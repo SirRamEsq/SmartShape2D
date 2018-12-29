@@ -1,0 +1,31 @@
+[gd_resource type="Resource" load_steps=6 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/sample/bottom.png" type="Texture" id=1]
+[ext_resource path="res://addons/rmsmartshape/sample/land_fill.png" type="Texture" id=2]
+[ext_resource path="res://addons/rmsmartshape/RMSmartShapeMaterial.gd" type="Script" id=3]
+[ext_resource path="res://addons/rmsmartshape/sample/grass.png" type="Texture" id=4]
+[ext_resource path="res://addons/rmsmartshape/sample/grass2.png" type="Texture" id=5]
+
+[resource]
+
+script = ExtResource( 3 )
+fill_texture = ExtResource( 2 )
+top_texture_tilt = 48.0
+bottom_texture_tilt = 46.667
+top_texture = [ ExtResource( 4 ), ExtResource( 5 ) ]
+top_texture_normal = [  ]
+left_texture = [ ExtResource( 1 ) ]
+left_texture_normal = null
+right_texture = [ ExtResource( 1 ) ]
+right_texture_normal = null
+bottom_texture = [ ExtResource( 1 ) ]
+bottom_texture_normal = null
+weld_edges = true
+top_offset = 0.0
+bottom_offset = 0.397
+right_offset = 0.525
+left_offset = 0.496
+collision_width = 1.0
+collision_offset = 0.0
+collision_extends = 0.0
+

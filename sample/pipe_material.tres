@@ -1,0 +1,28 @@
+[gd_resource type="Resource" load_steps=4 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/RMSmartShapeMaterial.gd" type="Script" id=1]
+[ext_resource path="res://addons/rmsmartshape/sample/pipe.png" type="Texture" id=2]
+[ext_resource path="res://addons/rmsmartshape/sample/pipe_end.png" type="Texture" id=3]
+
+[resource]
+
+script = ExtResource( 1 )
+top_texture_tilt = 20.0
+bottom_texture_tilt = 20.0
+top_texture = [ ExtResource( 2 ), ExtResource( 3 ) ]
+top_texture_normal = null
+left_texture = null
+left_texture_normal = null
+right_texture = null
+right_texture_normal = null
+bottom_texture = null
+bottom_texture_normal = null
+weld_edges = true
+top_offset = 0.0
+bottom_offset = 0.0
+right_offset = 0.0
+left_offset = 0.0
+collision_width = 0.618
+collision_offset = 0.0
+collision_extends = 0.0
+
