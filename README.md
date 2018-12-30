@@ -1,6 +1,6 @@
 # RMSmartShape2D
 ---
-![sample image](sample/sample_screen.PNG)
+![sample image](addons/rmsmartshape/sample/sample_screen.PNG)
 
 ## About
 This plugin, currently aimed at the Godot Game Engine 3.1+, provides the ability create non-uniform shaped objects using assets very similar to what you would use if producing your levels with tilesets.
@@ -14,7 +14,7 @@ In order to show your fancy shape material you must first create a RMSmartShape2
 2. Plot your points within the editor to represent your shape.
 
 ## Anchoring Nodes to Sections of the Shape Node
-You might have a desire to anchor nodes to various sections of the RMSmartShape2D node.  This is helpful in the level design by helping to automatically move other nodes in relation to the edited shape node.  Or, in the future, it might be create a shape that adjust dynamically and you want surrounding objects to be affected by adjustments in the shape's contour.
+You might have a desire to anchor nodes to various sections of the RMSmartShape2D node.  This is helpful in the level design by helping to automatically move other nodes in relation to the edited shape node.  Or, in the future, it might be useful adjust a shape dynamically and have the surrounding objects be affected by adjustments in the shape's contour.
 
 This is done by use of the RMSmartShapeAnchor2D node.
 
