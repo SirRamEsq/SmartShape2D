@@ -8,8 +8,11 @@ export (int) var track_control_point setget _set_track_control_point
 export (float) var normal_length = 10.0 setget _set_normal_length
 export (float, -1.0, 1.0) var control_point_offset setget _set_control_point_offset
 export (float, -3.14159, 3.14159) var rotation_offset = 0 setget _set_rotation_offset
+export (bool) var copy_scale = false setget _set_copy_scale
 
 var connected = false
+
+var monitored_transform
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -19,6 +22,14 @@ func _process(delta):
 	# Cannot connect until node is in tree
 	if connected == false and monitored_shape != null:
 		_set_monitored_shape(monitored_shape)
+		
+	# Watch for changes to attached node
+	if monitored_shape != null:
+		if has_node(monitored_shape):
+			var n = get_node(monitored_shape)
+			if n.get_global_transform() != monitored_transform:
+				refresh()
+				monitored_transform = n.get_global_transform()
 	pass
 
 func _set_monitored_shape(value):
@@ -30,6 +41,11 @@ func _set_monitored_shape(value):
 			get_node(value).connect("points_modified", self, "_handle_point_change")
 			connected = get_node(value).is_connected("points_modified", self, "_handle_point_change")
 	monitored_shape = value
+	refresh()
+	pass
+	
+func _set_copy_scale(value):
+	copy_scale = value
 	refresh()
 	pass
 	
@@ -85,7 +101,11 @@ func refresh():
 			else:
 				n_pt = pt_a + ((pt_a - pt_b) * control_point_offset)
 				angle = atan2(pt_b.y - pt_a.y, pt_b.x - pt_a.x)
+			
 			self.global_transform = Transform2D(angle + rotation_offset, n_pt)
+			
+			if copy_scale == true:
+				self.scale = node.scale
 
 	
 	update()

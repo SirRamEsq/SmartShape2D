@@ -2,6 +2,16 @@
 ---
 ![sample image](addons/rmsmartshape/sample/sample_screen.PNG)
 
+## Changes in 0.91
+- edges are calculated in relationship to object space instead of screen space
+- added option to allow user to let the object recalculate edges based on screen space.
+- fixed uv calculations for flipped textures.
+- fixed uv bug for edge sections less than half the size of texture width
+- added option to allow for a RMSmartShapeAnchor to mimic scale of monitored node
+- removed sections of code related to clockwise versus clockwise checks, very specifically regarding the direction of texture edges.
+- corrected normal texture bug for fill and edge rendering  
+
+
 ## About
 This plugin, currently aimed at the Godot Game Engine 3.1+, provides the ability create non-uniform shaped objects using assets very similar to what you would use if producing your levels with tilesets.
 

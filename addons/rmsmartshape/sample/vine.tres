@@ -22,7 +22,7 @@ top_offset = -0.042
 bottom_offset = 0.0
 right_offset = 0.0
 left_offset = -0.162
-collision_width = 0.067
-collision_offset = 0.016
-collision_extends = -0.012
+collision_width = 0.057
+collision_offset = 0.038
+collision_extends = 0.05
 

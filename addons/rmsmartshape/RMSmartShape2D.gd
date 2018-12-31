@@ -40,6 +40,7 @@ export (bool) var editor_debug = null setget _set_editor_debug
 export (Curve2D) var curve:Curve2D = null setget _set_curve
 export (bool) var closed_shape = false setget _close_shape
 export (bool) var auto_update_collider = false setget _set_auto_update_collider
+export (bool) var use_global_space = false setget _set_use_global_space
 export (NodePath) var collision_polygon_node
 export (int, 1, 512) var collision_bake_interval = 20
 export (bool) var draw_edges:bool = false setget _set_has_edge
@@ -51,11 +52,17 @@ export (Resource) var shape_material = preload("RMSmartShapeMaterial.gd").new() 
 
 # This will set true if it is time to rebake mesh, should prevent unnecessary 
 # mesh creation unless a change to a property deems it necessary
-var dirty:bool = true
+var dirty:bool = true 	# might be able to remove and replace by using change in point_change_index
 
 # For rendering fill and edges
 var meshes:Array = Array()
 var quads:Array 
+var point_change_index:int = 0
+
+# Reduce clockwise check if points don't change
+var is_clockwise:bool = false setget , are_points_clockwise
+var _clockwise_point_change_index:int = -1
+
 
 # Signals
 signal points_modified
@@ -180,6 +187,7 @@ func set_point_position(atPosition:int, position:Vector2):
 	if curve != null:
 		if curve.get_point_count() > atPosition and atPosition >= 0:
 			curve.set_point_position(atPosition, position)
+			point_change_index += 1
 			dirty = true
 			update()
 			emit_signal("points_modified")
@@ -198,6 +206,7 @@ func remove_point(atPosition):
 		if texture_flip_indices.size() > atPosition and atPosition >= 0:
 			texture_flip_indices.remove(atPosition)
 
+	point_change_index += 1
 	dirty = true
 	update()
 	emit_signal("points_modified")			
@@ -215,6 +224,7 @@ func resize_points(size:int):
 	texture_indices.resize(size)
 	texture_flip_indices.reszie(size)
 	
+	point_change_index += 1
 	dirty = true
 	update()
 	
@@ -226,7 +236,8 @@ func resize_points(size:int):
 func set_point_width(width:float, atPosition:int):
 	if width_indices.size() > atPosition and atPosition >= 0:
 		width_indices[atPosition] = width
-		
+
+	point_change_index += 1		
 	dirty = true
 	update()
 	emit_signal("points_modified")			
@@ -243,7 +254,8 @@ func get_point_width(atPosition:int)->float:
 func set_point_texture_index(index:int, atPosition:int):
 	if texture_indices.size() > atPosition and atPosition >= 0:
 		texture_indices[atPosition] = index
-		
+
+	point_change_index += 1		
 	dirty = true
 	update()
 	emit_signal("points_modified")			
@@ -275,6 +287,7 @@ func get_point_texture_flip(atPosition:int):
 func set_point_texture_flip(flip:bool, atPosition:int):
 	if texture_flip_indices.size() > atPosition and atPosition >= 0:
 		texture_flip_indices[atPosition] = flip
+		point_change_index += 1
 		dirty = true
 		update()
 		emit_signal("points_modified")			
@@ -288,7 +301,7 @@ func _convert_local_space_to_uv(point:Vector2, customSize = null):
 	if customSize != null:
 		tex_size = customSize
 	
-	var size:Vector2 = tex_size * Vector2(1.0 / scale.x, 1.0 / scale.y)
+	var size:Vector2 = tex_size #* Vector2(1.0 / scale.x, 1.0 / scale.y)
 	var rslt:Vector2 = Vector2(pt.x / size.x, pt.y / size.y) 
 	return rslt
 	
@@ -296,7 +309,7 @@ func _add_mesh(mesh, texture, normal_texture, direction):
 	var found:bool = false
 	
 	for m in meshes:
-		if m.texture == texture:
+		if m.texture == texture and m.normal_texture == normal_texture:
 			m.meshes.push_back(mesh)
 			found = true
 			
@@ -325,17 +338,33 @@ func _set_has_edge(value):
 	dirty = true
 	update()
 	
-func _are_points_clockwise():
+func _set_use_global_space(value):
+	use_global_space = value
+	dirty = true
+	update()
+
+func are_points_clockwise():
+	if _clockwise_point_change_index == point_change_index:
+		return is_clockwise
+	
 	var sum = 0.0
 	var pointCount = curve.get_point_count()
 	for i in pointCount:
 		var pt = curve.get_point_position(fmod(i, pointCount))
 		var pt2 = curve.get_point_position(fmod(i + 1, pointCount))
 		sum += pt.cross(pt2)
-	return sum > 0.0
+		
+	is_clockwise = sum > 0.0
+	_clockwise_point_change_index = point_change_index
+	return is_clockwise
 	
 func _to_vector3(vector:Vector2):
 	return Vector3(vector.x, vector.y, 0)
+	
+func _add_uv_to_surface_tool(surface_tool:SurfaceTool, uv:Vector2):
+	surface_tool.add_uv(uv)
+	surface_tool.add_uv2(uv)
+	pass
 	
 func _weld_quads(quads:Array, custom_scale:float = 1.0):
 	var rng
@@ -438,13 +467,16 @@ func _fix_quads():
 			if normal_tex == null:
 				normal_tex = quads[quad_index].normal_tex
 				
-			if tex != null and total_length > 1.0 and change_in_length == -1.0:
-				change_in_length = round( total_length / tex.get_size().x ) * tex.get_size().x - total_length
-				total_length += change_in_length
-				
+			if tex != null and change_in_length == -1.0:
+				change_in_length = (round( total_length / tex.get_size().x ) * tex.get_size().x) / total_length
+				#total_length += change_in_length
+								
 			# Adjust length
-			if change_in_length != 0.0 and total_length != 0.0:
-				section_length += (section_length / total_length) * change_in_length
+			#if change_in_length != 0.0 and total_length != 0.0:
+				#section_length += (section_length / total_length) * change_in_length
+			section_length = section_length * change_in_length
+			if section_length == 0:
+				section_length = tex.get_size().x
 			
 			this_quad.calculated = true
 			
@@ -453,49 +485,49 @@ func _fix_quads():
 			# A
 			if tex != null:
 				if this_quad.flip_texture == false:
-					st.add_uv( Vector2(length / tex.get_size().x, 0) )
+					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0) )
 				else:
-					st.add_uv( Vector2((total_length - length) / tex.get_size().x, 0) )
+					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0) )
 			st.add_vertex( _to_vector3( this_quad.pt_a ) )
 			
 			# B
 			if tex != null:
 				if this_quad.flip_texture == false:
-					st.add_uv( Vector2(length / tex.get_size().x, 1) )
+					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 1) )
 				else:
-					st.add_uv( Vector2((total_length - length) / tex.get_size().x, 1) )
+					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 1) )
 			st.add_vertex( _to_vector3( this_quad.pt_b ) )
 			
 			# C
 			if tex != null:
 				if this_quad.flip_texture == false:
-					st.add_uv( Vector2((length + section_length) / tex.get_size().x, 1) )
+					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 1) )
 				else:
-					st.add_uv( Vector2((total_length - (section_length + length)) / tex.get_size().x, 1) )
+					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (section_length + length)) / tex.get_size().x, 1) )
 			st.add_vertex( _to_vector3( this_quad.pt_c ) )
 			
 			# A
 			if tex != null:
 				if this_quad.flip_texture == false:
-					st.add_uv( Vector2(length / tex.get_size().x, 0) )
+					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0) )
 				else:
-					st.add_uv( Vector2((total_length - length) / tex.get_size().x, 0) )
+					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0) )
 			st.add_vertex( _to_vector3( this_quad.pt_a ) )
 			
 			# C
 			if tex != null:
 				if this_quad.flip_texture == false:
-					st.add_uv( Vector2((length + section_length) / tex.get_size().x, 1) )
+					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 1) )
 				else:
-					st.add_uv( Vector2((total_length - (length + section_length)) / tex.get_size().x, 1) )
+					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (length + section_length)) / tex.get_size().x, 1) )
 			st.add_vertex( _to_vector3( this_quad.pt_c ) )
 
 			# D
 			if tex != null:
 				if this_quad.flip_texture == false:
-					st.add_uv( Vector2((length + section_length) / tex.get_size().x, 0) )
+					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 0) )
 				else:
-					st.add_uv( Vector2((total_length - (length + section_length)) / tex.get_size().x, 0) )
+					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (length + section_length)) / tex.get_size().x, 0) )
 			st.add_vertex( _to_vector3( this_quad.pt_d ) )
 
 			if (quad_index + 1 == quads.size() and closed_shape == false) or this_quad.tex != next_quad.tex or this_quad.direction != next_quad.direction or next_quad.flip_texture != this_quad.flip_texture or fmod(index + 1,quads.size()) == mesh_index:
@@ -506,6 +538,7 @@ func _fix_quads():
 			index += 1
 		st.index()
 		st.generate_normals()
+		st.generate_tangents()
 		_add_mesh(st.commit(), tex, normal_tex, mesh_direction)
 		
 		global_index = fmod(index + 1, quads.size())
@@ -526,13 +559,7 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var top_tilt = shape_material.top_texture_tilt
 	var bottom_tilt = shape_material.bottom_texture_tilt
 	
-	var is_clockwise:bool = _are_points_clockwise()
-	
-	# Swap tilts if not clockwise
-	if is_clockwise == false:
-		var _t = top_tilt
-		top_tilt = bottom_tilt
-		bottom_tilt = _t
+	var is_clockwise:bool = are_points_clockwise()
 		
 	for curve_index in curve_count-1:
 		var pt_index = fmod(curve_index, curve.get_point_count())
@@ -542,24 +569,16 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		var pt2 = curve.get_point_position(pt2_index)
 		
 		direction = _get_direction(pt, pt2, top_tilt, bottom_tilt)
-		if is_clockwise == false:
-			if direction == DIRECTION.TOP:
-				direction = DIRECTION.BOTTOM
-			elif direction == DIRECTION.LEFT:
-				direction = DIRECTION.RIGHT
-			elif direction == DIRECTION.BOTTOM:
-				direction = DIRECTION.TOP
-			elif direction == DIRECTION.RIGHT:
-				direction = DIRECTION.LEFT
 				
 		if closed_shape == false:
 			direction = DIRECTION.TOP
 
 		tex = null
+		tex_normal = null
 		if shape_material != null:
 			if direction == DIRECTION.TOP:
 				if shape_material.top_texture != null:
-					tex_index = fmod(texture_indices[pt_index], shape_material.top_texture.size())
+					tex_index = abs(fmod(texture_indices[pt_index], shape_material.top_texture.size()))
 					if shape_material.top_texture.size() > tex_index:
 						tex = shape_material.top_texture[tex_index]
 					if shape_material.top_texture_normal != null:
@@ -567,16 +586,17 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 							tex_normal = shape_material.top_texture_normal[tex_index]
 			if direction == DIRECTION.BOTTOM:
 				if shape_material.bottom_texture != null:
-					tex_index = fmod(texture_indices[pt_index], shape_material.bottom_texture.size())
+					tex_index = abs(fmod(texture_indices[pt_index], shape_material.bottom_texture.size()))
 					if shape_material.bottom_texture.size() > tex_index:
 						if shape_material.bottom_texture.size() > tex_index:
 							tex = shape_material.bottom_texture[tex_index]
 					if shape_material.bottom_texture_normal != null:
 						if shape_material.bottom_texture_normal.size() > tex_index:
 							tex_normal = shape_material.bottom_texture_normal[tex_index]
+							print("Set Bottom")
 			if direction == DIRECTION.LEFT:
 				if shape_material.left_texture != null:
-					tex_index = fmod(texture_indices[pt_index], shape_material.left_texture.size())
+					tex_index = abs(fmod(texture_indices[pt_index], shape_material.left_texture.size()))
 					if shape_material.left_texture.size() > tex_index:
 						if shape_material.left_texture.size() > tex_index:
 							tex = shape_material.left_texture[tex_index]
@@ -585,7 +605,7 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 							tex_normal = shape_material.left_texture_normal[tex_index]
 			if direction == DIRECTION.RIGHT:
 				if shape_material.right_texture != null:
-					tex_index = fmod(texture_indices[pt_index], shape_material.right_texture.size())
+					tex_index = abs(fmod(texture_indices[pt_index], shape_material.right_texture.size()))
 					if shape_material.right_texture.size() > tex_index:
 						if shape_material.right_texture.size() > tex_index:
 							tex = shape_material.right_texture[tex_index]
@@ -607,7 +627,10 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		if width_indices[pt2_index] != 0.0:
 			scale_out = width_indices[pt2_index]
 		
-		if flip_edges == true:
+		if are_points_clockwise() == false:
+			vtx *= -1
+		
+		if flip_edges == true:  # finally, allow developer to override
 			vtx *= -1
 			
 		var clr:Color
@@ -701,7 +724,7 @@ func bake_mesh(force:bool = false):
 	
 	var fill_points:PoolVector2Array
 	
-	var is_clockwise:bool = _are_points_clockwise()
+	var is_clockwise:bool = are_points_clockwise()
 	
 	quads = Array()
 
@@ -729,16 +752,17 @@ func bake_mesh(force:bool = false):
 		
 		for i in range(0, fill_tris.size() - 1, 3):
 			st.add_color(Color.white)
-			st.add_uv( _convert_local_space_to_uv( curve.get_point_position(fill_tris[i]) ) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i]) ) )
 			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i]).x, curve.get_point_position(fill_tris[i]).y, 0) )
 			st.add_color(Color.white)
-			st.add_uv( _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+1]) ) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+1]) ) )
 			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i+1]).x, curve.get_point_position(fill_tris[i+1]).y, 0) )
 			st.add_color(Color.white)
-			st.add_uv( _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+2]) ) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+2]) ) )
 			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i+2]).x, curve.get_point_position(fill_tris[i+2]).y, 0) )
 		st.index()
 		st.generate_normals()
+		st.generate_tangents()
 		_add_mesh(st.commit(), shape_material.fill_texture, shape_material.fill_texture_normal, DIRECTION.FILL)
 		
 	if closed_shape==true and draw_edges==false:
@@ -761,20 +785,41 @@ func get_point_position(atPosition:int):
 			return curve.get_point_position(atPosition)
 	return null
 	
-func _get_direction(point1, point2, topTilt, bottomTilt):
-	var v1:Vector2 = get_global_transform().xform(point1)
-	var v2:Vector2 = get_global_transform().xform(point2)
-	var angle = atan2(v2.y - v1.y, v2.x - v1.x)
+func _get_direction(point_1, point_2, top_tilt, bottom_tilt):
+	var v1:Vector2 = point_1 
+	var v2:Vector2 = point_2 
+	
+	if use_global_space == true:
+		v1 = get_global_transform().xform(point_1)
+		v2 = get_global_transform().xform(point_2)
+	
+	var top_mid = 0.0
+	var bottom_mid = PI
+	
+	var clockwise = are_points_clockwise()
+	
+	if clockwise == false:
+		top_mid = PI
+		bottom_mid = 0
+		
+	var angle = atan2(v2.y - v1.y, v2.x - v1.x) 
 	
 	#Precedence is given to top
-	if abs(angle) <= deg2rad(topTilt):
+	if abs(top_mid - abs(angle)) <= deg2rad(top_tilt):
 		return DIRECTION.TOP
+		pass
 	#And then to bottom
-	if abs(angle) >= PI - deg2rad(bottomTilt):
+	if abs(bottom_mid - abs(angle)) <= deg2rad(bottom_tilt):
 		return DIRECTION.BOTTOM
 	if angle > 0:
+		if clockwise == true:
+			return DIRECTION.RIGHT
+		else:
+			return DIRECTION.LEFT
+	if clockwise == true:
+		return DIRECTION.LEFT
+	else:
 		return DIRECTION.RIGHT
-	return DIRECTION.LEFT
 	
 func _draw():
 	if dirty == true and auto_update_collider == true:
@@ -786,25 +831,25 @@ func _draw():
 	for mesh in meshes:
 		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and mesh.direction == DIRECTION.FILL:
 			for m in mesh.meshes:
-				draw_mesh(m, mesh.texture, null)
+				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
 	# Draw Left and Right
 	for mesh in meshes:
 		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and (mesh.direction == DIRECTION.LEFT or mesh.direction == DIRECTION.RIGHT):
 			for m in mesh.meshes:
-				draw_mesh(m, mesh.texture, null)
+				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
 	# Draw Bottom	
 	for mesh in meshes:
 		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and mesh.direction == DIRECTION.BOTTOM:
 			for m in mesh.meshes:
-				draw_mesh(m, mesh.texture, null)
+				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
 	# and Finally, Draw Top
 	for mesh in meshes:
 		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and mesh.direction == DIRECTION.TOP:
 			for m in mesh.meshes:
-				draw_mesh(m, mesh.texture, null)
+				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
 	# Draw edge quads for debug purposes (ONLY IN EDITOR)
 	if Engine.editor_hint == true and editor_debug == true:

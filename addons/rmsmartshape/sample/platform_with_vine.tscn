@@ -1,23 +1,24 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=17 format=2]
 
-[ext_resource path="res://addons/rmsmartshape/RMSmartShape2D.gd" type="Script" id=1]
-[ext_resource path="res://addons/rmsmartshape/sample/vine.tres" type="Resource" id=2]
-[ext_resource path="res://addons/rmsmartshape/sample/ground.tres" type="Resource" id=3]
-[ext_resource path="res://addons/rmsmartshape/RMSmartShapeAnchor2D.gd" type="Script" id=4]
-[ext_resource path="res://addons/rmsmartshape/sample/sign.png" type="Texture" id=5]
-[ext_resource path="res://addons/rmsmartshape/sample/ball.png" type="Texture" id=6]
-[ext_resource path="res://addons/rmsmartshape/sample/pipe_material.tres" type="Resource" id=7]
+[ext_resource path="res://addons/rmsmartshape/sample/spot_light.png" type="Texture" id=1]
+[ext_resource path="res://addons/rmsmartshape/RMSmartShape2D.gd" type="Script" id=2]
+[ext_resource path="res://addons/rmsmartshape/sample/vine.tres" type="Resource" id=3]
+[ext_resource path="res://addons/rmsmartshape/sample/ground.tres" type="Resource" id=4]
+[ext_resource path="res://addons/rmsmartshape/RMSmartShapeAnchor2D.gd" type="Script" id=5]
+[ext_resource path="res://addons/rmsmartshape/sample/sign.png" type="Texture" id=6]
+[ext_resource path="res://addons/rmsmartshape/sample/ball.png" type="Texture" id=7]
+[ext_resource path="res://addons/rmsmartshape/sample/pipe_material.tres" type="Resource" id=8]
 
 [sub_resource type="Curve2D" id=1]
 
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, -1422.53, 19.9327, 0, 0, 0, 0, -1261.22, 47.1975, 0, 0, 0, 0, -1102.59, 157.563, 0, 0, 0, 0, -1013.65, 238.959, 0, 0, 0, 0, -905.126, 315.833, 0, 0, 0, 0, -736.304, 412.303, 0, 0, 0, 0, -630.79, 495.207, 0, 0, 0, 0, -511.755, 546.182 )
+"points": PoolVector2Array( 0, 0, 0, 0, -532.694, -375.177, 0, 0, 0, 0, -409.398, -354.128, 0, 0, 0, 0, -326.864, -343.55, 0, 0, 0, 0, -205.458, -319.004, 0, 0, 0, 0, -163.583, -266.137, 0, 0, 0, 0, -122.921, -139.246, 0, 0, 0, 0, -23.5588, -59.1942, 0, 0, 0, 0, 145.263, 37.2758, 0, 0, 0, 0, 250.777, 120.18, 0, 0, 0, 0, 358.773, 175.212 )
 }
 
 [sub_resource type="Curve2D" id=2]
 
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, 200.537, -196.467, 0, 0, 0, 0, 45.7338, -316.925, 0, 0, 0, 0, -108.413, -433.678, 0, 0, 0, 0, -223.341, -512.735, 0, 0, 0, 0, -375.57, -533.184, 0, 0, 0, 0, -423.101, -33.3693, 0, 0, 0, 0, -410.798, 382.892, 0, 0, 0, 0, -80.6595, 401.342, 0, 0, 0, 0, 341.752, 399.292, 0, 0, 0, 0, 522.71, 93.818, 0, 0, 0, 0, 518.814, -1.63544, 0, 0, 0, 0, 399.506, -60.4993, 0, 0, 0, 0, 316.603, -131.344, 0, 0, 0, 0, 200.537, -196.467 )
+"points": PoolVector2Array( 0, 0, 0, 0, 186.719, -215.136, 0, 0, 0, 0, 47.2574, -327.009, 0, 0, 0, 0, -42.7343, -496.082, 0, 0, 0, 0, -233.306, -534.885, 0, 0, 0, 0, -383.663, -563.524, 0, 0, 0, 0, -423.101, -33.3693, 0, 0, 0, 0, -410.798, 382.892, 0, 0, 0, 0, -80.7913, 403.063, 0, 0, 0, 0, 341.752, 399.292, 0, 0, 0, 0, 522.71, 93.818, 0, 0, 0, 0, 518.814, -1.63544, 0, 0, 0, 0, 394.488, -69.7487, 0, 0, 0, 0, 316.603, -131.344, 0, 0, 0, 0, 186.719, -215.136 )
 }
 
 [sub_resource type="CircleShape2D" id=3]
@@ -27,29 +28,59 @@ radius = 32.538
 [sub_resource type="Curve2D" id=4]
 
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, -332.362, -44.7822, 0, 0, 0, 0, -155.782, -78.6931, 0, 0, 0, 0, 29.8206, -182.289, 0, 0, 0, 0, 201.704, -152.823, 0, 0, 0, 0, 199.249, 47.2981, 0, 0, 0, 0, 151.367, 139.379, 0, 0, 0, 0, -38.9329, 156.567, 0, 0, 0, 0, -286.936, 138.151, 0, 0, 0, 0, -332.362, -44.7822 )
-}
-
-[sub_resource type="Curve2D" id=6]
-
-_data = {
-"points": PoolVector2Array( 0, 0, 0, 0, -1337.5, -150.741, 0, 0, 0, 0, -1088.59, -167.595, 0, 0, 0, 0, -946.462, -233.844, 0, 0, 0, 0, -690.538, -203.307, 0, 0, 0, 0, -634.118, -176.779, 0, 0, 0, 0, -619.523, -134.201, 0, 0, 0, 0, -609.756, -68.266, 0, 0, 0, 0, -639.409, -7.34595, 0, 0, 0, 0, -634.526, 25.6216, 0, 0, 0, 0, -592.359, 49.1808, 0, 0, 0, 0, -505.657, 37.6841, 0, 0, 0, 0, -449.58, 24.6019, 0, 0, 0, 0, -354.979, 29.1281, 0, 0, 0, 0, 110.347, 92.8284, 0, 0, 0, 0, 131.781, 112.548, 0, 0, 0, 0, 202.944, 122.837, 0, 0, 0, 0, 277.535, 129.696, 0, 0, 0, 0, 328.597, 132.686 )
+"points": PoolVector2Array( 0, 0, 0, 0, -308.846, -37.8025, 0, 0, 0, 0, -132.266, -71.7134, 0, 0, 0, 0, 53.3368, -175.309, 0, 0, 0, 0, 255.319, -124.564, 0, 0, 0, 0, 222.765, 54.2778, 0, 0, 0, 0, 174.883, 146.359, 0, 0, 0, 0, -15.4166, 163.547, 0, 0, 0, 0, -263.42, 145.131, 0, 0, 0, 0, -308.846, -37.8025 )
 }
 
 [sub_resource type="Curve2D" id=5]
 
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, -357.762, -92.5669, 0, 0, 0, 0, -326.057, -72.6451, 0, 0, 0, 0, -304.623, -68.3582, 0, 0, 0, 0, -272.043, -68.3582, 0, 0, 0, 0, -230.031, -75.2172, 0, 0, 0, 0, -195.736, -86.3631, 0, 0, 0, 0, -160.584, -94.0794, 0, 0, 0, 0, -113.428, -99.2236, 0, 0, 0, 0, -70.5593, -101.796, 0, 0, 0, 0, 70.9077, -89.7925, 0, 0, 0, 0, 99.2012, -87.2204, 0, 0, 0, 0, 127.495, -81.2188, 0, 0, 0, 0, 152.327, -62.731, 0, 0, 0, 0, 158.067, -32.3896, 0, 0, 0, 0, 109.49, 67.1071, 0, 0, 0, 0, 110.347, 92.8284, 0, 0, 0, 0, 131.781, 112.548, 0, 0, 0, 0, 202.944, 122.837, 0, 0, 0, 0, 277.535, 129.696, 0, 0, 0, 0, 328.597, 132.686 )
+"points": PoolVector2Array( 0, 0, 0, 0, -354.062, 56.6929, 0, 0, 0, 0, -105.152, 39.839, 0, 0, 0, 0, 36.9756, -26.41, 0, 0, 0, 0, 292.9, 4.12708, 0, 0, 0, 0, 349.32, 30.6548, 0, 0, 0, 0, 363.915, 73.233, 0, 0, 0, 0, 373.682, 139.168, 0, 0, 0, 0, 344.029, 200.088, 0, 0, 0, 0, 348.912, 233.056, 0, 0, 0, 0, 391.079, 256.615, 0, 0, 0, 0, 477.781, 245.118, 0, 0, 0, 0, 533.858, 232.036, 0, 0, 0, 0, 628.459, 236.562, 0, 0, 0, 0, 1093.78, 300.262, 0, 0, 0, 0, 1115.22, 319.982, 0, 0, 0, 0, 1186.38, 330.271, 0, 0, 0, 0, 1260.97, 337.13, 0, 0, 0, 0, 1312.03, 340.12 )
+}
+
+[sub_resource type="Curve2D" id=6]
+
+_data = {
+"points": PoolVector2Array( 0, 0, 0, 0, -356.146, 7.23322, 0, 0, 0, 0, -324.441, 27.155, 0, 0, 0, 0, -303.007, 31.4419, 0, 0, 0, 0, -270.427, 31.4419, 0, 0, 0, 0, -228.415, 24.5829, 0, 0, 0, 0, -194.12, 13.437, 0, 0, 0, 0, -158.968, 5.7207, 0, 0, 0, 0, -111.812, 0.576477, 0, 0, 0, 0, -68.943, -1.99591, 0, 0, 0, 0, 72.524, 10.0076, 0, 0, 0, 0, 100.818, 12.5797, 0, 0, 0, 0, 129.111, 18.5813, 0, 0, 0, 0, 153.943, 37.0691, 0, 0, 0, 0, 159.683, 67.4105, 0, 0, 0, 0, 111.106, 166.907, 0, 0, 0, 0, 111.963, 192.628, 0, 0, 0, 0, 133.397, 212.348, 0, 0, 0, 0, 204.56, 222.637, 0, 0, 0, 0, 279.151, 229.496, 0, 0, 0, 0, 330.213, 232.486 )
 }
 
 [sub_resource type="Curve2D" id=7]
 
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, 886.49, 781.446, 0, 0, 0, 0, 987.601, 900.55, 0, 0, 0, 0, 1103.01, 982.809, 0, 0, 0, 0, 1244.2, 1040.51, 0, 0, 0, 0, 1386.25, 1033.4 )
+"points": PoolVector2Array( 0, 0, 0, 0, 882.716, 788.65, 0, 0, 0, 0, 987.601, 900.55, 0, 0, 0, 0, 1103.01, 982.809, 0, 0, 0, 0, 1237.83, 1027.45, 0, 0, 0, 0, 1386.25, 1033.4 )
+}
+
+[sub_resource type="Animation" id=8]
+
+resource_name = "MoveLight"
+length = 3.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Light2D:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = false
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.7, 1.5, 2.2, 3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 98.1968, 713.504 ), Vector2( 305.075, 996.915 ), Vector2( 775.035, 888.095 ), Vector2( 305.075, 996.915 ), Vector2( 98.1968, 713.504 ) ]
 }
 
 [node name="Node2D" type="Node2D"]
 position = Vector2( -7.03247, 1.75806 )
+
+[node name="Light2D" type="Light2D" parent="."]
+light_mask = 2
+position = Vector2( 257.35, 826.391 )
+rotation = -0.0982113
+scale = Vector2( 1.95282, 1.76375 )
+z_index = 1
+texture = ExtResource( 1 )
+color = Color( 0.913725, 0.956863, 0.14902, 1 )
+energy = 4.03
+range_item_cull_mask = 2
+shadow_item_cull_mask = 2
 
 [node name="ColorRect" type="ColorRect" parent="."]
 margin_left = -162.0
@@ -59,53 +90,58 @@ margin_bottom = 1278.0
 color = Color( 0.0745098, 0.568627, 0.807843, 1 )
 
 [node name="Vine" type="Node2D" parent="."]
-position = Vector2( 1406.29, 238.922 )
+position = Vector2( 524.723, 613.949 )
 z_index = 1
-script = ExtResource( 1 )
+script = ExtResource( 2 )
 editor_debug = false
 curve = SubResource( 1 )
 collision_polygon_node = NodePath("../CollisionPolygon2D")
 draw_edges = true
-texture_indices = [ 0, 1, 0, 1, 0, 0, 0, 0 ]
-texture_flip_indices = [ false, false, false, true, false, false, false, true ]
-width_indices = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-shape_material = ExtResource( 2 )
+texture_indices = [ 0, 1, 1, 0, 0, 1, 0, 0, 0, 0 ]
+texture_flip_indices = [ false, true, false, false, false, true, false, false, false, true ]
+width_indices = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+shape_material = ExtResource( 3 )
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 
 [node name="Platform" type="Node2D" parent="StaticBody2D"]
+light_mask = 2
 position = Vector2( 368.413, 780.678 )
-script = ExtResource( 1 )
+script = ExtResource( 2 )
 editor_debug = false
 curve = SubResource( 2 )
 closed_shape = true
 auto_update_collider = true
 collision_polygon_node = NodePath("../CollisionPolygon2D")
 draw_edges = true
-flip_edges = true
-texture_indices = [ 2, 2, 5, 5, -5, 0, 0, 0, 0, 0, 1, 1, 1, 0 ]
-texture_flip_indices = [ false, false, false, true, false, false, false, false, false, false, false, false, false, false ]
-width_indices = [ 1.0, 1.526, 1.0, 1.0, 1.827, 1.0, 1.0, 1.794, 1.794, 1.794, 1.0, 1.0, 1.0, 1.0 ]
-shape_material = ExtResource( 3 )
+texture_indices = [ 2, 2, 9, 9, -5, 0, 0, 0, 0, 0, 1, 2, 1, 0 ]
+texture_flip_indices = [ false, false, true, true, false, false, false, false, false, false, false, false, true, false ]
+width_indices = [ 1.0, 1.526, 0.448, 0.448, 1.827, 1.0, 1.0, 1.794, 1.794, 1.794, 1.0, 1.0, 1.0, 1.0 ]
+shape_material = ExtResource( 4 )
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
-modulate = Color( 1, 1, 1, 0.3 )
+visible = false
+modulate = Color( 1, 1, 1, 0.666667 )
 position = Vector2( 368.413, 780.678 )
-polygon = PoolVector2Array( 200.537, -196.467, 45.7338, -316.925, -108.413, -433.678, -223.341, -512.735, -375.57, -533.184, -423.101, -33.3693, -410.798, 382.892, -80.6595, 401.342, 341.752, 399.292, 522.71, 93.818, 518.814, -1.63544, 399.506, -60.4993, 316.603, -131.344, 200.537, -196.467 )
+polygon = PoolVector2Array( 186.719, -215.136, 47.2574, -327.009, -42.7343, -496.082, -233.306, -534.885, -383.663, -563.524, -423.101, -33.3693, -410.798, 382.892, -80.7913, 403.063, 341.752, 399.292, 522.71, 93.818, 518.814, -1.63544, 394.488, -69.7488, 316.603, -131.344, 186.719, -215.136 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="RMSmartShapeAnchor2D" type="Node2D" parent="."]
 editor/display_folded = true
-position = Vector2( 94.5323, 261.154 )
-rotation = 0.133529
-script = ExtResource( 4 )
+position = Vector2( 93.0072, 237.774 )
+rotation = 0.108222
+script = ExtResource( 5 )
 monitored_shape = NodePath("../StaticBody2D/Platform")
 track_control_point = 3
 normal_length = 100.0
-control_point_offset = 0.332
+control_point_offset = 0.28
+rotation_offset = -0.08
 
 [node name="sign" type="Sprite" parent="RMSmartShapeAnchor2D"]
-position = Vector2( -25.3607, -66.581 )
-texture = ExtResource( 5 )
+position = Vector2( 1.83058, -64.8691 )
+texture = ExtResource( 6 )
 
 [node name="Ball" type="RigidBody2D" parent="."]
 editor/display_folded = true
@@ -115,17 +151,19 @@ gravity_scale = 10.0
 [node name="ball" type="Sprite" parent="Ball"]
 position = Vector2( -0.827362, -0.177101 )
 z_index = 10
-texture = ExtResource( 6 )
+texture = ExtResource( 7 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ball"]
 shape = SubResource( 3 )
 
 [node name="StaticBody2D3" type="StaticBody2D" parent="."]
-editor/display_folded = true
 
 [node name="RMSmartShape2D" type="Node2D" parent="StaticBody2D3"]
-position = Vector2( 1732.48, 1079.16 )
-script = ExtResource( 1 )
+light_mask = 2
+position = Vector2( 1708.96, 1072.18 )
+rotation = 0.016052
+script = ExtResource( 2 )
+editor_debug = false
 curve = SubResource( 4 )
 closed_shape = true
 collision_polygon_node = NodePath("../CollisionPolygon2D")
@@ -133,46 +171,56 @@ draw_edges = true
 texture_indices = [ 0, 1, 1, 0, 0, 0, 0, 0, 0 ]
 texture_flip_indices = [ false, false, false, false, false, false, false, false, false ]
 width_indices = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-shape_material = ExtResource( 3 )
+shape_material = ExtResource( 4 )
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D3"]
 modulate = Color( 1, 1, 1, 0.3 )
-polygon = PoolVector2Array( 1400.12, 1034.37, 1576.7, 1000.46, 1762.3, 896.867, 1934.19, 926.333, 1931.73, 1126.45, 1883.85, 1218.53, 1693.55, 1235.72, 1445.55, 1217.31, 1400.12, 1034.37 )
+position = Vector2( 1708.96, 1072.18 )
+rotation = 0.016052
+polygon = PoolVector2Array( -308.846, -37.8025, -132.266, -71.7134, 53.3368, -175.309, 255.319, -124.564, 222.765, 54.2778, 174.883, 146.359, -15.4166, 163.547, -263.42, 145.131, -308.846, -37.8025 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="Pipe2" type="Node2D" parent="."]
-position = Vector2( 855.58, 1754.04 )
+position = Vector2( 1171.06, 799.76 )
 rotation = 1.6822
-script = ExtResource( 1 )
-curve = SubResource( 6 )
+script = ExtResource( 2 )
+curve = SubResource( 5 )
 texture_indices = [ 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 ]
 texture_flip_indices = [ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false ]
 width_indices = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-shape_material = ExtResource( 7 )
+shape_material = ExtResource( 8 )
 
 [node name="Pipe" type="Node2D" parent="."]
-position = Vector2( 1159.38, 664.657 )
-script = ExtResource( 1 )
-curve = SubResource( 5 )
+position = Vector2( 1157.76, 564.857 )
+script = ExtResource( 2 )
+curve = SubResource( 6 )
 auto_update_collider = true
 collision_polygon_node = NodePath("../CollisionPolygon2D")
-texture_indices = [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 ]
-texture_flip_indices = [ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false ]
+texture_indices = [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 1, 0 ]
+texture_flip_indices = [ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, true, false ]
 width_indices = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-shape_material = ExtResource( 7 )
+shape_material = ExtResource( 8 )
 
 [node name="StaticBody2D2" type="StaticBody2D" parent="."]
 
 [node name="CollisionVine" type="Node2D" parent="StaticBody2D2"]
-script = ExtResource( 1 )
+script = ExtResource( 2 )
 curve = SubResource( 7 )
 auto_update_collider = true
 collision_polygon_node = NodePath("../CollisionPolygon2D")
+flip_edges = true
 texture_indices = [ 0, 0, 1, 0, 0 ]
 texture_flip_indices = [ false, false, false, false, false ]
 width_indices = [ 1.0, 1.0, 1.0, 1.0, 1.0 ]
-shape_material = ExtResource( 2 )
+shape_material = ExtResource( 3 )
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D2"]
 z_index = 1
-polygon = PoolVector2Array( 889.484, 780.919, 989.385, 898.608, 1104.28, 980.501, 1244.65, 1037.88, 1384.58, 1030.86, 1385.01, 1039.42, 1243.21, 1046.34, 1100.14, 988.012, 983.583, 904.924, 882.947, 786.469 )
+polygon = PoolVector2Array( 880.814, 781.661, 989.835, 897.996, 1104.55, 979.782, 1238.44, 1024.11, 1392.78, 1030.27, 1392.49, 1037.56, 1237.13, 1031.29, 1101.24, 986.288, 985.032, 903.488, 875.491, 786.65 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+autoplay = "MoveLight"
+anims/MoveLight = SubResource( 8 )
 
