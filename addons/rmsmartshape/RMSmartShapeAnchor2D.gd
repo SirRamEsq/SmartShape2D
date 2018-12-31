@@ -19,6 +19,10 @@ func _ready():
 	pass # Replace with function body.
 	
 func _process(delta):
+	if monitored_shape != null and monitored_shape == "":
+		_set_monitored_shape(null)
+		return
+
 	# Cannot connect until node is in tree
 	if connected == false and monitored_shape != null:
 		_set_monitored_shape(monitored_shape)
@@ -27,21 +31,33 @@ func _process(delta):
 	if monitored_shape != null:
 		if has_node(monitored_shape):
 			var n = get_node(monitored_shape)
-			if n.get_global_transform() != monitored_transform:
-				refresh()
-				monitored_transform = n.get_global_transform()
+			if n.is_queued_for_deletion()==false:
+				if n.get_global_transform() != monitored_transform:
+					refresh()
+					monitored_transform = n.get_global_transform()
 	pass
 
 func _set_monitored_shape(value):
 	if value == null and monitored_shape != null:
-		get_node(value).disconnect("points_modified", self, "_handle_point_change")
+		get_node(monitored_shape).disconnect("points_modified", self, "_handle_point_change")
+		get_node(monitored_shape).disconnect("tree_exiting", self, "_monitored_node_leaving")
 		connected = false
+	
+	if value=="":
+		value = null
+	
 	if value != null:
 		if has_node(value):
 			get_node(value).connect("points_modified", self, "_handle_point_change")
 			connected = get_node(value).is_connected("points_modified", self, "_handle_point_change")
+			get_node(value).connect("tree_exiting", self, "_monitored_node_leaving")
+			
 	monitored_shape = value
 	refresh()
+	pass
+	
+func _monitored_node_leaving():
+	_set_monitored_shape(null)
 	pass
 	
 func _set_copy_scale(value):
@@ -77,6 +93,13 @@ func refresh():
 	if monitored_shape != null:
 		if has_node(monitored_shape) == true:
 			var node = get_node(monitored_shape)
+			if is_instance_valid(node) == false:
+				return
+			if node.is_queued_for_deletion() == true:
+				node.disconnect("points_modified", self, "_handle_point_change")
+				return
+				
+				
 			var pt_a_index = track_control_point
 			var pt_b_index = track_control_point + 1
 			if control_point_offset < 0:

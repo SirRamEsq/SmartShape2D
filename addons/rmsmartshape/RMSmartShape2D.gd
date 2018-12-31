@@ -74,6 +74,9 @@ func _ready():
 	pass
 
 func _process(delta):
+	if is_inside_tree() == false:
+		return 
+		
 	if dirty == true:
 		if auto_update_collider == true:
 			bake_collision()
@@ -91,6 +94,12 @@ func _init_indices():
 	pass
 	
 func _enter_tree():
+	pass
+	
+func _exit_tree():
+	if shape_material != null:
+		if ClassDB.class_has_signal("RMSmartShapeMaterial","changed"):
+			shape_material.disconnect("changed", self, "_handle_material_change")
 	pass
 	
 func _set_texture_indices(value):
@@ -593,7 +602,6 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 					if shape_material.bottom_texture_normal != null:
 						if shape_material.bottom_texture_normal.size() > tex_index:
 							tex_normal = shape_material.bottom_texture_normal[tex_index]
-							print("Set Bottom")
 			if direction == DIRECTION.LEFT:
 				if shape_material.left_texture != null:
 					tex_index = abs(fmod(texture_indices[pt_index], shape_material.left_texture.size()))
@@ -822,6 +830,9 @@ func _get_direction(point_1, point_2, top_tilt, bottom_tilt):
 		return DIRECTION.RIGHT
 	
 func _draw():
+	if is_inside_tree() == false:
+		return 
+	
 	if dirty == true and auto_update_collider == true:
 		bake_collision()
 	bake_mesh()
