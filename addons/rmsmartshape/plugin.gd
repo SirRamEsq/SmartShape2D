@@ -128,20 +128,26 @@ func _enter_tree():
 	
 func _exit_tree():
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
-	hb.queue_free()
 	pass
 
 func _process(delta):
+	return
+	
 	if Engine.editor_hint == true:
 		if edit_this != null:
 			if is_instance_valid(edit_this) == false:
 				edit_this = null
+				update_overlays()
+				return
+			if edit_this.is_inside_tree() == false:
+				edit_this = null
+				update_overlays()
 				return
 			
 			if edit_this_transform != edit_this.get_global_transform():
 				edit_this.bake_mesh(true)  # Force the bake so that directional changes can be made
 				edit_this.update()
-			edit_this_transform = edit_this.get_global_transform()
+				edit_this_transform = edit_this.get_global_transform()
 	pass
 
 func handles(object):
@@ -151,8 +157,7 @@ func handles(object):
 	var rslt:bool = object is ShapeClass
 	hb.hide()
 	
-	if edit_this != null:
-		update_overlays()
+	update_overlays()
 
 	return rslt
 	
@@ -212,6 +217,9 @@ func make_visible(visible):
 	
 func forward_canvas_gui_input(event):
 	if edit_this == null:
+		return false
+		
+	if is_instance_valid(edit_this) == false:
 		return false
 		
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
@@ -501,6 +509,7 @@ func _handle_auto_collision_press():
 	pass
 
 func forward_canvas_draw_over_viewport(overlay):
+	
 	# Something might force a draw which we had no control over,
 	# in this case do some updating to be sure
 	if undo_version != undo.get_version():
