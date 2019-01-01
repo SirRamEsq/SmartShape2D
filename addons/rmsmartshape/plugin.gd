@@ -131,8 +131,6 @@ func _exit_tree():
 	pass
 
 func _process(delta):
-	return
-	
 	if Engine.editor_hint == true:
 		if edit_this != null:
 			if is_instance_valid(edit_this) == false:
