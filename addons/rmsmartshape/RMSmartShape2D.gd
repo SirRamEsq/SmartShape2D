@@ -293,6 +293,11 @@ func get_point_texture_flip(atPosition:int):
 		return texture_flip_indices[atPosition]
 	return false
 	
+func is_closed_shape():
+	if closed_shape:
+		return true
+	return false
+	
 func set_point_texture_flip(flip:bool, atPosition:int):
 	if texture_flip_indices.size() > atPosition and atPosition >= 0:
 		texture_flip_indices[atPosition] = flip
@@ -425,10 +430,10 @@ func _fix_quads():
 
 				
 	var global_index = 0
-	while(true):
+	while quads.size()>0:
 		# Find start of sprite in control point list (change in direction is the key here)
 		var index:int = global_index
-		while true:
+		while quads.size()>0:
 			var previous_quad:QuadInfo = quads[fmod(index - 1, quads.size())]
 			var this_quad:QuadInfo = quads[fmod(index, quads.size())]
 			
@@ -443,7 +448,7 @@ func _fix_quads():
 		var length_index:int = index
 		var total_length:float = 0.0
 		var change_in_length:float = -1.0
-		while true:
+		while quads.size()>0:
 			var this_quad:QuadInfo = quads[fmod(length_index, quads.size())]
 			var next_quad:QuadInfo = quads[fmod(length_index + 1, quads.size())]
 			
@@ -465,7 +470,7 @@ func _fix_quads():
 		var mesh_direction:int
 		
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		while true:
+		while quads.size()>0:
 			var quad_index:int = fmod(index, quads.size())
 			var this_quad:QuadInfo = quads[fmod(quad_index, quads.size())]
 			var next_quad:QuadInfo = quads[fmod(quad_index + 1, quads.size())]
@@ -547,12 +552,15 @@ func _fix_quads():
 			index += 1
 		st.index()
 		st.generate_normals()
-		st.generate_tangents()
+		#st.generate_tangents()
 		_add_mesh(st.commit(), tex, normal_tex, mesh_direction)
 		
 		global_index = fmod(index + 1, quads.size())
 		
-		if quads[global_index].calculated == true or (global_index == 0 and closed_shape == false):
+		if quads.size()>0:
+			if quads[global_index].calculated == true or (global_index == 0 and closed_shape == false):
+				break
+		else:
 			break
 	pass
 	
@@ -587,39 +595,43 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		if shape_material != null:
 			if direction == DIRECTION.TOP:
 				if shape_material.top_texture != null:
-					tex_index = abs(fmod(texture_indices[pt_index], shape_material.top_texture.size()))
-					if shape_material.top_texture.size() > tex_index:
-						tex = shape_material.top_texture[tex_index]
-					if shape_material.top_texture_normal != null:
-						if shape_material.top_texture_normal.size() > tex_index:
-							tex_normal = shape_material.top_texture_normal[tex_index]
+					if shape_material.top_texture.size()>0:
+						tex_index = abs(fmod(texture_indices[pt_index], shape_material.top_texture.size()))
+						if shape_material.top_texture.size() > tex_index:
+							tex = shape_material.top_texture[tex_index]
+						if shape_material.top_texture_normal != null:
+							if shape_material.top_texture_normal.size() > tex_index:
+								tex_normal = shape_material.top_texture_normal[tex_index]
 			if direction == DIRECTION.BOTTOM:
 				if shape_material.bottom_texture != null:
-					tex_index = abs(fmod(texture_indices[pt_index], shape_material.bottom_texture.size()))
-					if shape_material.bottom_texture.size() > tex_index:
+					if shape_material.bottom_texture.size()>0:
+						tex_index = abs(fmod(texture_indices[pt_index], shape_material.bottom_texture.size()))
 						if shape_material.bottom_texture.size() > tex_index:
-							tex = shape_material.bottom_texture[tex_index]
-					if shape_material.bottom_texture_normal != null:
-						if shape_material.bottom_texture_normal.size() > tex_index:
-							tex_normal = shape_material.bottom_texture_normal[tex_index]
+							if shape_material.bottom_texture.size() > tex_index:
+								tex = shape_material.bottom_texture[tex_index]
+						if shape_material.bottom_texture_normal != null:
+							if shape_material.bottom_texture_normal.size() > tex_index:
+								tex_normal = shape_material.bottom_texture_normal[tex_index]
 			if direction == DIRECTION.LEFT:
 				if shape_material.left_texture != null:
-					tex_index = abs(fmod(texture_indices[pt_index], shape_material.left_texture.size()))
-					if shape_material.left_texture.size() > tex_index:
+					if (shape_material.left_texture.size()>0):
+						tex_index = abs(fmod(texture_indices[pt_index], shape_material.left_texture.size()))
 						if shape_material.left_texture.size() > tex_index:
-							tex = shape_material.left_texture[tex_index]
-					if shape_material.left_texture_normal != null:
-						if shape_material.left_texture_normal.size() > tex_index:
-							tex_normal = shape_material.left_texture_normal[tex_index]
+							if shape_material.left_texture.size() > tex_index:
+								tex = shape_material.left_texture[tex_index]
+						if shape_material.left_texture_normal != null:
+							if shape_material.left_texture_normal.size() > tex_index:
+								tex_normal = shape_material.left_texture_normal[tex_index]
 			if direction == DIRECTION.RIGHT:
 				if shape_material.right_texture != null:
-					tex_index = abs(fmod(texture_indices[pt_index], shape_material.right_texture.size()))
-					if shape_material.right_texture.size() > tex_index:
+					if shape_material.right_texture.size()>0:
+						tex_index = abs(fmod(texture_indices[pt_index], shape_material.right_texture.size()))
 						if shape_material.right_texture.size() > tex_index:
-							tex = shape_material.right_texture[tex_index]
-					if shape_material.right_texture_normal != null:
-						if shape_material.right_texture_normal.size() > tex_index:
-							tex_normal = shape_material.right_texture_normal[tex_index]
+							if shape_material.right_texture.size() > tex_index:
+								tex = shape_material.right_texture[tex_index]
+						if shape_material.right_texture_normal != null:
+							if shape_material.right_texture_normal.size() > tex_index:
+								tex_normal = shape_material.right_texture_normal[tex_index]
 					
 		if tex != null:
 			tex_size = tex.get_size()
@@ -664,7 +676,7 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		if closed_shape == false:
 			if curve_index == 0 and tex != null:
 				pt -= (pt2 - pt).normalized() * tex.get_size() * custom_extends
-			if curve_index == curve_count - 2:
+			if curve_index == curve_count - 2 and tex != null:
 				pt2 -= (pt - pt2).normalized() * tex.get_size() * custom_extends
 			
 		var new_quad = QuadInfo.new()
