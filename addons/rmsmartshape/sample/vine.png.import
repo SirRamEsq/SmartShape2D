@@ -3,6 +3,9 @@
 importer="texture"
 type="StreamTexture"
 path="res://.import/vine.png-fe54d9d5e6260dcc0f966f4ef0383b27.stex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 

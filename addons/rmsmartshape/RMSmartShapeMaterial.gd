@@ -1,6 +1,5 @@
 tool
 extends Resource
-
 class_name RMSmartShapeMaterial
 
 export (Texture) var fill_texture = null setget _set_fill_texture

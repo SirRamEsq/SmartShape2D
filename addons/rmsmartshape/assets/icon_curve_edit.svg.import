@@ -3,6 +3,9 @@
 importer="texture"
 type="StreamTexture"
 path="res://.import/icon_curve_edit.svg-bd7d5e1af7c72f4525dff1d79ad0af94.stex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 

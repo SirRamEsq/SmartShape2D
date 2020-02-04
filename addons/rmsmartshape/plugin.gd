@@ -34,6 +34,10 @@ var tb_edit:ToolButton = null
 var tb_create:ToolButton = null
 var tb_delete:ToolButton = null
 var tb_pivot:ToolButton = null
+var tb_snap_x:SpinBox = null
+var tb_snap_y:SpinBox = null
+var tb_snap_offset_x:SpinBox = null
+var tb_snap_offset_y:SpinBox = null
 var tb_collision:ToolButton = null
 var lbl_index:Label = null
 
@@ -61,23 +65,50 @@ var previous_mode:int = MODE.MODE_EDIT
 var undo:UndoRedo = null
 var undo_version:int = 0
 
+# Snapping
+var _snapping = Vector2(0,0)
+var _snapping_offset = Vector2(0,0)
 
 func _ready():
 	_init_undo()
 	_build_toolbar()
-	
+
 func _init_undo():
 	#Support the undo-redo actions
 	undo = get_undo_redo()
-	pass
-	
-func _build_toolbar():	
+
+func _build_toolbar():
 	#Build up tool bar when editing RMSmartShape2D
 	hb = HBoxContainer.new()
 	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
-	
+
 	var sep = VSeparator.new()
 	hb.add_child(sep)
+
+	tb_snap_x = SpinBox.new()
+	tb_snap_x.editable = true
+	tb_snap_x.connect("value_changed", self, "_snap_changed")
+	tb_snap_x.hint_tooltip = "Snap X"
+	hb.add_child(tb_snap_x)
+
+	tb_snap_y = SpinBox.new()
+	tb_snap_y.editable = true
+	tb_snap_y.connect("value_changed", self, "_snap_changed")
+	tb_snap_y.hint_tooltip = "Snap Y"
+	hb.add_child(tb_snap_y)
+
+	tb_snap_offset_x = SpinBox.new()
+	tb_snap_offset_x.editable = true
+	tb_snap_offset_x.connect("value_changed", self, "_snap_offset_changed")
+	tb_snap_offset_x.hint_tooltip = "Snap Offset X"
+	hb.add_child(tb_snap_offset_x)
+
+	tb_snap_offset_y = SpinBox.new()
+	tb_snap_offset_y.editable = true
+	tb_snap_offset_y.connect("value_changed", self, "_snap_offset_changed")
+	tb_snap_offset_y.hint_tooltip = "Snap Offset Y"
+	hb.add_child(tb_snap_offset_y)
+
 	tb_edit = ToolButton.new()
 	tb_edit.icon = CURVE_EDIT
 	tb_edit.toggle_mode = true
@@ -85,7 +116,7 @@ func _build_toolbar():
 	tb_edit.connect("pressed", self, "_enter_mode", [MODE.MODE_EDIT])
 	tb_edit.hint_tooltip = "Control+LMB: Set Pivot Point\nLMB+Drag: Move Point\nLMB: Click on curve to split\nRMB: Delete Point"
 	hb.add_child(tb_edit)
-	
+
 	tb_create = ToolButton.new()
 	tb_create.icon = CURVE_CREATE
 	tb_create.toggle_mode = true
@@ -93,7 +124,7 @@ func _build_toolbar():
 	tb_create.connect("pressed", self, "_enter_mode", [MODE.MODE_CREATE])
 	tb_create.hint_tooltip = "LMB: Add Point, Split in Curve or Close Shape\nLMB+Drag: Move Point"
 	hb.add_child(tb_create)
-	
+
 	tb_delete = ToolButton.new()
 	tb_delete.icon = CURVE_DELETE
 	tb_delete.toggle_mode = true
@@ -101,14 +132,14 @@ func _build_toolbar():
 	tb_delete.connect("pressed", self, "_enter_mode", [MODE.MODE_DELETE])
 	tb_delete.hint_tooltip = "LMB: Delete Point\nLMB+Drag: Move Point"
 	hb.add_child(tb_delete)
-	
+
 	tb_pivot = ToolButton.new()
 	tb_pivot.icon = PIVOT_POINT
 	tb_pivot.toggle_mode = true
 	tb_pivot.pressed = false
 	tb_pivot.connect("pressed", self, "_enter_mode", [MODE.MODE_SET_PIVOT])
 	hb.add_child(tb_pivot)
-	
+
 	tb_collision = ToolButton.new()
 	tb_collision.icon = COLLISION
 	tb_collision.toggle_mode = false
@@ -116,19 +147,17 @@ func _build_toolbar():
 	tb_collision.hint_tooltip = "Add static body parent and collision polygon sibling\nUse this to auto generate collision."
 	tb_collision.connect("pressed", self, "_add_collision")
 	hb.add_child(tb_collision)
-	
+
 	lbl_index = Label.new()
 	lbl_index.text = "Idx: "
 	hb.hide()
 	hb.add_child(lbl_index)
-	pass
 
 func _enter_tree():
 	pass
 	
 func _exit_tree():
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
-	pass
 
 func _process(delta):
 	if Engine.editor_hint == true:
@@ -141,12 +170,11 @@ func _process(delta):
 				edit_this = null
 				update_overlays()
 				return
-			
+
 			if edit_this_transform != edit_this.get_global_transform():
 				edit_this.bake_mesh(true)  # Force the bake so that directional changes can be made
 				edit_this.update()
 				edit_this_transform = edit_this.get_global_transform()
-	pass
 
 func handles(object):
 	if object is Resource:
@@ -170,16 +198,14 @@ func edit(object):
 	edit_this = object as RMSmartShape2D
 	
 	update_overlays()
-	pass
 
 func _untoggle_all():
 	for tb in [tb_edit, tb_create, tb_delete, tb_pivot]:
 		tb.pressed=false
-	pass
-	
+
 func _enter_mode(mode:int):
 	_untoggle_all()
-	
+
 	if mode == MODE.MODE_EDIT:
 		tb_edit.pressed = true
 	if mode == MODE.MODE_CREATE:
@@ -189,53 +215,66 @@ func _enter_mode(mode:int):
 	if mode == MODE.MODE_SET_PIVOT:
 		previous_mode = current_mode
 		tb_pivot.pressed = true
-		
+
 	current_mode = mode
-	pass
-	
+
 func _set_pivot(point:Vector2):
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 
 	var np:Vector2 = point
 	var ct:Transform2D = edit_this.get_global_transform()
 	ct.origin = np
-	
+
 	for i in edit_this.get_point_count():
 		var pt = edit_this.get_global_transform().xform(edit_this.get_point_position(i))
 		edit_this.set_point_position(i, ct.affine_inverse().xform(pt))
-	
+
 	edit_this.position = edit_this.get_parent().get_global_transform().affine_inverse().xform( np)
 	current_mode = previous_mode
 	_enter_mode(current_mode)
-	update_overlays()	
-	pass
+	update_overlays()
 	
 func make_visible(visible):
 	pass
-	
+
+func _snap_position(pos:Vector2, snap:Vector2):
+	var x = pos.x
+	if snap.x != 0:
+		x = pos.x - fmod(pos.x, snap.x)
+	var y = pos.y
+	if snap.y != 0:
+		y = pos.y - fmod(pos.y, snap.y)
+	return Vector2(x,y)
+
 func forward_canvas_gui_input(event):
 	if edit_this == null:
 		return false
-		
-	if is_instance_valid(edit_this) == false:
+
+	if not is_instance_valid(edit_this):
 		return false
-		
+
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 	var t:Transform2D = et * edit_this.get_global_transform()
 	var nt:Transform2D = edit_this.get_global_transform() * et
-	
+
 	var grab_threshold = get_editor_interface().get_editor_settings().get("editors/poly_editor/point_grab_radius")
-	
+
 	if current_point_index == -1:
-		lbl_index.text = "Idx: "
+		lbl_index.text = "Idx: None"
 	else:
-		lbl_index.text = "Idx: " + str(current_point_index)
-		
+		lbl_index.text = "Idx:%d Tex:%s Flip:%s Width:%s" % \
+			[
+			current_point_index,
+			edit_this.texture_indices[current_point_index],
+			edit_this.texture_flip_indices[current_point_index],
+			edit_this.width_indices[current_point_index]
+			]
+
 	if event is InputEventKey:
 		var kb:InputEventKey = event
 		if kb.scancode == KEY_SPACE and current_point_index != -1:
 			if kb.pressed:
-				edit_this.set_point_texture_flip(!edit_this.get_point_texture_flip(current_point_index), current_point_index) 
+				edit_this.set_point_texture_flip(!edit_this.get_point_texture_flip(current_point_index), current_point_index)
 				edit_this.bake_mesh()
 				edit_this.update()
 			return true
@@ -315,14 +354,14 @@ func forward_canvas_gui_input(event):
 
 				undo.add_do_method(edit_this, "remove_point", edit_this.get_point_count() - 1)
 				undo.add_do_method(edit_this, "remove_point", 0)
-				undo.add_undo_method(edit_this, "add_point", pt, 0)
+				undo.add_undo_method(edit_this, "add_point_to_curve", pt, 0)
 				undo.add_undo_method(edit_this,"set_point_position", edit_this.get_point_count() - 1, pt)
 				
 				close_this = true
 			else:
 				var pt:Vector2 = edit_this.get_point_position(current_point_index)
 				undo.add_do_method(edit_this, "remove_point", current_point_index)
-				undo.add_undo_method(edit_this, "add_point", pt, current_point_index)
+				undo.add_undo_method(edit_this, "add_point_to_curve", pt, current_point_index)
 		
 			undo.add_do_method(self, "update_overlays")
 			undo.add_undo_method(self, "update_overlays")
@@ -342,7 +381,8 @@ func forward_canvas_gui_input(event):
 			if (current_mode == MODE.MODE_SET_PIVOT) or (current_mode == MODE.MODE_EDIT and mb.control == true):
 				var old_pos = et.xform( edit_this.get_parent().get_global_transform().xform(edit_this.position))
 				undo.create_action("Set Pivot")
-				undo.add_do_method(self, "_set_pivot", et.affine_inverse().xform(mb.position))
+				var snapped_position = _snap_position(et.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
+				undo.add_do_method(self, "_set_pivot", snapped_position)
 				undo.add_undo_method(self, "_set_pivot", et.affine_inverse().xform(old_pos))
 				undo.add_do_method(edit_this, "bake_mesh")
 				undo.add_undo_method(edit_this, "bake_mesh")
@@ -354,10 +394,11 @@ func forward_canvas_gui_input(event):
 			
 			if current_mode == MODE.MODE_CREATE and on_edge == false:
 				if (edit_this.closed_shape == true and edit_this.get_point_count() < 3) or edit_this.closed_shape == false:
-					var np = t.affine_inverse().xform(mb.position)
+					var snapped_position = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
+					var np = snapped_position
 					
 					undo.create_action("Add Point")
-					undo.add_do_method(edit_this, "add_point", np)
+					undo.add_do_method(edit_this, "add_point_to_curve", np)
 					undo.add_undo_method(edit_this,"remove_point", edit_this.get_point_count())
 					undo.add_do_method(edit_this, "bake_mesh")
 					undo.add_undo_method(edit_this, "bake_mesh")
@@ -391,7 +432,7 @@ func forward_canvas_gui_input(event):
 					insertion_point = edit_this.get_point_count() - 2
 					
 				undo.create_action("Split Curve")
-				undo.add_do_method(edit_this, "add_point", xform.affine_inverse().xform(gpoint), insertion_point + 1)
+				undo.add_do_method(edit_this, "add_point_to_curve", xform.affine_inverse().xform(gpoint), insertion_point + 1)
 				undo.add_undo_method(edit_this, "remove_point", insertion_point + 1)
 				undo.add_do_method(edit_this, "bake_mesh")
 				undo.add_undo_method(edit_this, "bake_mesh")
@@ -413,12 +454,13 @@ func forward_canvas_gui_input(event):
 		var mm:InputEventMouseMotion = event
 		
 		if control_action == ACTION.ACTION_MOVING_CONTROL_POINT:
+			var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
 			# Appears we are moving a point
 			if edit_this.closed_shape == true and (current_point_index == edit_this.get_point_count() - 1 or current_point_index == 0):
-				edit_this.set_point_position(edit_this.get_point_count() - 1, t.affine_inverse().xform(mm.position))
-				edit_this.set_point_position(0, t.affine_inverse().xform(mm.position))
+				edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
+				edit_this.set_point_position(0, snapped_position)
 			else:
-				edit_this.set_point_position(current_point_index, t.affine_inverse().xform(mm.position))
+				edit_this.set_point_position(current_point_index, snapped_position)
 			edit_this.bake_mesh()
 			update_overlays()
 			return true
@@ -460,54 +502,50 @@ func forward_canvas_gui_input(event):
 	
 func _close_shape():
 	if edit_this.closed_shape and edit_this.get_point_position(0) != edit_this.get_point_position(edit_this.get_point_count() - 1):
-		edit_this.add_point(edit_this.get_point_position(0))
+		edit_this.add_point_to_curve(edit_this.get_point_position(0))
 		edit_this.bake_mesh()
 		update_overlays()
 	if edit_this.closed_shape == false and edit_this.get_point_position(0) == edit_this.get_point_position(edit_this.get_point_count() - 1):
 		edit_this.remove_point(edit_this.get_point_count()-1)
 		edit_this.bake_mesh()
 		update_overlays()
-	pass
-	
+
 func _curve_changed():
 	control_action = ACTION.ACTION_NONE
 	current_point_index = -1
 	update_overlays()
-	pass
-	
+
 func _add_collision():
 	call_deferred("_add_deferred_collision")
-	
+
 func _add_deferred_collision():
 	if (edit_this.get_parent() is StaticBody2D) == false:
 		var staticBody:StaticBody2D = StaticBody2D.new()
 		var t:Transform2D = edit_this.transform
 		staticBody.position = edit_this.position
 		edit_this.position = Vector2.ZERO
-		
+
 		edit_this.get_parent().add_child(staticBody)
 		staticBody.owner = get_editor_interface().get_edited_scene_root()
-		
+
 		edit_this.get_parent().remove_child(edit_this)
 		staticBody.add_child(edit_this)
 		edit_this.owner = get_editor_interface().get_edited_scene_root()
-		
+
 		var colPolygon:CollisionPolygon2D = CollisionPolygon2D.new()
 		staticBody.add_child(colPolygon)
 		colPolygon.owner = get_editor_interface().get_edited_scene_root()
 		colPolygon.modulate.a = 0.3 #TODO: Make this a option at some point
 		colPolygon.visible = false
-		
+
 		edit_this.collision_polygon_node = edit_this.get_path_to(colPolygon)
 
 		edit_this.bake_collision()
-	pass
-		
+
 func _handle_auto_collision_press():
 	pass
 
 func forward_canvas_draw_over_viewport(overlay):
-	
 	# Something might force a draw which we had no control over,
 	# in this case do some updating to be sure
 	if undo_version != undo.get_version():
@@ -543,7 +581,8 @@ func forward_canvas_draw_over_viewport(overlay):
 			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index) ), 3, Color.black)
 		
 		edit_this.update()
-	pass
 
-
-	
+func _snap_changed(ignore_value):
+	_snapping = Vector2(tb_snap_x.value, tb_snap_y.value)
+func _snap_offset_changed(ignore_value):
+	_snapping_offset = Vector2(tb_snap_offset_x.value, tb_snap_offset_y.value)

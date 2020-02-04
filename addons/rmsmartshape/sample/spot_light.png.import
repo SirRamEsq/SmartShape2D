@@ -3,6 +3,9 @@
 importer="texture"
 type="StreamTexture"
 path="res://.import/spot_light.png-8150dd682397bdbda2e4e2530d61aac7.stex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 

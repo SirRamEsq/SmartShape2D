@@ -2,6 +2,16 @@
 ---
 ![sample image](addons/rmsmartshape/sample/sample_screen.PNG)
 
+## Changes in 1.1
+- Refactoring
+- Fixed Errors Occuring when Texture Arrays are size '0' but not null
+- Fixed sync between texture, flip, and width indicies
+    - Would sometimes share a single array between the 3 vars
+    - Are all unique now
+
+- Snapping
+- More informative toolbar
+
 ## Changes in 1.0
 - fixed many debug errors reported related to indexing beyond array sizes
 - fixed control point wrapping of RMSmartShapeAnchor2D nodes anchored to RMSmartShape2D nodes.
@@ -34,8 +44,7 @@ You might have a desire to anchor nodes to various sections of the RMSmartShape2
 This is done by use of the RMSmartShapeAnchor2D node.
 
 ## Current State of the Tool
-The tool has been tested successfully in version 3.2 Godot with collisions on/off, with and without RMSMartShapeAnchor2D node attached, and where the RMSmartShape2D node is both an open and closed polygon.  
-
+The tool already appears to be quite useful, and is mostly complete.  However, until it is being utilized by others it is difficult to say.  Therefore, I would consider this tool to be beta at the moment.
 
 ## Hidden Features
 Currently the editor support the ability to modify the texture index on a control point handle by simply hovering over the control point and moving your mouse wheel up or down.  You can also change the direction of the texture being displayed by hovering over the control point and clicking the space bar.  This will probably change though as it doesn't consider the differences in mouse wheel speed.  Suggestions are welcome.
