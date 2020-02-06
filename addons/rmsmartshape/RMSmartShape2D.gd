@@ -225,6 +225,9 @@ func get_point_width(at_position:int)->float:
 	if _is_array_index_in_range(width_indices, at_position):
 		return width_indices[at_position]
 	return 0.0
+	
+func is_closed_shape()->bool:
+	return closed_shape
 
 func set_point_texture_index(index:int, at_position:int):
 	if _is_array_index_in_range(texture_indices, at_position):
