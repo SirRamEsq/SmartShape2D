@@ -9,7 +9,6 @@
 [ext_resource path="res://addons/rmsmartshape/sample/grass2.png" type="Texture" id=7]
 
 [resource]
-
 script = ExtResource( 5 )
 fill_texture = ExtResource( 3 )
 fill_texture_normal = ExtResource( 4 )
@@ -31,4 +30,3 @@ left_offset = 0.496
 collision_width = 1.0
 collision_offset = 0.0
 collision_extends = 0.0
-

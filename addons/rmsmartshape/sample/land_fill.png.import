@@ -3,6 +3,9 @@
 importer="texture"
 type="StreamTexture"
 path="res://.import/land_fill.png-5981e359b21c69066fb4c6d5d155301e.stex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 

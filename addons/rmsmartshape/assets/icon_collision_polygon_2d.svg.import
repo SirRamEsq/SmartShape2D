@@ -3,6 +3,9 @@
 importer="texture"
 type="StreamTexture"
 path="res://.import/icon_collision_polygon_2d.svg-d52c533e615c0baed724848cec175fe6.stex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
