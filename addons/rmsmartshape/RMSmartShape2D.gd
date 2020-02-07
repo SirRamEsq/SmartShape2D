@@ -288,7 +288,6 @@ func get_closest_offset(to_point:Vector2):
 		return curve.get_closest_offset(to_point)
 	return null
 
-
 func _set_editor_debug(value:bool):
 	editor_debug = value
 	set_as_dirty()
