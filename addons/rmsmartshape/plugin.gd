@@ -160,7 +160,7 @@ func _exit_tree():
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
 
 func _process(delta):
-	if Engine.editor_hint == true:
+	if Engine.editor_hint:
 		if edit_this != null:
 			if is_instance_valid(edit_this) == false:
 				edit_this = null
@@ -246,6 +246,239 @@ func _snap_position(pos:Vector2, snap:Vector2):
 		y = pos.y - fmod(pos.y, snap.y)
 	return Vector2(x,y)
 
+func _get_toolbar_status_message(idx:int)->String:
+	if not is_point_index_valid(idx):
+		return "Idx: None"
+	return "Idx:%d T:%s F:%s W:%s" % \
+		[
+		idx,
+		edit_this.texture_indices[idx],
+		edit_this.texture_flip_indices[idx],
+		edit_this.width_indices[idx]
+		]
+
+func is_current_point_index_valid()->bool:
+	return is_point_index_valid(current_point_index)
+
+func is_edit_this_valid()->bool:
+	if edit_this == null:
+		return false
+	if not is_instance_valid(edit_this):
+		return false
+	return true
+
+func is_point_index_valid(idx:int)->bool:
+	if not is_edit_this_valid():
+		return false
+	return (idx >= 0 and idx < edit_this.texture_indices.size())
+
+func _input_handle_keyboard_event(event:InputEventKey)->bool:
+	var kb:InputEventKey = event
+	if kb.scancode == KEY_SPACE and is_current_point_index_valid():
+		if kb.pressed:
+			edit_this.set_point_texture_flip(!edit_this.get_point_texture_flip(current_point_index), current_point_index)
+			edit_this.bake_mesh()
+			edit_this.update()
+		return true
+	return false
+
+func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2D, grab_threshold:float)->bool:
+	var t:Transform2D = et * edit_this.get_global_transform()
+	var mb:InputEventMouseButton = event
+
+###############################################################################################
+	# Mouse Button released While Moving Point
+	if not mb.pressed and mb.button_index == BUTTON_LEFT and control_action == ACTION.ACTION_MOVING_CONTROL_POINT:
+		control_action = ACTION.ACTION_NONE
+		if from_position.distance_to(edit_this.get_point_position(current_point_index)) > grab_threshold:
+			_action_move_control_point()
+			current_point_index = -1
+			return true
+		else:
+			current_point_index = -1
+			return false
+
+###############################################################################################
+	# Mouse Wheel up on valid point
+	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_current_point_index_valid():
+		var index:int = edit_this.get_point_texture_index(current_point_index) + 1
+		var flip:bool = edit_this.get_point_texture_flip(current_point_index)
+		edit_this.set_point_texture_index(index, current_point_index)
+		edit_this.set_point_texture_flip(flip, current_point_index)
+
+		edit_this.bake_mesh()
+		update_overlays()
+		return true
+
+###############################################################################################
+	# Mouse Wheel down on valid point
+	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_current_point_index_valid():
+		var index = edit_this.get_point_texture_index(current_point_index) - 1
+		edit_this.set_point_texture_index(index, current_point_index)
+
+		if Input.is_key_pressed(KEY_ALT):
+			edit_this.set_point_texture_flip(true, current_point_index)
+		else:
+			edit_this.set_point_texture_flip(false, current_point_index)
+
+		edit_this.bake_mesh()
+		update_overlays()
+		return true
+
+###############################################################################################
+	# Mouse left click on valid point
+	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_current_point_index_valid():
+		# If you create a point at the same location as point idx "0"
+		if current_mode == MODE.MODE_CREATE and not edit_this.closed_shape and current_point_index == 0:
+			_action_close_shape()
+			control_action = ACTION.ACTION_MOVING_CONTROL_POINT
+			from_position = edit_this.get_point_position(0)
+			return true
+		else:
+			control_action = ACTION.ACTION_MOVING_CONTROL_POINT
+			from_position = edit_this.get_point_position(current_point_index)
+			return true
+
+###############################################################################################
+	# Mouse Right click in Edit Mode -OR- LEFT Click on Delete Mode
+	elif mb.pressed and ((mb.button_index == BUTTON_RIGHT and current_mode == MODE.MODE_EDIT) or (current_mode == MODE.MODE_DELETE and mb.button_index == BUTTON_LEFT)) and is_current_point_index_valid():
+		var fix_close_shape = false
+		undo.create_action("Delete Point")
+		if edit_this.closed_shape and (current_point_index == edit_this.get_point_count() - 1 or current_point_index == 0):
+			var pt = edit_this.get_point_position(0)
+			undo.add_do_method(edit_this, "remove_point", edit_this.get_point_count() - 1)
+			undo.add_do_method(edit_this, "remove_point", 0)
+			undo.add_undo_method(edit_this, "add_point_to_curve", pt, 0)
+			undo.add_undo_method(edit_this,"set_point_position", edit_this.get_point_count() - 1, pt)
+			fix_close_shape = true
+
+		else:
+			var pt:Vector2 = edit_this.get_point_position(current_point_index)
+			undo.add_do_method(edit_this, "remove_point", current_point_index)
+			undo.add_undo_method(edit_this, "add_point_to_curve", pt, current_point_index)
+
+		undo.add_do_method(self, "update_overlays")
+		undo.add_undo_method(self, "update_overlays")
+		undo.add_do_method(edit_this, "bake_mesh")
+		undo.add_undo_method(edit_this, "bake_mesh")
+		undo.commit_action()
+		undo_version = undo.get_version()
+
+		current_point_index = -1
+		if fix_close_shape:
+			edit_this.fix_close_shape()
+
+		return true
+
+###############################################################################################
+	# Mouse Left click
+	elif mb.pressed and mb.button_index == BUTTON_LEFT:
+		#First, check if we are changing our pivot point
+		if (current_mode == MODE.MODE_SET_PIVOT) or (current_mode == MODE.MODE_EDIT and mb.control):
+			_action_set_pivot(mb.position, et)
+
+		elif current_mode == MODE.MODE_CREATE and not on_edge:
+			if (edit_this.closed_shape and edit_this.get_point_count() < 3) or edit_this.closed_shape == false:
+				var snapped_position = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
+				var np = snapped_position
+
+				undo.create_action("Add Point")
+				undo.add_do_method(edit_this, "add_point_to_curve", np)
+				undo.add_undo_method(edit_this,"remove_point", edit_this.get_point_count())
+				undo.add_do_method(edit_this, "bake_mesh")
+				undo.add_undo_method(edit_this, "bake_mesh")
+				undo.add_do_method(self, "update_overlays")
+				undo.add_undo_method(self, "update_overlays")
+				undo.commit_action()
+				undo_version = undo.get_version()
+
+				current_point_index = edit_this.get_point_count() - 1
+				from_position = edit_this.get_point_position(current_point_index)
+				control_action = ACTION.ACTION_MOVING_CONTROL_POINT
+
+		elif (current_mode == MODE.MODE_CREATE or current_mode == MODE.MODE_EDIT) and on_edge:
+			var xform:Transform2D = t
+			var gpoint:Vector2 = mb.position
+			var insertion_point:int = -1
+			var mb_length = edit_this.get_closest_offset(xform.affine_inverse().xform(gpoint))
+			var length = edit_this.get_point_count()
+
+			for i in length - 1:
+				var compareLength = edit_this.get_closest_offset(edit_this.get_point_position(i + 1))
+				if mb_length >= edit_this.get_closest_offset(edit_this.get_point_position(i)) and mb_length <= compareLength:
+					insertion_point = i
+
+			if insertion_point == -1:
+				insertion_point = edit_this.get_point_count() - 2
+
+			undo.create_action("Split Curve")
+			undo.add_do_method(edit_this, "add_point_to_curve", xform.affine_inverse().xform(gpoint), insertion_point + 1)
+			undo.add_undo_method(edit_this, "remove_point", insertion_point + 1)
+			undo.add_do_method(edit_this, "bake_mesh")
+			undo.add_undo_method(edit_this, "bake_mesh")
+			undo.add_do_method(self, "update_overlays")
+			undo.add_undo_method(self, "update_overlays")
+			undo.commit_action()
+			undo_version = undo.get_version()
+
+			on_edge = false
+
+			current_point_index = insertion_point + 1
+			from_position = edit_this.get_point_position(current_point_index)
+			control_action = ACTION.ACTION_MOVING_CONTROL_POINT
+		return true
+	return false
+
+func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2D, grab_threshold:float)->bool:
+	var t:Transform2D = et * edit_this.get_global_transform()
+	var mm:InputEventMouseMotion = event
+
+	if control_action == ACTION.ACTION_MOVING_CONTROL_POINT:
+		var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
+		# Appears we are moving a point
+		if edit_this.closed_shape and (current_point_index == edit_this.get_point_count() - 1 or current_point_index == 0):
+			edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
+			edit_this.set_point_position(0, snapped_position)
+		else:
+			edit_this.set_point_position(current_point_index, snapped_position)
+		edit_this.bake_mesh()
+		update_overlays()
+		return true
+
+
+	# Handle Edge Follow
+	var old_edge:bool = on_edge
+
+	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
+	var gpoint:Vector2 = mm.position
+
+	if edit_this.get_point_count() < 2:
+		return true
+
+	# Find edge
+	edge_point = xform.xform(edit_this.get_closest_point(xform.affine_inverse().xform(mm.position)))
+	on_edge = false
+	if edge_point.distance_to(gpoint) <= grab_threshold:
+		on_edge = true
+
+	# However, if near a control point or one of its handles then we are not on the edge
+	current_point_index = -1
+	for i in edit_this.get_point_count():
+		var pp:Vector2 = edit_this.get_point_position(i)
+		var p:Vector2 = xform.xform(pp)
+		if p.distance_to(gpoint) <= grab_threshold:
+			on_edge = false
+			current_point_index = i
+			break
+
+	if current_mode != MODE.MODE_CREATE and current_mode != MODE.MODE_EDIT:
+		on_edge = false #Ensure we are not on the edge if not in the proper mode
+
+	if on_edge or old_edge != on_edge:
+		update_overlays()
+
+	return false
+
 func forward_canvas_gui_input(event):
 	if edit_this == null:
 		return false
@@ -254,261 +487,20 @@ func forward_canvas_gui_input(event):
 		return false
 
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
-	var t:Transform2D = et * edit_this.get_global_transform()
-	var nt:Transform2D = edit_this.get_global_transform() * et
-
 	var grab_threshold = get_editor_interface().get_editor_settings().get("editors/poly_editor/point_grab_radius")
-
-	if current_point_index == -1:
-		lbl_index.text = "Idx: None"
-	else:
-		lbl_index.text = "Idx:%d T:%s F:%s W:%s" % \
-			[
-			current_point_index,
-			edit_this.texture_indices[current_point_index],
-			edit_this.texture_flip_indices[current_point_index],
-			edit_this.width_indices[current_point_index]
-			]
+	lbl_index.text = _get_toolbar_status_message(current_point_index)
 
 	if event is InputEventKey:
-		var kb:InputEventKey = event
-		if kb.scancode == KEY_SPACE and current_point_index != -1:
-			if kb.pressed:
-				edit_this.set_point_texture_flip(!edit_this.get_point_texture_flip(current_point_index), current_point_index)
-				edit_this.bake_mesh()
-				edit_this.update()
-			return true
+		return _input_handle_keyboard_event(event)
 
-	if event is InputEventMouseButton:
-		var mb:InputEventMouseButton = event
-		if mb.pressed == false and mb.button_index == BUTTON_LEFT and control_action == ACTION.ACTION_MOVING_CONTROL_POINT:
-			control_action = ACTION.ACTION_NONE
-			
-			if from_position.distance_to(edit_this.get_point_position(current_point_index)) > grab_threshold:
-				undo.create_action("Move Control Point")
-				
-				undo.add_do_method(edit_this, "bake_mesh")
-				undo.add_do_method(self, "update_overlays")
-				
-				if (current_point_index == 0 or current_point_index == edit_this.get_point_count() - 1) and edit_this.closed_shape:
-					undo.add_undo_method(edit_this, "set_point_position", 0, from_position)
-					undo.add_undo_method(edit_this, "set_point_position", edit_this.get_point_count() - 1, from_position)
-				else:
-					undo.add_undo_method(edit_this, "set_point_position", current_point_index, from_position)
-				
-				undo.add_undo_method(edit_this, "bake_mesh")
-				undo.add_undo_method(self, "update_overlays")
-				undo.commit_action()
-				undo_version = undo.get_version()
-				current_point_index = -1
-				return true
-				
-			current_point_index = -1
-		
-		if mb.pressed == true and mb.button_index == BUTTON_WHEEL_UP and current_point_index != -1:
-			var index:int = edit_this.get_point_texture_index(current_point_index) + 1
-			var flip:bool = edit_this.get_point_texture_flip(current_point_index)
-			edit_this.set_point_texture_index(index, current_point_index)
-			edit_this.set_point_texture_flip(flip, current_point_index)
-				
-			edit_this.bake_mesh()
-			update_overlays()
-			return true
-			
-		if mb.pressed == true and mb.button_index == BUTTON_WHEEL_DOWN and current_point_index != -1:
-			var index = edit_this.get_point_texture_index(current_point_index) - 1
-			edit_this.set_point_texture_index(index, current_point_index)
-			
-			if Input.is_key_pressed(KEY_ALT):
-				edit_this.set_point_texture_flip(true, current_point_index)
-			else:
-				edit_this.set_point_texture_flip(false, current_point_index)
-			
-			edit_this.bake_mesh()
-			update_overlays()
-			return true
+	elif event is InputEventMouseButton:
+		return _input_handle_mouse_button_event(event, et, grab_threshold)
 
-			
-		if mb.pressed == true and mb.button_index == BUTTON_LEFT and current_point_index != -1:
-			if current_mode == MODE.MODE_CREATE and edit_this.closed_shape == false and current_point_index == 0:
-				undo.create_action("Close Shape")
-				undo.add_do_property(edit_this, "closed_shape", true)
-				undo.add_do_method(edit_this, "property_list_changed_notify")
-				undo.add_undo_property(edit_this, "closed_shape", false)
-				undo.add_undo_method(edit_this, "property_list_changed_notify")
-				undo.commit_action()
-				undo_version = undo.get_version()
-				
-				control_action = ACTION.ACTION_MOVING_CONTROL_POINT
-				from_position = edit_this.get_point_position(0)
-				return true
-			else:
-				control_action = ACTION.ACTION_MOVING_CONTROL_POINT
-				from_position = edit_this.get_point_position(current_point_index)
-				return true
-		elif mb.pressed == true and ((mb.button_index == BUTTON_RIGHT and current_mode == MODE.MODE_EDIT) or (current_mode == MODE.MODE_DELETE and mb.button_index == BUTTON_LEFT)) and current_point_index != -1:
-			var close_this:bool = false
-			undo.create_action("Delete Point")
-			if edit_this.closed_shape == true and (current_point_index == edit_this.get_point_count() - 1 or current_point_index == 0):
-				var pt = edit_this.get_point_position(0)
-
-				undo.add_do_method(edit_this, "remove_point", edit_this.get_point_count() - 1)
-				undo.add_do_method(edit_this, "remove_point", 0)
-				undo.add_undo_method(edit_this, "add_point_to_curve", pt, 0)
-				undo.add_undo_method(edit_this,"set_point_position", edit_this.get_point_count() - 1, pt)
-				
-				close_this = true
-			else:
-				var pt:Vector2 = edit_this.get_point_position(current_point_index)
-				undo.add_do_method(edit_this, "remove_point", current_point_index)
-				undo.add_undo_method(edit_this, "add_point_to_curve", pt, current_point_index)
-		
-			undo.add_do_method(self, "update_overlays")
-			undo.add_undo_method(self, "update_overlays")
-			undo.add_do_method(edit_this, "bake_mesh")
-			undo.add_undo_method(edit_this, "bake_mesh")
-			undo.commit_action()
-			undo_version = undo.get_version()
-			
-			current_point_index = -1
-			
-			if close_this:
-				_close_shape()
-			
-			return true
-		elif mb.pressed == true and mb.button_index == BUTTON_LEFT:
-			#First, check if we are changing our pivot point
-			if (current_mode == MODE.MODE_SET_PIVOT) or (current_mode == MODE.MODE_EDIT and mb.control == true):
-				var old_pos = et.xform( edit_this.get_parent().get_global_transform().xform(edit_this.position))
-				undo.create_action("Set Pivot")
-				var snapped_position = _snap_position(et.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
-				undo.add_do_method(self, "_set_pivot", snapped_position)
-				undo.add_undo_method(self, "_set_pivot", et.affine_inverse().xform(old_pos))
-				undo.add_do_method(edit_this, "bake_mesh")
-				undo.add_undo_method(edit_this, "bake_mesh")
-				undo.add_do_method(self, "update_overlays")
-				undo.add_undo_method(self, "update_overlays")
-				undo.commit_action()
-				undo_version = undo.get_version()
-				return true
-			
-			if current_mode == MODE.MODE_CREATE and on_edge == false:
-				if (edit_this.closed_shape == true and edit_this.get_point_count() < 3) or edit_this.closed_shape == false:
-					var snapped_position = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
-					var np = snapped_position
-					
-					undo.create_action("Add Point")
-					undo.add_do_method(edit_this, "add_point_to_curve", np)
-					undo.add_undo_method(edit_this,"remove_point", edit_this.get_point_count())
-					undo.add_do_method(edit_this, "bake_mesh")
-					undo.add_undo_method(edit_this, "bake_mesh")
-					undo.add_do_method(self, "update_overlays")
-					undo.add_undo_method(self, "update_overlays")
-					undo.commit_action()
-					undo_version = undo.get_version()
-					
-					if edit_this.closed_shape and edit_this.get_point_count() == 3:
-						_close_shape()
-						
-					current_point_index = edit_this.get_point_count() - 1
-					from_position = edit_this.get_point_position(current_point_index)
-					control_action = ACTION.ACTION_MOVING_CONTROL_POINT
-						
-					return true
-				
-			if (current_mode == MODE.MODE_CREATE or current_mode == MODE.MODE_EDIT) and on_edge == true:
-				var xform:Transform2D = t
-				var gpoint:Vector2 = mb.position
-				var insertion_point:int = -1
-				var mb_length = edit_this.get_closest_offset(xform.affine_inverse().xform(gpoint))
-				var length = edit_this.get_point_count()
-				
-				for i in length - 1:
-					var compareLength = edit_this.get_closest_offset(edit_this.get_point_position(i + 1))
-					if mb_length >= edit_this.get_closest_offset(edit_this.get_point_position(i)) and mb_length <= compareLength:
-						insertion_point = i
-						
-				if insertion_point == -1:
-					insertion_point = edit_this.get_point_count() - 2
-					
-				undo.create_action("Split Curve")
-				undo.add_do_method(edit_this, "add_point_to_curve", xform.affine_inverse().xform(gpoint), insertion_point + 1)
-				undo.add_undo_method(edit_this, "remove_point", insertion_point + 1)
-				undo.add_do_method(edit_this, "bake_mesh")
-				undo.add_undo_method(edit_this, "bake_mesh")
-				undo.add_do_method(self, "update_overlays")
-				undo.add_undo_method(self, "update_overlays")
-				undo.commit_action()
-				undo_version = undo.get_version()
-				
-				on_edge = false
-				
-				current_point_index = insertion_point + 1
-				from_position = edit_this.get_point_position(current_point_index)
-				control_action = ACTION.ACTION_MOVING_CONTROL_POINT
-				
-				return true
-				
-				
-	if event is InputEventMouseMotion:
-		var mm:InputEventMouseMotion = event
-		
-		if control_action == ACTION.ACTION_MOVING_CONTROL_POINT:
-			var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
-			# Appears we are moving a point
-			if edit_this.closed_shape == true and (current_point_index == edit_this.get_point_count() - 1 or current_point_index == 0):
-				edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
-				edit_this.set_point_position(0, snapped_position)
-			else:
-				edit_this.set_point_position(current_point_index, snapped_position)
-			edit_this.bake_mesh()
-			update_overlays()
-			return true
-
-		
-		# Handle Edge Follow
-		var old_edge:bool = on_edge
-		
-		var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-		var gpoint:Vector2 = mm.position
-		
-		if edit_this.get_point_count() < 2:
-			return true
-			
-		# Find edge
-		edge_point = xform.xform(edit_this.get_closest_point(xform.affine_inverse().xform(mm.position)))
-		on_edge = false
-		if edge_point.distance_to(gpoint) <= grab_threshold:
-			on_edge = true
-		
-		# However, if near a control point or one of its handles then we are not on the edge
-		current_point_index = -1
-		for i in edit_this.get_point_count():
-			var pp:Vector2 = edit_this.get_point_position(i)
-			var p:Vector2 = xform.xform(pp)
-			if p.distance_to(gpoint) <= grab_threshold:
-				on_edge = false
-				current_point_index = i
-				break
-				
-		if current_mode != MODE.MODE_CREATE and current_mode != MODE.MODE_EDIT:
-			on_edge = false #Ensure we are not on the edge if not in the proper mode
-			
-		if on_edge == true or old_edge != on_edge:
-			update_overlays()
-			return true
+	elif event is InputEventMouseMotion:
+		return _input_handle_mouse_motion_event(event, et, grab_threshold)
 
 	return false
-	
-func _close_shape():
-	if edit_this.closed_shape and edit_this.get_point_position(0) != edit_this.get_point_position(edit_this.get_point_count() - 1):
-		edit_this.add_point_to_curve(edit_this.get_point_position(0))
-		edit_this.bake_mesh()
-		update_overlays()
-	if edit_this.closed_shape == false and edit_this.get_point_position(0) == edit_this.get_point_position(edit_this.get_point_count() - 1):
-		edit_this.remove_point(edit_this.get_point_count()-1)
-		edit_this.bake_mesh()
-		update_overlays()
+
 
 func _curve_changed():
 	control_action = ACTION.ACTION_NONE
@@ -572,11 +564,11 @@ func forward_canvas_draw_over_viewport(overlay):
 			var hp = t.xform(edit_this.get_point_position(i))
 			overlay.draw_texture(HANDLE, hp - HANDLE.get_size() * 0.5)
 		
-		if on_edge==true:
+		if on_edge:
 			overlay.draw_texture(ADD_HANDLE, edge_point - ADD_HANDLE.get_size() * 0.5)
 			
 		# Draw Highlighted Handle
-		if current_point_index != -1:
+		if is_current_point_index_valid():
 			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index) ), 5, Color.white )
 			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index) ), 3, Color.black)
 		
@@ -586,3 +578,45 @@ func _snap_changed(ignore_value):
 	_snapping = Vector2(tb_snap_x.value, tb_snap_y.value)
 func _snap_offset_changed(ignore_value):
 	_snapping_offset = Vector2(tb_snap_offset_x.value, tb_snap_offset_y.value)
+
+###########
+# ACTIONS #
+###########
+func _action_set_pivot(pos:Vector2, et:Transform2D):
+	var old_pos = et.xform( edit_this.get_parent().get_global_transform().xform(edit_this.position))
+	undo.create_action("Set Pivot")
+	var snapped_position = _snap_position(et.affine_inverse().xform(pos), _snapping) + _snapping_offset
+	undo.add_do_method(self, "_set_pivot", snapped_position)
+	undo.add_undo_method(self, "_set_pivot", et.affine_inverse().xform(old_pos))
+	undo.add_do_method(edit_this, "bake_mesh")
+	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_do_method(self, "update_overlays")
+	undo.add_undo_method(self, "update_overlays")
+	undo.commit_action()
+	undo_version = undo.get_version()
+
+func _action_move_control_point():
+	undo.create_action("Move Control Point")
+
+	undo.add_do_method(edit_this, "bake_mesh")
+	undo.add_do_method(self, "update_overlays")
+
+	if (current_point_index == 0 or current_point_index == edit_this.get_point_count() - 1) and edit_this.closed_shape:
+		undo.add_undo_method(edit_this, "set_point_position", 0, from_position)
+		undo.add_undo_method(edit_this, "set_point_position", edit_this.get_point_count() - 1, from_position)
+	else:
+		undo.add_undo_method(edit_this, "set_point_position", current_point_index, from_position)
+
+	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_undo_method(self, "update_overlays")
+	undo.commit_action()
+	undo_version = undo.get_version()
+
+func _action_close_shape():
+	undo.create_action("Close Shape")
+	undo.add_do_property(edit_this, "closed_shape", true)
+	undo.add_do_method(edit_this, "property_list_changed_notify")
+	undo.add_undo_property(edit_this, "closed_shape", false)
+	undo.add_undo_method(edit_this, "property_list_changed_notify")
+	undo.commit_action()
+	undo_version = undo.get_version()

@@ -11,6 +11,8 @@ enum DIRECTION {
 	FILL
 }
 
+signal on_dirty_update()
+
 # Used to organize all requested meshes to be rendered by their texture
 class MeshInfo:
 	var texture:Texture=null
@@ -52,7 +54,7 @@ export (Resource) var shape_material = preload("RMSmartShapeMaterial.gd").new() 
 
 # This will set true if it is time to rebake mesh, should prevent unnecessary
 # mesh creation unless a change to a property deems it necessary
-var dirty:bool = true 	# might be able to remove and replace by using change in point_change_index
+var _dirty:bool = true 	# might be able to remove and replace by using change in point_change_index
 
 # For rendering fill and edges
 var meshes:Array = Array()
@@ -84,10 +86,7 @@ func _ready():
 func _process(delta):
 	if not is_inside_tree():
 		return
-	if dirty:
-		if auto_update_collider:
-			bake_collision()
-		bake_mesh()
+	_on_dirty_update()
 
 func _enter_tree():
 	pass
@@ -97,14 +96,30 @@ func _exit_tree():
 		if ClassDB.class_has_signal("RMSmartShapeMaterial","changed"):
 			shape_material.disconnect("changed", self, "_handle_material_change")
 
+func _on_dirty_update():
+	if _dirty:
+		fix_close_shape()
+		if auto_update_collider:
+			bake_collision()
+		bake_mesh()
+		update()
+		_dirty = false
+		emit_signal("on_dirty_update")
+
+"""
+Will make sure a shape is closed or open after removing / adding / changing a point
+"""
+func fix_close_shape():
+	if closed_shape and get_point_position(0) != get_point_position(get_point_count() - 1):
+		add_point_to_curve(get_point_position(0))
+		bake_mesh()
+	elif not closed_shape and get_point_position(0) == get_point_position(get_point_count() - 1):
+		remove_point(get_point_count()-1)
+		bake_mesh()
+
 func _draw():
 	if not is_inside_tree():
 		return
-
-	if dirty and auto_update_collider:
-		bake_collision()
-	bake_mesh()
-	dirty = false
 
 	# Draw fill
 	for mesh in meshes:
@@ -148,15 +163,15 @@ func _draw():
 #####################
 func _set_texture_indices(value:Array):
 	texture_indices = value.duplicate()
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_texture_flip_indices(value:Array):
 	texture_flip_indices = value.duplicate()
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_width_indices(value:Array):
 	width_indices = value.duplicate()
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_material(value:RMSmartShapeMaterial):
 	if shape_material != null and shape_material.is_connected("changed", self, "_handle_material_change"):
@@ -165,7 +180,7 @@ func _set_material(value:RMSmartShapeMaterial):
 	shape_material = value
 	if (shape_material != null):
 		shape_material.connect("changed", self, "_handle_material_change")
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_close_shape(value):
 	if curve.get_point_count() < 3:
@@ -183,7 +198,7 @@ func _set_close_shape(value):
 		if first_point == final_point:
 			remove_point(curve.get_point_count()-1)
 
-	_set_as_dirty()
+	set_as_dirty()
 
 	if Engine.editor_hint:
 		property_list_changed_notify()
@@ -200,7 +215,7 @@ func _set_curve(value:Curve2D):
 	texture_flip_indices.resize(curve.get_point_count())
 	width_indices.resize(curve.get_point_count())
 
-	_set_as_dirty()
+	set_as_dirty()
 	emit_signal("points_modified")
 
 	if Engine.editor_hint:
@@ -215,7 +230,7 @@ func set_point_width(width:float, at_position:int):
 		width_indices[at_position] = width
 
 	point_change_index += 1
-	_set_as_dirty()
+	set_as_dirty()
 	emit_signal("points_modified")
 
 	if Engine.editor_hint:
@@ -234,7 +249,7 @@ func set_point_texture_index(index:int, at_position:int):
 		texture_indices[at_position] = index
 
 	point_change_index += 1
-	_set_as_dirty()
+	set_as_dirty()
 	emit_signal("points_modified")
 
 	if Engine.editor_hint:
@@ -254,7 +269,7 @@ func set_point_texture_flip(flip:bool, at_position:int):
 	if _is_array_index_in_range(texture_flip_indices, at_position):
 		texture_flip_indices[at_position] = flip
 		point_change_index += 1
-		_set_as_dirty()
+		set_as_dirty()
 		emit_signal("points_modified")
 	if Engine.editor_hint:
 		property_list_changed_notify()
@@ -276,19 +291,19 @@ func get_closest_offset(to_point:Vector2):
 
 func _set_editor_debug(value:bool):
 	editor_debug = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_flip_edge(value):
 	flip_edges = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_has_edge(value):
 	draw_edges = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_use_global_space(value):
 	use_global_space = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func get_point_count():
 	if curve == null:
@@ -735,7 +750,7 @@ func bake_collision():
 		col_polygon.polygon = points
 
 func bake_mesh(force:bool = false):
-	if not dirty and not force:
+	if not _dirty and not force:
 		return
 	# Clear Meshes
 	for mesh in meshes:
@@ -807,7 +822,10 @@ func add_point_to_curve(position:Vector2, at_position:int=-1):
 		texture_flip_indices.insert(at_position, texture_flip_indices[at_position - 1])
 		width_indices.insert(at_position, width_indices[at_position - 1])
 
-	_set_as_dirty()
+	# If we're able to close the shape now
+	if closed_shape and curve.get_point_count() == 3:
+		fix_close_shape()
+	set_as_dirty()
 	emit_signal("points_modified")
 
 	if Engine.editor_hint:
@@ -828,7 +846,7 @@ func set_point_position(at_position:int, position:Vector2):
 		if _is_curve_index_in_range(at_position):
 			curve.set_point_position(at_position, position)
 			point_change_index += 1
-			_set_as_dirty()
+			set_as_dirty()
 			emit_signal("points_modified")
 
 func remove_point(at_position:int):
@@ -841,7 +859,7 @@ func remove_point(at_position:int):
 		texture_flip_indices.remove(at_position)
 
 	point_change_index += 1
-	_set_as_dirty()
+	set_as_dirty()
 	emit_signal("points_modified")
 
 	if Engine.editor_hint:
@@ -857,7 +875,7 @@ func resize_points(size:int):
 	texture_flip_indices.reszie(size)
 
 	point_change_index += 1
-	_set_as_dirty()
+	set_as_dirty()
 
 	if Engine.editor_hint:
 		property_list_changed_notify()
@@ -865,12 +883,11 @@ func resize_points(size:int):
 ########
 # MISC #
 ########
-func _set_as_dirty():
-	dirty = true
-	update()
+func set_as_dirty():
+	_dirty = true
 
 func _handle_material_change():
-	_set_as_dirty()
+	set_as_dirty()
 
 func _convert_local_space_to_uv(point:Vector2, custom_size:Vector2=Vector2(0,0)):
 	var pt:Vector2 = point
