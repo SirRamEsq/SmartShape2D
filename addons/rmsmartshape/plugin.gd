@@ -262,7 +262,7 @@ func forward_canvas_gui_input(event):
 	if current_point_index == -1:
 		lbl_index.text = "Idx: None"
 	else:
-		lbl_index.text = "Idx:%d Tex:%s Flip:%s Width:%s" % \
+		lbl_index.text = "Idx:%d T:%s F:%s W:%s" % \
 			[
 			current_point_index,
 			edit_this.texture_indices[current_point_index],
