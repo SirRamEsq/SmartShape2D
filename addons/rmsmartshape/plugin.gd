@@ -71,6 +71,9 @@ var undo_version:int = 0
 var _snapping = Vector2(1,1)
 var _snapping_offset = Vector2(0,0)
 
+# Action Move Variables
+var _mouse_motion_delta_starting_pos = Vector2(0,0)
+
 func _ready():
 	_init_undo()
 	_build_toolbar()
@@ -236,7 +239,7 @@ func _set_pivot(point:Vector2):
 	current_mode = previous_mode
 	_enter_mode(current_mode)
 	update_overlays()
-	
+
 func make_visible(visible):
 	pass
 
@@ -301,6 +304,7 @@ func _input_handle_keyboard_event(event:InputEventKey)->bool:
 func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2D, grab_threshold:float)->bool:
 	var t:Transform2D = et * edit_this.get_global_transform()
 	var mb:InputEventMouseButton = event
+	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
 
 ###############################################################################################
 	# Mouse Button released While Moving Point
@@ -347,10 +351,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 		# If you create a point at the same location as point idx "0"
 		if current_mode == MODE.CREATE and not edit_this.closed_shape and current_point_index() == 0:
 			_action_close_shape()
-			select_control_points([0], ACTION.MOVING)
+			select_control_points_to_move([0], viewport_mouse_position)
 			return true
 		else:
-			select_control_points([current_point_index()], ACTION.MOVING)
+			select_control_points_to_move([current_point_index()], viewport_mouse_position)
 			return true
 
 ###############################################################################################
@@ -406,13 +410,26 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				undo.commit_action()
 				undo_version = undo.get_version()
 
-				select_control_points([edit_this.get_point_count() - 1], ACTION.MOVING)
+				select_control_points_to_move([edit_this.get_point_count() - 1], viewport_mouse_position)
 
 		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
-			if Input.is_key_pressed(KEY_ALT) and current_mode == MODE.EDIT:
-				# Select two points (both points creating the edge)
-				pass
-				
+			if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
+				var xform:Transform2D = t
+				var gpoint:Vector2 = mb.position
+				var insertion_point:int = -1
+				var mb_length = edit_this.get_closest_offset(xform.affine_inverse().xform(gpoint))
+				var length = edit_this.get_point_count()
+
+				for i in length - 1:
+					var compareLength = edit_this.get_closest_offset(edit_this.get_point_position(i + 1))
+					if mb_length >= edit_this.get_closest_offset(edit_this.get_point_position(i)) and mb_length <= compareLength:
+						insertion_point = i
+
+				if insertion_point == -1:
+					insertion_point = edit_this.get_point_count() - 2
+
+				select_control_points_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
+
 			else:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
@@ -440,24 +457,47 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 				on_edge = false
 
-				select_control_points([insertion_point + 1], ACTION.MOVING)
+				select_control_points_to_move([insertion_point+1], viewport_mouse_position)
 		return true
 	return false
+
+func _debug_mouse_positions(mm, t):
+	#print("========================================")
+	print("MouseDelta:%s" % str(_mouse_motion_delta_starting_pos))
+	print("= MousePositions =")
+	print("Position:  %s" % str(mm.position))
+	print("Relative:  %s" % str(mm.relative))
+	print("= Transforms =")
+	print("Transform: %s" % str(t))
+	print("Inverse:   %s" % str(t.affine_inverse()))
+	print("= Transformed Mouse positions =")
+	print("Position:  %s" % str(t.affine_inverse().xform(mm.position)))
+	print("Relative:  %s" % str(t.affine_inverse().xform(mm.relative)))
+	print("MouseDelta:%s" % str(t.affine_inverse().xform(_mouse_motion_delta_starting_pos)))
 
 func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2D, grab_threshold:float)->bool:
 	var t:Transform2D = et * edit_this.get_global_transform()
 	var mm:InputEventMouseMotion = event
+	var delta_current_pos = et.affine_inverse().xform(mm.position)
+	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
+
+	#_debug_mouse_positions(mm, et)
 
 	if control_point_action == ACTION.MOVING:
-		var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
-		# Appears we are moving a point
-		if edit_this.closed_shape and (current_point_index() == edit_this.get_point_count() - 1 or current_point_index() == 0):
-			edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
-			edit_this.set_point_position(0, snapped_position)
-		else:
-			edit_this.set_point_position(current_point_index(), snapped_position)
-		edit_this.bake_mesh()
-		update_overlays()
+		for i in range(0, control_points_selected.size(), 1):
+			var idx = control_points_selected[i]
+			var from = from_positions[i]
+			var new_position = from + delta
+			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
+			var snapped_position = _snap_position(new_position, _snapping) + _snapping_offset
+			# Appears we are moving a point
+			if edit_this.closed_shape and (idx == edit_this.get_point_count() - 1 or idx == 0):
+				edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
+				edit_this.set_point_position(0, snapped_position)
+			else:
+				edit_this.set_point_position(idx, snapped_position)
+			edit_this.bake_mesh()
+			update_overlays()
 		return true
 
 
@@ -619,11 +659,11 @@ func _action_move_control_points():
 	for i in range(0, control_points_selected.size(), 1):
 		var idx = control_points_selected[i]
 		var from_position = from_positions[i]
-		if (current_point_index() == 0 or current_point_index() == edit_this.get_point_count() - 1) and edit_this.closed_shape:
+		if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
 			undo.add_undo_method(edit_this, "set_point_position", 0, from_position)
 			undo.add_undo_method(edit_this, "set_point_position", edit_this.get_point_count() - 1, from_position)
 		else:
-			undo.add_undo_method(edit_this, "set_point_position", current_point_index(), from_position)
+			undo.add_undo_method(edit_this, "set_point_position", idx, from_position)
 
 	undo.add_undo_method(edit_this, "bake_mesh")
 	undo.add_undo_method(self, "update_overlays")
@@ -649,3 +689,7 @@ func select_control_points(indices:Array, action:int=-1):
 		from_positions.push_back(edit_this.get_point_position(idx))
 	if action != -1:
 		control_point_action = action
+
+func select_control_points_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
+	select_control_points(indices, ACTION.MOVING)
+	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
