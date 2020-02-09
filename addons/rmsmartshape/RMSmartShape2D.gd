@@ -110,11 +110,12 @@ func _on_dirty_update():
 Will make sure a shape is closed or open after removing / adding / changing a point
 """
 func fix_close_shape():
-	if closed_shape and get_point_position(0) != get_point_position(get_point_count() - 1):
+	var point_count = get_point_count()
+	if closed_shape and get_point_position(0) != get_point_position(point_count - 1):
 		add_point_to_curve(get_point_position(0))
 		bake_mesh()
-	elif not closed_shape and get_point_position(0) == get_point_position(get_point_count() - 1):
-		remove_point(get_point_count()-1)
+	elif not closed_shape and get_point_position(0) == get_point_position(point_count-1) and point_count > 2:
+		remove_point(point_count-1)
 		bake_mesh()
 
 func _draw():
@@ -809,9 +810,9 @@ func bake_mesh(force:bool = false):
 # CURVE #
 #########
 func add_point_to_curve(position:Vector2, at_position:int=-1):
-	# position '-1' appends to the list
 	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, at_position)
 
+	# position '-1' appends to the list
 	if at_position < 0:
 		texture_indices.push_back(0)
 		texture_flip_indices.push_back(false)

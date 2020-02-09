@@ -396,7 +396,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			_action_set_pivot(mb.position, et)
 
 		elif current_mode == MODE.CREATE and not on_edge:
-			if (edit_this.closed_shape and edit_this.get_point_count() < 3) or edit_this.closed_shape == false:
+			if (edit_this.closed_shape and edit_this.get_point_count() < 3) or not edit_this.closed_shape:
 				var snapped_position = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
 				var np = snapped_position
 
@@ -411,6 +411,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				undo_version = undo.get_version()
 
 				select_control_points_to_move([edit_this.get_point_count() - 1], viewport_mouse_position)
+				return true
 
 		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
 			if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
