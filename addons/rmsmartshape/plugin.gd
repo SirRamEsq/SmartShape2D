@@ -10,7 +10,13 @@ enum MODE {
 
 enum ACTION {
 	NONE = 0
-	MOVING = 1
+	MOVING_VERT = 1
+	# Moving both control points
+	MOVING_CONTROL = 2
+	# Moving control in
+	MOVING_CONTROL_IN = 3
+	# Moving control out
+	MOVING_CONTROL_OUT = 4
 }
 
 # The Plugin's Featured Component
@@ -45,12 +51,20 @@ var lbl_index:Label = null
 var on_edge:bool = false
 var edge_point:Vector2
 
-# Control Point Stuff
-var control_point_action:int = ACTION.NONE
-# Array of control points that are being affected by the control_point_action
-var control_points_selected:Array = []
-# Array of Vector2s, one for each control point that is being moved
-var from_positions:Array = []
+# Data related to an action being taken
+class ActionData:
+	func _init(_indices:Array, positions:Array, t:int):
+		type = t
+		indices = _indices
+		starting_positions = positions
+	#Type of Action ("Action" Enum)
+	var type:int = 0
+
+	# The affected Verticies and their initial positions
+	var indices = []
+	var starting_positions = []
+
+var current_action = ActionData.new([], [], ACTION.NONE)
 
 # Monitor change to node being edited
 var edit_this_transform:Transform2D
@@ -162,7 +176,7 @@ func _build_toolbar():
 
 func _enter_tree():
 	pass
-	
+
 func _exit_tree():
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
 
@@ -186,21 +200,19 @@ func _process(delta):
 func handles(object):
 	if object is Resource:
 		return false
-		
+
 	var rslt:bool = object is ShapeClass
 	hb.hide()
-	
+
 	update_overlays()
 
 	return rslt
-	
+
 func edit(object):
 	if hb != null:
 		hb.show()
 
 	on_edge = false
-	control_point_action = ACTION.NONE
-	#current_point_index = -1
 	deselect_control_points()
 	edit_this = object as RMSmartShape2D
 	update_overlays()
@@ -264,8 +276,8 @@ func _get_toolbar_status_message(idx:int)->String:
 		]
 
 func is_single_point_index_valid()->bool:
-	if control_points_selected.size() == 1:
-		return is_point_index_valid(control_points_selected[0])
+	if current_action.indices.size() == 1:
+		return is_point_index_valid(current_action.indices[0])
 	return false
 
 func is_edit_this_valid()->bool:
@@ -275,8 +287,8 @@ func is_edit_this_valid()->bool:
 		return false
 	return true
 
-func are_point_indices_valid(indicies:Array)->bool:
-	for idx in indicies:
+func are_point_indices_valid(indices:Array)->bool:
+	for idx in indices:
 		if not is_point_index_valid(idx):
 			return false
 	return true
@@ -289,7 +301,7 @@ func is_point_index_valid(idx:int)->bool:
 func current_point_index()->int:
 	if not is_single_point_index_valid():
 		return -1
-	return control_points_selected[0]
+	return current_action.indices[0]
 
 func _input_handle_keyboard_event(event:InputEventKey)->bool:
 	var kb:InputEventKey = event
@@ -307,10 +319,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
 
 ###############################################################################################
-	# Mouse Button released While Moving Point
-	if not mb.pressed and mb.button_index == BUTTON_LEFT and control_point_action == ACTION.MOVING:
-		control_point_action = ACTION.NONE
-		if from_positions[0].distance_to(edit_this.get_point_position(control_points_selected[0])) > grab_threshold:
+	# Mouse Button released
+	if not mb.pressed and mb.button_index == BUTTON_LEFT:#and current_action.type == ACTION.MOVING_VERT:
+		current_action.type = ACTION.NONE
+		if current_action.starting_positions[0].distance_to(edit_this.get_point_position(current_action.indices[0])) > grab_threshold:
 			_action_move_control_points()
 			deselect_control_points()
 			return true
@@ -348,13 +360,15 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 ###############################################################################################
 	# Mouse left click on valid point
 	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_single_point_index_valid():
+		if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
+			select_control_points_to_move([current_point_index()], viewport_mouse_position)
 		# If you create a point at the same location as point idx "0"
-		if current_mode == MODE.CREATE and not edit_this.closed_shape and current_point_index() == 0:
+		elif current_mode == MODE.CREATE and not edit_this.closed_shape and current_point_index() == 0:
 			_action_close_shape()
-			select_control_points_to_move([0], viewport_mouse_position)
+			select_vertices_to_move([0], viewport_mouse_position)
 			return true
 		else:
-			select_control_points_to_move([current_point_index()], viewport_mouse_position)
+			select_vertices_to_move([current_point_index()], viewport_mouse_position)
 			return true
 
 ###############################################################################################
@@ -410,11 +424,11 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				undo.commit_action()
 				undo_version = undo.get_version()
 
-				select_control_points_to_move([edit_this.get_point_count() - 1], viewport_mouse_position)
+				select_vertices_to_move([edit_this.get_point_count() - 1], viewport_mouse_position)
 				return true
 
 		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
-			if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
+			if Input.is_key_pressed(KEY_ALT) and current_mode == MODE.EDIT:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
 				var insertion_point:int = -1
@@ -429,8 +443,9 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				if insertion_point == -1:
 					insertion_point = edit_this.get_point_count() - 2
 
-				select_control_points_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
+				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
 
+					
 			else:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
@@ -458,7 +473,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 				on_edge = false
 
-				select_control_points_to_move([insertion_point+1], viewport_mouse_position)
+				select_vertices_to_move([insertion_point+1], viewport_mouse_position)
 		return true
 	return false
 
@@ -484,10 +499,10 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 
 	#_debug_mouse_positions(mm, et)
 
-	if control_point_action == ACTION.MOVING:
-		for i in range(0, control_points_selected.size(), 1):
-			var idx = control_points_selected[i]
-			var from = from_positions[i]
+	if current_action.type == ACTION.MOVING_VERT:
+		for i in range(0, current_action.indices.size(), 1):
+			var idx = current_action.indices[i]
+			var from = current_action.starting_positions[i]
 			var new_position = from + delta
 			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
 			var snapped_position = _snap_position(new_position, _snapping) + _snapping_offset
@@ -497,6 +512,29 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 				edit_this.set_point_position(0, snapped_position)
 			else:
 				edit_this.set_point_position(idx, snapped_position)
+			edit_this.bake_mesh()
+			update_overlays()
+		return true
+
+	elif current_action.type == ACTION.MOVING_CONTROL:
+		for i in range(0, current_action.indices.size(), 1):
+			var idx = current_action.indices[i]
+			var from = current_action.starting_positions[i]
+			var new_position_in = delta
+			var new_position_out = delta * -1
+			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
+			var snapped_position_in = _snap_position(new_position_in, _snapping) + _snapping_offset
+			var snapped_position_out = _snap_position(new_position_out, _snapping) + _snapping_offset
+			print ("%s : %s" % [str(snapped_position_in), str(snapped_position_out)])
+			# Appears we are moving a point
+			if edit_this.closed_shape and (idx == edit_this.get_point_count() - 1 or idx == 0):
+				edit_this.set_point_in(edit_this.get_point_count() - 1, snapped_position_in)
+				edit_this.set_point_in(0, snapped_position_in)
+				edit_this.set_point_out(edit_this.get_point_count() - 1, snapped_position_out)
+				edit_this.set_point_out(0, snapped_position_out)
+			else:
+				edit_this.set_point_in(idx, snapped_position_in)
+				edit_this.set_point_out(idx, snapped_position_out)
 			edit_this.bake_mesh()
 			update_overlays()
 		return true
@@ -524,7 +562,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 		var p:Vector2 = xform.xform(pp)
 		if p.distance_to(gpoint) <= grab_threshold:
 			on_edge = false
-			select_control_points([i])
+			select_verticies([i], ACTION.NONE)
 			break
 
 	if current_mode != MODE.CREATE and current_mode != MODE.EDIT:
@@ -559,7 +597,6 @@ func forward_canvas_gui_input(event):
 
 
 func _curve_changed():
-	control_point_action = ACTION.NONE
 	deselect_control_points()
 	update_overlays()
 
@@ -593,42 +630,6 @@ func _add_deferred_collision():
 func _handle_auto_collision_press():
 	pass
 
-func forward_canvas_draw_over_viewport(overlay):
-	# Something might force a draw which we had no control over,
-	# in this case do some updating to be sure
-	if undo_version != undo.get_version():
-		if undo.get_current_action_name() == "Move CanvasItem" or undo.get_current_action_name() == "Rotate CanvasItem" or undo.get_current_action_name() == "Scale CanvasItem":
-			edit_this.bake_collision()
-			undo_version = undo.get_version()
-	
-	if edit_this != null:
-		var t:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-		
-		# Draw Outline
-		var fpt = null
-		var ppt = null
-		for i in edit_this.get_point_count():
-			var pt = edit_this.get_point_position(i)
-			if ppt != null:
-				overlay.draw_line(ppt, t.xform(pt), edit_this.modulate)
-			ppt = t.xform( pt )
-			if fpt == null:
-				fpt = ppt
-		
-		# Draw handles
-		for i in edit_this.get_point_count():
-			var hp = t.xform(edit_this.get_point_position(i))
-			overlay.draw_texture(HANDLE, hp - HANDLE.get_size() * 0.5)
-		
-		if on_edge:
-			overlay.draw_texture(ADD_HANDLE, edge_point - ADD_HANDLE.get_size() * 0.5)
-			
-		# Draw Highlighted Handle
-		if is_single_point_index_valid():
-			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index()) ), 5, Color.white )
-			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index()) ), 3, Color.black)
-		
-		edit_this.update()
 
 func _snap_changed(ignore_value):
 	_snapping = Vector2(tb_snap_x.value, tb_snap_y.value)
@@ -657,9 +658,9 @@ func _action_move_control_points():
 	undo.add_do_method(edit_this, "bake_mesh")
 	undo.add_do_method(self, "update_overlays")
 
-	for i in range(0, control_points_selected.size(), 1):
-		var idx = control_points_selected[i]
-		var from_position = from_positions[i]
+	for i in range(0, current_action.indices.size(), 1):
+		var idx = current_action.indices[i]
+		var from_position = current_action.starting_positions[i]
 		if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
 			undo.add_undo_method(edit_this, "set_point_position", 0, from_position)
 			undo.add_undo_method(edit_this, "set_point_position", edit_this.get_point_count() - 1, from_position)
@@ -681,16 +682,86 @@ func _action_close_shape():
 	undo_version = undo.get_version()
 
 func deselect_control_points():
-	control_points_selected = []
-	from_positions = []
+	current_action = ActionData.new([], [], ACTION.NONE)
 
-func select_control_points(indices:Array, action:int=-1):
-	control_points_selected = indices
+func select_verticies(indices:Array, action:int):
+	var from_positions = []
 	for idx in indices:
 		from_positions.push_back(edit_this.get_point_position(idx))
-	if action != -1:
-		control_point_action = action
+	current_action = ActionData.new(indices, from_positions, action)
+
+func select_vertices_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
+	select_verticies(indices, ACTION.MOVING_VERT)
+	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
 func select_control_points_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
-	select_control_points(indices, ACTION.MOVING)
+	select_verticies(indices, ACTION.MOVING_CONTROL)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
+
+
+
+#############
+# RENDERING #
+#############
+func forward_canvas_draw_over_viewport(overlay:Control):
+	# Something might force a draw which we had no control over,
+	# in this case do some updating to be sure
+	if undo_version != undo.get_version():
+		if undo.get_current_action_name() == "Move CanvasItem" or undo.get_current_action_name() == "Rotate CanvasItem" or undo.get_current_action_name() == "Scale CanvasItem":
+			edit_this.bake_collision()
+			undo_version = undo.get_version()
+
+	if edit_this != null:
+		var t:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
+		var length = edit_this.get_point_count()
+
+		# Draw Outline
+		var fpt = null
+		var ppt = null
+		for i in length:
+			var pt = edit_this.get_point_position(i)
+			if ppt != null:
+				overlay.draw_line(ppt, t.xform(pt), edit_this.modulate)
+			ppt = t.xform( pt )
+			if fpt == null:
+				fpt = ppt
+
+		# Draw handles
+		for i in length:
+			var smooth = false
+			var hp = t.xform(edit_this.get_point_position(i))
+			overlay.draw_texture(HANDLE, hp - HANDLE.get_size() * 0.5)
+
+			# Draw handles for control-point-out
+			if i < length - 1:
+				var pointout = t.xform(edit_this.get_point_position(i) + edit_this.get_point_out(i));
+				if hp != pointout:
+					smooth = true;
+					_draw_control_point_line(overlay, hp, pointout)
+
+			# Draw handles for control-point-in
+			if i > 0:
+				var pointin = t.xform(edit_this.get_point_position(i) + edit_this.get_point_in(i));
+				if hp != pointin:
+					smooth = true;
+					_draw_control_point_line(overlay, hp, pointin)
+
+		if on_edge:
+			overlay.draw_texture(ADD_HANDLE, edge_point - ADD_HANDLE.get_size() * 0.5)
+
+		# Draw Highlighted Handle
+		if is_single_point_index_valid():
+			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index()) ), 5, Color.white )
+			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index()) ), 3, Color.black)
+
+		edit_this.update()
+
+func _draw_control_point_line(overlay:Control, point:Vector2, control_point:Vector2):
+	# Draw the line with a dark and light color to be visible on all backgrounds
+	var color_dark = Color(0, 0, 0, 0.5)
+	var color_light = Color(1, 1, 1, 0.5)
+	var width = 1.0
+	overlay.draw_line(point, control_point, color_dark, width)
+	overlay.draw_line(point, control_point, color_light, width)
+	#overlay.draw_texture_rect(curve_handle, Rect2(pointout - curve_handle_size * 0.5, curve_handle_size), false, Color(1, 1, 1, 0.75));
+	overlay.draw_texture(HANDLE, control_point - HANDLE.get_size() * 0.5)

@@ -1,6 +1,5 @@
 tool
 extends Node2D
-
 class_name RMSmartShape2D, "shape.png"
 
 enum DIRECTION {
@@ -46,6 +45,7 @@ export (bool) var use_global_space = false setget _set_use_global_space
 export (NodePath) var collision_polygon_node
 export (int, 1, 512) var collision_bake_interval = 20
 export (bool) var draw_edges:bool = false setget _set_has_edge
+export (bool) var mirror_angle:bool = true
 export (bool) var flip_edges:bool = false setget _set_flip_edge
 export (Array, int) var texture_indices=null setget _set_texture_indices
 export (Array, bool) var texture_flip_indices=null setget _set_texture_flip_indices
@@ -222,10 +222,11 @@ func _set_curve(value:Curve2D):
 	if Engine.editor_hint:
 		property_list_changed_notify()
 
+
+
 ######################
 # SET/GET FOR ARRAYS #
 ######################
-
 func set_point_width(width:float, at_position:int):
 	if _is_array_index_in_range(width_indices, at_position):
 		width_indices[at_position] = width
@@ -241,7 +242,7 @@ func get_point_width(at_position:int)->float:
 	if _is_array_index_in_range(width_indices, at_position):
 		return width_indices[at_position]
 	return 0.0
-	
+
 func is_closed_shape()->bool:
 	return closed_shape
 
@@ -278,6 +279,26 @@ func set_point_texture_flip(flip:bool, at_position:int):
 ######################
 ######################
 ######################
+
+func set_point_in(idx:int, p:Vector2):
+	if curve != null:
+		curve.set_point_in(idx, p)
+		set_as_dirty()
+
+func set_point_out(idx:int, p:Vector2):
+	if curve != null:
+		curve.set_point_out(idx, p)
+		set_as_dirty()
+
+func get_point_in(idx:int)->Vector2:
+	if curve != null:
+		return curve.get_point_in(idx)
+	return Vector2(0,0)
+
+func get_point_out(idx:int)->Vector2:
+	if curve != null:
+		return curve.get_point_out(idx)
+	return Vector2(0,0)
 
 func get_closest_point(to_point:Vector2):
 	if curve != null:
@@ -585,7 +606,8 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var tex_normal:Texture = null
 	var tex_size:Vector2
 	var tex_index:int = 0
-	var curve_count = curve.get_point_count()
+	var points = curve.tessellate(2)
+	var curve_count = points.size()
 
 	var top_tilt = shape_material.top_texture_tilt
 	var bottom_tilt = shape_material.bottom_texture_tilt
@@ -593,11 +615,11 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var is_clockwise:bool = are_points_clockwise()
 
 	for curve_index in curve_count-1:
-		var pt_index = fmod(curve_index, curve.get_point_count())
-		var pt2_index = fmod(curve_index + 1, curve.get_point_count())
+		var pt_index = fmod(curve_index, points.size())
+		var pt2_index = fmod(curve_index + 1, points.size())
 
-		var pt = curve.get_point_position(pt_index)
-		var pt2 = curve.get_point_position(pt2_index)
+		var pt = points[pt_index]
+		var pt2 = points[pt2_index]
 
 		var direction = DIRECTION.TOP
 		if closed_shape:
@@ -759,7 +781,8 @@ func bake_mesh(force:bool = false):
 	meshes.resize(0)
 
 	# Cant make a mesh without enough points
-	var point_count = curve.get_point_count()
+	var points = curve.tessellate(2)
+	var point_count = points.size()#curve.get_point_count()
 	if (closed_shape and point_count < 3) or (not closed_shape and point_count < 2):
 		return
 
@@ -773,7 +796,7 @@ func bake_mesh(force:bool = false):
 
 	fill_points.resize(point_count)
 	for i in point_count:
-		fill_points[i] = curve.get_point_position(i)
+		fill_points[i] = points[i]#curve.get_point_position(i)
 	#fill_points = curve.get_baked_points()
 
 	var fill_tris:PoolIntArray = Geometry.triangulate_polygon(fill_points)
@@ -785,14 +808,14 @@ func bake_mesh(force:bool = false):
 
 		for i in range(0, fill_tris.size() - 1, 3):
 			st.add_color(Color.white)
-			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i]) ) )
-			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i]).x, curve.get_point_position(fill_tris[i]).y, 0) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( points[fill_tris[i]] ) )
+			st.add_vertex( Vector3( points[fill_tris[i]].x, points[fill_tris[i]].y, 0) )
 			st.add_color(Color.white)
-			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+1]) ) )
-			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i+1]).x, curve.get_point_position(fill_tris[i+1]).y, 0) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( points[fill_tris[i+1]] ) )
+			st.add_vertex( Vector3( points[fill_tris[i+1]].x, points[fill_tris[i+1]].y, 0) )
 			st.add_color(Color.white)
-			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+2]) ) )
-			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i+2]).x, curve.get_point_position(fill_tris[i+2]).y, 0) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( points[fill_tris[i+2]] ) )
+			st.add_vertex( Vector3( points[fill_tris[i+2]].x, points[fill_tris[i+2]].y, 0) )
 		st.index()
 		st.generate_normals()
 		st.generate_tangents()
@@ -811,7 +834,6 @@ func bake_mesh(force:bool = false):
 #########
 func add_point_to_curve(position:Vector2, at_position:int=-1):
 	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, at_position)
-
 	# position '-1' appends to the list
 	if at_position < 0:
 		texture_indices.push_back(0)
