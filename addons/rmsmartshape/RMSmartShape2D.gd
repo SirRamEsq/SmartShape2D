@@ -151,7 +151,7 @@ func _draw():
 				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
 	# Draw edge quads for debug purposes (ONLY IN EDITOR)
-	if Engine.editor_hint == true and editor_debug == true:
+	if Engine.editor_hint and editor_debug:
 		for q in quads:
 			var t:QuadInfo = q
 			draw_line(t.pt_a, t.pt_b, t.color)
@@ -600,13 +600,30 @@ func _fix_quads():
 		else:
 				break
 
+func _get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index)->int:
+	var vertex_idx = -1
+	var tess_idx = 0
+	for i in range(0, tess_point_index, 1):
+		var tess_point = tess_points[i]
+		if tess_point == points[vertex_idx]:
+			vertex_idx += 1
+	return vertex_idx
+
+func _get_tessellated_points()->PoolVector2Array:
+	# Point 0 will be the same on both the curve points and the vertecies
+	# Point size - 1 will be the same on both the curve points and the vertecies
+	var points = curve.tessellate(2)
+	points[0] = curve.get_point_position(0)
+	points[points.size()-1] = curve.get_point_position(curve.get_point_count()-1)
+	return points
+
 func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0, custom_extends:float = 0.0):
 	# The remainder of the code build up the edge quads
 	var tex:Texture = null
 	var tex_normal:Texture = null
 	var tex_size:Vector2
 	var tex_index:int = 0
-	var points = curve.tessellate(2)
+	var points = _get_tessellated_points()
 	var curve_count = points.size()
 
 	var top_tilt = shape_material.top_texture_tilt
@@ -615,8 +632,10 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var is_clockwise:bool = are_points_clockwise()
 
 	for curve_index in curve_count-1:
+		# WRONG POINT INDEX, We want the Vertex index, not the idx of the curve point
 		var pt_index = fmod(curve_index, points.size())
 		var pt2_index = fmod(curve_index + 1, points.size())
+		var property_index = _get_vertex_idx_from_tessellated_point(curve.get_baked_points(), points, curve_index)
 
 		var pt = points[pt_index]
 		var pt2 = points[pt2_index]
@@ -628,45 +647,29 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		tex = null
 		tex_normal = null
 		if shape_material != null:
-			if direction == DIRECTION.TOP:
-				if shape_material.top_texture != null:
-					if not shape_material.top_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.top_texture.size()))
-						if shape_material.top_texture.size() > tex_index:
-							tex = shape_material.top_texture[tex_index]
-						if shape_material.top_texture_normal != null:
-							if shape_material.top_texture_normal.size() > tex_index:
-								tex_normal = shape_material.top_texture_normal[tex_index]
-			if direction == DIRECTION.BOTTOM:
-				if shape_material.bottom_texture != null:
-					if not shape_material.bottom_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.bottom_texture.size()))
-						if shape_material.bottom_texture.size() > tex_index:
-							if shape_material.bottom_texture.size() > tex_index:
-								tex = shape_material.bottom_texture[tex_index]
-						if shape_material.bottom_texture_normal != null:
-							if shape_material.bottom_texture_normal.size() > tex_index:
-								tex_normal = shape_material.bottom_texture_normal[tex_index]
-			if direction == DIRECTION.LEFT:
-				if shape_material.left_texture != null:
-					if not shape_material.left_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.left_texture.size()))
-						if shape_material.left_texture.size() > tex_index:
-							if shape_material.left_texture.size() > tex_index:
-								tex = shape_material.left_texture[tex_index]
-						if shape_material.left_texture_normal != null:
-							if shape_material.left_texture_normal.size() > tex_index:
-								tex_normal = shape_material.left_texture_normal[tex_index]
-			if direction == DIRECTION.RIGHT:
-				if shape_material.right_texture != null:
-					if not shape_material.right_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.right_texture.size()))
-						if shape_material.right_texture.size() > tex_index:
-							if shape_material.right_texture.size() > tex_index:
-								tex = shape_material.right_texture[tex_index]
-						if shape_material.right_texture_normal != null:
-							if shape_material.right_texture_normal.size() > tex_index:
-								tex_normal = shape_material.right_texture_normal[tex_index]
+			var material_textures_diffuse = null
+			var material_textures_normal = null
+			match(direction):
+				DIRECTION.TOP:
+					material_textures_diffuse = shape_material.top_texture
+					material_textures_normal = shape_material.top_texture_normal
+				DIRECTION.BOTTOM:
+					material_textures_diffuse = shape_material.bottom_texture
+					material_textures_normal = shape_material.bottom_texture_normal
+				DIRECTION.LEFT:
+					material_textures_diffuse = shape_material.left_texture
+					material_textures_normal = shape_material.left_texture_normal
+				DIRECTION.RIGHT:
+					material_textures_diffuse = shape_material.right_texture
+					material_textures_normal = shape_material.right_texture_normal
+			if material_textures_diffuse != null:
+				if not material_textures_diffuse.empty():
+					tex_index = abs(fmod(texture_indices[property_index], material_textures_diffuse.size()))
+					if material_textures_diffuse.size() > tex_index:
+						tex = material_textures_diffuse[tex_index]
+					if material_textures_normal != null:
+						if material_textures_normal.size() > tex_index:
+							tex_normal = material_textures_normal[tex_index]
 
 		if tex != null:
 			tex_size = tex.get_size()
@@ -677,31 +680,32 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		var scale_in:float = 1
 		var scale_out:float = 1
 
-		if width_indices[pt_index] != 0.0:
-			scale_in = width_indices[pt_index]
-		if width_indices[pt2_index] != 0.0:
-			scale_out = width_indices[pt2_index]
+		if width_indices[property_index] != 0.0:
+			scale_in = width_indices[property_index]
+		#if width_indices[pt2_index] != 0.0:
+			#scale_out = width_indices[pt2_index]
 
-		if are_points_clockwise() == false:
+		if not are_points_clockwise():
 			vtx *= -1
 
-		if flip_edges == true:  # finally, allow developer to override
+		if flip_edges:  # allow developer to override
 			vtx *= -1
 
-		var clr:Color
+		var clr:Color = Color.white
 		var vert_adj:Vector2 = vtx
-		if direction == DIRECTION.TOP:
-			clr = Color.green
-			vert_adj *= shape_material.top_offset
-		elif direction == DIRECTION.RIGHT:
-			clr = Color.red
-			vert_adj *= shape_material.right_offset
-		elif direction == DIRECTION.BOTTOM:
-			clr = Color.blue
-			vert_adj *= shape_material.bottom_offset
-		else:
-			clr = Color.yellow
-			vert_adj *= shape_material.left_offset
+		match(direction):
+			DIRECTION.TOP:
+				clr = Color.green
+				vert_adj *= shape_material.top_offset
+			DIRECTION.LEFT:
+				clr = Color.yellow
+				vert_adj *= shape_material.left_offset
+			DIRECTION.RIGHT:
+				clr = Color.red
+				vert_adj *= shape_material.right_offset
+			DIRECTION.BOTTOM:
+				clr = Color.blue
+				vert_adj *= shape_material.bottom_offset
 
 		var offset = Vector2.ZERO
 		if tex != null and custom_offset != 0.0:
@@ -724,8 +728,8 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		new_quad.direction = direction
 		new_quad.tex = tex
 		new_quad.normal_tex = tex_normal
-		new_quad.flip_texture = texture_flip_indices[pt_index]
-		new_quad.width_factor = width_indices[pt_index]
+		new_quad.flip_texture = texture_flip_indices[property_index]
+		new_quad.width_factor = width_indices[property_index]
 		quads.push_back(new_quad)
 
 func bake_collision():
@@ -743,8 +747,9 @@ func bake_collision():
 
 			curve.bake_interval = old_interval
 
-			for i in curve.get_point_count():
-				points.push_back( col_polygon.get_global_transform().xform_inv( get_global_transform().xform(curve.get_point_position(i)) ))
+			var curve_points = _get_tessellated_points()
+			for i in curve_points:
+				points.push_back( col_polygon.get_global_transform().xform_inv( get_global_transform().xform(i) ))
 		else:
 			var collision_quads = Array()
 			var collision_width = 1.0
@@ -781,7 +786,7 @@ func bake_mesh(force:bool = false):
 	meshes.resize(0)
 
 	# Cant make a mesh without enough points
-	var points = curve.tessellate(2)
+	var points = _get_tessellated_points()
 	var point_count = points.size()#curve.get_point_count()
 	if (closed_shape and point_count < 3) or (not closed_shape and point_count < 2):
 		return
