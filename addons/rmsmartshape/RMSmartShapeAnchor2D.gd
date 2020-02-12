@@ -6,7 +6,7 @@ class_name RMSmartShapeAnchor2D, "shape_anchor.png"
 export (NodePath) var monitored_shape setget _set_monitored_shape
 export (int) var track_control_point setget _set_track_control_point
 export (float) var normal_length = 100.0 setget _set_normal_length
-export (float, -1.0, 1.0) var control_point_offset setget _set_control_point_offset
+export (float, 0.0, 1.0) var control_point_offset setget _set_control_point_offset
 export (float, -3.14159, 3.14159) var rotation_offset = 0 setget _set_rotation_offset
 export (bool) var copy_scale = false setget _set_copy_scale
 
@@ -31,6 +31,17 @@ func _process(delta):
 				if n.get_global_transform() != monitored_transform:
 					refresh()
 					monitored_transform = n.get_global_transform()
+					
+func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float):
+    var q0 = p0.linear_interpolate(p1, t)
+    var q1 = p1.linear_interpolate(p2, t)
+    var q2 = p2.linear_interpolate(p3, t)
+
+    var r0 = q0.linear_interpolate(q1, t)
+    var r1 = q1.linear_interpolate(q2, t)
+
+    var s = r0.linear_interpolate(r1, t)
+    return s
 
 func _set_monitored_shape(value):
 	if value == null and monitored_shape != null:
@@ -137,17 +148,29 @@ func refresh():
 			pt_a_index = pt_a_index % node.get_point_count()
 			pt_b_index = pt_b_index % node.get_point_count()
 
-			var pt_a = node.global_transform.xform( node.get_point_position(pt_a_index) )
-			var pt_b = node.global_transform.xform( node.get_point_position(pt_b_index) )
+			var pt_a:Vector2 = node.global_transform.xform( node.get_point_position(pt_a_index) )
+			var pt_b:Vector2 = node.global_transform.xform( node.get_point_position(pt_b_index) )
+			
+			# might need to know the direction of the shape before determining which in/out
+			# is needed.
+			var pt_a_in:Vector2 = node.global_transform.xform( node.get_point_position(pt_a_index) + node.get_point_out(pt_a_index))
+			var pt_b_out:Vector2 = node.global_transform.xform( node.get_point_position(pt_b_index) + node.get_point_in(pt_b_index))
 
-			var n_pt
+			var n_pt:Vector2
+			var n_pt_a:Vector2
+			var n_pt_b:Vector2
+			
 			var angle = 0.0
 
 			if (control_point_offset >= 0):
-				n_pt = pt_a + ((pt_b - pt_a) * control_point_offset)
-				angle = atan2(pt_a.y - pt_b.y, pt_a.x - pt_b.x)
+				n_pt = _cubic_bezier(pt_b, pt_b_out, pt_a_in, pt_a, control_point_offset)
+				n_pt_a = _cubic_bezier(pt_b, pt_b_out, pt_a_in, pt_a, clamp(control_point_offset-0.1,0.0,1.0))
+				n_pt_b = _cubic_bezier(pt_b, pt_b_out, pt_a_in, pt_a, clamp(control_point_offset+0.1,0.0,1.0))
+				#n_pt = pt_a + ((pt_b - pt_a) * control_point_offset)
+				angle = atan2(n_pt_b.y - n_pt_a.y, n_pt_b.x - n_pt_a.x)
 			else:
-				n_pt = pt_a + ((pt_a - pt_b) * control_point_offset)
+				#n_pt = _cubic_bezier(pt_a, pt_a_out, pt_b_in, pt_b, control_point_offset)
+				#n_pt = pt_a + ((pt_a - pt_b) * control_point_offset)
 				angle = atan2(pt_b.y - pt_a.y, pt_b.x - pt_a.x)
 
 			self.global_transform = Transform2D(angle + rotation_offset, n_pt)
