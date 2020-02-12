@@ -341,8 +341,11 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				_action_move_verticies()
 				deselect_control_points()
 			return true
-		elif current_action.type == ACTION.MOVING_CONTROL:
-			_action_move_control_points()
+		var type = current_action.type
+		var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
+		var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
+		if _in or _out:
+			_action_move_control_points(_in, _out)
 			deselect_control_points()
 			return true
 
@@ -413,6 +416,14 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 		if (current_mode == MODE.SET_PIVOT) or (current_mode == MODE.EDIT and mb.control):
 			_action_set_pivot(mb.position, et)
 
+		elif current_mode == MODE.EDIT and not on_edge:
+			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
+			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
+			if not points_in.empty():
+				select_control_points_to_move([points_in[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_IN)
+			elif not points_out.empty():
+				select_control_points_to_move([points_out[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_OUT)
+
 		elif current_mode == MODE.CREATE and not on_edge:
 			if (edit_this.closed_shape and edit_this.get_point_count() < 3) or not edit_this.closed_shape:
 				var snapped_position = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
@@ -449,7 +460,6 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
 
-					
 			else:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
@@ -478,6 +488,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				on_edge = false
 
 				select_vertices_to_move([insertion_point+1], viewport_mouse_position)
+
 		return true
 	return false
 
@@ -501,9 +512,13 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 
+	var type = current_action.type
+	var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
+	var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
+
 	#_debug_mouse_positions(mm, et)
 
-	if current_action.type == ACTION.MOVING_VERT:
+	if type == ACTION.MOVING_VERT:
 		for i in range(0, current_action.indices.size(), 1):
 			var idx = current_action.indices[i]
 			var from = current_action.starting_positions[i]
@@ -520,24 +535,32 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			update_overlays()
 		return true
 
-	elif current_action.type == ACTION.MOVING_CONTROL:
+	elif _in or _out:
 		for i in range(0, current_action.indices.size(), 1):
 			var idx = current_action.indices[i]
 			var from = current_action.starting_positions[i]
-			var new_position_in = delta
-			var new_position_out = delta * -1
+			var out_multiplier = 1
+			# Invert the delta for position_out if moving both at once
+			if type == ACTION.MOVING_CONTROL:
+				out_multiplier = -1
+			var new_position_in = delta + current_action.starting_positions_control_in[i]
+			var new_position_out = (delta * out_multiplier) + current_action.starting_positions_control_out[i]
 			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
 			var snapped_position_in = _snap_position(new_position_in, _snapping) + _snapping_offset
 			var snapped_position_out = _snap_position(new_position_out, _snapping) + _snapping_offset
 			# Appears we are moving a point
 			if edit_this.closed_shape and (idx == edit_this.get_point_count() - 1 or idx == 0):
-				edit_this.set_point_in(edit_this.get_point_count() - 1, snapped_position_in)
-				edit_this.set_point_in(0, snapped_position_in)
-				edit_this.set_point_out(edit_this.get_point_count() - 1, snapped_position_out)
-				edit_this.set_point_out(0, snapped_position_out)
+				if _in:
+					edit_this.set_point_in(edit_this.get_point_count() - 1, snapped_position_in)
+					edit_this.set_point_in(0, snapped_position_in)
+				if _out:
+					edit_this.set_point_out(edit_this.get_point_count() - 1, snapped_position_out)
+					edit_this.set_point_out(0, snapped_position_out)
 			else:
-				edit_this.set_point_in(idx, snapped_position_in)
-				edit_this.set_point_out(idx, snapped_position_out)
+				if _in:
+					edit_this.set_point_in(idx, snapped_position_in)
+				if _out:
+					edit_this.set_point_out(idx, snapped_position_out)
 			edit_this.bake_mesh()
 			update_overlays()
 		return true
@@ -675,7 +698,9 @@ func _action_move_verticies():
 	undo.commit_action()
 	undo_version = undo.get_version()
 
-func _action_move_control_points():
+func _action_move_control_points(_in:bool, _out:bool):
+	if not _in and not _out:
+		return
 	undo.create_action("Move Control Point")
 
 	undo.add_do_method(edit_this, "bake_mesh")
@@ -687,13 +712,17 @@ func _action_move_control_points():
 		var from_position_out = current_action.starting_positions_control_out[i]
 
 		if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
-			undo.add_undo_method(edit_this, "set_point_in", 0, from_position_in)
-			undo.add_undo_method(edit_this, "set_point_out", 0, from_position_out)
-			undo.add_undo_method(edit_this, "set_point_in", edit_this.get_point_count() - 1, from_position_in)
-			undo.add_undo_method(edit_this, "set_point_out", edit_this.get_point_count() - 1, from_position_out)
+			if _in:
+				undo.add_undo_method(edit_this, "set_point_in", 0, from_position_in)
+				undo.add_undo_method(edit_this, "set_point_in", edit_this.get_point_count() - 1, from_position_in)
+			if _out:
+				undo.add_undo_method(edit_this, "set_point_out", 0, from_position_out)
+				undo.add_undo_method(edit_this, "set_point_out", edit_this.get_point_count() - 1, from_position_out)
 		else:
-			undo.add_undo_method(edit_this, "set_point_in", idx, from_position_in)
-			undo.add_undo_method(edit_this, "set_point_out", idx, from_position_out)
+			if _in:
+				undo.add_undo_method(edit_this, "set_point_in", idx, from_position_in)
+			if _out:
+				undo.add_undo_method(edit_this, "set_point_out", idx, from_position_out)
 
 	undo.add_undo_method(edit_this, "bake_mesh")
 	undo.add_undo_method(self, "update_overlays")
@@ -795,8 +824,8 @@ func select_vertices_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2
 	select_verticies(indices, ACTION.MOVING_VERT)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
-func select_control_points_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
-	select_verticies(indices, ACTION.MOVING_CONTROL)
+func select_control_points_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2, action=ACTION.MOVING_CONTROL):
+	select_verticies(indices, action)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
 
