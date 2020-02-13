@@ -339,19 +339,14 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 		if current_action.type == ACTION.MOVING_VERT:
 			if current_action.starting_positions[0].distance_to(edit_this.get_point_position(current_action.indices[0])) > grab_threshold:
 				_action_move_verticies()
-				deselect_control_points()
-			return true
 		var type = current_action.type
 		var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
 		var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
 		if _in or _out:
 			_action_move_control_points(_in, _out)
-			deselect_control_points()
-			return true
+		deselect_control_points()
+		return true
 
-		else:
-			deselect_control_points()
-			return false
 
 ###############################################################################################
 	# Mouse Right click in Edit Mode -OR- LEFT Click on Delete Mode
@@ -843,13 +838,15 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 
 	if edit_this != null:
 		var t:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-		var length = edit_this.get_point_count()
+		var baked = edit_this.get_vertices()
+		var points = edit_this.get_tessellated_points()
+		var length = points.size()
 
 		# Draw Outline
 		var fpt = null
 		var ppt = null
 		for i in length:
-			var pt = edit_this.get_point_position(i)
+			var pt = points[i]
 			if ppt != null:
 				overlay.draw_line(ppt, t.xform(pt), edit_this.modulate)
 			ppt = t.xform( pt )
@@ -857,21 +854,25 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 				fpt = ppt
 
 		# Draw handles
-		for i in length:
+		for i in range(0, baked.size(), 1):
+			#print ("%s:%s" % [str(i), str(baked.size())])
+			#print ("%s:%s | %s | %s" % [str(i), str(edit_this.get_point_position(i)), str(edit_this.get_point_in(i)), str(edit_this.get_point_out(i))])
 			var smooth = false
-			var hp = t.xform(edit_this.get_point_position(i))
+			var hp = t.xform(baked[i])
 			overlay.draw_texture(HANDLE, hp - HANDLE.get_size() * 0.5)
 
 			# Draw handles for control-point-out
-			if i < length - 1:
-				var pointout = t.xform(edit_this.get_point_position(i) + edit_this.get_point_out(i));
+			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
+			if i < baked.size() - 1:
+				var pointout = t.xform(baked[i] + edit_this.get_point_out(i));
 				if hp != pointout:
 					smooth = true;
 					_draw_control_point_line(overlay, hp, pointout, HANDLE_CONTROL)
 
 			# Draw handles for control-point-in
+			# Drawing the point-in for point 0 makes no sense, as there's no point behind it
 			if i > 0:
-				var pointin = t.xform(edit_this.get_point_position(i) + edit_this.get_point_in(i));
+				var pointin = t.xform(baked[i] + edit_this.get_point_in(i));
 				if hp != pointin:
 					smooth = true;
 					_draw_control_point_line(overlay, hp, pointin, HANDLE_CONTROL)
@@ -881,8 +882,8 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 
 		# Draw Highlighted Handle
 		if is_single_point_index_valid():
-			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index()) ), 5, Color.white )
-			overlay.draw_circle(t.xform( edit_this.get_point_position(current_point_index()) ), 3, Color.black)
+			overlay.draw_circle(t.xform( baked[current_point_index()] ), 5, Color.white )
+			overlay.draw_circle(t.xform( baked[current_point_index()] ), 3, Color.black)
 
 		edit_this.update()
 
@@ -899,7 +900,7 @@ func _draw_control_point_line(overlay:Control, point:Vector2, control_point:Vect
 func _get_intersecting_control_point_in(mouse_pos:Vector2, grab_threshold:float)->Array:
 	var points = []
 	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-	for i in range(0, edit_this.get_point_count()-1, 1):
+	for i in range(0, edit_this.get_point_count(), 1):
 		var vec = edit_this.get_point_position(i)
 		var c_in = vec + edit_this.get_point_in(i)
 		c_in = xform.xform(c_in)
@@ -911,7 +912,7 @@ func _get_intersecting_control_point_in(mouse_pos:Vector2, grab_threshold:float)
 func _get_intersecting_control_point_out(mouse_pos:Vector2, grab_threshold:float)->Array:
 	var points = []
 	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-	for i in range(0, edit_this.get_point_count()-1, 1):
+	for i in range(0, edit_this.get_point_count(), 1):
 		var vec = edit_this.get_point_position(i)
 		var c_out = vec + edit_this.get_point_out(i)
 		c_out = xform.xform(c_out)

@@ -41,6 +41,7 @@ export (bool) var editor_debug = null setget _set_editor_debug
 export (Curve2D) var curve:Curve2D = null setget _set_curve
 export (bool) var closed_shape = false setget _set_close_shape
 export (bool) var auto_update_collider = false setget _set_auto_update_collider
+export (int, 1, 8) var tessellation_stages = 5 setget _set_tessellation_stages
 export (bool) var use_global_space = false setget _set_use_global_space
 export (NodePath) var collision_polygon_node
 export (int, 1, 512) var collision_bake_interval = 20
@@ -172,6 +173,10 @@ func _set_texture_flip_indices(value:Array):
 
 func _set_width_indices(value:Array):
 	width_indices = value.duplicate()
+	set_as_dirty()
+
+func _set_tessellation_stages(value:int):
+	tessellation_stages = value
 	set_as_dirty()
 
 func _set_material(value:RMSmartShapeMaterial):
@@ -602,7 +607,13 @@ func _fix_quads():
 		else:
 				break
 
-func _get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index)->int:
+func get_vertices()->Array:
+	var verts = []
+	for i in range(0, curve.get_point_count(), 1):
+		verts.push_back(curve.get_point_position(i))
+	return verts
+
+func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index)->int:
 	var vertex_idx = -1
 	var tess_idx = 0
 	for i in range(0, tess_point_index, 1):
@@ -611,10 +622,10 @@ func _get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_inde
 			vertex_idx += 1
 	return vertex_idx
 
-func _get_tessellated_points()->PoolVector2Array:
+func get_tessellated_points()->PoolVector2Array:
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
-	var points = curve.tessellate(2)
+	var points = curve.tessellate(tessellation_stages)
 	points[0] = curve.get_point_position(0)
 	points[points.size()-1] = curve.get_point_position(curve.get_point_count()-1)
 	return points
@@ -625,7 +636,7 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var tex_normal:Texture = null
 	var tex_size:Vector2
 	var tex_index:int = 0
-	var points = _get_tessellated_points()
+	var points = get_tessellated_points()
 	var curve_count = points.size()
 
 	var top_tilt = shape_material.top_texture_tilt
@@ -634,10 +645,10 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var is_clockwise:bool = are_points_clockwise()
 
 	for curve_index in curve_count-1:
-		# WRONG POINT INDEX, We want the Vertex index, not the idx of the curve point
 		var pt_index = fmod(curve_index, points.size())
 		var pt2_index = fmod(curve_index + 1, points.size())
-		var property_index = _get_vertex_idx_from_tessellated_point(curve.get_baked_points(), points, curve_index)
+		#var property_index = get_vertex_idx_from_tessellated_point(curve.get_baked_points(), points, curve_index)
+		var property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, curve_index)
 
 		var pt = points[pt_index]
 		var pt2 = points[pt2_index]
@@ -749,7 +760,7 @@ func bake_collision():
 
 			curve.bake_interval = old_interval
 
-			var curve_points = _get_tessellated_points()
+			var curve_points = get_tessellated_points()
 			for i in curve_points:
 				points.push_back( col_polygon.get_global_transform().xform_inv( get_global_transform().xform(i) ))
 		else:
@@ -788,7 +799,7 @@ func bake_mesh(force:bool = false):
 	meshes.resize(0)
 
 	# Cant make a mesh without enough points
-	var points = _get_tessellated_points()
+	var points = get_tessellated_points()
 	var point_count = points.size()#curve.get_point_count()
 	if (closed_shape and point_count < 3) or (not closed_shape and point_count < 2):
 		return
@@ -828,7 +839,7 @@ func bake_mesh(force:bool = false):
 		st.generate_tangents()
 		_add_mesh(st.commit(), shape_material.fill_texture, shape_material.fill_texture_normal, DIRECTION.FILL)
 
-	if closed_shape==true and draw_edges==false:
+	if closed_shape and not draw_edges:
 		return
 
 	# Build Edge Quads
