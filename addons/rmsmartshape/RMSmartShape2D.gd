@@ -284,11 +284,13 @@ func set_point_in(idx:int, p:Vector2):
 	if curve != null:
 		curve.set_point_in(idx, p)
 		set_as_dirty()
+		emit_signal("points_modified")
 
 func set_point_out(idx:int, p:Vector2):
 	if curve != null:
 		curve.set_point_out(idx, p)
 		set_as_dirty()
+		emit_signal("points_modified")
 
 func get_point_in(idx:int)->Vector2:
 	if curve != null:
