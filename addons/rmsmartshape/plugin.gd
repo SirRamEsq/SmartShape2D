@@ -269,6 +269,9 @@ func _snap_position(pos:Vector2, snap:Vector2):
 		y = pos.y - fmod(pos.y, snap.y)
 	return Vector2(x,y)
 
+func update_toolbar_status_message():
+	lbl_index.text = _get_toolbar_status_message(current_point_index())
+
 func _get_toolbar_status_message(idx:int)->String:
 	if not is_point_index_valid(idx):
 		return "Idx: None"
@@ -325,6 +328,7 @@ func _input_handle_keyboard_event(event:InputEventKey)->bool:
 				edit_this.set_point_texture_flip(!edit_this.get_point_texture_flip(current_point_index()), current_point_index())
 				edit_this.bake_mesh()
 				edit_this.update()
+				update_toolbar_status_message()
 		return true
 	return false
 
@@ -373,6 +377,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 		edit_this.bake_mesh()
 		update_overlays()
+		update_toolbar_status_message()
 		return true
 
 ###############################################################################################
@@ -388,6 +393,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 		edit_this.bake_mesh()
 		update_overlays()
+		update_toolbar_status_message()
 		return true
 
 ###############################################################################################
@@ -603,7 +609,7 @@ func forward_canvas_gui_input(event):
 
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 	var grab_threshold = get_editor_interface().get_editor_settings().get("editors/poly_editor/point_grab_radius")
-	lbl_index.text = _get_toolbar_status_message(current_point_index())
+	update_toolbar_status_message()
 
 	if event is InputEventKey:
 		return _input_handle_keyboard_event(event)

@@ -613,12 +613,41 @@ func get_vertices()->Array:
 		verts.push_back(curve.get_point_position(i))
 	return verts
 
+"""
+Returns a float between 0.0 and 1.0
+0.0 means that this tessellated point is at the same position as the vertex
+0.5 means that this tessellated point is half way between this vertex and the next
+0.999 means that this tessellated point is basically at the next vertex
+1.0 isn't going to happen
+"""
+func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_point_index)->float:
+	var vertex_idx = -1
+	# The total tessellated points betwen two verts
+	var tess_point_count = 0
+	# The index of the passed tess_point_index relative to the starting vert
+	var tess_index_count = 0
+	for i in range(0, tess_points.size(), 1):
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		tess_point_count += 1
+		if i <= tess_point_index:
+			tess_index_count += 1
+		if tp == p:
+			if i <= tess_point_index:
+				vertex_idx += 1
+				tess_point_count = 0
+				tess_index_count = 0
+			else:
+				break
+
+	return float(tess_index_count) / float(tess_point_count)
+
 func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index)->int:
 	var vertex_idx = -1
-	var tess_idx = 0
 	for i in range(0, tess_point_index, 1):
-		var tess_point = tess_points[i]
-		if tess_point == points[vertex_idx]:
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		if tp == p:
 			vertex_idx += 1
 	return vertex_idx
 
@@ -647,8 +676,8 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	for curve_index in curve_count-1:
 		var pt_index = fmod(curve_index, points.size())
 		var pt2_index = fmod(curve_index + 1, points.size())
-		#var property_index = get_vertex_idx_from_tessellated_point(curve.get_baked_points(), points, curve_index)
 		var property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, curve_index)
+		var property_index_next = (property_index + 1) % curve.get_point_count()
 
 		var pt = points[pt_index]
 		var pt2 = points[pt2_index]
@@ -742,7 +771,12 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		new_quad.tex = tex
 		new_quad.normal_tex = tex_normal
 		new_quad.flip_texture = texture_flip_indices[property_index]
-		new_quad.width_factor = width_indices[property_index]
+		var ratio = get_distance_as_ratio_from_tessellated_point(get_vertices(), points, curve_index)
+		var w1 = width_indices[property_index]
+		var w2 = width_indices[property_index_next]
+		var w = lerp(w1, w2, ratio)
+		#print("%s | %10f | %s = %s" % [str(w1), ratio, str(w2), str(w)])
+		new_quad.width_factor = w
 		quads.push_back(new_quad)
 
 func bake_collision():
