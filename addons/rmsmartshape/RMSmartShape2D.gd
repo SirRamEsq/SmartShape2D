@@ -188,6 +188,7 @@ func _set_material(value:RMSmartShapeMaterial):
 		shape_material.connect("changed", self, "_handle_material_change")
 	set_as_dirty()
 
+
 func _set_close_shape(value):
 	if curve.get_point_count() < 3:
 		return
@@ -633,7 +634,7 @@ func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_poin
 		if i <= tess_point_index:
 			tess_index_count += 1
 		if tp == p:
-			if i <= tess_point_index:
+			if i < tess_point_index:
 				vertex_idx += 1
 				tess_point_count = 0
 				tess_index_count = 0
