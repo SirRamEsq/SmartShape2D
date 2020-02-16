@@ -619,9 +619,12 @@ Returns a float between 0.0 and 1.0
 0.0 means that this tessellated point is at the same position as the vertex
 0.5 means that this tessellated point is half way between this vertex and the next
 0.999 means that this tessellated point is basically at the next vertex
-1.0 isn't going to happen
+1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
 """
 func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_point_index)->float:
+	if tess_point_index == 0:
+		return 0.0
+
 	var vertex_idx = -1
 	# The total tessellated points betwen two verts
 	var tess_point_count = 0
@@ -631,7 +634,7 @@ func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_poin
 		var tp = tess_points[i]
 		var p = points[vertex_idx + 1]
 		tess_point_count += 1
-		if i <= tess_point_index:
+		if i < tess_point_index:
 			tess_index_count += 1
 		if tp == p:
 			if i < tess_point_index:
@@ -644,6 +647,9 @@ func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_poin
 	return float(tess_index_count) / float(tess_point_count)
 
 func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index)->int:
+	if tess_point_index == 0:
+		return 0
+
 	var vertex_idx = -1
 	for i in range(0, tess_point_index, 1):
 		var tp = tess_points[i]
@@ -776,7 +782,7 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		var w1 = width_indices[property_index]
 		var w2 = width_indices[property_index_next]
 		var w = lerp(w1, w2, ratio)
-		#print("%s | %10f | %s = %s" % [str(w1), ratio, str(w2), str(w)])
+		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(property_index), str(property_index_next), str(w1), ratio, str(w2), str(w)])
 		new_quad.width_factor = w
 		quads.push_back(new_quad)
 
