@@ -42,20 +42,21 @@ export (Curve2D) var curve:Curve2D = null setget _set_curve
 export (bool) var closed_shape = false setget _set_close_shape
 export (bool) var auto_update_collider = false setget _set_auto_update_collider
 export (int, 1, 8) var tessellation_stages = 5 setget _set_tessellation_stages
+export (int, 1, 8) var tessellation_tolerence = 4 setget _set_tolerence
 export (bool) var use_global_space = false setget _set_use_global_space
 export (NodePath) var collision_polygon_node
 export (int, 1, 512) var collision_bake_interval = 20
 export (bool) var draw_edges:bool = false setget _set_has_edge
 export (bool) var mirror_angle:bool = true
 export (bool) var flip_edges:bool = false setget _set_flip_edge
-export (Array, int) var texture_indices=null setget _set_texture_indices
-export (Array, bool) var texture_flip_indices=null setget _set_texture_flip_indices
-export (Array, float, 0, 10) var width_indices=null setget _set_width_indices
-export (Resource) var shape_material = preload("RMSmartShapeMaterial.gd").new() setget _set_material
+
+export (Resource) var shape_material = RMS2D_Material.new() setget _set_material
 
 # This will set true if it is time to rebake mesh, should prevent unnecessary
 # mesh creation unless a change to a property deems it necessary
 var _dirty:bool = true 	# might be able to remove and replace by using change in point_change_index
+
+var vertex_properties = RMS2D_VertexPropertiesArray.new(0)
 
 # For rendering fill and edges
 var meshes:Array = Array()
@@ -74,12 +75,8 @@ signal points_modified
 # GODOT #
 #########
 func _init():
-	if texture_indices == null:
-		texture_indices = []
-	if texture_flip_indices == null:
-		texture_flip_indices = []
-	if width_indices == null:
-		width_indices = []
+	pass
+
 func _ready():
 	if curve==null:
 		curve = Curve2D.new()
@@ -94,7 +91,7 @@ func _enter_tree():
 
 func _exit_tree():
 	if shape_material != null:
-		if ClassDB.class_has_signal("RMSmartShapeMaterial","changed"):
+		if ClassDB.class_has_signal("RMS2D_Material","changed"):
 			shape_material.disconnect("changed", self, "_handle_material_change")
 
 func _on_dirty_update():
@@ -163,23 +160,15 @@ func _draw():
 #####################
 # SETTERS / GETTERS #
 #####################
-func _set_texture_indices(value:Array):
-	texture_indices = value.duplicate()
-	set_as_dirty()
-
-func _set_texture_flip_indices(value:Array):
-	texture_flip_indices = value.duplicate()
-	set_as_dirty()
-
-func _set_width_indices(value:Array):
-	width_indices = value.duplicate()
-	set_as_dirty()
-
 func _set_tessellation_stages(value:int):
 	tessellation_stages = value
 	set_as_dirty()
 
-func _set_material(value:RMSmartShapeMaterial):
+func _set_tolerence(value:int):
+	tessellation_tolerence = value
+	set_as_dirty()
+
+func _set_material(value:RMS2D_Material):
 	if shape_material != null and shape_material.is_connected("changed", self, "_handle_material_change"):
 		shape_material.disconnect("changed", self, "_handle_material_change")
 
@@ -218,15 +207,12 @@ func _set_auto_update_collider(value:bool):
 func _set_curve(value:Curve2D):
 	curve = value
 
-	texture_indices.resize(curve.get_point_count())
-	texture_flip_indices.resize(curve.get_point_count())
-	width_indices.resize(curve.get_point_count())
+	if vertex_properties.resize(curve.get_point_count()):
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 
 
@@ -234,53 +220,43 @@ func _set_curve(value:Curve2D):
 # SET/GET FOR ARRAYS #
 ######################
 func set_point_width(width:float, at_position:int):
-	if _is_array_index_in_range(width_indices, at_position):
-		width_indices[at_position] = width
+	if vertex_properties.set_width(width, at_position):
+		point_change_index += 1
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	point_change_index += 1
-	set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 func get_point_width(at_position:int)->float:
-	if _is_array_index_in_range(width_indices, at_position):
-		return width_indices[at_position]
-	return 0.0
+	return vertex_properties.get_width(at_position)
 
 func is_closed_shape()->bool:
 	return closed_shape
 
-func set_point_texture_index(index:int, at_position:int):
-	if _is_array_index_in_range(texture_indices, at_position):
-		texture_indices[at_position] = index
-
-	point_change_index += 1
-	set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
-
-func get_point_texture_index(at_position:int):
-	if _is_array_index_in_range(texture_indices, at_position):
-		return texture_indices[at_position]
-	return -1
-
-func get_point_texture_flip(at_position:int)->bool:
-	if _is_array_index_in_range(texture_flip_indices, at_position):
-		return texture_flip_indices[at_position]
-	return false
-
-func set_point_texture_flip(flip:bool, at_position:int):
-	if _is_array_index_in_range(texture_flip_indices, at_position):
-		texture_flip_indices[at_position] = flip
+func set_point_texture_index(point_index:int, tex_index:int):
+	if vertex_properties.set_texture_idx(tex_index, point_index):
 		point_change_index += 1
 		set_as_dirty()
 		emit_signal("points_modified")
-	if Engine.editor_hint:
-		property_list_changed_notify()
+
+		if Engine.editor_hint:
+			property_list_changed_notify()
+
+func get_point_texture_index(at_position:int)->int:
+	return vertex_properties.get_texture_idx(at_position)
+
+func get_point_texture_flip(at_position:int)->bool:
+	return vertex_properties.get_flip(at_position)
+
+func set_point_texture_flip(flip:bool, at_position:int):
+	if vertex_properties.set_flip(flip, at_position):
+		point_change_index += 1
+		set_as_dirty()
+		emit_signal("points_modified")
+
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 ######################
 ######################
@@ -613,6 +589,24 @@ func get_vertices()->Array:
 	for i in range(0, curve.get_point_count(), 1):
 		verts.push_back(curve.get_point_position(i))
 	return verts
+"""
+func get_width_offset_from_curve(tessellated_points, idx_tess:int)->float:
+	if width_curve == 0:
+		return 0.0
+
+	var pc = width_curve.get_point_count()
+	var curve_repititions = 1
+	var w_curve_range = width_curve.get_points_count()
+	var tess_range = tessellated_points.size()
+
+	# What about odd numbered ranges?
+	for i in range(1, curve_repititions, 1):
+		new_range = new_range / 2.0
+
+	# Convert idx_tess (in range tess) to range width curve
+	var idx_w_curve = round((idx_tess * w_curve_range) / tess_range)
+	return 0.0
+"""
 
 """
 Returns a float between 0.0 and 1.0
@@ -651,7 +645,7 @@ func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index
 		return 0
 
 	var vertex_idx = -1
-	for i in range(0, tess_point_index, 1):
+	for i in range(0, tess_point_index+1, 1):
 		var tp = tess_points[i]
 		var p = points[vertex_idx + 1]
 		if tp == p:
@@ -713,7 +707,8 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 					material_textures_normal = shape_material.right_texture_normal
 			if material_textures_diffuse != null:
 				if not material_textures_diffuse.empty():
-					tex_index = abs(fmod(texture_indices[property_index], material_textures_diffuse.size()))
+					tex_index = abs(vertex_properties.get_texture_idx(property_index)) % material_textures_diffuse.size()
+					#print("%s(%s %% %s) : %s" % [tex_index, texture_indices[property_index], material_textures_diffuse.size(), property_index])
 					if material_textures_diffuse.size() > tex_index:
 						tex = material_textures_diffuse[tex_index]
 					if material_textures_normal != null:
@@ -729,10 +724,9 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		var scale_in:float = 1
 		var scale_out:float = 1
 
-		if width_indices[property_index] != 0.0:
-			scale_in = width_indices[property_index]
-		#if width_indices[pt2_index] != 0.0:
-			#scale_out = width_indices[pt2_index]
+		var width = vertex_properties.get_width(property_index)
+		if width != 0.0:
+			scale_in = width
 
 		if not are_points_clockwise():
 			vtx *= -1
@@ -777,13 +771,15 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		new_quad.direction = direction
 		new_quad.tex = tex
 		new_quad.normal_tex = tex_normal
-		new_quad.flip_texture = texture_flip_indices[property_index]
+		new_quad.flip_texture = vertex_properties.get_flip(property_index)
+
 		var ratio = get_distance_as_ratio_from_tessellated_point(get_vertices(), points, curve_index)
-		var w1 = width_indices[property_index]
-		var w2 = width_indices[property_index_next]
+		var w1 = vertex_properties.get_width(property_index)
+		var w2 = vertex_properties.get_width(property_index_next)
 		var w = lerp(w1, w2, ratio)
 		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(property_index), str(property_index_next), str(w1), ratio, str(w2), str(w)])
 		new_quad.width_factor = w
+
 		quads.push_back(new_quad)
 
 func bake_collision():
@@ -891,26 +887,18 @@ func bake_mesh(force:bool = false):
 #########
 # CURVE #
 #########
-func add_point_to_curve(position:Vector2, at_position:int=-1):
-	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, at_position)
+func add_point_to_curve(position:Vector2, index:int=-1):
+	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, index)
 	# position '-1' appends to the list
-	if at_position < 0:
-		texture_indices.push_back(0)
-		texture_flip_indices.push_back(false)
-		width_indices.push_back(1.0)
-	else:
-		texture_indices.insert(at_position, texture_indices[at_position - 1])
-		texture_flip_indices.insert(at_position, texture_flip_indices[at_position - 1])
-		width_indices.insert(at_position, width_indices[at_position - 1])
+	if vertex_properties.add_point(index):
+		# If we're able to close the shape now
+		if closed_shape and curve.get_point_count() == 3:
+			fix_close_shape()
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	# If we're able to close the shape now
-	if closed_shape and curve.get_point_count() == 3:
-		fix_close_shape()
-	set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 func _is_curve_index_in_range(i:int)->bool:
 	if curve.get_point_count() > i and i >= 0:
@@ -930,36 +918,27 @@ func set_point_position(at_position:int, position:Vector2):
 			set_as_dirty()
 			emit_signal("points_modified")
 
-func remove_point(at_position:int):
-	curve.remove_point(at_position)
-	if _is_array_index_in_range(width_indices, at_position):
-		width_indices.remove(at_position)
-	if _is_array_index_in_range(texture_indices, at_position):
-		texture_indices.remove(at_position)
-	if _is_array_index_in_range(texture_flip_indices, at_position):
-		texture_flip_indices.remove(at_position)
+func remove_point(idx:int):
+	curve.remove_point(idx)
+	if vertex_properties.remove_point(idx):
+		point_change_index += 1
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	point_change_index += 1
-	set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 func resize_points(size:int):
 	if size < 0:
 		size = 0
 
 	curve.resize(size)
-	width_indices.resize(size)
-	texture_indices.resize(size)
-	texture_flip_indices.reszie(size)
+	if vertex_properties.resize(size):
+		point_change_index += 1
+		set_as_dirty()
 
-	point_change_index += 1
-	set_as_dirty()
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 ########
 # MISC #

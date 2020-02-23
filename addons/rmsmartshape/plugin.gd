@@ -20,7 +20,7 @@ enum ACTION {
 }
 
 # The Plugin's Featured Component
-const ShapeClass = preload("RMSmartShape2D.gd")
+const ShapeClass = RMSmartShape2D
 
 # Icons
 const HANDLE = preload("assets/icon_editor_handle.svg")
@@ -278,9 +278,9 @@ func _get_toolbar_status_message(idx:int)->String:
 	return "Idx:%d T:%s F:%s W:%s" % \
 		[
 		idx,
-		edit_this.texture_indices[idx],
-		edit_this.texture_flip_indices[idx],
-		edit_this.width_indices[idx]
+		edit_this.vertex_properties.get_texture_idx(idx),
+		edit_this.vertex_properties.get_flip(idx),
+		edit_this.vertex_properties.get_width(idx)
 		]
 
 func is_single_point_index_valid()->bool:
@@ -304,7 +304,7 @@ func are_point_indices_valid(indices:Array)->bool:
 func is_point_index_valid(idx:int)->bool:
 	if not is_edit_this_valid():
 		return false
-	return (idx >= 0 and idx < edit_this.texture_indices.size())
+	return (idx >= 0 and idx < edit_this.get_point_count())
 
 func current_point_index()->int:
 	if not is_single_point_index_valid():
@@ -372,7 +372,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_index_valid():
 		var index:int = edit_this.get_point_texture_index(current_point_index()) + 1
 		var flip:bool = edit_this.get_point_texture_flip(current_point_index())
-		edit_this.set_point_texture_index(index, current_point_index())
+		edit_this.set_point_texture_index(current_point_index(), index)
 		edit_this.set_point_texture_flip(flip, current_point_index())
 
 		edit_this.bake_mesh()
@@ -384,7 +384,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	# Mouse Wheel down on valid point
 	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_index_valid():
 		var index = edit_this.get_point_texture_index(current_point_index()) - 1
-		edit_this.set_point_texture_index(index, current_point_index())
+		edit_this.set_point_texture_index(current_point_index(), index)
 
 		if Input.is_key_pressed(KEY_ALT):
 			edit_this.set_point_texture_flip(true, current_point_index())
