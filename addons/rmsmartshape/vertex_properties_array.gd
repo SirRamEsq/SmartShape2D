@@ -10,7 +10,7 @@ var properties:Array = []
 Returns true if changed
 """
 func remove_point(idx:int)->bool:
-	assert(_is_array_index_in_range(idx, properties))
+	assert(_is_array_index_in_range(properties, idx))
 	properties.remove(idx)
 	return true
 
@@ -23,7 +23,7 @@ func add_point(idx:int)->bool:
 		properties.push_back(RMS2D_VertexProperties.new())
 		new_point_idx = properties.size() - 1
 	else:
-		assert(_is_array_index_in_range(idx, properties))
+		assert(_is_array_index_in_range(properties, idx))
 		properties.insert(idx, RMS2D_VertexProperties.new())
 		new_point_idx = idx
 

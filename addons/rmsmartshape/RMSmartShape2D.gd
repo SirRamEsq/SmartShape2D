@@ -7,8 +7,46 @@ enum DIRECTION {
 	RIGHT,
 	BOTTOM,
 	LEFT,
+	TOP_LEFT_INNER,
+	TOP_RIGHT_INNER,
+	BOTTOM_RIGHT_INNER,
+	BOTTOM_LEFT_INNER,
+	TOP_LEFT_OUTER,
+	TOP_RIGHT_OUTER,
+	BOTTOM_RIGHT_OUTER,
+	BOTTOM_LEFT_OUTER,
 	FILL
 }
+
+func _dir_to_string(d:int):
+	match(d):
+		DIRECTION.TOP:
+			return "TOP"
+		DIRECTION.RIGHT:
+			return "RIGHT"
+		DIRECTION.LEFT:
+			return "LEFT"
+		DIRECTION.BOTTOM:
+			return "BOTTOM"
+		DIRECTION.FILL:
+			return "FILL"
+		DIRECTION.TOP_LEFT_INNER:
+			return "TOP-LEFT-INNER"
+		DIRECTION.TOP_RIGHT_INNER:
+			return "TOP-RIGHT-INNER"
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			return "BOTTOM-RIGHT-INNER"
+		DIRECTION.BOTTOM_LEFT_INNER:
+			return "BOTTOM-LEFT-INNER"
+		DIRECTION.TOP_LEFT_OUTER:
+			return "TOP-LEFT-OUTER"
+		DIRECTION.TOP_RIGHT_OUTER:
+			return "TOP-RIGHT-OUTER"
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			return "BOTTOM-RIGHT-OUTER"
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			return "BOTTOM-LEFT-OUTER"
+	return "???"
 
 signal on_dirty_update()
 
@@ -141,10 +179,17 @@ func _draw():
 			for m in mesh.meshes:
 				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
-	# and Finally, Draw Top
+	# Draw Top
 	for mesh in meshes:
 		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and \
 			mesh.direction == DIRECTION.TOP:
+			for m in mesh.meshes:
+				draw_mesh(m, mesh.texture, mesh.normal_texture)
+
+	# Draw Corners
+	for mesh in meshes:
+		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and \
+			_is_corner_direction(mesh.direction):
 			for m in mesh.meshes:
 				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
@@ -156,6 +201,46 @@ func _draw():
 			draw_line(t.pt_b, t.pt_c, t.color)
 			draw_line(t.pt_c, t.pt_d, t.color)
 			draw_line(t.pt_d, t.pt_a, t.color)
+
+		var _range
+		if not closed_shape:
+			_range = range(1,quads.size())
+		else:
+			_range = range(quads.size())
+
+		for index in _range:
+			if not (index % 3 == 0):
+				continue
+			# Skip the first and last vert if the shape isn't closed
+			if (not closed_shape and (index == 0 or index == quads.size())):
+				continue
+			var this_quad:QuadInfo = quads[index % quads.size()]
+			draw_circle(this_quad.pt_a, 3, Color(0.5,0,0))
+			draw_circle(this_quad.pt_b, 3, Color(0,0,0.5))
+			draw_circle(this_quad.pt_c, 3, Color(0,0.5,0))
+			draw_circle(this_quad.pt_d, 3, Color(0.5,0,0.5))
+		for index in _range:
+			if not ((index+1) % 3 == 0):
+				continue
+			# Skip the first and last vert if the shape isn't closed
+			if (not closed_shape and (index == 0 or index == quads.size())):
+				continue
+			var this_quad:QuadInfo = quads[index % quads.size()]
+			draw_circle(this_quad.pt_a, 2, Color(0.75,0,0))
+			draw_circle(this_quad.pt_b, 2, Color(0,0,0.75))
+			draw_circle(this_quad.pt_c, 2, Color(0,0.75,0))
+			draw_circle(this_quad.pt_d, 2, Color(0.75,0,0.75))
+		for index in _range:
+			if not ((index+2) % 3 == 0):
+				continue
+			# Skip the first and last vert if the shape isn't closed
+			if (not closed_shape and (index == 0 or index == quads.size())):
+				continue
+			var this_quad:QuadInfo = quads[index % quads.size()]
+			draw_circle(this_quad.pt_a, 1, Color(1,0,0))
+			draw_circle(this_quad.pt_b, 1, Color(0,0,1))
+			draw_circle(this_quad.pt_c, 1, Color(0,1,0))
+			draw_circle(this_quad.pt_d, 1, Color(1,0,1))
 
 #####################
 # SETTERS / GETTERS #
@@ -377,41 +462,193 @@ func _weld_quads(quads:Array, custom_scale:float = 1.0):
 
 		var previous_quad:QuadInfo = quads[(index-1) % quads.size()]
 		var this_quad:QuadInfo = quads[index % quads.size()]
+		var next_quad:QuadInfo = quads[(index+1) % quads.size()]
 
 		var needed_length:float = 0.0
 		if previous_quad.tex != null and this_quad.tex != null:
 			needed_length = (previous_quad.tex.get_size().y +\
 											 (this_quad.tex.get_size().y * this_quad.width_factor)) * 0.5
 
-		var pt1 = (previous_quad.pt_d + this_quad.pt_a) * 0.5
-		var pt2 = (previous_quad.pt_c + this_quad.pt_b) * 0.5
+		if not _is_corner_direction(previous_quad.direction) and not _is_inner_direction(this_quad.direction):
+			var pt1 = (previous_quad.pt_d + this_quad.pt_a) * 0.5
+			var pt2 = (previous_quad.pt_c + this_quad.pt_b) * 0.5
 
-		var mid_point:Vector2 = (pt1 + pt2) * 0.5
-		var half_line:Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale * 0.5
+			var mid_point:Vector2 = (pt1 + pt2) * 0.5
+			var half_line:Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale * 0.5
 
-		if half_line != Vector2.ZERO:
-			pt2 = mid_point + half_line
-			pt1 = mid_point - half_line
+			if half_line != Vector2.ZERO:
+				pt2 = mid_point + half_line
+				pt1 = mid_point - half_line
 
-		this_quad.pt_a = pt1
-		this_quad.pt_b = pt2
-		previous_quad.pt_d = pt1
-		previous_quad.pt_c = pt2
+			this_quad.pt_a = pt1
+			this_quad.pt_b = pt2
+			previous_quad.pt_d = pt1
+			previous_quad.pt_c = pt2
+		else:
+			if _is_outer_direction(previous_quad.direction):
+				previous_quad.pt_c = this_quad.pt_a
+				this_quad.pt_b = previous_quad.pt_b
+			elif _is_inner_direction(previous_quad.direction):
+				var previous_previous_quad:QuadInfo = quads[(index-2) % quads.size()]
+				var pt1 = (previous_quad.pt_a + this_quad.pt_b) / 2.0
+				var pt2 = (previous_quad.pt_d + this_quad.pt_a) / 2.0
+				previous_quad.pt_a = pt1
+				previous_quad.pt_d = pt2
+				previous_previous_quad.pt_d = pt2
+				this_quad.pt_b = pt1
+				this_quad.pt_a = pt2
 
-func _get_direction(point_1, point_2, top_tilt, bottom_tilt)->int:
-	var v1:Vector2 = point_1
-	var v2:Vector2 = point_2
+"""
+Takes two values from the DIRECTION enum
+The order of the params does matter
 
-	if use_global_space == true:
-		v1 = get_global_transform().xform(point_1)
-		v2 = get_global_transform().xform(point_2)
+Will return true if an angle is an outer angle (greater than 180 degrees)
 
-	var top_mid = 0.0
-	var bottom_mid = PI
+"""
+func _is_outer_angle(d1:int, d2:int)->bool:
+	if are_points_clockwise():
+		# This works because the DIRECTION enum is defined in clockwise order
+		if d1 == DIRECTION.LEFT and d2 == DIRECTION.TOP:
+			return true
+		return (d1+1) == d2
+	else:
+		# This works because the DIRECTION enum is defined in clockwise order
+		if d1 == DIRECTION.TOP and d2 == DIRECTION.LEFT:
+			return true
+		return (d1-1) == d2
+
+"""
+Takes two values from the DIRECTION enum
+If the two directions form a valid corner, will return that corner's DIRECTION Enum value
+if invalid, will return -1
+"""
+func _get_corner_direction(d1:int, d2:int)->int:
+	var dirs = [d1, d2]
+	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.LEFT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.TOP_LEFT_OUTER
+		return DIRECTION.TOP_LEFT_INNER
+
+	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.RIGHT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.TOP_RIGHT_OUTER
+		return DIRECTION.TOP_RIGHT_INNER
+
+	if dirs.has(DIRECTION.BOTTOM) and dirs.has(DIRECTION.RIGHT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.BOTTOM_RIGHT_OUTER
+		return DIRECTION.BOTTOM_RIGHT_INNER
+
+	if dirs.has(DIRECTION.BOTTOM) and dirs.has(DIRECTION.LEFT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.BOTTOM_LEFT_OUTER
+		return DIRECTION.BOTTOM_LEFT_INNER
+
+	return -1
+
+"""
+Takes a values from the DIRECTION enum
+If the direction is a cardinal direction (Top,Bottom,Left,Right)
+	Will return true
+else return false
+"""
+func _is_cardinal_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP:
+			return true
+		DIRECTION.LEFT:
+			return true
+		DIRECTION.RIGHT:
+			return true
+		DIRECTION.BOTTOM:
+			return true
+	return false
+func _is_corner_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP_LEFT_INNER:
+			return true
+		DIRECTION.TOP_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_LEFT_INNER:
+			return true
+		DIRECTION.TOP_LEFT_OUTER:
+			return true
+		DIRECTION.TOP_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			return true
+	return false
+func _is_inner_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP_LEFT_INNER:
+			return true
+		DIRECTION.TOP_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_LEFT_INNER:
+			return true
+	return false
+func _is_outer_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP_LEFT_OUTER:
+			return true
+		DIRECTION.TOP_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			return true
+	return false
+
+func _get_direction_three_points(point:Vector2, point_next:Vector2, point_prev:Vector2,\
+																 top_tilt:float, bottom_tilt:float)->int:
+	var a = point - point_prev
+	var b = point - point_next
+	var c = point_prev - point_next
+
+	var a_len = a.length()
+	var b_len = b.length()
+	var c_len = c.length()
+	#var a_angle = arccos((P12 + P13 - P23) / (2 * P12 * P13))
+
+	var ab2 = a_len * b_len * 2
+	var a2_plus_b2_minus_c2 = (a_len*a_len) + (b_len*b_len) - c_len*c_len
+	var _cos = a2_plus_b2_minus_c2 / ab2
+	var b_angle = acos(_cos)
+
+	# This will be between 0.0 and 180.0
+	b_angle = rad2deg(b_angle)
+
+	# No need for a right angle texture if the angle is shallow enough
+	if b_angle > 135:
+		return _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
+
+	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
+	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
+
+	# Need an outer angle texture
+	var corner_dir = _get_corner_direction(ab_dir, bc_dir)
+
+	return corner_dir
+
+
+func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)->int:
+	var v1:Vector2 = point
+	var v2:Vector2 = point_next
+
+	if use_global_space:
+		v1 = get_global_transform().xform(point)
+		v2 = get_global_transform().xform(point_next)
 
 	var clockwise = are_points_clockwise()
-
-	if clockwise == false:
+	var top_mid = 0.0
+	var bottom_mid = PI
+	if not clockwise:
 		top_mid = PI
 		bottom_mid = 0
 
@@ -426,42 +663,44 @@ func _get_direction(point_1, point_2, top_tilt, bottom_tilt)->int:
 		return DIRECTION.BOTTOM
 
 	if angle > 0:
-		if clockwise == true:
+		if clockwise:
 			return DIRECTION.RIGHT
-		else:
-			return DIRECTION.LEFT
+		return DIRECTION.LEFT
 	else:
-		if clockwise == true:
+		if clockwise:
 			return DIRECTION.LEFT
-		else:
-			return DIRECTION.RIGHT
+		return DIRECTION.RIGHT
 
+"""
+The purpose of this function is to
+"""
 func _fix_quads():
 	# TODO: Why is this needed?
 	# quads.resize(quads.size() - 1)
 
 	var _range
-	if closed_shape == false:
+	if not closed_shape:
 		_range = range(1,quads.size())
 	else:
 		_range = range(quads.size())
 
 	# Weld quads if weld_edges is on
-	if shape_material.weld_edges == true:
+	if shape_material.weld_edges:
 		_weld_quads(quads)
 
 	var global_index = 0
+
 	while(quads.size()>0):
 		# Find start of sprite in control point list (change in direction is the key here)
 		var index:int = global_index
 		while quads.size()>0:
-			var previous_quad:QuadInfo = quads[fmod(index - 1, quads.size())]
-			var this_quad:QuadInfo = quads[fmod(index, quads.size())]
+			var previous_quad:QuadInfo = quads[(index-1) % quads.size()]
+			var this_quad:QuadInfo = quads[index % quads.size()]
 
-			if (index == 0 and closed_shape == false) or previous_quad.calculated == true or previous_quad.direction != this_quad.direction:
+			if (index == 0 and not closed_shape) or previous_quad.calculated or previous_quad.direction != this_quad.direction:
 				break
 
-			index = fmod(index - 1, quads.size())
+			index = (index - 1) % quads.size()
 			if index == 0:
 				break
 
@@ -470,15 +709,15 @@ func _fix_quads():
 		var total_length:float = 0.0
 		var change_in_length:float = -1.0
 		while quads.size()>0:
-			var this_quad:QuadInfo = quads[fmod(length_index, quads.size())]
-			var next_quad:QuadInfo = quads[fmod(length_index + 1, quads.size())]
+			var this_quad:QuadInfo = quads[length_index % quads.size()]
+			var next_quad:QuadInfo = quads[(length_index+1) % quads.size()]
 
 			total_length += this_quad.get_length()
 
-			if (length_index + 1 == quads.size() and closed_shape == false) or next_quad.direction != this_quad.direction or next_quad.tex != this_quad.tex or next_quad.flip_texture != this_quad.flip_texture:
+			if (length_index + 1 == quads.size() and not closed_shape) or next_quad.direction != this_quad.direction or next_quad.tex != this_quad.tex or next_quad.flip_texture != this_quad.flip_texture:
 				break
 
-			length_index = fmod(length_index + 1, quads.size())
+			length_index = (length_index + 1) % quads.size()
 			if length_index == index:
 				break
 
@@ -492,9 +731,9 @@ func _fix_quads():
 
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		while true:
-			var quad_index:int = fmod(index, quads.size())
-			var this_quad:QuadInfo = quads[fmod(quad_index, quads.size())]
-			var next_quad:QuadInfo = quads[fmod(quad_index + 1, quads.size())]
+			var quad_index:int = index % quads.size()
+			var this_quad:QuadInfo = quads[quad_index % quads.size()]
+			var next_quad:QuadInfo = quads[(quad_index+1) % quads.size()]
 			var section_length:float = this_quad.get_length()
 
 			if tex == null:
@@ -519,7 +758,7 @@ func _fix_quads():
 
 			# A
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0) )
@@ -527,7 +766,7 @@ func _fix_quads():
 
 			# B
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 1) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 1) )
@@ -535,7 +774,7 @@ func _fix_quads():
 
 			# C
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 1) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (section_length + length)) / tex.get_size().x, 1) )
@@ -543,7 +782,7 @@ func _fix_quads():
 
 			# A
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0) )
@@ -551,7 +790,7 @@ func _fix_quads():
 
 			# C
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 1) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (length + section_length)) / tex.get_size().x, 1) )
@@ -559,13 +798,18 @@ func _fix_quads():
 
 			# D
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 0) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (length + section_length)) / tex.get_size().x, 0) )
 			st.add_vertex( _to_vector3( this_quad.pt_d ) )
 
-			if (quad_index + 1 == quads.size() and closed_shape == false) or this_quad.tex != next_quad.tex or this_quad.direction != next_quad.direction or next_quad.flip_texture != this_quad.flip_texture or fmod(index + 1,quads.size()) == mesh_index:
+			# If we need to recalculate for the next quad
+			if (quad_index + 1 == quads.size() and not closed_shape)\
+			or this_quad.tex != next_quad.tex\
+			or this_quad.direction != next_quad.direction\
+			or next_quad.flip_texture != this_quad.flip_texture\
+			or (index + 1) % quads.size() == mesh_index:
 				mesh_direction = this_quad.direction
 				break
 
@@ -660,6 +904,110 @@ func get_tessellated_points()->PoolVector2Array:
 	points[points.size()-1] = curve.get_point_position(curve.get_point_count()-1)
 	return points
 
+func _get_next_point_index(idx:int, points:Array, closed:bool)->int:
+	var new_idx = idx
+	if closed_shape:
+		new_idx = (idx + 1) % points.size()
+	else:
+		new_idx = int(min(idx + 1, points.size() - 1))
+
+	if points[idx] == points[new_idx] and closed:
+		new_idx = _get_next_point_index(new_idx, points, closed)
+	return new_idx
+
+func _get_previous_point_index(idx:int, points:Array, closed:bool)->int:
+	var new_idx = idx
+	if closed_shape:
+		new_idx = idx - 1
+		if new_idx < 0:
+			new_idx += points.size()
+	else:
+		new_idx = int(max(idx-1, 0))
+
+	if points[idx] == points[new_idx] and closed:
+		new_idx = _get_previous_point_index(new_idx, points, closed)
+	return new_idx
+
+func _build_corner_quad(pt_next:Vector2,\
+												pt:Vector2, pt_width:float,
+												pt_prev:Vector2, pt_prev_width:float,
+												direction:int)->QuadInfo:
+	var texture = null
+	var texture_normal = null
+	match(direction):
+		DIRECTION.TOP_LEFT_INNER:
+			texture = shape_material.top_left_inner_texture
+			texture_normal = shape_material.top_left_inner_texture_normal
+		DIRECTION.TOP_RIGHT_INNER:
+			texture = shape_material.top_right_inner_texture
+			texture_normal = shape_material.top_right_inner_texture_normal
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			texture = shape_material.bottom_right_inner_texture
+			texture_normal = shape_material.bottom_right_inner_texture_normal
+		DIRECTION.BOTTOM_LEFT_INNER:
+			texture = shape_material.bottom_left_inner_texture
+			texture_normal = shape_material.bottom_left_inner_texture_normal
+		DIRECTION.TOP_LEFT_OUTER:
+			texture = shape_material.top_left_outer_texture
+			texture_normal = shape_material.top_left_outer_texture_normal
+		DIRECTION.TOP_RIGHT_OUTER:
+			texture = shape_material.top_right_outer_texture
+			texture_normal = shape_material.top_right_outer_texture_normal
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			texture = shape_material.bottom_right_outer_texture
+			texture_normal = shape_material.bottom_right_outer_texture_normal
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			texture = shape_material.bottom_left_outer_texture
+			texture_normal = shape_material.bottom_left_outer_texture_normal
+
+	var new_quad = QuadInfo.new()
+	if texture == null:
+		return new_quad
+
+
+	var tex_size = texture.get_size()
+	var extents = tex_size / 2.0
+	var delta_12 = pt - pt_prev
+	var delta_23 = pt_next - pt
+	#var delta_12_normal = delta_12.normalized()
+	#var delta_23_normal = delta_23.normalized()
+
+	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
+	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
+
+	"""
+	normal_23 * pt_wdith
+	This will get the extents of the line between pt(2) and pt_next(3)
+
+	normal_12 * pt_wdith
+	This will get the extents of the line between pt(2) and pt_prev(1)
+
+	There are 2 parallel lines formed for each pair of points and an extent value
+
+	We want to find where each extent of 12 and 23 intersect to find the
+	4 points for our quad
+
+	Assuming that pt is the center of our quad, we can find the four points
+	from each possible combination of extents
+		adding one subtracting another
+		adding both
+		subtracting both
+	"""
+	var pt_d = pt + (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
+	var pt_a = pt - (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
+	var pt_c = pt + (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
+	var pt_b = pt - (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
+
+	new_quad.pt_a= pt_a
+	new_quad.pt_b= pt_b
+	new_quad.pt_c= pt_c
+	new_quad.pt_d= pt_d
+	new_quad.direction = direction
+	new_quad.tex = texture
+	new_quad.normal_tex = texture_normal
+
+	return new_quad
+
 func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0, custom_extends:float = 0.0):
 	# The remainder of the code build up the edge quads
 	var tex:Texture = null
@@ -675,24 +1023,32 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var is_clockwise:bool = are_points_clockwise()
 
 	for curve_index in curve_count-1:
-		var pt_index = fmod(curve_index, points.size())
-		var pt2_index = fmod(curve_index + 1, points.size())
-		var property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, curve_index)
+		var pt_index = curve_index % points.size()
+		var pt_next_index = _get_next_point_index(curve_index, points, closed_shape)
+		var pt_prev_index = _get_previous_point_index(curve_index, points, closed_shape)
+
+		var pt_prev_property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, pt_prev_index)
+		var property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, pt_index)
 		var property_index_next = (property_index + 1) % curve.get_point_count()
 
 		var pt = points[pt_index]
-		var pt2 = points[pt2_index]
+		var pt_next = points[pt_next_index]
+		var pt_prev = points[pt_prev_index]
 
-		var direction = DIRECTION.TOP
+		var cardinal_direction = DIRECTION.TOP
+		var corner_direction = null
+		var is_cardinal_direction = true
 		if closed_shape:
-			direction = _get_direction(pt, pt2, top_tilt, bottom_tilt)
+			cardinal_direction = _get_direction_two_points(pt, pt_next, top_tilt, bottom_tilt)
+			corner_direction = _get_direction_three_points(pt, pt_next, pt_prev, top_tilt, bottom_tilt)
+			is_cardinal_direction = _is_cardinal_direction(corner_direction)
 
 		tex = null
 		tex_normal = null
 		if shape_material != null:
 			var material_textures_diffuse = null
 			var material_textures_normal = null
-			match(direction):
+			match(cardinal_direction):
 				DIRECTION.TOP:
 					material_textures_diffuse = shape_material.top_texture
 					material_textures_normal = shape_material.top_texture_normal
@@ -707,19 +1063,25 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 					material_textures_normal = shape_material.right_texture_normal
 			if material_textures_diffuse != null:
 				if not material_textures_diffuse.empty():
-					tex_index = abs(vertex_properties.get_texture_idx(property_index)) % material_textures_diffuse.size()
-					#print("%s(%s %% %s) : %s" % [tex_index, texture_indices[property_index], material_textures_diffuse.size(), property_index])
+					tex_index= abs(vertex_properties.get_texture_idx(property_index)) % material_textures_diffuse.size()
 					if material_textures_diffuse.size() > tex_index:
 						tex = material_textures_diffuse[tex_index]
 					if material_textures_normal != null:
 						if material_textures_normal.size() > tex_index:
 							tex_normal = material_textures_normal[tex_index]
-
 		if tex != null:
 			tex_size = tex.get_size()
 
-		var vtx:Vector2 = (pt2 - pt)
-		vtx = Vector2(vtx.y, -vtx.x).normalized() * tex_size * 0.5
+		# Get Perpendicular Vector
+		var vtx:Vector2 = Vector2(0,0)
+		var delta = pt_next - pt
+		var delta_normal = delta.normalized()
+		var vtx_normal = Vector2(delta.y, -delta.x).normalized()
+		# TODO
+		# This causes weird rendering if the texture isn't a square
+		# IE, if taller than wide, left/right edges look skinny, whereas top/bottom looks normal
+		# if wider than tall, top/bottom edges look skinny, whereas left/right looks normal
+		vtx = vtx_normal * (tex_size * 0.5)
 
 		var scale_in:float = 1
 		var scale_out:float = 1
@@ -736,7 +1098,7 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 
 		var clr:Color = Color.white
 		var vert_adj:Vector2 = vtx
-		match(direction):
+		match(cardinal_direction):
 			DIRECTION.TOP:
 				clr = Color.green
 				vert_adj *= shape_material.top_offset
@@ -758,29 +1120,61 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		if not closed_shape:
 			if tex != null:
 				if curve_index == 0:
-					pt -= (pt2 - pt).normalized() * tex.get_size() * custom_extends
+					pt -= (pt_next - pt).normalized() * tex.get_size() * custom_extends
 				if curve_index == curve_count - 2 and tex != null:
-					pt2 -= (pt - pt2).normalized() * tex.get_size() * custom_extends
-
-		var new_quad = QuadInfo.new()
-		new_quad.pt_a = (pt + vtx * scale_in * custom_scale + vert_adj + offset)
-		new_quad.pt_b = (pt - vtx * scale_in * custom_scale + vert_adj + offset)
-		new_quad.pt_c = (pt2 - vtx * scale_out * custom_scale + vert_adj + offset)
-		new_quad.pt_d = (pt2 + vtx * scale_out * custom_scale + vert_adj + offset)
-		new_quad.color = clr
-		new_quad.direction = direction
-		new_quad.tex = tex
-		new_quad.normal_tex = tex_normal
-		new_quad.flip_texture = vertex_properties.get_flip(property_index)
+					pt_next -= (pt - pt_next).normalized() * tex.get_size() * custom_extends
 
 		var ratio = get_distance_as_ratio_from_tessellated_point(get_vertices(), points, curve_index)
 		var w1 = vertex_properties.get_width(property_index)
 		var w2 = vertex_properties.get_width(property_index_next)
 		var w = lerp(w1, w2, ratio)
 		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(property_index), str(property_index_next), str(w1), ratio, str(w2), str(w)])
+
+		var new_quad = QuadInfo.new()
+		var final_offset_scale_in = vtx * scale_in * custom_scale + vert_adj + offset
+		var final_offset_scale_out = vtx * scale_out * custom_scale + vert_adj + offset
+		new_quad.pt_a = (pt + final_offset_scale_in)
+		new_quad.pt_b = (pt - final_offset_scale_in)
+		new_quad.pt_c = (pt_next - final_offset_scale_out)
+		new_quad.pt_d = (pt_next + final_offset_scale_out)
+		new_quad.color = clr
+		new_quad.direction = cardinal_direction
+		new_quad.tex = tex
+		new_quad.normal_tex = tex_normal
+		new_quad.flip_texture = vertex_properties.get_flip(property_index)
 		new_quad.width_factor = w
 
+		if not is_cardinal_direction and shape_material.use_corners:
+			var prev_width = vertex_properties.get_width(pt_prev_property_index)
+			var new_quad2 = _build_corner_quad(pt_next, pt, width, pt_prev, prev_width, corner_direction)
+			if new_quad2.tex != null:
+				var previous_quad = null
+				if quads.size() > 0:
+					previous_quad = quads[quads.size()-1]
+				new_quad2.color = Color.purple
+				new_quad2.flip_texture = vertex_properties.get_flip(property_index)
+				new_quad2.width_factor = w
+				quads.push_back(new_quad2)
+
+				var quad2_size = new_quad2.tex.get_size()
+				var quad2_offset = (quad2_size/2.0) * delta_normal
+				new_quad.pt_a += quad2_offset
+				new_quad.pt_b += quad2_offset
+				#new_quad.tex = new_quad2.tex
+				if previous_quad != null:
+					var rotated = Vector2(0,0)
+					if are_points_clockwise():
+						rotated = Vector2(-quad2_offset.y, quad2_offset.x)
+					else:
+						rotated = Vector2(-quad2_offset.y, quad2_offset.x)
+					if _is_inner_direction(corner_direction):
+						rotated *= -1
+					previous_quad.pt_c += rotated
+					previous_quad.pt_d += rotated
+
 		quads.push_back(new_quad)
+
+
 
 func bake_collision():
 	if collision_polygon_node == null or not is_inside_tree():
