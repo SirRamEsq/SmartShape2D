@@ -434,6 +434,9 @@ func _add_uv_to_surface_tool(surface_tool:SurfaceTool, uv:Vector2):
 	surface_tool.add_uv2(uv)
 
 func are_points_clockwise()->bool:
+	# Not relevant if this isn't a closed shape (?)
+	#if not closed_shape:
+		#return true
 	if _clockwise_point_change_index == point_change_index:
 		return is_clockwise
 

@@ -317,8 +317,6 @@ func _is_valid_keyboard_scancode(kb:InputEventKey)->bool:
 			return true
 		KEY_SHIFT:
 			return true
-		KEY_ALT:
-			return true
 	return false
 func _input_handle_keyboard_event(event:InputEventKey)->bool:
 	var kb:InputEventKey = event
@@ -370,30 +368,43 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 ###############################################################################################
 	# Mouse Wheel up on valid point
 	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_index_valid():
-		var index:int = edit_this.get_point_texture_index(current_point_index()) + 1
-		var flip:bool = edit_this.get_point_texture_flip(current_point_index())
-		edit_this.set_point_texture_index(current_point_index(), index)
-		edit_this.set_point_texture_flip(flip, current_point_index())
+		if Input.is_key_pressed(KEY_SHIFT):
+			var width = edit_this.get_point_width(current_point_index())
+			var new_width = width + 0.1
+			edit_this.set_point_width(new_width, current_point_index())
 
-		edit_this.bake_mesh()
-		update_overlays()
-		update_toolbar_status_message()
+			edit_this.bake_mesh()
+			update_overlays()
+			update_toolbar_status_message()
+		else:
+			var index:int = edit_this.get_point_texture_index(current_point_index()) + 1
+			var flip:bool = edit_this.get_point_texture_flip(current_point_index())
+			edit_this.set_point_texture_index(current_point_index(), index)
+			edit_this.set_point_texture_flip(flip, current_point_index())
+
+			edit_this.bake_mesh()
+			update_overlays()
+			update_toolbar_status_message()
 		return true
 
 ###############################################################################################
 	# Mouse Wheel down on valid point
 	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_index_valid():
-		var index = edit_this.get_point_texture_index(current_point_index()) - 1
-		edit_this.set_point_texture_index(current_point_index(), index)
+		if Input.is_key_pressed(KEY_SHIFT):
+			var width = edit_this.get_point_width(current_point_index())
+			var new_width = width - 0.1
+			edit_this.set_point_width(new_width, current_point_index())
 
-		if Input.is_key_pressed(KEY_ALT):
-			edit_this.set_point_texture_flip(true, current_point_index())
+			edit_this.bake_mesh()
+			update_overlays()
+			update_toolbar_status_message()
 		else:
-			edit_this.set_point_texture_flip(false, current_point_index())
+			var index = edit_this.get_point_texture_index(current_point_index()) - 1
+			edit_this.set_point_texture_index(current_point_index(), index)
 
-		edit_this.bake_mesh()
-		update_overlays()
-		update_toolbar_status_message()
+			edit_this.bake_mesh()
+			update_overlays()
+			update_toolbar_status_message()
 		return true
 
 ###############################################################################################
@@ -444,7 +455,8 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				return true
 
 		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
-			if Input.is_key_pressed(KEY_ALT) and current_mode == MODE.EDIT:
+			# Grab Edge (2 points)
+			if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
 				var insertion_point:int = -1
