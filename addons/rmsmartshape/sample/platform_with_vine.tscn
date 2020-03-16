@@ -121,11 +121,11 @@ __meta__ = {
 }
 
 [node name="RMSmartShapeAnchor2D" type="Node2D" parent="."]
-editor/display_folded = true
-position = Vector2( 141.754, 255.2 )
+position = Vector2( 26.4642, 227.262 )
 rotation = 0.157744
+scale = Vector2( 1, 1 )
 script = ExtResource( 5 )
-monitored_shape = NodePath("../StaticBody2D/Platform")
+monitored_shape = null
 track_control_point = 3
 normal_length = 100.0
 control_point_offset = 0.28
@@ -137,7 +137,6 @@ position = Vector2( 1.83058, -64.8691 )
 texture = ExtResource( 6 )
 
 [node name="Ball" type="RigidBody2D" parent="."]
-editor/display_folded = true
 position = Vector2( 162.062, -125.229 )
 gravity_scale = 10.0
 

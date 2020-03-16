@@ -1,12 +1,13 @@
 tool
 extends Resource
-class_name RMSmartShapeMaterial
+class_name RMS2D_Material
 
 export (Texture) var fill_texture = null setget _set_fill_texture
 export (Texture) var fill_texture_normal = null setget _set_fill_texture_normal
 
 export (float, 0, 180.0) var top_texture_tilt = 20.0 setget _set_top_texture_tilt
 export (float, 0, 180.0) var bottom_texture_tilt = 20.0 setget _set_bottom_texture_tilt
+
 
 export (Array, Texture) var top_texture setget _set_top_texture
 export (Array, Texture) var top_texture_normal setget _set_top_texture_normal
@@ -19,6 +20,36 @@ export (Array, Texture) var right_texture_normal setget _set_right_texture_norma
 
 export (Array, Texture) var bottom_texture setget _set_bottom_texture
 export (Array, Texture) var bottom_texture_normal setget _set_bottom_texture_normal
+
+
+export (bool) var use_corners = true setget _set_use_corners
+# Textures for 90 angles
+# Inner Angles
+export (Texture) var top_left_inner_texture setget _set_top_left_inner_texture
+export (Texture) var top_left_inner_texture_normal setget _set_top_left_inner_texture_normal
+
+export (Texture) var top_right_inner_texture setget _set_top_right_inner_texture
+export (Texture) var top_right_inner_texture_normal setget _set_top_right_inner_texture_normal
+
+export (Texture) var bottom_right_inner_texture setget _set_bottom_right_inner_texture
+export (Texture) var bottom_right_inner_texture_normal setget _set_bottom_right_inner_texture_normal
+
+export (Texture) var bottom_left_inner_texture setget _set_bottom_left_inner_texture
+export (Texture) var bottom_left_inner_texture_normal setget _set_bottom_left_inner_texture_normal
+
+# Outer Angles
+export (Texture) var top_left_outer_texture setget _set_top_left_outer_texture
+export (Texture) var top_left_outer_texture_normal setget _set_top_left_outer_texture_normal
+
+export (Texture) var top_right_outer_texture setget _set_top_right_outer_texture
+export (Texture) var top_right_outer_texture_normal setget _set_top_right_outer_texture_normal
+
+export (Texture) var bottom_right_outer_texture setget _set_bottom_right_outer_texture
+export (Texture) var bottom_right_outer_texture_normal setget _set_bottom_right_outer_texture_normal
+
+export (Texture) var bottom_left_outer_texture setget _set_bottom_left_outer_texture
+export (Texture) var bottom_left_outer_texture_normal setget _set_bottom_left_outer_texture_normal
+
 
 export (bool) var weld_edges = false setget _set_weld_edges
 export (float, -1.0, 1.0) var top_offset = 0.0 setget _set_top_offset
@@ -111,4 +142,78 @@ func _set_top_texture_tilt(value):
 	
 func _set_weld_edges(value):
 	weld_edges = value
+	emit_signal("changed")
+
+
+
+func _set_use_corners(value):
+	use_corners = value
+	emit_signal("changed")
+
+func _set_top_left_inner_texture(value):
+	top_left_inner_texture = value
+	emit_signal("changed")
+
+func _set_top_right_inner_texture(value):
+	top_right_inner_texture = value
+	emit_signal("changed")
+
+func _set_bottom_right_inner_texture(value):
+	bottom_right_inner_texture = value
+	emit_signal("changed")
+
+func _set_bottom_left_inner_texture(value):
+	bottom_left_inner_texture = value
+	emit_signal("changed")
+
+
+func _set_top_left_inner_texture_normal(value):
+	top_left_inner_texture_normal = value
+	emit_signal("changed")
+
+func _set_top_right_inner_texture_normal(value):
+	top_right_inner_texture_normal = value
+	emit_signal("changed")
+
+func _set_bottom_right_inner_texture_normal(value):
+	bottom_right_inner_texture_normal = value
+	emit_signal("changed")
+
+func _set_bottom_left_inner_texture_normal(value):
+	bottom_left_inner_texture_normal = value
+	emit_signal("changed")
+
+
+
+func _set_top_left_outer_texture(value):
+	top_left_outer_texture = value
+	emit_signal("changed")
+
+func _set_top_right_outer_texture(value):
+	top_right_outer_texture = value
+	emit_signal("changed")
+
+func _set_bottom_right_outer_texture(value):
+	bottom_right_outer_texture = value
+	emit_signal("changed")
+
+func _set_bottom_left_outer_texture(value):
+	bottom_left_outer_texture = value
+	emit_signal("changed")
+
+
+func _set_top_left_outer_texture_normal(value):
+	top_left_outer_texture_normal = value
+	emit_signal("changed")
+
+func _set_top_right_outer_texture_normal(value):
+	top_right_outer_texture_normal = value
+	emit_signal("changed")
+
+func _set_bottom_right_outer_texture_normal(value):
+	bottom_right_outer_texture_normal = value
+	emit_signal("changed")
+
+func _set_bottom_left_outer_texture_normal(value):
+	bottom_left_outer_texture_normal = value
 	emit_signal("changed")

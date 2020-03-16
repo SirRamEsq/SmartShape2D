@@ -1,6 +1,5 @@
 tool
 extends Node2D
-
 class_name RMSmartShape2D, "shape.png"
 
 enum DIRECTION {
@@ -8,8 +7,48 @@ enum DIRECTION {
 	RIGHT,
 	BOTTOM,
 	LEFT,
+	TOP_LEFT_INNER,
+	TOP_RIGHT_INNER,
+	BOTTOM_RIGHT_INNER,
+	BOTTOM_LEFT_INNER,
+	TOP_LEFT_OUTER,
+	TOP_RIGHT_OUTER,
+	BOTTOM_RIGHT_OUTER,
+	BOTTOM_LEFT_OUTER,
 	FILL
 }
+
+func _dir_to_string(d:int):
+	match(d):
+		DIRECTION.TOP:
+			return "TOP"
+		DIRECTION.RIGHT:
+			return "RIGHT"
+		DIRECTION.LEFT:
+			return "LEFT"
+		DIRECTION.BOTTOM:
+			return "BOTTOM"
+		DIRECTION.FILL:
+			return "FILL"
+		DIRECTION.TOP_LEFT_INNER:
+			return "TOP-LEFT-INNER"
+		DIRECTION.TOP_RIGHT_INNER:
+			return "TOP-RIGHT-INNER"
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			return "BOTTOM-RIGHT-INNER"
+		DIRECTION.BOTTOM_LEFT_INNER:
+			return "BOTTOM-LEFT-INNER"
+		DIRECTION.TOP_LEFT_OUTER:
+			return "TOP-LEFT-OUTER"
+		DIRECTION.TOP_RIGHT_OUTER:
+			return "TOP-RIGHT-OUTER"
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			return "BOTTOM-RIGHT-OUTER"
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			return "BOTTOM-LEFT-OUTER"
+	return "???"
+
+signal on_dirty_update()
 
 # Used to organize all requested meshes to be rendered by their texture
 class MeshInfo:
@@ -40,19 +79,22 @@ export (bool) var editor_debug = null setget _set_editor_debug
 export (Curve2D) var curve:Curve2D = null setget _set_curve
 export (bool) var closed_shape = false setget _set_close_shape
 export (bool) var auto_update_collider = false setget _set_auto_update_collider
+export (int, 1, 8) var tessellation_stages = 5 setget _set_tessellation_stages
+export (int, 1, 8) var tessellation_tolerence = 4 setget _set_tolerence
 export (bool) var use_global_space = false setget _set_use_global_space
 export (NodePath) var collision_polygon_node
 export (int, 1, 512) var collision_bake_interval = 20
 export (bool) var draw_edges:bool = false setget _set_has_edge
+export (bool) var mirror_angle:bool = true
 export (bool) var flip_edges:bool = false setget _set_flip_edge
-export (Array, int) var texture_indices=null setget _set_texture_indices
-export (Array, bool) var texture_flip_indices=null setget _set_texture_flip_indices
-export (Array, float, 0, 10) var width_indices=null setget _set_width_indices
-export (Resource) var shape_material = preload("RMSmartShapeMaterial.gd").new() setget _set_material
+
+export (Resource) var shape_material = RMS2D_Material.new() setget _set_material
 
 # This will set true if it is time to rebake mesh, should prevent unnecessary
 # mesh creation unless a change to a property deems it necessary
-var dirty:bool = true 	# might be able to remove and replace by using change in point_change_index
+var _dirty:bool = true 	# might be able to remove and replace by using change in point_change_index
+
+var vertex_properties = RMS2D_VertexPropertiesArray.new(0)
 
 # For rendering fill and edges
 var meshes:Array = Array()
@@ -71,12 +113,8 @@ signal points_modified
 # GODOT #
 #########
 func _init():
-	if texture_indices == null:
-		texture_indices = []
-	if texture_flip_indices == null:
-		texture_flip_indices = []
-	if width_indices == null:
-		width_indices = []
+	pass
+
 func _ready():
 	if curve==null:
 		curve = Curve2D.new()
@@ -84,27 +122,41 @@ func _ready():
 func _process(delta):
 	if not is_inside_tree():
 		return
-	if dirty:
-		if auto_update_collider:
-			bake_collision()
-		bake_mesh()
+	_on_dirty_update()
 
 func _enter_tree():
 	pass
 
 func _exit_tree():
 	if shape_material != null:
-		if ClassDB.class_has_signal("RMSmartShapeMaterial","changed"):
+		if ClassDB.class_has_signal("RMS2D_Material","changed"):
 			shape_material.disconnect("changed", self, "_handle_material_change")
+
+func _on_dirty_update():
+	if _dirty:
+		fix_close_shape()
+		if auto_update_collider:
+			bake_collision()
+		bake_mesh()
+		update()
+		_dirty = false
+		emit_signal("on_dirty_update")
+
+"""
+Will make sure a shape is closed or open after removing / adding / changing a point
+"""
+func fix_close_shape():
+	var point_count = get_point_count()
+	if closed_shape and get_point_position(0) != get_point_position(point_count - 1):
+		add_point_to_curve(get_point_position(0))
+		bake_mesh()
+	elif not closed_shape and get_point_position(0) == get_point_position(point_count-1) and point_count > 2:
+		remove_point(point_count-1)
+		bake_mesh()
 
 func _draw():
 	if not is_inside_tree():
 		return
-
-	if dirty and auto_update_collider:
-		bake_collision()
-	bake_mesh()
-	dirty = false
 
 	# Draw fill
 	for mesh in meshes:
@@ -127,15 +179,22 @@ func _draw():
 			for m in mesh.meshes:
 				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
-	# and Finally, Draw Top
+	# Draw Top
 	for mesh in meshes:
 		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and \
 			mesh.direction == DIRECTION.TOP:
 			for m in mesh.meshes:
 				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
+	# Draw Corners
+	for mesh in meshes:
+		if mesh != null and mesh.meshes.size() != 0 and mesh.texture != null and \
+			_is_corner_direction(mesh.direction):
+			for m in mesh.meshes:
+				draw_mesh(m, mesh.texture, mesh.normal_texture)
+
 	# Draw edge quads for debug purposes (ONLY IN EDITOR)
-	if Engine.editor_hint == true and editor_debug == true:
+	if Engine.editor_hint and editor_debug:
 		for q in quads:
 			var t:QuadInfo = q
 			draw_line(t.pt_a, t.pt_b, t.color)
@@ -143,29 +202,66 @@ func _draw():
 			draw_line(t.pt_c, t.pt_d, t.color)
 			draw_line(t.pt_d, t.pt_a, t.color)
 
+		var _range
+		if not closed_shape:
+			_range = range(1,quads.size())
+		else:
+			_range = range(quads.size())
+
+		for index in _range:
+			if not (index % 3 == 0):
+				continue
+			# Skip the first and last vert if the shape isn't closed
+			if (not closed_shape and (index == 0 or index == quads.size())):
+				continue
+			var this_quad:QuadInfo = quads[index % quads.size()]
+			draw_circle(this_quad.pt_a, 3, Color(0.5,0,0))
+			draw_circle(this_quad.pt_b, 3, Color(0,0,0.5))
+			draw_circle(this_quad.pt_c, 3, Color(0,0.5,0))
+			draw_circle(this_quad.pt_d, 3, Color(0.5,0,0.5))
+		for index in _range:
+			if not ((index+1) % 3 == 0):
+				continue
+			# Skip the first and last vert if the shape isn't closed
+			if (not closed_shape and (index == 0 or index == quads.size())):
+				continue
+			var this_quad:QuadInfo = quads[index % quads.size()]
+			draw_circle(this_quad.pt_a, 2, Color(0.75,0,0))
+			draw_circle(this_quad.pt_b, 2, Color(0,0,0.75))
+			draw_circle(this_quad.pt_c, 2, Color(0,0.75,0))
+			draw_circle(this_quad.pt_d, 2, Color(0.75,0,0.75))
+		for index in _range:
+			if not ((index+2) % 3 == 0):
+				continue
+			# Skip the first and last vert if the shape isn't closed
+			if (not closed_shape and (index == 0 or index == quads.size())):
+				continue
+			var this_quad:QuadInfo = quads[index % quads.size()]
+			draw_circle(this_quad.pt_a, 1, Color(1,0,0))
+			draw_circle(this_quad.pt_b, 1, Color(0,0,1))
+			draw_circle(this_quad.pt_c, 1, Color(0,1,0))
+			draw_circle(this_quad.pt_d, 1, Color(1,0,1))
+
 #####################
 # SETTERS / GETTERS #
 #####################
-func _set_texture_indices(value:Array):
-	texture_indices = value.duplicate()
-	_set_as_dirty()
+func _set_tessellation_stages(value:int):
+	tessellation_stages = value
+	set_as_dirty()
 
-func _set_texture_flip_indices(value:Array):
-	texture_flip_indices = value.duplicate()
-	_set_as_dirty()
+func _set_tolerence(value:int):
+	tessellation_tolerence = value
+	set_as_dirty()
 
-func _set_width_indices(value:Array):
-	width_indices = value.duplicate()
-	_set_as_dirty()
-
-func _set_material(value:RMSmartShapeMaterial):
+func _set_material(value:RMS2D_Material):
 	if shape_material != null and shape_material.is_connected("changed", self, "_handle_material_change"):
 		shape_material.disconnect("changed", self, "_handle_material_change")
 
 	shape_material = value
 	if (shape_material != null):
 		shape_material.connect("changed", self, "_handle_material_change")
-	_set_as_dirty()
+	set_as_dirty()
+
 
 func _set_close_shape(value):
 	if curve.get_point_count() < 3:
@@ -183,7 +279,7 @@ func _set_close_shape(value):
 		if first_point == final_point:
 			remove_point(curve.get_point_count()-1)
 
-	_set_as_dirty()
+	set_as_dirty()
 
 	if Engine.editor_hint:
 		property_list_changed_notify()
@@ -196,72 +292,82 @@ func _set_auto_update_collider(value:bool):
 func _set_curve(value:Curve2D):
 	curve = value
 
-	texture_indices.resize(curve.get_point_count())
-	texture_flip_indices.resize(curve.get_point_count())
-	width_indices.resize(curve.get_point_count())
+	if vertex_properties.resize(curve.get_point_count()):
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	_set_as_dirty()
-	emit_signal("points_modified")
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
-	if Engine.editor_hint:
-		property_list_changed_notify()
+
 
 ######################
 # SET/GET FOR ARRAYS #
 ######################
-
 func set_point_width(width:float, at_position:int):
-	if _is_array_index_in_range(width_indices, at_position):
-		width_indices[at_position] = width
+	if vertex_properties.set_width(width, at_position):
+		point_change_index += 1
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	point_change_index += 1
-	_set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 func get_point_width(at_position:int)->float:
-	if _is_array_index_in_range(width_indices, at_position):
-		return width_indices[at_position]
-	return 0.0
-	
+	return vertex_properties.get_width(at_position)
+
 func is_closed_shape()->bool:
 	return closed_shape
 
-func set_point_texture_index(index:int, at_position:int):
-	if _is_array_index_in_range(texture_indices, at_position):
-		texture_indices[at_position] = index
+func set_point_texture_index(point_index:int, tex_index:int):
+	if vertex_properties.set_texture_idx(tex_index, point_index):
+		point_change_index += 1
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	point_change_index += 1
-	_set_as_dirty()
-	emit_signal("points_modified")
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
-	if Engine.editor_hint:
-		property_list_changed_notify()
-
-func get_point_texture_index(at_position:int):
-	if _is_array_index_in_range(texture_indices, at_position):
-		return texture_indices[at_position]
-	return -1
+func get_point_texture_index(at_position:int)->int:
+	return vertex_properties.get_texture_idx(at_position)
 
 func get_point_texture_flip(at_position:int)->bool:
-	if _is_array_index_in_range(texture_flip_indices, at_position):
-		return texture_flip_indices[at_position]
-	return false
+	return vertex_properties.get_flip(at_position)
 
 func set_point_texture_flip(flip:bool, at_position:int):
-	if _is_array_index_in_range(texture_flip_indices, at_position):
-		texture_flip_indices[at_position] = flip
+	if vertex_properties.set_flip(flip, at_position):
 		point_change_index += 1
-		_set_as_dirty()
+		set_as_dirty()
 		emit_signal("points_modified")
-	if Engine.editor_hint:
-		property_list_changed_notify()
+
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 ######################
 ######################
 ######################
+
+func set_point_in(idx:int, p:Vector2):
+	if curve != null:
+		curve.set_point_in(idx, p)
+		set_as_dirty()
+		emit_signal("points_modified")
+
+func set_point_out(idx:int, p:Vector2):
+	if curve != null:
+		curve.set_point_out(idx, p)
+		set_as_dirty()
+		emit_signal("points_modified")
+
+func get_point_in(idx:int)->Vector2:
+	if curve != null:
+		return curve.get_point_in(idx)
+	return Vector2(0,0)
+
+func get_point_out(idx:int)->Vector2:
+	if curve != null:
+		return curve.get_point_out(idx)
+	return Vector2(0,0)
 
 func get_closest_point(to_point:Vector2):
 	if curve != null:
@@ -273,22 +379,21 @@ func get_closest_offset(to_point:Vector2):
 		return curve.get_closest_offset(to_point)
 	return null
 
-
 func _set_editor_debug(value:bool):
 	editor_debug = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_flip_edge(value):
 	flip_edges = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_has_edge(value):
 	draw_edges = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func _set_use_global_space(value):
 	use_global_space = value
-	_set_as_dirty()
+	set_as_dirty()
 
 func get_point_count():
 	if curve == null:
@@ -329,6 +434,9 @@ func _add_uv_to_surface_tool(surface_tool:SurfaceTool, uv:Vector2):
 	surface_tool.add_uv2(uv)
 
 func are_points_clockwise()->bool:
+	# Not relevant if this isn't a closed shape (?)
+	#if not closed_shape:
+		#return true
 	if _clockwise_point_change_index == point_change_index:
 		return is_clockwise
 
@@ -357,41 +465,193 @@ func _weld_quads(quads:Array, custom_scale:float = 1.0):
 
 		var previous_quad:QuadInfo = quads[(index-1) % quads.size()]
 		var this_quad:QuadInfo = quads[index % quads.size()]
+		var next_quad:QuadInfo = quads[(index+1) % quads.size()]
 
 		var needed_length:float = 0.0
 		if previous_quad.tex != null and this_quad.tex != null:
 			needed_length = (previous_quad.tex.get_size().y +\
 											 (this_quad.tex.get_size().y * this_quad.width_factor)) * 0.5
 
-		var pt1 = (previous_quad.pt_d + this_quad.pt_a) * 0.5
-		var pt2 = (previous_quad.pt_c + this_quad.pt_b) * 0.5
+		if not _is_corner_direction(previous_quad.direction) and not _is_inner_direction(this_quad.direction):
+			var pt1 = (previous_quad.pt_d + this_quad.pt_a) * 0.5
+			var pt2 = (previous_quad.pt_c + this_quad.pt_b) * 0.5
 
-		var mid_point:Vector2 = (pt1 + pt2) * 0.5
-		var half_line:Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale * 0.5
+			var mid_point:Vector2 = (pt1 + pt2) * 0.5
+			var half_line:Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale * 0.5
 
-		if half_line != Vector2.ZERO:
-			pt2 = mid_point + half_line
-			pt1 = mid_point - half_line
+			if half_line != Vector2.ZERO:
+				pt2 = mid_point + half_line
+				pt1 = mid_point - half_line
 
-		this_quad.pt_a = pt1
-		this_quad.pt_b = pt2
-		previous_quad.pt_d = pt1
-		previous_quad.pt_c = pt2
+			this_quad.pt_a = pt1
+			this_quad.pt_b = pt2
+			previous_quad.pt_d = pt1
+			previous_quad.pt_c = pt2
+		else:
+			if _is_outer_direction(previous_quad.direction):
+				previous_quad.pt_c = this_quad.pt_a
+				this_quad.pt_b = previous_quad.pt_b
+			elif _is_inner_direction(previous_quad.direction):
+				var previous_previous_quad:QuadInfo = quads[(index-2) % quads.size()]
+				var pt1 = (previous_quad.pt_a + this_quad.pt_b) / 2.0
+				var pt2 = (previous_quad.pt_d + this_quad.pt_a) / 2.0
+				previous_quad.pt_a = pt1
+				previous_quad.pt_d = pt2
+				previous_previous_quad.pt_d = pt2
+				this_quad.pt_b = pt1
+				this_quad.pt_a = pt2
 
-func _get_direction(point_1, point_2, top_tilt, bottom_tilt)->int:
-	var v1:Vector2 = point_1
-	var v2:Vector2 = point_2
+"""
+Takes two values from the DIRECTION enum
+The order of the params does matter
 
-	if use_global_space == true:
-		v1 = get_global_transform().xform(point_1)
-		v2 = get_global_transform().xform(point_2)
+Will return true if an angle is an outer angle (greater than 180 degrees)
 
-	var top_mid = 0.0
-	var bottom_mid = PI
+"""
+func _is_outer_angle(d1:int, d2:int)->bool:
+	if are_points_clockwise():
+		# This works because the DIRECTION enum is defined in clockwise order
+		if d1 == DIRECTION.LEFT and d2 == DIRECTION.TOP:
+			return true
+		return (d1+1) == d2
+	else:
+		# This works because the DIRECTION enum is defined in clockwise order
+		if d1 == DIRECTION.TOP and d2 == DIRECTION.LEFT:
+			return true
+		return (d1-1) == d2
+
+"""
+Takes two values from the DIRECTION enum
+If the two directions form a valid corner, will return that corner's DIRECTION Enum value
+if invalid, will return -1
+"""
+func _get_corner_direction(d1:int, d2:int)->int:
+	var dirs = [d1, d2]
+	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.LEFT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.TOP_LEFT_OUTER
+		return DIRECTION.TOP_LEFT_INNER
+
+	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.RIGHT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.TOP_RIGHT_OUTER
+		return DIRECTION.TOP_RIGHT_INNER
+
+	if dirs.has(DIRECTION.BOTTOM) and dirs.has(DIRECTION.RIGHT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.BOTTOM_RIGHT_OUTER
+		return DIRECTION.BOTTOM_RIGHT_INNER
+
+	if dirs.has(DIRECTION.BOTTOM) and dirs.has(DIRECTION.LEFT):
+		if _is_outer_angle(d1, d2):
+			return DIRECTION.BOTTOM_LEFT_OUTER
+		return DIRECTION.BOTTOM_LEFT_INNER
+
+	return -1
+
+"""
+Takes a values from the DIRECTION enum
+If the direction is a cardinal direction (Top,Bottom,Left,Right)
+	Will return true
+else return false
+"""
+func _is_cardinal_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP:
+			return true
+		DIRECTION.LEFT:
+			return true
+		DIRECTION.RIGHT:
+			return true
+		DIRECTION.BOTTOM:
+			return true
+	return false
+func _is_corner_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP_LEFT_INNER:
+			return true
+		DIRECTION.TOP_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_LEFT_INNER:
+			return true
+		DIRECTION.TOP_LEFT_OUTER:
+			return true
+		DIRECTION.TOP_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			return true
+	return false
+func _is_inner_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP_LEFT_INNER:
+			return true
+		DIRECTION.TOP_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			return true
+		DIRECTION.BOTTOM_LEFT_INNER:
+			return true
+	return false
+func _is_outer_direction(d:int)->bool:
+	match(d):
+		DIRECTION.TOP_LEFT_OUTER:
+			return true
+		DIRECTION.TOP_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			return true
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			return true
+	return false
+
+func _get_direction_three_points(point:Vector2, point_next:Vector2, point_prev:Vector2,\
+																 top_tilt:float, bottom_tilt:float)->int:
+	var a = point - point_prev
+	var b = point - point_next
+	var c = point_prev - point_next
+
+	var a_len = a.length()
+	var b_len = b.length()
+	var c_len = c.length()
+	#var a_angle = arccos((P12 + P13 - P23) / (2 * P12 * P13))
+
+	var ab2 = a_len * b_len * 2
+	var a2_plus_b2_minus_c2 = (a_len*a_len) + (b_len*b_len) - c_len*c_len
+	var _cos = a2_plus_b2_minus_c2 / ab2
+	var b_angle = acos(_cos)
+
+	# This will be between 0.0 and 180.0
+	b_angle = rad2deg(b_angle)
+
+	# No need for a right angle texture if the angle is shallow enough
+	if b_angle > 135:
+		return _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
+
+	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
+	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
+
+	# Need an outer angle texture
+	var corner_dir = _get_corner_direction(ab_dir, bc_dir)
+
+	return corner_dir
+
+
+func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)->int:
+	var v1:Vector2 = point
+	var v2:Vector2 = point_next
+
+	if use_global_space:
+		v1 = get_global_transform().xform(point)
+		v2 = get_global_transform().xform(point_next)
 
 	var clockwise = are_points_clockwise()
-
-	if clockwise == false:
+	var top_mid = 0.0
+	var bottom_mid = PI
+	if not clockwise:
 		top_mid = PI
 		bottom_mid = 0
 
@@ -406,42 +666,44 @@ func _get_direction(point_1, point_2, top_tilt, bottom_tilt)->int:
 		return DIRECTION.BOTTOM
 
 	if angle > 0:
-		if clockwise == true:
+		if clockwise:
 			return DIRECTION.RIGHT
-		else:
-			return DIRECTION.LEFT
+		return DIRECTION.LEFT
 	else:
-		if clockwise == true:
+		if clockwise:
 			return DIRECTION.LEFT
-		else:
-			return DIRECTION.RIGHT
+		return DIRECTION.RIGHT
 
+"""
+The purpose of this function is to
+"""
 func _fix_quads():
 	# TODO: Why is this needed?
 	# quads.resize(quads.size() - 1)
 
 	var _range
-	if closed_shape == false:
+	if not closed_shape:
 		_range = range(1,quads.size())
 	else:
 		_range = range(quads.size())
 
 	# Weld quads if weld_edges is on
-	if shape_material.weld_edges == true:
+	if shape_material.weld_edges:
 		_weld_quads(quads)
 
 	var global_index = 0
+
 	while(quads.size()>0):
 		# Find start of sprite in control point list (change in direction is the key here)
 		var index:int = global_index
 		while quads.size()>0:
-			var previous_quad:QuadInfo = quads[fmod(index - 1, quads.size())]
-			var this_quad:QuadInfo = quads[fmod(index, quads.size())]
+			var previous_quad:QuadInfo = quads[(index-1) % quads.size()]
+			var this_quad:QuadInfo = quads[index % quads.size()]
 
-			if (index == 0 and closed_shape == false) or previous_quad.calculated == true or previous_quad.direction != this_quad.direction:
+			if (index == 0 and not closed_shape) or previous_quad.calculated or previous_quad.direction != this_quad.direction:
 				break
 
-			index = fmod(index - 1, quads.size())
+			index = (index - 1) % quads.size()
 			if index == 0:
 				break
 
@@ -450,15 +712,15 @@ func _fix_quads():
 		var total_length:float = 0.0
 		var change_in_length:float = -1.0
 		while quads.size()>0:
-			var this_quad:QuadInfo = quads[fmod(length_index, quads.size())]
-			var next_quad:QuadInfo = quads[fmod(length_index + 1, quads.size())]
+			var this_quad:QuadInfo = quads[length_index % quads.size()]
+			var next_quad:QuadInfo = quads[(length_index+1) % quads.size()]
 
 			total_length += this_quad.get_length()
 
-			if (length_index + 1 == quads.size() and closed_shape == false) or next_quad.direction != this_quad.direction or next_quad.tex != this_quad.tex or next_quad.flip_texture != this_quad.flip_texture:
+			if (length_index + 1 == quads.size() and not closed_shape) or next_quad.direction != this_quad.direction or next_quad.tex != this_quad.tex or next_quad.flip_texture != this_quad.flip_texture:
 				break
 
-			length_index = fmod(length_index + 1, quads.size())
+			length_index = (length_index + 1) % quads.size()
 			if length_index == index:
 				break
 
@@ -472,9 +734,9 @@ func _fix_quads():
 
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		while true:
-			var quad_index:int = fmod(index, quads.size())
-			var this_quad:QuadInfo = quads[fmod(quad_index, quads.size())]
-			var next_quad:QuadInfo = quads[fmod(quad_index + 1, quads.size())]
+			var quad_index:int = index % quads.size()
+			var this_quad:QuadInfo = quads[quad_index % quads.size()]
+			var next_quad:QuadInfo = quads[(quad_index+1) % quads.size()]
 			var section_length:float = this_quad.get_length()
 
 			if tex == null:
@@ -499,7 +761,7 @@ func _fix_quads():
 
 			# A
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0) )
@@ -507,7 +769,7 @@ func _fix_quads():
 
 			# B
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 1) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 1) )
@@ -515,7 +777,7 @@ func _fix_quads():
 
 			# C
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 1) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (section_length + length)) / tex.get_size().x, 1) )
@@ -523,7 +785,7 @@ func _fix_quads():
 
 			# A
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0) )
@@ -531,7 +793,7 @@ func _fix_quads():
 
 			# C
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 1) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (length + section_length)) / tex.get_size().x, 1) )
@@ -539,13 +801,18 @@ func _fix_quads():
 
 			# D
 			if tex != null:
-				if this_quad.flip_texture == false:
+				if not this_quad.flip_texture:
 					_add_uv_to_surface_tool(st, Vector2((length + section_length) / tex.get_size().x, 0) )
 				else:
 					_add_uv_to_surface_tool(st, Vector2((total_length * change_in_length - (length + section_length)) / tex.get_size().x, 0) )
 			st.add_vertex( _to_vector3( this_quad.pt_d ) )
 
-			if (quad_index + 1 == quads.size() and closed_shape == false) or this_quad.tex != next_quad.tex or this_quad.direction != next_quad.direction or next_quad.flip_texture != this_quad.flip_texture or fmod(index + 1,quads.size()) == mesh_index:
+			# If we need to recalculate for the next quad
+			if (quad_index + 1 == quads.size() and not closed_shape)\
+			or this_quad.tex != next_quad.tex\
+			or this_quad.direction != next_quad.direction\
+			or next_quad.flip_texture != this_quad.flip_texture\
+			or (index + 1) % quads.size() == mesh_index:
 				mesh_direction = this_quad.direction
 				break
 
@@ -564,13 +831,194 @@ func _fix_quads():
 		else:
 				break
 
+func get_vertices()->Array:
+	var verts = []
+	for i in range(0, curve.get_point_count(), 1):
+		verts.push_back(curve.get_point_position(i))
+	return verts
+"""
+func get_width_offset_from_curve(tessellated_points, idx_tess:int)->float:
+	if width_curve == 0:
+		return 0.0
+
+	var pc = width_curve.get_point_count()
+	var curve_repititions = 1
+	var w_curve_range = width_curve.get_points_count()
+	var tess_range = tessellated_points.size()
+
+	# What about odd numbered ranges?
+	for i in range(1, curve_repititions, 1):
+		new_range = new_range / 2.0
+
+	# Convert idx_tess (in range tess) to range width curve
+	var idx_w_curve = round((idx_tess * w_curve_range) / tess_range)
+	return 0.0
+"""
+
+"""
+Returns a float between 0.0 and 1.0
+0.0 means that this tessellated point is at the same position as the vertex
+0.5 means that this tessellated point is half way between this vertex and the next
+0.999 means that this tessellated point is basically at the next vertex
+1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
+"""
+func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_point_index)->float:
+	if tess_point_index == 0:
+		return 0.0
+
+	var vertex_idx = -1
+	# The total tessellated points betwen two verts
+	var tess_point_count = 0
+	# The index of the passed tess_point_index relative to the starting vert
+	var tess_index_count = 0
+	for i in range(0, tess_points.size(), 1):
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		tess_point_count += 1
+		if i < tess_point_index:
+			tess_index_count += 1
+		if tp == p:
+			if i < tess_point_index:
+				vertex_idx += 1
+				tess_point_count = 0
+				tess_index_count = 0
+			else:
+				break
+
+	return float(tess_index_count) / float(tess_point_count)
+
+func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index)->int:
+	if tess_point_index == 0:
+		return 0
+
+	var vertex_idx = -1
+	for i in range(0, tess_point_index+1, 1):
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		if tp == p:
+			vertex_idx += 1
+	return vertex_idx
+
+func get_tessellated_points()->PoolVector2Array:
+	# Point 0 will be the same on both the curve points and the vertecies
+	# Point size - 1 will be the same on both the curve points and the vertecies
+	var points = curve.tessellate(tessellation_stages)
+	points[0] = curve.get_point_position(0)
+	points[points.size()-1] = curve.get_point_position(curve.get_point_count()-1)
+	return points
+
+func _get_next_point_index(idx:int, points:Array, closed:bool)->int:
+	var new_idx = idx
+	if closed_shape:
+		new_idx = (idx + 1) % points.size()
+	else:
+		new_idx = int(min(idx + 1, points.size() - 1))
+
+	if points[idx] == points[new_idx] and closed:
+		new_idx = _get_next_point_index(new_idx, points, closed)
+	return new_idx
+
+func _get_previous_point_index(idx:int, points:Array, closed:bool)->int:
+	var new_idx = idx
+	if closed_shape:
+		new_idx = idx - 1
+		if new_idx < 0:
+			new_idx += points.size()
+	else:
+		new_idx = int(max(idx-1, 0))
+
+	if points[idx] == points[new_idx] and closed:
+		new_idx = _get_previous_point_index(new_idx, points, closed)
+	return new_idx
+
+func _build_corner_quad(pt_next:Vector2,\
+												pt:Vector2, pt_width:float,
+												pt_prev:Vector2, pt_prev_width:float,
+												direction:int)->QuadInfo:
+	var texture = null
+	var texture_normal = null
+	match(direction):
+		DIRECTION.TOP_LEFT_INNER:
+			texture = shape_material.top_left_inner_texture
+			texture_normal = shape_material.top_left_inner_texture_normal
+		DIRECTION.TOP_RIGHT_INNER:
+			texture = shape_material.top_right_inner_texture
+			texture_normal = shape_material.top_right_inner_texture_normal
+		DIRECTION.BOTTOM_RIGHT_INNER:
+			texture = shape_material.bottom_right_inner_texture
+			texture_normal = shape_material.bottom_right_inner_texture_normal
+		DIRECTION.BOTTOM_LEFT_INNER:
+			texture = shape_material.bottom_left_inner_texture
+			texture_normal = shape_material.bottom_left_inner_texture_normal
+		DIRECTION.TOP_LEFT_OUTER:
+			texture = shape_material.top_left_outer_texture
+			texture_normal = shape_material.top_left_outer_texture_normal
+		DIRECTION.TOP_RIGHT_OUTER:
+			texture = shape_material.top_right_outer_texture
+			texture_normal = shape_material.top_right_outer_texture_normal
+		DIRECTION.BOTTOM_RIGHT_OUTER:
+			texture = shape_material.bottom_right_outer_texture
+			texture_normal = shape_material.bottom_right_outer_texture_normal
+		DIRECTION.BOTTOM_LEFT_OUTER:
+			texture = shape_material.bottom_left_outer_texture
+			texture_normal = shape_material.bottom_left_outer_texture_normal
+
+	var new_quad = QuadInfo.new()
+	if texture == null:
+		return new_quad
+
+
+	var tex_size = texture.get_size()
+	var extents = tex_size / 2.0
+	var delta_12 = pt - pt_prev
+	var delta_23 = pt_next - pt
+	#var delta_12_normal = delta_12.normalized()
+	#var delta_23_normal = delta_23.normalized()
+
+	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
+	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
+
+	"""
+	normal_23 * pt_wdith
+	This will get the extents of the line between pt(2) and pt_next(3)
+
+	normal_12 * pt_wdith
+	This will get the extents of the line between pt(2) and pt_prev(1)
+
+	There are 2 parallel lines formed for each pair of points and an extent value
+
+	We want to find where each extent of 12 and 23 intersect to find the
+	4 points for our quad
+
+	Assuming that pt is the center of our quad, we can find the four points
+	from each possible combination of extents
+		adding one subtracting another
+		adding both
+		subtracting both
+	"""
+	var pt_d = pt + (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
+	var pt_a = pt - (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
+	var pt_c = pt + (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
+	var pt_b = pt - (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
+
+	new_quad.pt_a= pt_a
+	new_quad.pt_b= pt_b
+	new_quad.pt_c= pt_c
+	new_quad.pt_d= pt_d
+	new_quad.direction = direction
+	new_quad.tex = texture
+	new_quad.normal_tex = texture_normal
+
+	return new_quad
+
 func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0, custom_extends:float = 0.0):
 	# The remainder of the code build up the edge quads
 	var tex:Texture = null
 	var tex_normal:Texture = null
 	var tex_size:Vector2
 	var tex_index:int = 0
-	var curve_count = curve.get_point_count()
+	var points = get_tessellated_points()
+	var curve_count = points.size()
 
 	var top_tilt = shape_material.top_texture_tilt
 	var bottom_tilt = shape_material.bottom_texture_tilt
@@ -578,93 +1026,94 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 	var is_clockwise:bool = are_points_clockwise()
 
 	for curve_index in curve_count-1:
-		var pt_index = fmod(curve_index, curve.get_point_count())
-		var pt2_index = fmod(curve_index + 1, curve.get_point_count())
+		var pt_index = curve_index % points.size()
+		var pt_next_index = _get_next_point_index(curve_index, points, closed_shape)
+		var pt_prev_index = _get_previous_point_index(curve_index, points, closed_shape)
 
-		var pt = curve.get_point_position(pt_index)
-		var pt2 = curve.get_point_position(pt2_index)
+		var pt_prev_property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, pt_prev_index)
+		var property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, pt_index)
+		var property_index_next = (property_index + 1) % curve.get_point_count()
 
-		var direction = DIRECTION.TOP
+		var pt = points[pt_index]
+		var pt_next = points[pt_next_index]
+		var pt_prev = points[pt_prev_index]
+
+		var cardinal_direction = DIRECTION.TOP
+		var corner_direction = null
+		var is_cardinal_direction = true
 		if closed_shape:
-			direction = _get_direction(pt, pt2, top_tilt, bottom_tilt)
+			cardinal_direction = _get_direction_two_points(pt, pt_next, top_tilt, bottom_tilt)
+			corner_direction = _get_direction_three_points(pt, pt_next, pt_prev, top_tilt, bottom_tilt)
+			is_cardinal_direction = _is_cardinal_direction(corner_direction)
 
 		tex = null
 		tex_normal = null
 		if shape_material != null:
-			if direction == DIRECTION.TOP:
-				if shape_material.top_texture != null:
-					if not shape_material.top_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.top_texture.size()))
-						if shape_material.top_texture.size() > tex_index:
-							tex = shape_material.top_texture[tex_index]
-						if shape_material.top_texture_normal != null:
-							if shape_material.top_texture_normal.size() > tex_index:
-								tex_normal = shape_material.top_texture_normal[tex_index]
-			if direction == DIRECTION.BOTTOM:
-				if shape_material.bottom_texture != null:
-					if not shape_material.bottom_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.bottom_texture.size()))
-						if shape_material.bottom_texture.size() > tex_index:
-							if shape_material.bottom_texture.size() > tex_index:
-								tex = shape_material.bottom_texture[tex_index]
-						if shape_material.bottom_texture_normal != null:
-							if shape_material.bottom_texture_normal.size() > tex_index:
-								tex_normal = shape_material.bottom_texture_normal[tex_index]
-			if direction == DIRECTION.LEFT:
-				if shape_material.left_texture != null:
-					if not shape_material.left_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.left_texture.size()))
-						if shape_material.left_texture.size() > tex_index:
-							if shape_material.left_texture.size() > tex_index:
-								tex = shape_material.left_texture[tex_index]
-						if shape_material.left_texture_normal != null:
-							if shape_material.left_texture_normal.size() > tex_index:
-								tex_normal = shape_material.left_texture_normal[tex_index]
-			if direction == DIRECTION.RIGHT:
-				if shape_material.right_texture != null:
-					if not shape_material.right_texture.empty():
-						tex_index = abs(fmod(texture_indices[pt_index], shape_material.right_texture.size()))
-						if shape_material.right_texture.size() > tex_index:
-							if shape_material.right_texture.size() > tex_index:
-								tex = shape_material.right_texture[tex_index]
-						if shape_material.right_texture_normal != null:
-							if shape_material.right_texture_normal.size() > tex_index:
-								tex_normal = shape_material.right_texture_normal[tex_index]
-
+			var material_textures_diffuse = null
+			var material_textures_normal = null
+			match(cardinal_direction):
+				DIRECTION.TOP:
+					material_textures_diffuse = shape_material.top_texture
+					material_textures_normal = shape_material.top_texture_normal
+				DIRECTION.BOTTOM:
+					material_textures_diffuse = shape_material.bottom_texture
+					material_textures_normal = shape_material.bottom_texture_normal
+				DIRECTION.LEFT:
+					material_textures_diffuse = shape_material.left_texture
+					material_textures_normal = shape_material.left_texture_normal
+				DIRECTION.RIGHT:
+					material_textures_diffuse = shape_material.right_texture
+					material_textures_normal = shape_material.right_texture_normal
+			if material_textures_diffuse != null:
+				if not material_textures_diffuse.empty():
+					tex_index= abs(vertex_properties.get_texture_idx(property_index)) % material_textures_diffuse.size()
+					if material_textures_diffuse.size() > tex_index:
+						tex = material_textures_diffuse[tex_index]
+					if material_textures_normal != null:
+						if material_textures_normal.size() > tex_index:
+							tex_normal = material_textures_normal[tex_index]
 		if tex != null:
 			tex_size = tex.get_size()
 
-		var vtx:Vector2 = (pt2 - pt)
-		vtx = Vector2(vtx.y, -vtx.x).normalized() * tex_size * 0.5
+		# Get Perpendicular Vector
+		var vtx:Vector2 = Vector2(0,0)
+		var delta = pt_next - pt
+		var delta_normal = delta.normalized()
+		var vtx_normal = Vector2(delta.y, -delta.x).normalized()
+		# TODO
+		# This causes weird rendering if the texture isn't a square
+		# IE, if taller than wide, left/right edges look skinny, whereas top/bottom looks normal
+		# if wider than tall, top/bottom edges look skinny, whereas left/right looks normal
+		vtx = vtx_normal * (tex_size * 0.5)
 
 		var scale_in:float = 1
 		var scale_out:float = 1
 
-		if width_indices[pt_index] != 0.0:
-			scale_in = width_indices[pt_index]
-		if width_indices[pt2_index] != 0.0:
-			scale_out = width_indices[pt2_index]
+		var width = vertex_properties.get_width(property_index)
+		if width != 0.0:
+			scale_in = width
 
-		if are_points_clockwise() == false:
+		if not are_points_clockwise():
 			vtx *= -1
 
-		if flip_edges == true:  # finally, allow developer to override
+		if flip_edges:  # allow developer to override
 			vtx *= -1
 
-		var clr:Color
+		var clr:Color = Color.white
 		var vert_adj:Vector2 = vtx
-		if direction == DIRECTION.TOP:
-			clr = Color.green
-			vert_adj *= shape_material.top_offset
-		elif direction == DIRECTION.RIGHT:
-			clr = Color.red
-			vert_adj *= shape_material.right_offset
-		elif direction == DIRECTION.BOTTOM:
-			clr = Color.blue
-			vert_adj *= shape_material.bottom_offset
-		else:
-			clr = Color.yellow
-			vert_adj *= shape_material.left_offset
+		match(cardinal_direction):
+			DIRECTION.TOP:
+				clr = Color.green
+				vert_adj *= shape_material.top_offset
+			DIRECTION.LEFT:
+				clr = Color.yellow
+				vert_adj *= shape_material.left_offset
+			DIRECTION.RIGHT:
+				clr = Color.red
+				vert_adj *= shape_material.right_offset
+			DIRECTION.BOTTOM:
+				clr = Color.blue
+				vert_adj *= shape_material.bottom_offset
 
 		var offset = Vector2.ZERO
 		if tex != null and custom_offset != 0.0:
@@ -674,22 +1123,61 @@ func _build_quads(quads:Array, custom_scale:float = 1.0, custom_offset:float = 0
 		if not closed_shape:
 			if tex != null:
 				if curve_index == 0:
-					pt -= (pt2 - pt).normalized() * tex.get_size() * custom_extends
+					pt -= (pt_next - pt).normalized() * tex.get_size() * custom_extends
 				if curve_index == curve_count - 2 and tex != null:
-					pt2 -= (pt - pt2).normalized() * tex.get_size() * custom_extends
+					pt_next -= (pt - pt_next).normalized() * tex.get_size() * custom_extends
+
+		var ratio = get_distance_as_ratio_from_tessellated_point(get_vertices(), points, curve_index)
+		var w1 = vertex_properties.get_width(property_index)
+		var w2 = vertex_properties.get_width(property_index_next)
+		var w = lerp(w1, w2, ratio)
+		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(property_index), str(property_index_next), str(w1), ratio, str(w2), str(w)])
 
 		var new_quad = QuadInfo.new()
-		new_quad.pt_a = (pt + vtx * scale_in * custom_scale + vert_adj + offset)
-		new_quad.pt_b = (pt - vtx * scale_in * custom_scale + vert_adj + offset)
-		new_quad.pt_c = (pt2 - vtx * scale_out * custom_scale + vert_adj + offset)
-		new_quad.pt_d = (pt2 + vtx * scale_out * custom_scale + vert_adj + offset)
+		var final_offset_scale_in = vtx * scale_in * custom_scale + vert_adj + offset
+		var final_offset_scale_out = vtx * scale_out * custom_scale + vert_adj + offset
+		new_quad.pt_a = (pt + final_offset_scale_in)
+		new_quad.pt_b = (pt - final_offset_scale_in)
+		new_quad.pt_c = (pt_next - final_offset_scale_out)
+		new_quad.pt_d = (pt_next + final_offset_scale_out)
 		new_quad.color = clr
-		new_quad.direction = direction
+		new_quad.direction = cardinal_direction
 		new_quad.tex = tex
 		new_quad.normal_tex = tex_normal
-		new_quad.flip_texture = texture_flip_indices[pt_index]
-		new_quad.width_factor = width_indices[pt_index]
+		new_quad.flip_texture = vertex_properties.get_flip(property_index)
+		new_quad.width_factor = w
+
+		if not is_cardinal_direction and shape_material.use_corners:
+			var prev_width = vertex_properties.get_width(pt_prev_property_index)
+			var new_quad2 = _build_corner_quad(pt_next, pt, width, pt_prev, prev_width, corner_direction)
+			if new_quad2.tex != null:
+				var previous_quad = null
+				if quads.size() > 0:
+					previous_quad = quads[quads.size()-1]
+				new_quad2.color = Color.purple
+				new_quad2.flip_texture = vertex_properties.get_flip(property_index)
+				new_quad2.width_factor = w
+				quads.push_back(new_quad2)
+
+				var quad2_size = new_quad2.tex.get_size()
+				var quad2_offset = (quad2_size/2.0) * delta_normal
+				new_quad.pt_a += quad2_offset
+				new_quad.pt_b += quad2_offset
+				#new_quad.tex = new_quad2.tex
+				if previous_quad != null:
+					var rotated = Vector2(0,0)
+					if are_points_clockwise():
+						rotated = Vector2(-quad2_offset.y, quad2_offset.x)
+					else:
+						rotated = Vector2(-quad2_offset.y, quad2_offset.x)
+					if _is_inner_direction(corner_direction):
+						rotated *= -1
+					previous_quad.pt_c += rotated
+					previous_quad.pt_d += rotated
+
 		quads.push_back(new_quad)
+
+
 
 func bake_collision():
 	if collision_polygon_node == null or not is_inside_tree():
@@ -706,8 +1194,9 @@ func bake_collision():
 
 			curve.bake_interval = old_interval
 
-			for i in curve.get_point_count():
-				points.push_back( col_polygon.get_global_transform().xform_inv( get_global_transform().xform(curve.get_point_position(i)) ))
+			var curve_points = get_tessellated_points()
+			for i in curve_points:
+				points.push_back( col_polygon.get_global_transform().xform_inv( get_global_transform().xform(i) ))
 		else:
 			var collision_quads = Array()
 			var collision_width = 1.0
@@ -735,7 +1224,7 @@ func bake_collision():
 		col_polygon.polygon = points
 
 func bake_mesh(force:bool = false):
-	if not dirty and not force:
+	if not _dirty and not force:
 		return
 	# Clear Meshes
 	for mesh in meshes:
@@ -744,7 +1233,8 @@ func bake_mesh(force:bool = false):
 	meshes.resize(0)
 
 	# Cant make a mesh without enough points
-	var point_count = curve.get_point_count()
+	var points = get_tessellated_points()
+	var point_count = points.size()#curve.get_point_count()
 	if (closed_shape and point_count < 3) or (not closed_shape and point_count < 2):
 		return
 
@@ -758,7 +1248,7 @@ func bake_mesh(force:bool = false):
 
 	fill_points.resize(point_count)
 	for i in point_count:
-		fill_points[i] = curve.get_point_position(i)
+		fill_points[i] = points[i]#curve.get_point_position(i)
 	#fill_points = curve.get_baked_points()
 
 	var fill_tris:PoolIntArray = Geometry.triangulate_polygon(fill_points)
@@ -770,20 +1260,20 @@ func bake_mesh(force:bool = false):
 
 		for i in range(0, fill_tris.size() - 1, 3):
 			st.add_color(Color.white)
-			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i]) ) )
-			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i]).x, curve.get_point_position(fill_tris[i]).y, 0) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( points[fill_tris[i]] ) )
+			st.add_vertex( Vector3( points[fill_tris[i]].x, points[fill_tris[i]].y, 0) )
 			st.add_color(Color.white)
-			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+1]) ) )
-			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i+1]).x, curve.get_point_position(fill_tris[i+1]).y, 0) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( points[fill_tris[i+1]] ) )
+			st.add_vertex( Vector3( points[fill_tris[i+1]].x, points[fill_tris[i+1]].y, 0) )
 			st.add_color(Color.white)
-			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( curve.get_point_position(fill_tris[i+2]) ) )
-			st.add_vertex( Vector3( curve.get_point_position(fill_tris[i+2]).x, curve.get_point_position(fill_tris[i+2]).y, 0) )
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv( points[fill_tris[i+2]] ) )
+			st.add_vertex( Vector3( points[fill_tris[i+2]].x, points[fill_tris[i+2]].y, 0) )
 		st.index()
 		st.generate_normals()
 		st.generate_tangents()
 		_add_mesh(st.commit(), shape_material.fill_texture, shape_material.fill_texture_normal, DIRECTION.FILL)
 
-	if closed_shape==true and draw_edges==false:
+	if closed_shape and not draw_edges:
 		return
 
 	# Build Edge Quads
@@ -794,24 +1284,18 @@ func bake_mesh(force:bool = false):
 #########
 # CURVE #
 #########
-func add_point_to_curve(position:Vector2, at_position:int=-1):
+func add_point_to_curve(position:Vector2, index:int=-1):
+	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, index)
 	# position '-1' appends to the list
-	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, at_position)
+	if vertex_properties.add_point(index):
+		# If we're able to close the shape now
+		if closed_shape and curve.get_point_count() == 3:
+			fix_close_shape()
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	if at_position < 0:
-		texture_indices.push_back(0)
-		texture_flip_indices.push_back(false)
-		width_indices.push_back(1.0)
-	else:
-		texture_indices.insert(at_position, texture_indices[at_position - 1])
-		texture_flip_indices.insert(at_position, texture_flip_indices[at_position - 1])
-		width_indices.insert(at_position, width_indices[at_position - 1])
-
-	_set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 func _is_curve_index_in_range(i:int)->bool:
 	if curve.get_point_count() > i and i >= 0:
@@ -828,49 +1312,39 @@ func set_point_position(at_position:int, position:Vector2):
 		if _is_curve_index_in_range(at_position):
 			curve.set_point_position(at_position, position)
 			point_change_index += 1
-			_set_as_dirty()
+			set_as_dirty()
 			emit_signal("points_modified")
 
-func remove_point(at_position:int):
-	curve.remove_point(at_position)
-	if _is_array_index_in_range(width_indices, at_position):
-		width_indices.remove(at_position)
-	if _is_array_index_in_range(texture_indices, at_position):
-		texture_indices.remove(at_position)
-	if _is_array_index_in_range(texture_flip_indices, at_position):
-		texture_flip_indices.remove(at_position)
+func remove_point(idx:int):
+	curve.remove_point(idx)
+	if vertex_properties.remove_point(idx):
+		point_change_index += 1
+		set_as_dirty()
+		emit_signal("points_modified")
 
-	point_change_index += 1
-	_set_as_dirty()
-	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 func resize_points(size:int):
 	if size < 0:
 		size = 0
 
 	curve.resize(size)
-	width_indices.resize(size)
-	texture_indices.resize(size)
-	texture_flip_indices.reszie(size)
+	if vertex_properties.resize(size):
+		point_change_index += 1
+		set_as_dirty()
 
-	point_change_index += 1
-	_set_as_dirty()
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
+		if Engine.editor_hint:
+			property_list_changed_notify()
 
 ########
 # MISC #
 ########
-func _set_as_dirty():
-	dirty = true
-	update()
+func set_as_dirty():
+	_dirty = true
 
 func _handle_material_change():
-	_set_as_dirty()
+	set_as_dirty()
 
 func _convert_local_space_to_uv(point:Vector2, custom_size:Vector2=Vector2(0,0)):
 	var pt:Vector2 = point
