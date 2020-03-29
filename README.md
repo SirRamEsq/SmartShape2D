@@ -19,9 +19,6 @@ You might have a desire to anchor nodes to various sections of the RMSmartShape2
 
 This is done by use of the RMSmartShapeAnchor2D node.
 
-# Current State of the Tool
-The tool already appears to be quite useful, and is mostly complete.  However, until it is being utilized by others it is difficult to say.  Therefore, I would consider this tool to be beta at the moment.
-
 # Keyboard Controls
 - Cycle through texture indices of a vertex
   - Mouseover a vertex and MOUSEWHEEL up or down to increment / decrement the texture index
