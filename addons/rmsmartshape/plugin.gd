@@ -21,7 +21,7 @@ enum ACTION {
 
 # The Plugin's Featured Component
 const ShapeClass = RMSmartShape2D
-
+	
 # Icons
 const HANDLE = preload("assets/icon_editor_handle.svg")
 const HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
@@ -331,6 +331,7 @@ func _input_handle_keyboard_event(event:InputEventKey)->bool:
 	return false
 
 func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2D, grab_threshold:float)->bool:
+	var rslt:bool = false
 	var t:Transform2D = et * edit_this.get_global_transform()
 	var mb:InputEventMouseButton = event
 	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
@@ -341,13 +342,15 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 		if current_action.type == ACTION.MOVING_VERT:
 			if current_action.starting_positions[0].distance_to(edit_this.get_point_position(current_action.indices[0])) > grab_threshold:
 				_action_move_verticies()
+				rslt = true
 		var type = current_action.type
 		var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
 		var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
 		if _in or _out:
 			_action_move_control_points(_in, _out)
+			rslt = true
 		deselect_control_points()
-		return true
+		return rslt
 
 
 ###############################################################################################
@@ -356,14 +359,17 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 		if is_single_point_index_valid():
 			_action_delete_point()
 			deselect_control_points()
+			rslt = true
 		else:
 			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
 			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
 			if not points_in.empty():
 				_action_delete_point_in(points_in[0])
+				rslt = true
 			elif not points_out.empty():
 				_action_delete_point_out(points_out[0])
-		return true
+				rslt = true
+		return rslt
 
 ###############################################################################################
 	# Mouse Wheel up on valid point
@@ -376,6 +382,8 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			edit_this.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
+			
+			rslt = true
 		else:
 			var index:int = edit_this.get_point_texture_index(current_point_index()) + 1
 			var flip:bool = edit_this.get_point_texture_flip(current_point_index())
@@ -385,7 +393,9 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			edit_this.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
-		return true
+			
+			rslt = true
+		return rslt
 
 ###############################################################################################
 	# Mouse Wheel down on valid point
@@ -398,6 +408,8 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			edit_this.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
+			
+			rslt = true
 		else:
 			var index = edit_this.get_point_texture_index(current_point_index()) - 1
 			edit_this.set_point_texture_index(current_point_index(), index)
@@ -405,7 +417,9 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			edit_this.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
-		return true
+			
+			rslt = true
+		return rslt
 
 ###############################################################################################
 	# Mouse left click on valid point
@@ -421,20 +435,24 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			select_vertices_to_move([current_point_index()], viewport_mouse_position)
 			return true
 
+
 ###############################################################################################
 	# Mouse Left click
 	elif mb.pressed and mb.button_index == BUTTON_LEFT:
 		#First, check if we are changing our pivot point
 		if (current_mode == MODE.SET_PIVOT) or (current_mode == MODE.EDIT and mb.control):
 			_action_set_pivot(mb.position, et)
+			return true
 
 		elif current_mode == MODE.EDIT and not on_edge:
 			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
 			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
 			if not points_in.empty():
 				select_control_points_to_move([points_in[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_IN)
+				return true
 			elif not points_out.empty():
 				select_control_points_to_move([points_out[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_OUT)
+				return true
 
 		elif current_mode == MODE.CREATE and not on_edge:
 			if (edit_this.closed_shape and edit_this.get_point_count() < 3) or not edit_this.closed_shape:
@@ -472,7 +490,8 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 					insertion_point = edit_this.get_point_count() - 2
 
 				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
-
+				return true
+				
 			else:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
@@ -501,8 +520,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				on_edge = false
 
 				select_vertices_to_move([insertion_point+1], viewport_mouse_position)
+				
+				return true
 
-		return true
+	print("Return false")
 	return false
 
 func _debug_mouse_positions(mm, t):
@@ -524,6 +545,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	var mm:InputEventMouseMotion = event
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
+	var rslt:bool = false
 
 	var type = current_action.type
 	var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
@@ -542,11 +564,13 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			if edit_this.closed_shape and (idx == edit_this.get_point_count() - 1 or idx == 0):
 				edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
 				edit_this.set_point_position(0, snapped_position)
+				rslt = true
 			else:
 				edit_this.set_point_position(idx, snapped_position)
+				rslt = true
 			edit_this.bake_mesh()
 			update_overlays()
-		return true
+		return rslt
 
 	elif _in or _out:
 		for i in range(0, current_action.indices.size(), 1):
@@ -566,17 +590,21 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 				if _in:
 					edit_this.set_point_in(edit_this.get_point_count() - 1, snapped_position_in)
 					edit_this.set_point_in(0, snapped_position_in)
+					rslt = true
 				if _out:
 					edit_this.set_point_out(edit_this.get_point_count() - 1, snapped_position_out)
 					edit_this.set_point_out(0, snapped_position_out)
+					rslt = true
 			else:
 				if _in:
 					edit_this.set_point_in(idx, snapped_position_in)
+					rslt = true
 				if _out:
 					edit_this.set_point_out(idx, snapped_position_out)
+					rslt = true
 			edit_this.bake_mesh()
 			update_overlays()
-		return true
+		return rslt
 
 
 	# Handle Edge Follow
@@ -586,7 +614,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	var gpoint:Vector2 = mm.position
 
 	if edit_this.get_point_count() < 2:
-		return true
+		return rslt
 
 	# Find edge
 	edge_point = xform.xform(edit_this.get_closest_point(xform.affine_inverse().xform(mm.position)))
@@ -610,7 +638,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	if on_edge or old_edge != on_edge:
 		update_overlays()
 
-	return true
+	return rslt
 
 func forward_canvas_gui_input(event):
 	if edit_this == null:
