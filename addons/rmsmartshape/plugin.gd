@@ -523,7 +523,6 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				
 				return true
 
-	print("Return false")
 	return false
 
 func _debug_mouse_positions(mm, t):
