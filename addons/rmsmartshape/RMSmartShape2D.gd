@@ -78,11 +78,20 @@ class QuadInfo:
 	var tex: Texture
 	var normal_tex: Texture
 	var flip_texture: bool = false
-	var calculated: bool = false
+	# Used with the Adjust_Quads method
+	var adjusted: bool = false
 	var width_factor: float = 1.0
 
-	func get_length():
+	func get_length() -> float:
 		return (pt_d.distance_to(pt_a) + pt_c.distance_to(pt_b)) * 0.5
+
+	func different_render(q: QuadInfo) -> bool:
+		"""
+		Will return true if this quad is part of a different render sequence than q
+		"""
+		if q.direction != direction or q.tex != tex or q.flip_texture != flip_texture:
+			return true
+		return false
 
 
 export (bool) var editor_debug = null setget _set_editor_debug
@@ -588,16 +597,14 @@ func _weld_quads(quads: Array, custom_scale: float = 1.0):
 				this_quad.pt_a = pt2
 
 
-"""
-Takes two values from the DIRECTION enum
-The order of the params does matter
-
-Will return true if an angle is an outer angle (greater than 180 degrees)
-
-"""
-
-
 func _is_outer_angle(d1: int, d2: int) -> bool:
+	"""
+	Takes two values from the DIRECTION enum
+	The order of the params does matter
+
+	Will return true if an angle is an outer angle (greater than 180 degrees)
+
+	"""
 	if are_points_clockwise():
 		# This works because the DIRECTION enum is defined in clockwise order
 		if d1 == DIRECTION.LEFT and d2 == DIRECTION.TOP:
@@ -610,14 +617,12 @@ func _is_outer_angle(d1: int, d2: int) -> bool:
 		return (d1 - 1) == d2
 
 
-"""
-Takes two values from the DIRECTION enum
-If the two directions form a valid corner, will return that corner's DIRECTION Enum value
-if invalid, will return -1
-"""
-
-
 func _get_corner_direction(d1: int, d2: int) -> int:
+	"""
+	Takes two values from the DIRECTION enum
+	If the two directions form a valid corner, will return that corner's DIRECTION Enum value
+	if invalid, will return -1
+	"""
 	var dirs = [d1, d2]
 	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.LEFT):
 		if _is_outer_angle(d1, d2):
@@ -642,15 +647,13 @@ func _get_corner_direction(d1: int, d2: int) -> int:
 	return -1
 
 
-"""
-Takes a values from the DIRECTION enum
-If the direction is a cardinal direction (Top,Bottom,Left,Right)
-	Will return true
-else return false
-"""
-
-
 func _is_cardinal_direction(d: int) -> bool:
+	"""
+	Takes a values from the DIRECTION enum
+	If the direction is a cardinal direction (Top,Bottom,Left,Right)
+		Will return true
+	else return false
+	"""
 	match d:
 		DIRECTION.TOP:
 			return true
@@ -731,6 +734,7 @@ func _get_direction_three_points(
 	b_angle = rad2deg(b_angle)
 
 	# No need for a right angle texture if the angle is shallow enough
+	# TODO Make this 135 degrees an exported parameter
 	if b_angle > 135:
 		return _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
 
@@ -778,53 +782,121 @@ func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt) -> int:
 		return DIRECTION.RIGHT
 
 
-func _fix_quads(quads: Array):
+func _adjust_mesh_quads(quads: Array):
 	"""
-	The purpose of this function is to
+	The purpose of this function is to adjust mesh quads so they look good
+	Not intended for collision quads
 	"""
-	# TODO: Why is this needed?
-	# _quads.resize(_quads.size() - 1)
+	if quads.size() < 1:
+		return
 
-	var _range
+	var quad_range
+	var quad_range_len = 0
+	var global_index = 0
 	if not closed_shape:
-		_range = range(1, quads.size())
+		quad_range = range(1, quads.size())
+		quad_range_len = quads.size() - 1
+		global_index = 1
 	else:
-		_range = range(quads.size())
+		quad_range = range(quads.size())
+		quad_range_len = quads.size()
 
 	# Weld quads if weld_edges is on
 	if shape_material.weld_edges:
 		_weld_quads(quads)
 
-	var global_index = 0
+	# Lloyd Update
+	# This function needs to be broken up into to steps
+	# Step 1
+	#   - Return an array of arrays containing the indexes for each consecutive segment
+	# Step 2
+	#   For array in arrays
+	#     - Process array (adjust_mesh_quad)
 
-	while quads.size() > 0:
+	var quad_segments = []
+
+	# Get initial start index
+	var initial_start_index = 0
+	if closed_shape:
+		for i in quad_range:
+			initial_start_index = i
+			var prev_quad_index = (i - 1) % quads.size()
+			var this_quad: QuadInfo = quads[i]
+			var prev_quad: QuadInfo = quads[prev_quad_index]
+			if (
+				(i + 1 == quads.size() and not closed_shape)
+				or this_quad.different_render(prev_quad)
+			):
+				break
+
+	var start_index: int = initial_start_index
+	for j in quad_range:
+		var new_segment = []
+		for i in range(quads.size()):
+			var length_index = (start_index + i) % quads.size()
+			var length_index_next: int = (start_index + i + 1) % quads.size()
+			new_segment.push_back(length_index)
+
+			var this_quad: QuadInfo = quads[length_index]
+			var next_quad: QuadInfo = quads[length_index_next]
+			# Break if change detected
+			if (
+				(length_index + 1 == quads.size() and not closed_shape)
+				or this_quad.different_render(next_quad)
+			):
+				break
+		quad_segments.push_back(new_segment)
+		start_index += new_segment.size()
+		j += new_segment.size()
+		if (
+			(start_index == quads.size() and not closed_shape)
+			or ((start_index) % quads.size() == initial_start_index and closed_shape)
+		):
+			break
+	#print("=====")
+	#print(
+	#(
+	#"size:%s  |  init: %s  |  start: %s  |  segments: %s"
+	#% [quads.size(), initial_start_index, start_index, quad_segments.size()]
+	#)
+	#)
+	#for i in range(quad_segments.size()):
+	#print("Segment %s" % i)
+	#var segment = quad_segments[i]
+	#for idx in segment:
+	#print("IDX: %s" % str(idx))
+
+	while not quads[global_index].adjusted and not (global_index == 0 and not closed_shape):
 		# Find start of sprite in control point list (change in direction is the key here)
-		var index: int = global_index
-		while quads.size() > 0:
-			var previous_quad: QuadInfo = quads[(index - 1) % quads.size()]
-			var this_quad: QuadInfo = quads[index % quads.size()]
+		start_index = global_index
+
+		while true:
+			var previous_quad: QuadInfo = quads[(start_index - 1) % quads.size()]
+			var this_quad: QuadInfo = quads[start_index % quads.size()]
 
 			if (
-				(index == 0 and not closed_shape)
-				or previous_quad.calculated
+				(start_index == 0 and not closed_shape)
+				or previous_quad.adjusted
 				or previous_quad.direction != this_quad.direction
 			):
 				break
 
-			index = (index - 1) % quads.size()
-			if index == 0:
+			start_index = (start_index - 1) % quads.size()
+			if start_index == 0:
 				break
 
 		# Calculate total length of the sprite run (change in direction, or change in texture is the key here)
-		var length_index: int = index
+		var length_index: int = start_index
 		var total_length: float = 0.0
-		var change_in_length: float = -1.0
-		while quads.size() > 0:
-			var this_quad: QuadInfo = quads[length_index % quads.size()]
-			var next_quad: QuadInfo = quads[(length_index + 1) % quads.size()]
+		for i in quad_range:
+			length_index = (start_index + i) % quad_range_len
+			var length_index_next: int = (start_index + i + 1) % quad_range_len
+			var this_quad: QuadInfo = quads[length_index]
+			var next_quad: QuadInfo = quads[length_index_next]
 
 			total_length += this_quad.get_length()
 
+			# Break if change detected
 			if (
 				(length_index + 1 == quads.size() and not closed_shape)
 				or next_quad.direction != this_quad.direction
@@ -833,21 +905,18 @@ func _fix_quads(quads: Array):
 			):
 				break
 
-			length_index = (length_index + 1) % quads.size()
-			if length_index == index:
-				break
-
 		# Iterate over the quads now until change in direction or texture or looped around
-		var mesh_index: int = index
+		var mesh_start_index: int = start_index
 		var st: SurfaceTool = SurfaceTool.new()
 		var tex: Texture = null
 		var normal_tex: Texture = null
 		var length: float = 0.0
 		var mesh_direction: int
+		var change_in_length: float = -1.0
 
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		while true:
-			var quad_index: int = index % quads.size()
+		for i in quad_range:
+			var quad_index: int = start_index % quads.size()
 			var this_quad: QuadInfo = quads[quad_index % quads.size()]
 			var next_quad: QuadInfo = quads[(quad_index + 1) % quads.size()]
 			var section_length: float = this_quad.get_length()
@@ -871,7 +940,7 @@ func _fix_quads(quads: Array):
 			if section_length == 0:
 				section_length = tex.get_size().x
 
-			this_quad.calculated = true
+			this_quad.adjusted = true
 
 			st.add_color(Color.white)
 
@@ -968,28 +1037,23 @@ func _fix_quads(quads: Array):
 			# If we need to recalculate for the next quad
 			if (
 				(quad_index + 1 == quads.size() and not closed_shape)
-				or this_quad.tex != next_quad.tex
-				or this_quad.direction != next_quad.direction
+				or next_quad.direction != this_quad.direction
+				or next_quad.tex != this_quad.tex
 				or next_quad.flip_texture != this_quad.flip_texture
-				or (index + 1) % quads.size() == mesh_index
+				or (start_index + 1) % quads.size() == mesh_start_index
 			):
 				mesh_direction = this_quad.direction
 				break
 
 			length += section_length
-			index += 1
+			start_index += 1
+
 		st.index()
 		st.generate_normals()
 		#st.generate_tangents()
 		_add_mesh(st.commit(), tex, normal_tex, mesh_direction)
 
-		global_index = fmod(index + 1, quads.size())
-
-		if quads.size() > 0:
-			if quads[global_index].calculated or (global_index == 0 and not closed_shape):
-				break
-		else:
-			break
+		global_index = fmod(start_index + 1, quads.size())
 
 
 func get_vertices() -> Array:
@@ -1018,16 +1082,15 @@ func get_width_offset_from_curve(tessellated_points, idx_tess:int)->float:
 	return 0.0
 """
 
-"""
-Returns a float between 0.0 and 1.0
-0.0 means that this tessellated point is at the same position as the vertex
-0.5 means that this tessellated point is half way between this vertex and the next
-0.999 means that this tessellated point is basically at the next vertex
-1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
-"""
-
 
 func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_point_index) -> float:
+	"""
+	Returns a float between 0.0 and 1.0
+	0.0 means that this tessellated point is at the same position as the vertex
+	0.5 means that this tessellated point is half way between this vertex and the next
+	0.999 means that this tessellated point is basically at the next vertex
+	1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
+	"""
 	if tess_point_index == 0:
 		return 0.0
 
@@ -1195,37 +1258,43 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 	var tex_normal: Texture = null
 	var tex_size: Vector2
 	var tex_index: int = 0
-	var points = get_tessellated_points()
-	var curve_count = points.size()
+
+	var tess_points = get_tessellated_points()
+	var tess_count = tess_points.size()
+
+	var points = get_vertices()
 
 	var top_tilt = shape_material.top_texture_tilt
 	var bottom_tilt = shape_material.bottom_texture_tilt
 
 	var is_clockwise: bool = are_points_clockwise()
+	var corner_quad_indicies = []
 
-	for curve_index in curve_count - 1:
-		var pt_index = curve_index % points.size()
-		var pt_next_index = _get_next_point_index(curve_index, points, closed_shape)
-		var pt_prev_index = _get_previous_point_index(curve_index, points, closed_shape)
+	for tess_index in tess_count - 1:
+		var tess_index_next = _get_next_point_index(tess_index, tess_points, closed_shape)
+		var tess_index_prev = _get_previous_point_index(tess_index, tess_points, closed_shape)
+		var tess_pt = tess_points[tess_index]
+		var tess_pt_next = tess_points[tess_index_next]
+		var tess_pt_prev = tess_points[tess_index_prev]
 
-		var pt_prev_property_index = get_vertex_idx_from_tessellated_point(
-			get_vertices(), points, pt_prev_index
+		var pt_index = get_vertex_idx_from_tessellated_point(points, tess_points, tess_index)
+		var pt_index_next = get_vertex_idx_from_tessellated_point(
+			points, tess_points, tess_index_next
 		)
-
-		var property_index = get_vertex_idx_from_tessellated_point(get_vertices(), points, pt_index)
-		var property_index_next = (property_index + 1) % curve.get_point_count()
-
-		var pt = points[pt_index]
-		var pt_next = points[pt_next_index]
-		var pt_prev = points[pt_prev_index]
+		var pt_index_prev = get_vertex_idx_from_tessellated_point(
+			points, tess_points, tess_index_prev
+		)
 
 		var cardinal_direction = DIRECTION.TOP
 		var corner_direction = null
 		var is_cardinal_direction = true
+
 		if closed_shape:
-			cardinal_direction = _get_direction_two_points(pt, pt_next, top_tilt, bottom_tilt)
+			cardinal_direction = _get_direction_two_points(
+				tess_pt, tess_pt_next, top_tilt, bottom_tilt
+			)
 			corner_direction = _get_direction_three_points(
-				pt, pt_next, pt_prev, top_tilt, bottom_tilt
+				tess_pt, tess_pt_next, tess_pt_prev, top_tilt, bottom_tilt
 			)
 			is_cardinal_direction = _is_cardinal_direction(corner_direction)
 
@@ -1250,7 +1319,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 			if material_textures_diffuse != null:
 				if not material_textures_diffuse.empty():
 					tex_index = (
-						abs(vertex_properties.get_texture_idx(property_index))
+						abs(vertex_properties.get_texture_idx(pt_index))
 						% material_textures_diffuse.size()
 					)
 					if material_textures_diffuse.size() > tex_index:
@@ -1263,7 +1332,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 
 		# Get Perpendicular Vector
 		var vtx: Vector2 = Vector2(0, 0)
-		var delta = pt_next - pt
+		var delta = tess_pt_next - tess_pt
 		var delta_normal = delta.normalized()
 		var vtx_normal = Vector2(delta.y, -delta.x).normalized()
 		# TODO
@@ -1275,7 +1344,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 		var scale_in: float = 1
 		var scale_out: float = 1
 
-		var width = vertex_properties.get_width(property_index)
+		var width = vertex_properties.get_width(pt_index)
 		if width != 0.0:
 			scale_in = width
 
@@ -1291,7 +1360,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 			DIRECTION.TOP:
 				clr = Color.green
 				vert_adj *= shape_material.top_offset
-				print("vtx: %s  |  vert_adj: %s" % [str(vtx), str(vert_adj)])
+				#print("vtx: %s  |  vert_adj: %s" % [str(vtx), str(vert_adj)])
 			DIRECTION.LEFT:
 				clr = Color.yellow
 				vert_adj *= shape_material.left_offset
@@ -1309,26 +1378,33 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 
 		if not closed_shape:
 			if tex != null:
-				if curve_index == 0:
-					pt -= (pt_next - pt).normalized() * tex.get_size() * custom_extends
-				if curve_index == curve_count - 2 and tex != null:
-					pt_next -= (pt - pt_next).normalized() * tex.get_size() * custom_extends
+				if tess_index == 0:
+					tess_pt -= (
+						(tess_pt_next - tess_pt).normalized()
+						* tex.get_size()
+						* custom_extends
+					)
+				if tess_index == tess_count - 2 and tex != null:
+					tess_pt_next -= (
+						(tess_pt - tess_pt_next).normalized()
+						* tex.get_size()
+						* custom_extends
+					)
 
-		var ratio = get_distance_as_ratio_from_tessellated_point(
-			get_vertices(), points, curve_index
-		)
-		var w1 = vertex_properties.get_width(property_index)
-		var w2 = vertex_properties.get_width(property_index_next)
+		var ratio = get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_index)
+		var w1 = vertex_properties.get_width(pt_index)
+		var w2 = vertex_properties.get_width(pt_index_next)
 		var w = lerp(w1, w2, ratio)
-		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(property_index), str(property_index_next), str(w1), ratio, str(w2), str(w)])
+		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(pt_index), str(pt_index_next), str(w1), ratio, str(w2), str(w)])
 
 		var new_quad = QuadInfo.new()
-		var final_offset_scale_in = vtx * scale_in * custom_scale + vert_adj
-		var final_offset_scale_out = vtx * scale_out * custom_scale + vert_adj
-		var pt_a = (pt + final_offset_scale_in) + offset
-		var pt_b = (pt - final_offset_scale_in) + offset
-		var pt_c = (pt_next - final_offset_scale_out) + offset
-		var pt_d = (pt_next + final_offset_scale_out) + offset
+		var final_offset_scale_in = ((vtx * scale_in) + vert_adj) * custom_scale
+		var final_offset_scale_out = ((vtx * scale_out) + vert_adj) * custom_scale
+		#print("VTX: %s  |  S_in: %s  |  CS: %s" % [str(vtx), str(scale_in), str(custom_scale)])
+		var pt_a = (tess_pt + final_offset_scale_in) + offset
+		var pt_b = (tess_pt - final_offset_scale_in) + offset
+		var pt_c = (tess_pt_next - final_offset_scale_out) + offset
+		var pt_d = (tess_pt_next + final_offset_scale_out) + offset
 		new_quad.pt_a = pt_a
 		new_quad.pt_b = pt_b
 		new_quad.pt_c = pt_c
@@ -1337,22 +1413,24 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 		new_quad.direction = cardinal_direction
 		new_quad.tex = tex
 		new_quad.normal_tex = tex_normal
-		new_quad.flip_texture = vertex_properties.get_flip(property_index)
+		new_quad.flip_texture = vertex_properties.get_flip(pt_index)
 		new_quad.width_factor = w
 
 		if not is_cardinal_direction and shape_material.use_corners:
-			var prev_width = vertex_properties.get_width(pt_prev_property_index)
+			var prev_width = vertex_properties.get_width(pt_index_prev)
 			var new_quad2 = _build_corner_quad(
-				pt_next, pt, width, pt_prev, prev_width, corner_direction
+				tess_pt_next, tess_pt, width, tess_pt_prev, prev_width, corner_direction
 			)
 			if new_quad2.tex != null:
 				var previous_quad = null
 				if quads.size() > 0:
 					previous_quad = quads[quads.size() - 1]
 				new_quad2.color = Color.purple
-				new_quad2.flip_texture = vertex_properties.get_flip(property_index)
+				new_quad2.flip_texture = vertex_properties.get_flip(pt_index)
 				new_quad2.width_factor = w
 				quads.push_back(new_quad2)
+
+				corner_quad_indicies.push_back(quads.size() - 1)
 
 				var quad2_size = new_quad2.tex.get_size()
 				var quad2_offset = (quad2_size / 2.0) * delta_normal
@@ -1371,6 +1449,9 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 					previous_quad.pt_d += rotated
 
 		quads.push_back(new_quad)
+
+	for corner_quad_index in corner_quad_indicies:
+		pass
 
 	return quads
 
@@ -1509,7 +1590,7 @@ func bake_mesh(force: bool = false):
 		collision_extends = shape_material.collision_extends
 	_quads = _build_quads(collision_width, collision_offset, collision_extends)
 
-	_fix_quads(_quads)
+	_adjust_mesh_quads(_quads)
 
 
 #########
