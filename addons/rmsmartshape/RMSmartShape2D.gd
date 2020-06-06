@@ -89,7 +89,12 @@ class QuadInfo:
 		"""
 		Will return true if this quad is part of a different render sequence than q
 		"""
-		if q.direction != direction or q.tex != tex or q.flip_texture != flip_texture:
+		if (
+			q.direction != direction
+			or q.tex != tex
+			or q.flip_texture != flip_texture
+			or q.normal_tex != normal_tex
+		):
 			return true
 		return false
 
@@ -782,6 +787,135 @@ func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt) -> int:
 		return DIRECTION.RIGHT
 
 
+func _adjust_mesh_quad_segment(quads: Array, quad_indices: Array):
+	var total_length:float = 0.0
+	for quad_index in quad_indices:
+		total_length += quads[quad_index].get_length()
+
+	# Iterate over the quads now until change in direction or texture or looped around
+	var mesh_start_index: int = quad_indices[0]
+	var st: SurfaceTool = SurfaceTool.new()
+	var first_quad = quads[quad_indices[0]]
+	# All quads should not differ. Should have same tex and normal_tex
+	var tex: Texture = first_quad.tex
+	var normal_tex: Texture = first_quad.normal_tex
+
+	var length: float = 0.0
+	var mesh_direction: int
+	var change_in_length: float = -1.0
+	if tex != null and change_in_length == -1.0:
+		change_in_length = (
+			(round(total_length / tex.get_size().x) * tex.get_size().x)
+			/ total_length
+		)
+
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for quad_index in quad_indices:
+		var this_quad:QuadInfo = quads[quad_index % quads.size()]
+		var next_quad:QuadInfo = quads[(quad_index + 1) % quads.size()]
+		var section_length:float = this_quad.get_length() * change_in_length
+		if section_length == 0:
+			section_length = tex.get_size().x
+
+		# TODO Remove the 'adjusted' property
+		this_quad.adjusted = true
+
+		st.add_color(Color.white)
+
+		# A
+		if tex != null:
+			if not this_quad.flip_texture:
+				_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0))
+			else:
+				_add_uv_to_surface_tool(
+					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
+				)
+		st.add_vertex(_to_vector3(this_quad.pt_a))
+
+		# B
+		if tex != null:
+			if not this_quad.flip_texture:
+				_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 1))
+			else:
+				_add_uv_to_surface_tool(
+					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 1)
+				)
+		st.add_vertex(_to_vector3(this_quad.pt_b))
+
+		# C
+		if tex != null:
+			if not this_quad.flip_texture:
+				_add_uv_to_surface_tool(
+					st, Vector2((length + section_length) / tex.get_size().x, 1)
+				)
+			else:
+				_add_uv_to_surface_tool(
+					st,
+					Vector2(
+						(
+							(total_length * change_in_length - (section_length + length))
+							/ tex.get_size().x
+						),
+						1
+					)
+				)
+		st.add_vertex(_to_vector3(this_quad.pt_c))
+
+		# A
+		if tex != null:
+			if not this_quad.flip_texture:
+				_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0))
+			else:
+				_add_uv_to_surface_tool(
+					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
+				)
+		st.add_vertex(_to_vector3(this_quad.pt_a))
+
+		# C
+		if tex != null:
+			if not this_quad.flip_texture:
+				_add_uv_to_surface_tool(
+					st, Vector2((length + section_length) / tex.get_size().x, 1)
+				)
+			else:
+				_add_uv_to_surface_tool(
+					st,
+					Vector2(
+						(
+							(total_length * change_in_length - (length + section_length))
+							/ tex.get_size().x
+						),
+						1
+					)
+				)
+		st.add_vertex(_to_vector3(this_quad.pt_c))
+
+		# D
+		if tex != null:
+			if not this_quad.flip_texture:
+				_add_uv_to_surface_tool(
+					st, Vector2((length + section_length) / tex.get_size().x, 0)
+				)
+			else:
+				_add_uv_to_surface_tool(
+					st,
+					Vector2(
+						(
+							(total_length * change_in_length - (length + section_length))
+							/ tex.get_size().x
+						),
+						0
+					)
+				)
+		st.add_vertex(_to_vector3(this_quad.pt_d))
+		length += section_length
+
+	st.index()
+	st.generate_normals()
+	#st.generate_tangents()
+	_add_mesh(st.commit(), tex, normal_tex, mesh_direction)
+
+
 func _adjust_mesh_quads(quads: Array):
 	"""
 	The purpose of this function is to adjust mesh quads so they look good
@@ -804,14 +938,6 @@ func _adjust_mesh_quads(quads: Array):
 	# Weld quads if weld_edges is on
 	if shape_material.weld_edges:
 		_weld_quads(quads)
-
-	# Lloyd Update
-	# This function needs to be broken up into to steps
-	# Step 1
-	#   - Return an array of arrays containing the indexes for each consecutive segment
-	# Step 2
-	#   For array in arrays
-	#     - Process array (adjust_mesh_quad)
 
 	var quad_segments = []
 
@@ -865,195 +991,8 @@ func _adjust_mesh_quads(quads: Array):
 	#var segment = quad_segments[i]
 	#for idx in segment:
 	#print("IDX: %s" % str(idx))
-
-	while not quads[global_index].adjusted and not (global_index == 0 and not closed_shape):
-		# Find start of sprite in control point list (change in direction is the key here)
-		start_index = global_index
-
-		while true:
-			var previous_quad: QuadInfo = quads[(start_index - 1) % quads.size()]
-			var this_quad: QuadInfo = quads[start_index % quads.size()]
-
-			if (
-				(start_index == 0 and not closed_shape)
-				or previous_quad.adjusted
-				or previous_quad.direction != this_quad.direction
-			):
-				break
-
-			start_index = (start_index - 1) % quads.size()
-			if start_index == 0:
-				break
-
-		# Calculate total length of the sprite run (change in direction, or change in texture is the key here)
-		var length_index: int = start_index
-		var total_length: float = 0.0
-		for i in quad_range:
-			length_index = (start_index + i) % quad_range_len
-			var length_index_next: int = (start_index + i + 1) % quad_range_len
-			var this_quad: QuadInfo = quads[length_index]
-			var next_quad: QuadInfo = quads[length_index_next]
-
-			total_length += this_quad.get_length()
-
-			# Break if change detected
-			if (
-				(length_index + 1 == quads.size() and not closed_shape)
-				or next_quad.direction != this_quad.direction
-				or next_quad.tex != this_quad.tex
-				or next_quad.flip_texture != this_quad.flip_texture
-			):
-				break
-
-		# Iterate over the quads now until change in direction or texture or looped around
-		var mesh_start_index: int = start_index
-		var st: SurfaceTool = SurfaceTool.new()
-		var tex: Texture = null
-		var normal_tex: Texture = null
-		var length: float = 0.0
-		var mesh_direction: int
-		var change_in_length: float = -1.0
-
-		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		for i in quad_range:
-			var quad_index: int = start_index % quads.size()
-			var this_quad: QuadInfo = quads[quad_index % quads.size()]
-			var next_quad: QuadInfo = quads[(quad_index + 1) % quads.size()]
-			var section_length: float = this_quad.get_length()
-
-			if tex == null:
-				tex = quads[quad_index].tex
-			if normal_tex == null:
-				normal_tex = quads[quad_index].normal_tex
-
-			if tex != null and change_in_length == -1.0:
-				change_in_length = (
-					(round(total_length / tex.get_size().x) * tex.get_size().x)
-					/ total_length
-				)
-				#total_length += change_in_length
-
-			# Adjust length
-			#if change_in_length != 0.0 and total_length != 0.0:
-			#section_length += (section_length / total_length) * change_in_length
-			section_length = section_length * change_in_length
-			if section_length == 0:
-				section_length = tex.get_size().x
-
-			this_quad.adjusted = true
-
-			st.add_color(Color.white)
-
-			# A
-			if tex != null:
-				if not this_quad.flip_texture:
-					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0))
-				else:
-					_add_uv_to_surface_tool(
-						st,
-						Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
-					)
-			st.add_vertex(_to_vector3(this_quad.pt_a))
-
-			# B
-			if tex != null:
-				if not this_quad.flip_texture:
-					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 1))
-				else:
-					_add_uv_to_surface_tool(
-						st,
-						Vector2((total_length * change_in_length - length) / tex.get_size().x, 1)
-					)
-			st.add_vertex(_to_vector3(this_quad.pt_b))
-
-			# C
-			if tex != null:
-				if not this_quad.flip_texture:
-					_add_uv_to_surface_tool(
-						st, Vector2((length + section_length) / tex.get_size().x, 1)
-					)
-				else:
-					_add_uv_to_surface_tool(
-						st,
-						Vector2(
-							(
-								(total_length * change_in_length - (section_length + length))
-								/ tex.get_size().x
-							),
-							1
-						)
-					)
-			st.add_vertex(_to_vector3(this_quad.pt_c))
-
-			# A
-			if tex != null:
-				if not this_quad.flip_texture:
-					_add_uv_to_surface_tool(st, Vector2(length / tex.get_size().x, 0))
-				else:
-					_add_uv_to_surface_tool(
-						st,
-						Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
-					)
-			st.add_vertex(_to_vector3(this_quad.pt_a))
-
-			# C
-			if tex != null:
-				if not this_quad.flip_texture:
-					_add_uv_to_surface_tool(
-						st, Vector2((length + section_length) / tex.get_size().x, 1)
-					)
-				else:
-					_add_uv_to_surface_tool(
-						st,
-						Vector2(
-							(
-								(total_length * change_in_length - (length + section_length))
-								/ tex.get_size().x
-							),
-							1
-						)
-					)
-			st.add_vertex(_to_vector3(this_quad.pt_c))
-
-			# D
-			if tex != null:
-				if not this_quad.flip_texture:
-					_add_uv_to_surface_tool(
-						st, Vector2((length + section_length) / tex.get_size().x, 0)
-					)
-				else:
-					_add_uv_to_surface_tool(
-						st,
-						Vector2(
-							(
-								(total_length * change_in_length - (length + section_length))
-								/ tex.get_size().x
-							),
-							0
-						)
-					)
-			st.add_vertex(_to_vector3(this_quad.pt_d))
-
-			# If we need to recalculate for the next quad
-			if (
-				(quad_index + 1 == quads.size() and not closed_shape)
-				or next_quad.direction != this_quad.direction
-				or next_quad.tex != this_quad.tex
-				or next_quad.flip_texture != this_quad.flip_texture
-				or (start_index + 1) % quads.size() == mesh_start_index
-			):
-				mesh_direction = this_quad.direction
-				break
-
-			length += section_length
-			start_index += 1
-
-		st.index()
-		st.generate_normals()
-		#st.generate_tangents()
-		_add_mesh(st.commit(), tex, normal_tex, mesh_direction)
-
-		global_index = fmod(start_index + 1, quads.size())
+	for segment in quad_segments:
+		_adjust_mesh_quad_segment(quads, segment)
 
 
 func get_vertices() -> Array:
