@@ -68,22 +68,22 @@ class QuadInfo:
 	Extends from Reference to avoid memory leaks
 	Used to describe the welded quads that form the edge data
 	"""
-	var control_point_index: int
-	var direction: int
 	var pt_a: Vector2
 	var pt_b: Vector2
 	var pt_c: Vector2
 	var pt_d: Vector2
-	var color: Color
+
 	var tex: Texture
 	var normal_tex: Texture
+	var color: Color
+
 	var flip_texture: bool = false
-	# Used with the Adjust_Quads method
-	var adjusted: bool = false
 	var width_factor: float = 1.0
+	var direction: int
+	var control_point_index: int
 
 	func get_length() -> float:
-		return (pt_d.distance_to(pt_a) + pt_c.distance_to(pt_b)) * 0.5
+		return (pt_d.distance_to(pt_a) + pt_c.distance_to(pt_b)) / 2.0
 
 	func different_render(q: QuadInfo) -> bool:
 		"""
@@ -602,56 +602,6 @@ func _weld_quads(quads: Array, custom_scale: float = 1.0):
 				this_quad.pt_a = pt2
 
 
-func _is_outer_angle(d1: int, d2: int) -> bool:
-	"""
-	Takes two values from the DIRECTION enum
-	The order of the params does matter
-
-	Will return true if an angle is an outer angle (greater than 180 degrees)
-
-	"""
-	if are_points_clockwise():
-		# This works because the DIRECTION enum is defined in clockwise order
-		if d1 == DIRECTION.LEFT and d2 == DIRECTION.TOP:
-			return true
-		return (d1 + 1) == d2
-	else:
-		# This works because the DIRECTION enum is defined in clockwise order
-		if d1 == DIRECTION.TOP and d2 == DIRECTION.LEFT:
-			return true
-		return (d1 - 1) == d2
-
-
-func _get_corner_direction(d1: int, d2: int) -> int:
-	"""
-	Takes two values from the DIRECTION enum
-	If the two directions form a valid corner, will return that corner's DIRECTION Enum value
-	if invalid, will return -1
-	"""
-	var dirs = [d1, d2]
-	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.LEFT):
-		if _is_outer_angle(d1, d2):
-			return DIRECTION.TOP_LEFT_OUTER
-		return DIRECTION.TOP_LEFT_INNER
-
-	if dirs.has(DIRECTION.TOP) and dirs.has(DIRECTION.RIGHT):
-		if _is_outer_angle(d1, d2):
-			return DIRECTION.TOP_RIGHT_OUTER
-		return DIRECTION.TOP_RIGHT_INNER
-
-	if dirs.has(DIRECTION.BOTTOM) and dirs.has(DIRECTION.RIGHT):
-		if _is_outer_angle(d1, d2):
-			return DIRECTION.BOTTOM_RIGHT_OUTER
-		return DIRECTION.BOTTOM_RIGHT_INNER
-
-	if dirs.has(DIRECTION.BOTTOM) and dirs.has(DIRECTION.LEFT):
-		if _is_outer_angle(d1, d2):
-			return DIRECTION.BOTTOM_LEFT_OUTER
-		return DIRECTION.BOTTOM_LEFT_INNER
-
-	return -1
-
-
 func _is_cardinal_direction(d: int) -> bool:
 	"""
 	Takes a values from the DIRECTION enum
@@ -721,6 +671,57 @@ func _is_outer_direction(d: int) -> bool:
 func _get_direction_three_points(
 	point: Vector2, point_next: Vector2, point_prev: Vector2, top_tilt: float, bottom_tilt: float
 ) -> int:
+	"""
+	AB→*BC→ = ||AB→||*||BC→||cosθ
+	θ = arccos(AB→⋅BC→ / (||AB→|| * ||BC→||))
+	"""
+	var ab = point - point_prev
+	var bc = point_next - point
+	var dot_prod = ab.dot(bc)
+	var abs_length = abs(ab.length()) * abs(bc.length())
+	var _cos = dot_prod / abs_length
+	# This will be between 0.0 and 180.0
+	var theta = acos(_cos)
+	var deg = rad2deg(theta)
+
+	var corner_range = 15.0
+	var clockwise = are_points_clockwise()
+	var dir = 0
+	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
+	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
+	if (
+		(deg > 90.0 - corner_range and deg < 90.0 + corner_range)
+		or (deg > 270.0 - corner_range and deg < 270.0 + corner_range)
+	):
+		var ab_normal = ab.tangent().normalized()
+		var bc_normal = bc.tangent().normalized()
+		if not clockwise:
+			ab_normal *= -1.0
+			bc_normal *= -1.0
+
+		var averaged = (ab_normal + bc_normal) / 2.0
+		# Outer
+		if deg < 180:
+			dir = _vector_to_corner_dir(averaged, false)
+		# Inner
+		else:
+			dir = _vector_to_corner_dir(averaged, true)
+
+	else:
+		dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
+
+	var dirs = [_dir_to_string(ab_dir), _dir_to_string(bc_dir), _dir_to_string(dir)]
+	print("===")
+	print("AB: %s  |  BC: %s" % [str(ab), str(bc)])
+	print(
+		(
+			"dot: %s  |  abs: %s  |  cos: %s  |  theta: %s  |  deg: %s  |  dirs: %s"
+			% [str(dot_prod), str(abs_length), str(_cos), str(theta), str(deg), dirs]
+		)
+	)
+	return dir
+
+	"""
 	var a = point - point_prev
 	var b = point - point_next
 	var c = point_prev - point_next
@@ -748,8 +749,43 @@ func _get_direction_three_points(
 
 	# Need an outer angle texture
 	var corner_dir = _get_corner_direction(ab_dir, bc_dir)
-
 	return corner_dir
+	"""
+
+
+func _in_range(v: float, low: float, high: float) -> bool:
+	return (v >= low) and (v <= high)
+
+
+func to_positive_angle(angle: float) -> float:
+	angle = fmod(angle, 360)
+	if angle < 0:
+		angle += 360
+	return angle
+
+
+func _vector_to_corner_dir(vec: Vector2, inner: bool) -> int:
+	var deg = rad2deg(vec.angle()) - 90.0
+	deg = to_positive_angle(deg)
+
+	if _in_range(deg, 0.0, 90.0):
+		if inner:
+			return DIRECTION.TOP_LEFT_INNER
+		return DIRECTION.TOP_RIGHT_OUTER
+	if _in_range(deg, 90.0, 180.0):
+		if inner:
+			return DIRECTION.TOP_LEFT_INNER
+		return DIRECTION.BOTTOM_LEFT_OUTER
+	if _in_range(deg, 180.0, 270.0):
+		if inner:
+			return DIRECTION.TOP_LEFT_INNER
+		return DIRECTION.BOTTOM_RIGHT_OUTER
+	if _in_range(deg, 270.0, 360.0):
+		if inner:
+			return DIRECTION.TOP_LEFT_INNER
+		return DIRECTION.TOP_LEFT_OUTER
+
+	return -1
 
 
 func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt) -> int:
@@ -788,7 +824,7 @@ func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt) -> int:
 
 
 func _adjust_mesh_quad_segment(quads: Array, quad_indices: Array):
-	var total_length:float = 0.0
+	var total_length: float = 0.0
 	for quad_index in quad_indices:
 		total_length += quads[quad_index].get_length()
 
@@ -811,14 +847,11 @@ func _adjust_mesh_quad_segment(quads: Array, quad_indices: Array):
 
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for quad_index in quad_indices:
-		var this_quad:QuadInfo = quads[quad_index % quads.size()]
-		var next_quad:QuadInfo = quads[(quad_index + 1) % quads.size()]
-		var section_length:float = this_quad.get_length() * change_in_length
+		var this_quad: QuadInfo = quads[quad_index % quads.size()]
+		var next_quad: QuadInfo = quads[(quad_index + 1) % quads.size()]
+		var section_length: float = this_quad.get_length() * change_in_length
 		if section_length == 0:
 			section_length = tex.get_size().x
-
-		# TODO Remove the 'adjusted' property
-		this_quad.adjusted = true
 
 		st.add_color(Color.white)
 
@@ -919,6 +952,7 @@ func _adjust_mesh_quad_segment(quads: Array, quad_indices: Array):
 func _adjust_mesh_quads(quads: Array):
 	"""
 	The purpose of this function is to adjust mesh quads so they look good
+	Afterward, they are added to the mesh
 	Not intended for collision quads
 	"""
 	if quads.size() < 1:
