@@ -711,47 +711,15 @@ func _get_direction_three_points(
 		dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
 
 	var dirs = [_dir_to_string(ab_dir), _dir_to_string(bc_dir), _dir_to_string(dir)]
-	print("===")
-	print("AB: %s  |  BC: %s" % [str(ab), str(bc)])
-	print(
-		(
-			"dot: %s  |  abs: %s  |  cos: %s  |  theta: %s  |  deg: %s  |  dirs: %s"
-			% [str(dot_prod), str(abs_length), str(_cos), str(theta), str(deg), dirs]
-		)
-	)
+	#print("===")
+	#print("AB: %s  |  BC: %s" % [str(ab), str(bc)])
+	#print(
+		#(
+			#"dot: %s  |  abs: %s  |  cos: %s  |  theta: %s  |  deg: %s  |  dirs: %s"
+			#% [str(dot_prod), str(abs_length), str(_cos), str(theta), str(deg), dirs]
+		#)
+	#)
 	return dir
-
-	"""
-	var a = point - point_prev
-	var b = point - point_next
-	var c = point_prev - point_next
-
-	var a_len = a.length()
-	var b_len = b.length()
-	var c_len = c.length()
-	#var a_angle = arccos((P12 + P13 - P23) / (2 * P12 * P13))
-
-	var ab2 = a_len * b_len * 2
-	var a2_plus_b2_minus_c2 = (a_len * a_len) + (b_len * b_len) - c_len * c_len
-	var _cos = a2_plus_b2_minus_c2 / ab2
-	var b_angle = acos(_cos)
-
-	# This will be between 0.0 and 180.0
-	b_angle = rad2deg(b_angle)
-
-	# No need for a right angle texture if the angle is shallow enough
-	# TODO Make this 135 degrees an exported parameter
-	if b_angle > 135:
-		return _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
-
-	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
-	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
-
-	# Need an outer angle texture
-	var corner_dir = _get_corner_direction(ab_dir, bc_dir)
-	return corner_dir
-	"""
-
 
 func _in_range(v: float, low: float, high: float) -> bool:
 	return (v >= low) and (v <= high)
@@ -1036,26 +1004,6 @@ func get_vertices() -> Array:
 	return verts
 
 
-"""
-func get_width_offset_from_curve(tessellated_points, idx_tess:int)->float:
-	if width_curve == 0:
-		return 0.0
-
-	var pc = width_curve.get_point_count()
-	var curve_repititions = 1
-	var w_curve_range = width_curve.get_points_count()
-	var tess_range = tessellated_points.size()
-
-	# What about odd numbered ranges?
-	for i in range(1, curve_repititions, 1):
-		new_range = new_range / 2.0
-
-	# Convert idx_tess (in range tess) to range width curve
-	var idx_w_curve = round((idx_tess * w_curve_range) / tess_range)
-	return 0.0
-"""
-
-
 func get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_point_index) -> float:
 	"""
 	Returns a float between 0.0 and 1.0
@@ -1181,30 +1129,10 @@ func _build_corner_quad(
 	var extents = tex_size / 2.0
 	var delta_12 = pt - pt_prev
 	var delta_23 = pt_next - pt
-	#var delta_12_normal = delta_12.normalized()
-	#var delta_23_normal = delta_23.normalized()
 
 	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
 	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
 
-	"""
-	normal_23 * pt_wdith
-	This will get the extents of the line between pt(2) and pt_next(3)
-
-	normal_12 * pt_wdith
-	This will get the extents of the line between pt(2) and pt_prev(1)
-
-	There are 2 parallel lines formed for each pair of points and an extent value
-
-	We want to find where each extent of 12 and 23 intersect to find the
-	4 points for our quad
-
-	Assuming that pt is the center of our quad, we can find the four points
-	from each possible combination of extents
-		adding one subtracting another
-		adding both
-		subtracting both
-	"""
 	var pt_d = pt + (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
 	var pt_a = pt - (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
 	var pt_c = pt + (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
@@ -1436,6 +1364,17 @@ func bake_collision():
 	if has_node(collision_polygon_node):
 		var col_polygon = get_node(collision_polygon_node)
 		var points: PoolVector2Array = PoolVector2Array()
+		var collision_quads = Array()
+
+		var collision_width = 1.0
+		var collision_offset = 0.0
+		var collision_extends = 1.0
+
+		if shape_material != null:
+			collision_width = shape_material.collision_width
+			collision_offset = shape_material.collision_offset
+			collision_extends = shape_material.collision_extends
+
 		if closed_shape:
 			var old_interval = curve.bake_interval
 			col_polygon.transform = transform
@@ -1444,33 +1383,44 @@ func bake_collision():
 
 			curve.bake_interval = old_interval
 
-			var curve_points = get_tessellated_points()
-			for i in curve_points:
-				points.push_back(
-					col_polygon.get_global_transform().xform_inv(get_global_transform().xform(i))
-				)
+			#var curve_points = get_tessellated_points()
+			#for i in curve_points:
+			#points.push_back(
+			#col_polygon.get_global_transform().xform_inv(get_global_transform().xform(i))
+			#)
+			collision_quads = _build_quads(collision_width, collision_offset, collision_extends)
+			for quad in collision_quads:
+				if _is_cardinal_direction(quad.direction):
+					points.push_back(
+						col_polygon.get_global_transform().xform_inv(
+							get_global_transform().xform(quad.pt_a)
+						)
+					)
+				else:
+					points.push_back(
+						col_polygon.get_global_transform().xform_inv(
+							get_global_transform().xform(quad.pt_a)
+						)
+					)
+					points.push_back(
+						col_polygon.get_global_transform().xform_inv(
+							get_global_transform().xform(quad.pt_d)
+						)
+					)
 		else:
-			var collision_quads = Array()
-			var collision_width = 1.0
-			var collision_offset = 0.0
-			var collision_extends = 1.0
-
-			if shape_material != null:
-				collision_width = shape_material.collision_width
-				collision_offset = shape_material.collision_offset
-				collision_extends = shape_material.collision_extends
-
 			collision_quads = _build_quads(collision_width, collision_offset, collision_extends)
 			_weld_quads(collision_quads, collision_width)
 
-			for quad in collision_quads:
-				points.push_back(
-					col_polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_a)
-					)
-				)
-
 			if not collision_quads.empty():
+				# PT A
+				for quad in collision_quads:
+					points.push_back(
+						col_polygon.get_global_transform().xform_inv(
+							get_global_transform().xform(quad.pt_a)
+						)
+					)
+
+				# PT D
 				points.push_back(
 					col_polygon.get_global_transform().xform_inv(
 						get_global_transform().xform(
@@ -1478,6 +1428,8 @@ func bake_collision():
 						)
 					)
 				)
+
+				# PT C
 				for quad_index in collision_quads.size():
 					var quad = collision_quads[collision_quads.size() - 1 - quad_index]
 					points.push_back(
@@ -1485,6 +1437,8 @@ func bake_collision():
 							get_global_transform().xform(quad.pt_c)
 						)
 					)
+
+				# PT B
 				points.push_back(
 					col_polygon.get_global_transform().xform_inv(
 						get_global_transform().xform(collision_quads[0].pt_b)
@@ -1553,16 +1507,7 @@ func bake_mesh(force: bool = false):
 		return
 
 	# Build Edge Quads
-	var collision_width = 1.0
-	var collision_offset = 0.0
-	var collision_extends = 1.0
-
-	if shape_material != null:
-		collision_width = shape_material.collision_width
-		collision_offset = shape_material.collision_offset
-		collision_extends = shape_material.collision_extends
-	_quads = _build_quads(collision_width, collision_offset, collision_extends)
-
+	_quads = _build_quads()
 	_adjust_mesh_quads(_quads)
 
 
