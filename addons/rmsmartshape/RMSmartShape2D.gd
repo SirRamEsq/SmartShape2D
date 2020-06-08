@@ -539,13 +539,7 @@ func are_points_clockwise() -> bool:
 
 
 func _weld_quads(quads: Array, custom_scale: float = 1.0):
-	var _range
-	if not closed_shape:
-		_range = range(1, quads.size())
-	else:
-		_range = range(quads.size())
-
-	for index in _range:
+	for index in range(quads.size()):
 		# Skip the first and last vert if the shape isn't closed
 		if not closed_shape and (index == 0 or index == quads.size()):
 			continue
@@ -566,7 +560,7 @@ func _weld_quads(quads: Array, custom_scale: float = 1.0):
 
 		if (
 			not _is_corner_direction(previous_quad.direction)
-			and not _is_inner_direction(this_quad.direction)
+			and not _is_corner_direction(this_quad.direction)
 		):
 			var pt1 = (previous_quad.pt_d + this_quad.pt_a) * 0.5
 			var pt2 = (previous_quad.pt_c + this_quad.pt_b) * 0.5
@@ -589,18 +583,20 @@ func _weld_quads(quads: Array, custom_scale: float = 1.0):
 			previous_quad.pt_c = pt2
 		else:
 			if _is_outer_direction(previous_quad.direction):
-				previous_quad.pt_c = this_quad.pt_a
+				this_quad.pt_a = previous_quad.pt_c
 				this_quad.pt_b = previous_quad.pt_b
-			elif _is_inner_direction(previous_quad.direction):
-				var previous_previous_quad: QuadInfo = quads[(index - 2) % quads.size()]
-				var pt1 = (previous_quad.pt_a + this_quad.pt_b) / 2.0
-				var pt2 = (previous_quad.pt_d + this_quad.pt_a) / 2.0
-				previous_quad.pt_a = pt1
-				previous_quad.pt_d = pt2
-				previous_previous_quad.pt_d = pt2
-				this_quad.pt_b = pt1
-				this_quad.pt_a = pt2
 
+			elif _is_inner_direction(previous_quad.direction):
+				this_quad.pt_a = previous_quad.pt_d
+				this_quad.pt_b = previous_quad.pt_a
+
+			if _is_outer_direction(this_quad.direction):
+				previous_quad.pt_d = this_quad.pt_a
+				previous_quad.pt_c = this_quad.pt_b
+
+			elif _is_inner_direction(this_quad.direction):
+				previous_quad.pt_d = this_quad.pt_d
+				previous_quad.pt_c = this_quad.pt_c
 
 func _is_cardinal_direction(d: int) -> bool:
 	"""
@@ -671,54 +667,40 @@ func _is_outer_direction(d: int) -> bool:
 func _get_direction_three_points(
 	point: Vector2, point_next: Vector2, point_prev: Vector2, top_tilt: float, bottom_tilt: float
 ) -> int:
-	"""
-	AB→*BC→ = ||AB→||*||BC→||cosθ
-	θ = arccos(AB→⋅BC→ / (||AB→|| * ||BC→||))
-	"""
 	var ab = point - point_prev
 	var bc = point_next - point
 	var dot_prod = ab.dot(bc)
-	var abs_length = abs(ab.length()) * abs(bc.length())
-	var _cos = dot_prod / abs_length
-	# This will be between 0.0 and 180.0
-	var theta = acos(_cos)
-	var deg = rad2deg(theta)
+	var determinant = (ab.x*bc.y) - (ab.y*bc.x)
+	var angle = atan2(determinant, dot_prod)
+	# This angle has a range of 360 degrees
+	# Is between 180 and - 180
+	var deg = rad2deg(angle)
 
-	var corner_range = 15.0
 	var clockwise = are_points_clockwise()
 	var dir = 0
 	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
 	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
-	if (
-		(deg > 90.0 - corner_range and deg < 90.0 + corner_range)
-		or (deg > 270.0 - corner_range and deg < 270.0 + corner_range)
-	):
+	var corner_range = 15.0
+	if _in_range(abs(deg), 90.0 - corner_range, 90.0 + corner_range):
 		var ab_normal = ab.tangent().normalized()
 		var bc_normal = bc.tangent().normalized()
-		if not clockwise:
-			ab_normal *= -1.0
-			bc_normal *= -1.0
-
 		var averaged = (ab_normal + bc_normal) / 2.0
-		# Outer
-		if deg < 180:
-			dir = _vector_to_corner_dir(averaged, false)
+		if not clockwise:
+			averaged *= -1.0
+
 		# Inner
-		else:
+		if deg < 0:
 			dir = _vector_to_corner_dir(averaged, true)
+		# Outer
+		else:
+			dir = _vector_to_corner_dir(averaged, false)
 
 	else:
 		dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
-
-	var dirs = [_dir_to_string(ab_dir), _dir_to_string(bc_dir), _dir_to_string(dir)]
+	#var dirs = [_dir_to_string(ab_dir), _dir_to_string(bc_dir), _dir_to_string(dir)]
 	#print("===")
 	#print("AB: %s  |  BC: %s" % [str(ab), str(bc)])
-	#print(
-	#(
-	#"dot: %s  |  abs: %s  |  cos: %s  |  theta: %s  |  deg: %s  |  dirs: %s"
-	#% [str(dot_prod), str(abs_length), str(_cos), str(theta), str(deg), dirs]
-	#)
-	#)
+	#print(("dot: %s  |  deg: %s  |  dirs: %s"% [str(dot_prod), str(deg), dirs]))
 	return dir
 
 
@@ -734,24 +716,24 @@ func to_positive_angle(angle: float) -> float:
 
 
 func _vector_to_corner_dir(vec: Vector2, inner: bool) -> int:
-	var deg = rad2deg(vec.angle()) - 90.0
+	var deg = rad2deg(vec.angle()) + 90.0
 	deg = to_positive_angle(deg)
 
 	if _in_range(deg, 0.0, 90.0):
 		if inner:
-			return DIRECTION.TOP_LEFT_INNER
+			return DIRECTION.BOTTOM_LEFT_INNER
 		return DIRECTION.TOP_RIGHT_OUTER
 	if _in_range(deg, 90.0, 180.0):
 		if inner:
 			return DIRECTION.TOP_LEFT_INNER
-		return DIRECTION.BOTTOM_LEFT_OUTER
+		return DIRECTION.BOTTOM_RIGHT_OUTER # Correct
 	if _in_range(deg, 180.0, 270.0):
 		if inner:
-			return DIRECTION.TOP_LEFT_INNER
-		return DIRECTION.BOTTOM_RIGHT_OUTER
+			return DIRECTION.TOP_RIGHT_INNER
+		return DIRECTION.BOTTOM_LEFT_OUTER # Correct
 	if _in_range(deg, 270.0, 360.0):
 		if inner:
-			return DIRECTION.TOP_LEFT_INNER
+			return DIRECTION.BOTTOM_RIGHT_INNER
 		return DIRECTION.TOP_LEFT_OUTER
 
 	return -1
@@ -1164,13 +1146,8 @@ func _build_corner_quad(
 		+ custom_offset_13
 	)
 
-	if custom_offset != 1.0 and custom_offset != 0.0:
-		print(
-			(
-				"n1:%s  |  n2:%s  | d1:%s  | d2:%s  |  o1:%s  |  o2:%s"
-				% [normal_12, normal_23, delta_12, delta_23, offset_12, offset_23]
-			)
-		)
+	#if custom_offset != 1.0 and custom_offset != 0.0:
+	#print(("n1:%s  |  n2:%s  | d1:%s  | d2:%s  |  o1:%s  |  o2:%s"% [normal_12, normal_23, delta_12, delta_23, offset_12, offset_23]))
 
 	new_quad.pt_a = pt_a
 	new_quad.pt_b = pt_b
