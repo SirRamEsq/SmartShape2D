@@ -714,12 +714,13 @@ func _get_direction_three_points(
 	#print("===")
 	#print("AB: %s  |  BC: %s" % [str(ab), str(bc)])
 	#print(
-		#(
-			#"dot: %s  |  abs: %s  |  cos: %s  |  theta: %s  |  deg: %s  |  dirs: %s"
-			#% [str(dot_prod), str(abs_length), str(_cos), str(theta), str(deg), dirs]
-		#)
+	#(
+	#"dot: %s  |  abs: %s  |  cos: %s  |  theta: %s  |  deg: %s  |  dirs: %s"
+	#% [str(dot_prod), str(abs_length), str(_cos), str(theta), str(deg), dirs]
+	#)
 	#)
 	return dir
+
 
 func _in_range(v: float, low: float, high: float) -> bool:
 	return (v >= low) and (v <= high)
@@ -1088,10 +1089,13 @@ func _get_previous_point_index(idx: int, points: Array, closed: bool) -> int:
 func _build_corner_quad(
 	pt_next: Vector2,
 	pt: Vector2,
-	pt_width: float,
 	pt_prev: Vector2,
+	pt_width: float,
 	pt_prev_width: float,
-	direction: int
+	direction: int,
+	custom_scale: float,
+	custom_offset: float,
+	custom_extends: float
 ) -> QuadInfo:
 	var texture = null
 	var texture_normal = null
@@ -1129,14 +1133,44 @@ func _build_corner_quad(
 	var extents = tex_size / 2.0
 	var delta_12 = pt - pt_prev
 	var delta_23 = pt_next - pt
-
 	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
 	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
+	var width = (pt_prev_width + pt_width) / 2.0
+	var center = pt + (delta_12.normalized() * extents)
 
-	var pt_d = pt + (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
-	var pt_a = pt - (extents * normal_23 * pt_width) + (extents * normal_12 * pt_prev_width)
-	var pt_c = pt + (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
-	var pt_b = pt - (extents * normal_23 * pt_width) - (extents * normal_12 * pt_prev_width)
+	var offset_12 = normal_12 * custom_scale * pt_width * extents
+	var offset_23 = normal_23 * custom_scale * pt_prev_width * extents
+
+	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * extents
+
+	var pt_d = (
+		pt
+		+ (offset_23)
+		+ (offset_12)
+		+ custom_offset_13
+	)
+	var pt_a = (
+		pt
+		- (offset_23)
+		+ (offset_12)
+		+ custom_offset_13
+		#+ offset_12
+	)
+	var pt_c = pt + (center + offset_23) - (center + offset_12) + custom_offset_13
+	var pt_b = (
+		pt
+		- (offset_23)
+		- (offset_12)
+		+ custom_offset_13
+	)
+
+	if custom_offset != 1.0 and custom_offset != 0.0:
+		print(
+			(
+				"n1:%s  |  n2:%s  | d1:%s  | d2:%s  |  o1:%s  |  o2:%s"
+				% [normal_12, normal_23, delta_12, delta_23, offset_12, offset_23]
+			)
+		)
 
 	new_quad.pt_a = pt_a
 	new_quad.pt_b = pt_b
@@ -1257,11 +1291,11 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 
 		var clr: Color = Color.white
 		var vert_adj: Vector2 = vtx
+		# TODO Replace this with "Render Offset"
 		match cardinal_direction:
 			DIRECTION.TOP:
 				clr = Color.green
 				vert_adj *= shape_material.top_offset
-				#print("vtx: %s  |  vert_adj: %s" % [str(vtx), str(vert_adj)])
 			DIRECTION.LEFT:
 				clr = Color.yellow
 				vert_adj *= shape_material.left_offset
@@ -1320,7 +1354,15 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 		if not is_cardinal_direction and shape_material.use_corners:
 			var prev_width = vertex_properties.get_width(pt_index_prev)
 			var new_quad2 = _build_corner_quad(
-				tess_pt_next, tess_pt, width, tess_pt_prev, prev_width, corner_direction
+				tess_pt_next,
+				tess_pt,
+				tess_pt_prev,
+				width,
+				prev_width,
+				corner_direction,
+				custom_scale,
+				custom_offset,
+				custom_extends
 			)
 			if new_quad2.tex != null:
 				var previous_quad = null
@@ -1506,7 +1548,16 @@ func bake_mesh(force: bool = false):
 	if closed_shape and not draw_edges:
 		return
 
+	var collision_width = 1.0
+	var collision_offset = 0.0
+	var collision_extends = 1.0
+
+	if shape_material != null:
+		collision_width = shape_material.collision_width
+		collision_offset = shape_material.collision_offset
+		collision_extends = shape_material.collision_extends
 	# Build Edge Quads
+	#_quads = _build_quads(collision_width, collision_offset, collision_extends)
 	_quads = _build_quads()
 	_adjust_mesh_quads(_quads)
 
