@@ -2,26 +2,23 @@ tool
 extends EditorPlugin
 
 enum MODE {
-	EDIT
-	CREATE
-	DELETE
+	EDIT,
+	CREATE,
+	DELETE,
 	SET_PIVOT
 }
 
 enum ACTION {
-	NONE = 0
-	MOVING_VERT = 1
+	NONE = 0,
+	MOVING_VERT = 1,
 	# Moving both control points
-	MOVING_CONTROL = 2
+	MOVING_CONTROL = 2,
 	# Moving control in
-	MOVING_CONTROL_IN = 3
+	MOVING_CONTROL_IN = 3,
 	# Moving control out
 	MOVING_CONTROL_OUT = 4
 }
 
-# The Plugin's Featured Component
-const ShapeClass = RMSmartShape2D
-	
 # Icons
 const HANDLE = preload("assets/icon_editor_handle.svg")
 const HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
@@ -32,8 +29,8 @@ const CURVE_DELETE = preload("assets/icon_curve_delete.svg")
 const PIVOT_POINT = preload("assets/icon_editor_position.svg")
 const COLLISION = preload("assets/icon_collision_polygon_2d.svg")
 
-# Should be obvious that this is the node being edited
-var edit_this:ShapeClass = null
+# This is the RMSmartShape2D node being edited
+var smart_shape:RMSmartShape2D = null
 
 # Toolbar Stuff
 var hb:HBoxContainer = null
@@ -52,6 +49,9 @@ var lbl_index:Label = null
 var on_edge:bool = false
 var edge_point:Vector2
 
+func _invert_idx(idx:int, array_size:int):
+	return array_size - idx - 1
+
 # Data related to an action being taken
 class ActionData:
 	func _init(_indices:Array, positions:Array, positions_in:Array, positions_out:Array, t:int):
@@ -60,6 +60,11 @@ class ActionData:
 		starting_positions = positions
 		starting_positions_control_in = positions_in
 		starting_positions_control_out = positions_out
+
+	func invert(array_size:int):
+		for i in range(0, indices.size(), 1):
+			var new_idx = array_size - indices[i] - 1
+			indices[i] = new_idx
 	#Type of Action ("Action" Enum)
 	var type:int = 0
 
@@ -72,11 +77,11 @@ class ActionData:
 var current_action = ActionData.new([], [], [], [], ACTION.NONE)
 
 # Monitor change to node being edited
-var edit_this_transform:Transform2D
-var edit_this_collision_offset:float
-var edit_this_collision_width:float
-var edit_this_collision_extends:float
-var edit_this_top_offset:float			# This also has an impact on open shaped collision
+var smart_shape_transform:Transform2D
+var smart_shape_collision_offset:float
+var smart_shape_collision_width:float
+var smart_shape_collision_extends:float
+var smart_shape_top_offset:float			# This also has an impact on open shaped collision
 
 # Track our mode of operation
 var current_mode:int = MODE.EDIT
@@ -187,26 +192,26 @@ func _exit_tree():
 
 func _process(delta):
 	if Engine.editor_hint:
-		if edit_this != null:
-			if is_instance_valid(edit_this) == false:
-				edit_this = null
+		if smart_shape != null:
+			if not is_instance_valid(smart_shape):
+				smart_shape = null
 				update_overlays()
 				return
-			if edit_this.is_inside_tree() == false:
-				edit_this = null
+			if not smart_shape.is_inside_tree():
+				smart_shape = null
 				update_overlays()
 				return
 
-			if edit_this_transform != edit_this.get_global_transform():
-				edit_this.bake_mesh(true)  # Force the bake so that directional changes can be made
-				edit_this.update()
-				edit_this_transform = edit_this.get_global_transform()
+			if smart_shape_transform != smart_shape.get_global_transform():
+				smart_shape.bake_mesh(true)  # Force the bake so that directional changes can be made
+				smart_shape.update()
+				smart_shape_transform = smart_shape.get_global_transform()
 
 func handles(object):
 	if object is Resource:
 		return false
 
-	var rslt:bool = object is ShapeClass
+	var rslt:bool = object is RMSmartShape2D
 	hb.hide()
 
 	update_overlays()
@@ -219,7 +224,10 @@ func edit(object):
 
 	on_edge = false
 	deselect_control_points()
-	edit_this = object as RMSmartShape2D
+	if smart_shape != null:
+		smart_shape.disconnect ("points_modified", self, "_on_smart_shape_point_modified")
+	smart_shape = object as RMSmartShape2D
+	smart_shape.connect("points_modified", self, "_on_smart_shape_point_modified")
 	update_overlays()
 
 func _untoggle_all():
@@ -245,14 +253,14 @@ func _set_pivot(point:Vector2):
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 
 	var np:Vector2 = point
-	var ct:Transform2D = edit_this.get_global_transform()
+	var ct:Transform2D = smart_shape.get_global_transform()
 	ct.origin = np
 
-	for i in edit_this.get_point_count():
-		var pt = edit_this.get_global_transform().xform(edit_this.get_point_position(i))
-		edit_this.set_point_position(i, ct.affine_inverse().xform(pt))
+	for i in smart_shape.get_point_count():
+		var pt = smart_shape.get_global_transform().xform(smart_shape.get_point_position(i))
+		smart_shape.set_point_position(i, ct.affine_inverse().xform(pt))
 
-	edit_this.position = edit_this.get_parent().get_global_transform().affine_inverse().xform( np)
+	smart_shape.position = smart_shape.get_parent().get_global_transform().affine_inverse().xform( np)
 	current_mode = previous_mode
 	_enter_mode(current_mode)
 	update_overlays()
@@ -278,9 +286,9 @@ func _get_toolbar_status_message(idx:int)->String:
 	return "Idx:%d T:%s F:%s W:%s" % \
 		[
 		idx,
-		edit_this.vertex_properties.get_texture_idx(idx),
-		edit_this.vertex_properties.get_flip(idx),
-		edit_this.vertex_properties.get_width(idx)
+		smart_shape.vertex_properties.get_texture_idx(idx),
+		smart_shape.vertex_properties.get_flip(idx),
+		smart_shape.vertex_properties.get_width(idx)
 		]
 
 func is_single_point_index_valid()->bool:
@@ -288,10 +296,10 @@ func is_single_point_index_valid()->bool:
 		return is_point_index_valid(current_action.indices[0])
 	return false
 
-func is_edit_this_valid()->bool:
-	if edit_this == null:
+func is_smart_shape_valid()->bool:
+	if smart_shape == null:
 		return false
-	if not is_instance_valid(edit_this):
+	if not is_instance_valid(smart_shape):
 		return false
 	return true
 
@@ -302,9 +310,9 @@ func are_point_indices_valid(indices:Array)->bool:
 	return true
 
 func is_point_index_valid(idx:int)->bool:
-	if not is_edit_this_valid():
+	if not is_smart_shape_valid():
 		return false
-	return (idx >= 0 and idx < edit_this.get_point_count())
+	return (idx >= 0 and idx < smart_shape.get_point_count())
 
 func current_point_index()->int:
 	if not is_single_point_index_valid():
@@ -323,16 +331,16 @@ func _input_handle_keyboard_event(event:InputEventKey)->bool:
 	if _is_valid_keyboard_scancode(kb):
 		if is_single_point_index_valid():
 			if kb.pressed and kb.scancode == KEY_SPACE:
-				edit_this.set_point_texture_flip(!edit_this.get_point_texture_flip(current_point_index()), current_point_index())
-				edit_this.bake_mesh()
-				edit_this.update()
+				smart_shape.set_point_texture_flip(!smart_shape.get_point_texture_flip(current_point_index()), current_point_index())
+				smart_shape.bake_mesh()
+				smart_shape.update()
 				update_toolbar_status_message()
 		return true
 	return false
 
 func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2D, grab_threshold:float)->bool:
 	var rslt:bool = false
-	var t:Transform2D = et * edit_this.get_global_transform()
+	var t:Transform2D = et * smart_shape.get_global_transform()
 	var mb:InputEventMouseButton = event
 	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
 
@@ -340,7 +348,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	# Mouse Button released
 	if not mb.pressed and mb.button_index == BUTTON_LEFT:#and current_action.type == ACTION.MOVING_VERT:
 		if current_action.type == ACTION.MOVING_VERT:
-			if current_action.starting_positions[0].distance_to(edit_this.get_point_position(current_action.indices[0])) > grab_threshold:
+			if current_action.starting_positions[0].distance_to(smart_shape.get_point_position(current_action.indices[0])) > grab_threshold:
 				_action_move_verticies()
 				rslt = true
 		var type = current_action.type
@@ -375,22 +383,22 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	# Mouse Wheel up on valid point
 	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_index_valid():
 		if Input.is_key_pressed(KEY_SHIFT):
-			var width = edit_this.get_point_width(current_point_index())
+			var width = smart_shape.get_point_width(current_point_index())
 			var new_width = width + 0.1
-			edit_this.set_point_width(new_width, current_point_index())
+			smart_shape.set_point_width(new_width, current_point_index())
 
-			edit_this.bake_mesh()
+			smart_shape.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
 			
 			rslt = true
 		else:
-			var index:int = edit_this.get_point_texture_index(current_point_index()) + 1
-			var flip:bool = edit_this.get_point_texture_flip(current_point_index())
-			edit_this.set_point_texture_index(current_point_index(), index)
-			edit_this.set_point_texture_flip(flip, current_point_index())
+			var index:int = smart_shape.get_point_texture_index(current_point_index()) + 1
+			var flip:bool = smart_shape.get_point_texture_flip(current_point_index())
+			smart_shape.set_point_texture_index(current_point_index(), index)
+			smart_shape.set_point_texture_flip(flip, current_point_index())
 
-			edit_this.bake_mesh()
+			smart_shape.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
 			
@@ -401,20 +409,20 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	# Mouse Wheel down on valid point
 	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_index_valid():
 		if Input.is_key_pressed(KEY_SHIFT):
-			var width = edit_this.get_point_width(current_point_index())
+			var width = smart_shape.get_point_width(current_point_index())
 			var new_width = width - 0.1
-			edit_this.set_point_width(new_width, current_point_index())
+			smart_shape.set_point_width(new_width, current_point_index())
 
-			edit_this.bake_mesh()
+			smart_shape.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
 			
 			rslt = true
 		else:
-			var index = edit_this.get_point_texture_index(current_point_index()) - 1
-			edit_this.set_point_texture_index(current_point_index(), index)
+			var index = smart_shape.get_point_texture_index(current_point_index()) - 1
+			smart_shape.set_point_texture_index(current_point_index(), index)
 
-			edit_this.bake_mesh()
+			smart_shape.bake_mesh()
 			update_overlays()
 			update_toolbar_status_message()
 			
@@ -427,7 +435,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 		if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
 			select_control_points_to_move([current_point_index()], viewport_mouse_position)
 		# If you create a point at the same location as point idx "0"
-		elif current_mode == MODE.CREATE and not edit_this.closed_shape and current_point_index() == 0:
+		elif current_mode == MODE.CREATE and not smart_shape.closed_shape and current_point_index() == 0:
 			_action_close_shape()
 			select_vertices_to_move([0], viewport_mouse_position)
 			return true
@@ -455,21 +463,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				return true
 
 		elif current_mode == MODE.CREATE and not on_edge:
-			if (edit_this.closed_shape and edit_this.get_point_count() < 3) or not edit_this.closed_shape:
-				var snapped_position = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
-				var np = snapped_position
+			if (smart_shape.closed_shape and smart_shape.get_point_count() < 3) or not smart_shape.closed_shape:
+				var snapped_pos = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
+				select_vertices_to_move([_action_add_point(snapped_pos)], viewport_mouse_position)
 
-				undo.create_action("Add Point")
-				undo.add_do_method(edit_this, "add_point_to_curve", np)
-				undo.add_undo_method(edit_this,"remove_point", edit_this.get_point_count())
-				undo.add_do_method(edit_this, "bake_mesh")
-				undo.add_undo_method(edit_this, "bake_mesh")
-				undo.add_do_method(self, "update_overlays")
-				undo.add_undo_method(self, "update_overlays")
-				undo.commit_action()
-				undo_version = undo.get_version()
-
-				select_vertices_to_move([edit_this.get_point_count() - 1], viewport_mouse_position)
 				return true
 
 		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
@@ -478,16 +475,16 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
 				var insertion_point:int = -1
-				var mb_length = edit_this.get_closest_offset(xform.affine_inverse().xform(gpoint))
-				var length = edit_this.get_point_count()
+				var mb_length = smart_shape.get_closest_offset(xform.affine_inverse().xform(gpoint))
+				var length = smart_shape.get_point_count()
 
 				for i in length - 1:
-					var compareLength = edit_this.get_closest_offset(edit_this.get_point_position(i + 1))
-					if mb_length >= edit_this.get_closest_offset(edit_this.get_point_position(i)) and mb_length <= compareLength:
+					var compareLength = smart_shape.get_closest_offset(smart_shape.get_point_position(i + 1))
+					if mb_length >= smart_shape.get_closest_offset(smart_shape.get_point_position(i)) and mb_length <= compareLength:
 						insertion_point = i
 
 				if insertion_point == -1:
-					insertion_point = edit_this.get_point_count() - 2
+					insertion_point = smart_shape.get_point_count() - 2
 
 				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
 				return true
@@ -496,31 +493,22 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
 				var insertion_point:int = -1
-				var mb_length = edit_this.get_closest_offset(xform.affine_inverse().xform(gpoint))
-				var length = edit_this.get_point_count()
+				var mb_length = smart_shape.get_closest_offset(xform.affine_inverse().xform(gpoint))
+				var length = smart_shape.get_point_count()
 
 				for i in length - 1:
-					var compareLength = edit_this.get_closest_offset(edit_this.get_point_position(i + 1))
-					if mb_length >= edit_this.get_closest_offset(edit_this.get_point_position(i)) and mb_length <= compareLength:
+					var compareLength = smart_shape.get_closest_offset(smart_shape.get_point_position(i + 1))
+					if mb_length >= smart_shape.get_closest_offset(smart_shape.get_point_position(i)) and mb_length <= compareLength:
 						insertion_point = i
 
 				if insertion_point == -1:
-					insertion_point = edit_this.get_point_count() - 2
+					insertion_point = smart_shape.get_point_count() - 2
+				var idx = insertion_point+1
 
-				undo.create_action("Split Curve")
-				undo.add_do_method(edit_this, "add_point_to_curve", xform.affine_inverse().xform(gpoint), insertion_point + 1)
-				undo.add_undo_method(edit_this, "remove_point", insertion_point + 1)
-				undo.add_do_method(edit_this, "bake_mesh")
-				undo.add_undo_method(edit_this, "bake_mesh")
-				undo.add_do_method(self, "update_overlays")
-				undo.add_undo_method(self, "update_overlays")
-				undo.commit_action()
-				undo_version = undo.get_version()
-
+				idx = _action_split_curve(idx, gpoint, xform)
+				select_vertices_to_move([idx], viewport_mouse_position)
 				on_edge = false
 
-				select_vertices_to_move([insertion_point+1], viewport_mouse_position)
-				
 				return true
 
 	return false
@@ -540,7 +528,7 @@ func _debug_mouse_positions(mm, t):
 	print("MouseDelta:%s" % str(t.affine_inverse().xform(_mouse_motion_delta_starting_pos)))
 
 func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2D, grab_threshold:float)->bool:
-	var t:Transform2D = et * edit_this.get_global_transform()
+	var t:Transform2D = et * smart_shape.get_global_transform()
 	var mm:InputEventMouseMotion = event
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
@@ -560,14 +548,14 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
 			var snapped_position = _snap_position(new_position, _snapping) + _snapping_offset
 			# Appears we are moving a point
-			if edit_this.closed_shape and (idx == edit_this.get_point_count() - 1 or idx == 0):
-				edit_this.set_point_position(edit_this.get_point_count() - 1, snapped_position)
-				edit_this.set_point_position(0, snapped_position)
+			if smart_shape.closed_shape and (idx == smart_shape.get_point_count() - 1 or idx == 0):
+				smart_shape.set_point_position(smart_shape.get_point_count() - 1, snapped_position)
+				smart_shape.set_point_position(0, snapped_position)
 				rslt = true
 			else:
-				edit_this.set_point_position(idx, snapped_position)
+				smart_shape.set_point_position(idx, snapped_position)
 				rslt = true
-			edit_this.bake_mesh()
+			#smart_shape.bake_mesh()
 			update_overlays()
 		return rslt
 
@@ -585,23 +573,23 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			var snapped_position_in = _snap_position(new_position_in, _snapping) + _snapping_offset
 			var snapped_position_out = _snap_position(new_position_out, _snapping) + _snapping_offset
 			# Appears we are moving a point
-			if edit_this.closed_shape and (idx == edit_this.get_point_count() - 1 or idx == 0):
+			if smart_shape.closed_shape and (idx == smart_shape.get_point_count() - 1 or idx == 0):
 				if _in:
-					edit_this.set_point_in(edit_this.get_point_count() - 1, snapped_position_in)
-					edit_this.set_point_in(0, snapped_position_in)
+					smart_shape.set_point_in(smart_shape.get_point_count() - 1, snapped_position_in)
+					smart_shape.set_point_in(0, snapped_position_in)
 					rslt = true
 				if _out:
-					edit_this.set_point_out(edit_this.get_point_count() - 1, snapped_position_out)
-					edit_this.set_point_out(0, snapped_position_out)
+					smart_shape.set_point_out(smart_shape.get_point_count() - 1, snapped_position_out)
+					smart_shape.set_point_out(0, snapped_position_out)
 					rslt = true
 			else:
 				if _in:
-					edit_this.set_point_in(idx, snapped_position_in)
+					smart_shape.set_point_in(idx, snapped_position_in)
 					rslt = true
 				if _out:
-					edit_this.set_point_out(idx, snapped_position_out)
+					smart_shape.set_point_out(idx, snapped_position_out)
 					rslt = true
-			edit_this.bake_mesh()
+			smart_shape.bake_mesh()
 			update_overlays()
 		return rslt
 
@@ -609,22 +597,22 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	# Handle Edge Follow
 	var old_edge:bool = on_edge
 
-	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
+	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * smart_shape.get_global_transform()
 	var gpoint:Vector2 = mm.position
 
-	if edit_this.get_point_count() < 2:
+	if smart_shape.get_point_count() < 2:
 		return rslt
 
 	# Find edge
-	edge_point = xform.xform(edit_this.get_closest_point(xform.affine_inverse().xform(mm.position)))
+	edge_point = xform.xform(smart_shape.get_closest_point(xform.affine_inverse().xform(mm.position)))
 	on_edge = false
 	if edge_point.distance_to(gpoint) <= grab_threshold:
 		on_edge = true
 
 	# However, if near a control point or one of its handles then we are not on the edge
 	deselect_control_points()
-	for i in edit_this.get_point_count():
-		var pp:Vector2 = edit_this.get_point_position(i)
+	for i in smart_shape.get_point_count():
+		var pp:Vector2 = smart_shape.get_point_position(i)
 		var p:Vector2 = xform.xform(pp)
 		if p.distance_to(gpoint) <= grab_threshold:
 			on_edge = false
@@ -640,10 +628,10 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	return rslt
 
 func forward_canvas_gui_input(event):
-	if edit_this == null:
+	if smart_shape == null:
 		return false
 
-	if not is_instance_valid(edit_this):
+	if not is_instance_valid(smart_shape):
 		return false
 
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
@@ -670,18 +658,18 @@ func _add_collision():
 	call_deferred("_add_deferred_collision")
 
 func _add_deferred_collision():
-	if (edit_this.get_parent() is StaticBody2D) == false:
+	if (smart_shape.get_parent() is StaticBody2D) == false:
 		var staticBody:StaticBody2D = StaticBody2D.new()
-		var t:Transform2D = edit_this.transform
-		staticBody.position = edit_this.position
-		edit_this.position = Vector2.ZERO
+		var t:Transform2D = smart_shape.transform
+		staticBody.position = smart_shape.position
+		smart_shape.position = Vector2.ZERO
 
-		edit_this.get_parent().add_child(staticBody)
+		smart_shape.get_parent().add_child(staticBody)
 		staticBody.owner = get_editor_interface().get_edited_scene_root()
 
-		edit_this.get_parent().remove_child(edit_this)
-		staticBody.add_child(edit_this)
-		edit_this.owner = get_editor_interface().get_edited_scene_root()
+		smart_shape.get_parent().remove_child(smart_shape)
+		staticBody.add_child(smart_shape)
+		smart_shape.owner = get_editor_interface().get_edited_scene_root()
 
 		var colPolygon:CollisionPolygon2D = CollisionPolygon2D.new()
 		staticBody.add_child(colPolygon)
@@ -689,9 +677,9 @@ func _add_deferred_collision():
 		colPolygon.modulate.a = 0.3 #TODO: Make this a option at some point
 		colPolygon.visible = false
 
-		edit_this.collision_polygon_node = edit_this.get_path_to(colPolygon)
+		smart_shape.collision_polygon_node = smart_shape.get_path_to(colPolygon)
 
-		edit_this.bake_collision()
+		smart_shape.bake_collision()
 
 func _handle_auto_collision_press():
 	pass
@@ -706,13 +694,13 @@ func _snap_offset_changed(ignore_value):
 # ACTIONS #
 ###########
 func _action_set_pivot(pos:Vector2, et:Transform2D):
-	var old_pos = et.xform( edit_this.get_parent().get_global_transform().xform(edit_this.position))
+	var old_pos = et.xform( smart_shape.get_parent().get_global_transform().xform(smart_shape.position))
 	undo.create_action("Set Pivot")
 	var snapped_position = _snap_position(et.affine_inverse().xform(pos), _snapping) + _snapping_offset
 	undo.add_do_method(self, "_set_pivot", snapped_position)
 	undo.add_undo_method(self, "_set_pivot", et.affine_inverse().xform(old_pos))
-	undo.add_do_method(edit_this, "bake_mesh")
-	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_do_method(smart_shape, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
 	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
@@ -721,19 +709,22 @@ func _action_set_pivot(pos:Vector2, et:Transform2D):
 func _action_move_verticies():
 	undo.create_action("Move Vertex")
 
-	undo.add_do_method(edit_this, "bake_mesh")
-	undo.add_do_method(self, "update_overlays")
-
 	for i in range(0, current_action.indices.size(), 1):
 		var idx = current_action.indices[i]
 		var from_position = current_action.starting_positions[i]
-		if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
-			undo.add_undo_method(edit_this, "set_point_position", 0, from_position)
-			undo.add_undo_method(edit_this, "set_point_position", edit_this.get_point_count() - 1, from_position)
+		var this_position = smart_shape.get_point_position(idx)
+		if (idx == 0 or idx == smart_shape.get_point_count() - 1) and smart_shape.closed_shape:
+			undo.add_do_method(smart_shape, "set_point_position", 0, this_position)
+			undo.add_undo_method(smart_shape, "set_point_position", 0, from_position)
+			undo.add_do_method(smart_shape, "set_point_position", smart_shape.get_point_count() - 1, this_position)
+			undo.add_undo_method(smart_shape, "set_point_position", smart_shape.get_point_count() - 1, from_position)
 		else:
-			undo.add_undo_method(edit_this, "set_point_position", idx, from_position)
+			undo.add_do_method(smart_shape, "set_point_position", idx, this_position)
+			undo.add_undo_method(smart_shape, "set_point_position", idx, from_position)
 
-	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_do_method(smart_shape, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
+	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
@@ -743,7 +734,7 @@ func _action_move_control_points(_in:bool, _out:bool):
 		return
 	undo.create_action("Move Control Point")
 
-	undo.add_do_method(edit_this, "bake_mesh")
+	undo.add_do_method(smart_shape, "bake_mesh")
 	undo.add_do_method(self, "update_overlays")
 
 	for i in range(0, current_action.indices.size(), 1):
@@ -751,101 +742,157 @@ func _action_move_control_points(_in:bool, _out:bool):
 		var from_position_in = current_action.starting_positions_control_in[i]
 		var from_position_out = current_action.starting_positions_control_out[i]
 
-		if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
+		if (idx == 0 or idx == smart_shape.get_point_count() - 1) and smart_shape.closed_shape:
 			if _in:
-				undo.add_undo_method(edit_this, "set_point_in", 0, from_position_in)
-				undo.add_undo_method(edit_this, "set_point_in", edit_this.get_point_count() - 1, from_position_in)
+				undo.add_undo_method(smart_shape, "set_point_in", 0, from_position_in)
+				undo.add_undo_method(smart_shape, "set_point_in", smart_shape.get_point_count() - 1, from_position_in)
 			if _out:
-				undo.add_undo_method(edit_this, "set_point_out", 0, from_position_out)
-				undo.add_undo_method(edit_this, "set_point_out", edit_this.get_point_count() - 1, from_position_out)
+				undo.add_undo_method(smart_shape, "set_point_out", 0, from_position_out)
+				undo.add_undo_method(smart_shape, "set_point_out", smart_shape.get_point_count() - 1, from_position_out)
 		else:
 			if _in:
-				undo.add_undo_method(edit_this, "set_point_in", idx, from_position_in)
+				undo.add_undo_method(smart_shape, "set_point_in", idx, from_position_in)
 			if _out:
-				undo.add_undo_method(edit_this, "set_point_out", idx, from_position_out)
+				undo.add_undo_method(smart_shape, "set_point_out", idx, from_position_out)
 
-	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
 
 func _action_close_shape():
 	undo.create_action("Close Shape")
-	undo.add_do_property(edit_this, "closed_shape", true)
-	undo.add_do_method(edit_this, "property_list_changed_notify")
-	undo.add_undo_property(edit_this, "closed_shape", false)
-	undo.add_undo_method(edit_this, "property_list_changed_notify")
+	undo.add_do_property(smart_shape, "closed_shape", true)
+	undo.add_do_method(smart_shape, "property_list_changed_notify")
+	undo.add_undo_property(smart_shape, "closed_shape", false)
+	undo.add_undo_method(smart_shape, "property_list_changed_notify")
 	undo.commit_action()
 	undo_version = undo.get_version()
+	_action_invert_orientation()
 
 func _action_delete_point_in(idx:int):
-	var from_position_in = edit_this.get_point_in(idx)
+	var from_position_in = smart_shape.get_point_in(idx)
 	undo.create_action("Delete Control Point In")
 
-	undo.add_do_method(edit_this, "bake_mesh")
+	undo.add_do_method(smart_shape, "bake_mesh")
 	undo.add_do_method(self, "update_overlays")
 
 
-	if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
-		undo.add_undo_method(edit_this, "set_point_in", 0, from_position_in)
-		undo.add_undo_method(edit_this, "set_point_in", edit_this.get_point_count() - 1, from_position_in)
-		edit_this.set_point_in(0, Vector2(0,0))
-		edit_this.set_point_in(edit_this.get_point_count() - 1, Vector2(0,0))
+	if (idx == 0 or idx == smart_shape.get_point_count() - 1) and smart_shape.closed_shape:
+		undo.add_undo_method(smart_shape, "set_point_in", 0, from_position_in)
+		undo.add_undo_method(smart_shape, "set_point_in", smart_shape.get_point_count() - 1, from_position_in)
+		smart_shape.set_point_in(0, Vector2(0,0))
+		smart_shape.set_point_in(smart_shape.get_point_count() - 1, Vector2(0,0))
 	else:
-		undo.add_undo_method(edit_this, "set_point_in", idx, from_position_in)
-		edit_this.set_point_in(idx, Vector2(0,0))
+		undo.add_undo_method(smart_shape, "set_point_in", idx, from_position_in)
+		smart_shape.set_point_in(idx, Vector2(0,0))
 
-	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
+	_action_invert_orientation()
 
 func _action_delete_point_out(idx:int):
-	var from_position_out = edit_this.get_point_out(idx)
+	var from_position_out = smart_shape.get_point_out(idx)
 	undo.create_action("Delete Control Point Out")
 
-	undo.add_do_method(edit_this, "bake_mesh")
+	undo.add_do_method(smart_shape, "bake_mesh")
 	undo.add_do_method(self, "update_overlays")
 
 
-	if (idx == 0 or idx == edit_this.get_point_count() - 1) and edit_this.closed_shape:
-		undo.add_undo_method(edit_this, "set_point_out", 0, from_position_out)
-		undo.add_undo_method(edit_this, "set_point_out", edit_this.get_point_count() - 1, from_position_out)
-		edit_this.set_point_out(0, Vector2(0,0))
-		edit_this.set_point_out(edit_this.get_point_count() - 1, Vector2(0,0))
+	if (idx == 0 or idx == smart_shape.get_point_count() - 1) and smart_shape.closed_shape:
+		undo.add_undo_method(smart_shape, "set_point_out", 0, from_position_out)
+		undo.add_undo_method(smart_shape, "set_point_out", smart_shape.get_point_count() - 1, from_position_out)
+		smart_shape.set_point_out(0, Vector2(0,0))
+		smart_shape.set_point_out(smart_shape.get_point_count() - 1, Vector2(0,0))
 	else:
-		undo.add_undo_method(edit_this, "set_point_out", idx, from_position_out)
-		edit_this.set_point_out(idx, Vector2(0,0))
+		undo.add_undo_method(smart_shape, "set_point_out", idx, from_position_out)
+		smart_shape.set_point_out(idx, Vector2(0,0))
 
-	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
+	_action_invert_orientation()
 
 func _action_delete_point():
 	var fix_close_shape = false
 	undo.create_action("Delete Point")
-	if edit_this.closed_shape and (current_point_index() == edit_this.get_point_count() - 1 or current_point_index() == 0):
-		var pt = edit_this.get_point_position(0)
-		undo.add_do_method(edit_this, "remove_point", edit_this.get_point_count() - 1)
-		undo.add_do_method(edit_this, "remove_point", 0)
-		undo.add_undo_method(edit_this, "add_point_to_curve", pt, 0)
-		undo.add_undo_method(edit_this,"set_point_position", edit_this.get_point_count() - 1, pt)
+	if smart_shape.closed_shape and (current_point_index() == smart_shape.get_point_count() - 1 or current_point_index() == 0):
+		var pt = smart_shape.get_point_position(0)
+		undo.add_do_method(smart_shape, "remove_point", smart_shape.get_point_count() - 1)
+		undo.add_do_method(smart_shape, "remove_point", 0)
+		undo.add_undo_method(smart_shape, "add_point_to_curve", pt, 0)
+		undo.add_undo_method(smart_shape,"set_point_position", smart_shape.get_point_count() - 1, pt)
 		fix_close_shape = true
 
 	else:
-		var pt:Vector2 = edit_this.get_point_position(current_point_index())
-		undo.add_do_method(edit_this, "remove_point", current_point_index())
-		undo.add_undo_method(edit_this, "add_point_to_curve", pt, current_point_index())
+		var pt:Vector2 = smart_shape.get_point_position(current_point_index())
+		undo.add_do_method(smart_shape, "remove_point", current_point_index())
+		undo.add_undo_method(smart_shape, "add_point_to_curve", pt, current_point_index())
 
 	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
-	undo.add_do_method(edit_this, "bake_mesh")
-	undo.add_undo_method(edit_this, "bake_mesh")
+	undo.add_do_method(smart_shape, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
 	undo.commit_action()
 	undo_version = undo.get_version()
 	if fix_close_shape:
-		edit_this.fix_close_shape()
+		smart_shape.fix_close_shape()
+	_action_invert_orientation()
+
+func _action_add_point(new_point:Vector2)->int:
+	"""
+	Will return index of added point
+	"""
+	undo.create_action("Add Point")
+	undo.add_do_method(smart_shape, "add_point_to_curve", new_point)
+	undo.add_undo_method(smart_shape,"remove_point", smart_shape.get_point_count())
+	undo.add_do_method(smart_shape, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
+	undo.add_do_method(self, "update_overlays")
+	undo.add_undo_method(self, "update_overlays")
+	undo.commit_action()
+	undo_version = undo.get_version()
+	if _action_invert_orientation():
+		return 0
+	return smart_shape.get_point_count() - 1
+
+
+func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
+	"""
+	Will split the shape at the given index
+	The idx of the new point will be returned
+	If the orientation is changed, idx will be updated
+	"""
+	undo.create_action("Split Curve")
+	undo.add_do_method(smart_shape, "add_point_to_curve", xform.affine_inverse().xform(gpoint), idx)
+	undo.add_undo_method(smart_shape, "remove_point", idx)
+	undo.add_do_method(smart_shape, "bake_mesh")
+	undo.add_undo_method(smart_shape, "bake_mesh")
+	undo.add_do_method(self, "update_overlays")
+	undo.add_undo_method(self, "update_overlays")
+	undo.commit_action()
+	undo_version = undo.get_version()
+	if _action_invert_orientation():
+		return _invert_idx(idx, smart_shape.get_point_count())
+	return idx
+
+func _action_invert_orientation()->bool:
+	if not smart_shape.are_points_clockwise() and smart_shape.get_point_count() >= 3 and smart_shape.closed_shape:
+		undo.create_action("Invert Orientation")
+		undo.add_do_method(smart_shape, "invert_point_order")
+		undo.add_undo_method(smart_shape,"invert_point_order")
+
+		undo.add_do_method(current_action, "invert", smart_shape.get_point_count())
+		undo.add_undo_method(current_action, "invert", smart_shape.get_point_count())
+		undo.commit_action()
+		undo_version = undo.get_version()
+		return true
+	return false
+
+
 
 func deselect_control_points():
 	current_action = ActionData.new([], [], [], [], ACTION.NONE)
@@ -855,9 +902,9 @@ func select_verticies(indices:Array, action:int):
 	var from_positions_c_in = []
 	var from_positions_c_out = []
 	for idx in indices:
-		from_positions.push_back(edit_this.get_point_position(idx))
-		from_positions_c_in.push_back(edit_this.get_point_in(idx))
-		from_positions_c_out.push_back(edit_this.get_point_out(idx))
+		from_positions.push_back(smart_shape.get_point_position(idx))
+		from_positions_c_in.push_back(smart_shape.get_point_in(idx))
+		from_positions_c_out.push_back(smart_shape.get_point_out(idx))
 	current_action = ActionData.new(indices, from_positions, from_positions_c_in, from_positions_c_out, action)
 
 func select_vertices_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
@@ -878,13 +925,13 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 	# in this case do some updating to be sure
 	if undo_version != undo.get_version():
 		if undo.get_current_action_name() == "Move CanvasItem" or undo.get_current_action_name() == "Rotate CanvasItem" or undo.get_current_action_name() == "Scale CanvasItem":
-			edit_this.bake_collision()
+			smart_shape.bake_collision()
 			undo_version = undo.get_version()
 
-	if edit_this != null:
-		var t:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-		var baked = edit_this.get_vertices()
-		var points = edit_this.get_tessellated_points()
+	if smart_shape != null:
+		var t:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * smart_shape.get_global_transform()
+		var baked = smart_shape.get_vertices()
+		var points = smart_shape.get_tessellated_points()
 		var length = points.size()
 
 		# Draw Outline
@@ -893,7 +940,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 		for i in length:
 			var pt = points[i]
 			if ppt != null:
-				overlay.draw_line(ppt, t.xform(pt), edit_this.modulate)
+				overlay.draw_line(ppt, t.xform(pt), smart_shape.modulate)
 			ppt = t.xform( pt )
 			if fpt == null:
 				fpt = ppt
@@ -901,7 +948,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 		# Draw handles
 		for i in range(0, baked.size(), 1):
 			#print ("%s:%s" % [str(i), str(baked.size())])
-			#print ("%s:%s | %s | %s" % [str(i), str(edit_this.get_point_position(i)), str(edit_this.get_point_in(i)), str(edit_this.get_point_out(i))])
+			#print ("%s:%s | %s | %s" % [str(i), str(smart_shape.get_point_position(i)), str(smart_shape.get_point_in(i)), str(smart_shape.get_point_out(i))])
 			var smooth = false
 			var hp = t.xform(baked[i])
 			overlay.draw_texture(HANDLE, hp - HANDLE.get_size() * 0.5)
@@ -909,7 +956,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 			# Draw handles for control-point-out
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
 			if i < baked.size() - 1:
-				var pointout = t.xform(baked[i] + edit_this.get_point_out(i));
+				var pointout = t.xform(baked[i] + smart_shape.get_point_out(i));
 				if hp != pointout:
 					smooth = true;
 					_draw_control_point_line(overlay, hp, pointout, HANDLE_CONTROL)
@@ -917,7 +964,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 			# Draw handles for control-point-in
 			# Drawing the point-in for point 0 makes no sense, as there's no point behind it
 			if i > 0:
-				var pointin = t.xform(baked[i] + edit_this.get_point_in(i));
+				var pointin = t.xform(baked[i] + smart_shape.get_point_in(i));
 				if hp != pointin:
 					smooth = true;
 					_draw_control_point_line(overlay, hp, pointin, HANDLE_CONTROL)
@@ -930,7 +977,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 			overlay.draw_circle(t.xform( baked[current_point_index()] ), 5, Color.white )
 			overlay.draw_circle(t.xform( baked[current_point_index()] ), 3, Color.black)
 
-		edit_this.update()
+		smart_shape.update()
 
 func _draw_control_point_line(overlay:Control, point:Vector2, control_point:Vector2, texture:Texture=HANDLE):
 	# Draw the line with a dark and light color to be visible on all backgrounds
@@ -944,10 +991,10 @@ func _draw_control_point_line(overlay:Control, point:Vector2, control_point:Vect
 
 func _get_intersecting_control_point_in(mouse_pos:Vector2, grab_threshold:float)->Array:
 	var points = []
-	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-	for i in range(0, edit_this.get_point_count(), 1):
-		var vec = edit_this.get_point_position(i)
-		var c_in = vec + edit_this.get_point_in(i)
+	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * smart_shape.get_global_transform()
+	for i in range(0, smart_shape.get_point_count(), 1):
+		var vec = smart_shape.get_point_position(i)
+		var c_in = vec + smart_shape.get_point_in(i)
 		c_in = xform.xform(c_in)
 		if c_in.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(i)
@@ -956,12 +1003,15 @@ func _get_intersecting_control_point_in(mouse_pos:Vector2, grab_threshold:float)
 
 func _get_intersecting_control_point_out(mouse_pos:Vector2, grab_threshold:float)->Array:
 	var points = []
-	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * edit_this.get_global_transform()
-	for i in range(0, edit_this.get_point_count(), 1):
-		var vec = edit_this.get_point_position(i)
-		var c_out = vec + edit_this.get_point_out(i)
+	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * smart_shape.get_global_transform()
+	for i in range(0, smart_shape.get_point_count(), 1):
+		var vec = smart_shape.get_point_position(i)
+		var c_out = vec + smart_shape.get_point_out(i)
 		c_out = xform.xform(c_out)
 		if c_out.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(i)
 
 	return points
+
+func _on_smart_shape_point_modified():
+	_action_invert_orientation()

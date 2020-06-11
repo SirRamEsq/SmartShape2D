@@ -2,6 +2,15 @@ tool
 extends Node2D
 class_name RMSmartShape2D, "shape.png"
 
+"""
+- This class assumes that points are in clockwise orientation
+- This class does not support polygons with a counter-clockwise orientation
+	- To remedy this, it contains functions to detect and invert the orientation if needed
+		- Inverting the orientation will need to be called by the code using this class
+		- Inverting the orientation isn't autmoatically done by the class
+			- This would change the indices of points and would cause weird issues
+"""
+
 enum DIRECTION {
 	TOP,
 	RIGHT,
@@ -15,7 +24,7 @@ enum DIRECTION {
 	TOP_RIGHT_OUTER,
 	BOTTOM_RIGHT_OUTER,
 	BOTTOM_LEFT_OUTER,
-	FILL,
+	FILL
 }
 
 
@@ -116,18 +125,16 @@ export (Resource) var shape_material = RMS2D_Material.new() setget _set_material
 
 # This will set true if it is time to rebake mesh, should prevent unnecessary
 # mesh creation unless a change to a property deems it necessary
-var _dirty: bool = true  # might be able to remove and replace by using change in point_change_index
+var _dirty: bool = true
 
 var vertex_properties = RMS2D_VertexPropertiesArray.new(0)
 
 # For rendering fill and edges
 var meshes: Array = Array()
 var _quads: Array
-var point_change_index: int = 0
 
 # Reduce clockwise check if points don't change
 var is_clockwise: bool = false setget , are_points_clockwise
-var _clockwise_point_change_index: int = -1
 
 # Signals
 signal points_modified
@@ -180,16 +187,18 @@ Will make sure a shape is closed or open after removing / adding / changing a po
 
 func fix_close_shape():
 	var point_count = get_point_count()
-	if closed_shape and get_point_position(0) != get_point_position(point_count - 1):
+	var first_point = curve.get_point_position(0)
+	var final_point = curve.get_point_position(point_count - 1)
+	if closed_shape and first_point != final_point:
 		add_point_to_curve(get_point_position(0))
-		bake_mesh()
+		set_as_dirty()
 	elif (
 		not closed_shape
 		and get_point_position(0) == get_point_position(point_count - 1)
 		and point_count > 2
 	):
 		remove_point(point_count - 1)
-		bake_mesh()
+		set_as_dirty()
 
 
 func _draw():
@@ -328,23 +337,8 @@ func _set_material(value: RMS2D_Material):
 
 
 func _set_close_shape(value):
-	if curve.get_point_count() < 3:
-		return
 	closed_shape = value
-
-	var first_point = curve.get_point_position(0)
-	var final_point = curve.get_point_position(curve.get_point_count() - 1)
-	if closed_shape:
-		# If not already closed, add a point to close the shape
-		if first_point != final_point:
-			add_point_to_curve(curve.get_point_position(0))
-	else:
-		# Remove final point if it matches the first
-		if first_point == final_point:
-			remove_point(curve.get_point_count() - 1)
-
-	set_as_dirty()
-
+	fix_close_shape()
 	if Engine.editor_hint:
 		property_list_changed_notify()
 
@@ -371,7 +365,6 @@ func _set_curve(value: Curve2D):
 ######################
 func set_point_width(width: float, at_position: int):
 	if vertex_properties.set_width(width, at_position):
-		point_change_index += 1
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -389,7 +382,6 @@ func is_closed_shape() -> bool:
 
 func set_point_texture_index(point_index: int, tex_index: int):
 	if vertex_properties.set_texture_idx(tex_index, point_index):
-		point_change_index += 1
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -407,7 +399,6 @@ func get_point_texture_flip(at_position: int) -> bool:
 
 func set_point_texture_flip(flip: bool, at_position: int):
 	if vertex_properties.set_flip(flip, at_position):
-		point_change_index += 1
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -520,12 +511,6 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 
 
 func are_points_clockwise() -> bool:
-	# Not relevant if this isn't a closed shape (?)
-	#if not closed_shape:
-	#return true
-	if _clockwise_point_change_index == point_change_index:
-		return is_clockwise
-
 	var sum = 0.0
 	var point_count = curve.get_point_count()
 	for i in point_count:
@@ -534,7 +519,6 @@ func are_points_clockwise() -> bool:
 		sum += pt.cross(pt2)
 
 	is_clockwise = sum > 0.0
-	_clockwise_point_change_index = point_change_index
 	return is_clockwise
 
 
@@ -1024,11 +1008,14 @@ func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index
 	if tess_point_index == 0:
 		return 0
 
+	#print("============")
+	#print("points: %s  |  tess_p: %s  |  tess_p_i: %s" % [str(points.size()), str(tess_points.size()), str(tess_point_index)])
 	var vertex_idx = -1
 	for i in range(0, tess_point_index + 1, 1):
 		var tp = tess_points[i]
 		var p = points[vertex_idx + 1]
 		if tp == p:
+			#print("i: %s  |  p: %s  |  tp: %s" % [str(i), str(p), str(tp)])
 			vertex_idx += 1
 	return vertex_idx
 
@@ -1542,19 +1529,67 @@ func bake_mesh(force: bool = false):
 #########
 # CURVE #
 #########
-func add_point_to_curve(position: Vector2, index: int = -1):
+func invert_point_order():
+	var verts = get_vertices()
+
+	# Store inverted verts and properties
+	var inverted_properties = []
+	var inverted = []
+	for i in range(0, verts.size(), 1):
+		var vert = verts[i]
+		var prop = vertex_properties.properties[i]
+		inverted.push_front(vert)
+		inverted_properties.push_front(prop)
+
+	# Clear Verts, add Inverted Verts
+	curve.clear_points()
+	_quads = []
+	meshes = []
+	add_points_to_curve(inverted, -1, false)
+
+	# Set Inverted Properties
+	for i in range(0, inverted_properties.size(), 1):
+		var prop = inverted_properties[i]
+		vertex_properties.properties[inverted_properties.size() - i] = prop
+
+	# Update and set as dirty
+	set_as_dirty()
+
+	if Engine.editor_hint:
+		property_list_changed_notify()
+
+func clear_points():
+	curve.clear_points()
+	vertex_properties = RMS2D_VertexPropertiesArray.new(0)
+	_quads = []
+	meshes = []
+
+func add_points_to_curve(verts:Array, starting_index: int = -1, update:bool = true):
+	for i in range(0, verts.size(), 1):
+		var v = verts[i]
+		if starting_index != -1:
+			curve.add_point(v, Vector2.ZERO, Vector2.ZERO, starting_index + i)
+			vertex_properties.add_point(starting_index + i)
+		else:
+			curve.add_point(v, Vector2.ZERO, Vector2.ZERO, starting_index)
+			vertex_properties.add_point(starting_index)
+
+	if update:
+		_add_point_update()
+
+func add_point_to_curve(position:Vector2, index:int = -1, update:bool = true):
 	curve.add_point(position, Vector2.ZERO, Vector2.ZERO, index)
-	# position '-1' appends to the list
-	if vertex_properties.add_point(index):
-		# If we're able to close the shape now
-		if closed_shape and curve.get_point_count() == 3:
-			fix_close_shape()
-		set_as_dirty()
-		emit_signal("points_modified")
+	vertex_properties.add_point(index)
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+	if update:
+		_add_point_update()
 
+func _add_point_update():
+	set_as_dirty()
+	emit_signal("points_modified")
+
+	if Engine.editor_hint:
+		property_list_changed_notify()
 
 func _is_curve_index_in_range(i: int) -> bool:
 	if curve.get_point_count() > i and i >= 0:
@@ -1572,7 +1607,6 @@ func set_point_position(at_position: int, position: Vector2):
 	if curve != null:
 		if _is_curve_index_in_range(at_position):
 			curve.set_point_position(at_position, position)
-			point_change_index += 1
 			set_as_dirty()
 			emit_signal("points_modified")
 
@@ -1580,7 +1614,6 @@ func set_point_position(at_position: int, position: Vector2):
 func remove_point(idx: int):
 	curve.remove_point(idx)
 	if vertex_properties.remove_point(idx):
-		point_change_index += 1
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -1594,7 +1627,6 @@ func resize_points(size: int):
 
 	curve.resize(size)
 	if vertex_properties.resize(size):
-		point_change_index += 1
 		set_as_dirty()
 
 		if Engine.editor_hint:
