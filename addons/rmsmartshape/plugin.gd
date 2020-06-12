@@ -434,6 +434,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_single_point_index_valid():
 		if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
 			select_control_points_to_move([current_point_index()], viewport_mouse_position)
+			return true
 		# If you create a point at the same location as point idx "0"
 		elif current_mode == MODE.CREATE and not smart_shape.closed_shape and current_point_index() == 0:
 			_action_close_shape()
@@ -488,7 +489,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
 				return true
-				
+
 			else:
 				var xform:Transform2D = t
 				var gpoint:Vector2 = mb.position
