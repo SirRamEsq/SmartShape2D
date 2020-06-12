@@ -672,12 +672,12 @@ func _get_direction_three_points(
 		if not clockwise:
 			averaged *= -1.0
 
-		# Inner
+		var inner = false
 		if deg < 0:
-			dir = _vector_to_corner_dir(averaged, true)
-		# Outer
-		else:
-			dir = _vector_to_corner_dir(averaged, false)
+			inner = true
+		if flip_edges:
+			inner = not inner
+		dir = _vector_to_corner_dir(averaged, inner)
 
 	else:
 		dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
@@ -948,18 +948,6 @@ func _adjust_mesh_quads(quads: Array):
 			or ((start_index) % quads.size() == initial_start_index and closed_shape)
 		):
 			break
-	#print("=====")
-	#print(
-	#(
-	#"size:%s  |  init: %s  |  start: %s  |  segments: %s"
-	#% [quads.size(), initial_start_index, start_index, quad_segments.size()]
-	#)
-	#)
-	#for i in range(quad_segments.size()):
-	#print("Segment %s" % i)
-	#var segment = quad_segments[i]
-	#for idx in segment:
-	#print("IDX: %s" % str(idx))
 	for segment in quad_segments:
 		_adjust_mesh_quad_segment(quads, segment)
 
@@ -1109,8 +1097,11 @@ func _build_corner_quad(
 
 	var offset_12 = normal_12 * custom_scale * pt_width * extents
 	var offset_23 = normal_23 * custom_scale * pt_prev_width * extents
-
 	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * extents
+	if flip_edges:
+		offset_12 *= -1
+		offset_23 *= -1
+		custom_offset_13 *= -1
 
 	var pt_d = (
 		pt
@@ -1135,11 +1126,11 @@ func _build_corner_quad(
 
 	#if custom_offset != 1.0 and custom_offset != 0.0:
 	#print(("n1:%s  |  n2:%s  | d1:%s  | d2:%s  |  o1:%s  |  o2:%s"% [normal_12, normal_23, delta_12, delta_23, offset_12, offset_23]))
-
 	new_quad.pt_a = pt_a
 	new_quad.pt_b = pt_b
 	new_quad.pt_c = pt_c
 	new_quad.pt_d = pt_d
+
 	new_quad.direction = direction
 	new_quad.tex = texture
 	new_quad.normal_tex = texture_normal
@@ -1385,7 +1376,6 @@ func bake_collision():
 			var old_interval = curve.bake_interval
 			col_polygon.transform = transform
 			col_polygon.scale = Vector2.ONE
-			curve.bake_interval = collision_bake_interval
 
 			curve.bake_interval = old_interval
 
@@ -1402,7 +1392,13 @@ func bake_collision():
 							get_global_transform().xform(quad.pt_a)
 						)
 					)
-				else:
+				elif _is_inner_direction(quad.direction):
+					points.push_back(
+						col_polygon.get_global_transform().xform_inv(
+							get_global_transform().xform(quad.pt_d)
+						)
+					)
+				elif _is_outer_direction(quad.direction):
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
 							get_global_transform().xform(quad.pt_a)
@@ -1413,6 +1409,7 @@ func bake_collision():
 							get_global_transform().xform(quad.pt_d)
 						)
 					)
+			curve.bake_interval = collision_bake_interval
 		else:
 			collision_quads = _build_quads(collision_width, collision_offset, collision_extends)
 			_weld_quads(collision_quads, collision_width)
@@ -1485,7 +1482,7 @@ func bake_mesh(force: bool = false):
 	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
 	var st: SurfaceTool
 
-	if closed_shape == true and shape_material.fill_texture != null:
+	if closed_shape and shape_material.fill_texture != null:
 		st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
@@ -1512,16 +1509,7 @@ func bake_mesh(force: bool = false):
 	if closed_shape and not draw_edges:
 		return
 
-	var collision_width = 1.0
-	var collision_offset = 0.0
-	var collision_extends = 1.0
-
-	if shape_material != null:
-		collision_width = shape_material.collision_width
-		collision_offset = shape_material.collision_offset
-		collision_extends = shape_material.collision_extends
 	# Build Edge Quads
-	#_quads = _build_quads(collision_width, collision_offset, collision_extends)
 	_quads = _build_quads()
 	_adjust_mesh_quads(_quads)
 

@@ -879,8 +879,20 @@ func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
 		return _invert_idx(idx, smart_shape.get_point_count())
 	return idx
 
+func _should_invert_orientation()->bool:
+	return not smart_shape.are_points_clockwise() and smart_shape.get_point_count() >= 3 and smart_shape.closed_shape
+
 func _action_invert_orientation()->bool:
-	if not smart_shape.are_points_clockwise() and smart_shape.get_point_count() >= 3 and smart_shape.closed_shape:
+	"""
+	Will reverse the orientation of the smart_shape verticies
+	This does not create or commit an undo action on its own
+	It's meant to be included with another action
+	Therefore, the function should be called between a block like so:
+		undo.create_action("xxx")
+		_action_invert_orientation()-
+		undo.commit_action()
+	"""
+	if _should_invert_orientation():
 		undo.create_action("Invert Orientation")
 		undo.add_do_method(smart_shape, "invert_point_order")
 		undo.add_undo_method(smart_shape,"invert_point_order")
