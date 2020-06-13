@@ -43,6 +43,18 @@ Please include the following three bits of information in each issue posted:
 - RMSMartshape Version
 
 # Version History
+## Changes in 1.3
+This update primarily fixes bugs and improves existing features to be more usable.
+### Changes
+- Merged top/left/right/bottom offset into one variable. render offset
+### Fixes
+- Input bugs
+- Edge Flipping
+- Polygon orientation bugs
+- Quad Welding
+- Corer quad generation and welding
+- Collision variables in the RMSmartShapeMaterial working as intended
+
 ## Changes in 1.2
 ### Tweaks
 - Refactoring
