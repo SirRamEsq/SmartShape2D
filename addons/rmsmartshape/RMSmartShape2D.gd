@@ -118,7 +118,6 @@ export (bool) var use_global_space = false setget _set_use_global_space
 export (NodePath) var collision_polygon_node
 export (int, 1, 512) var collision_bake_interval = 20
 export (bool) var draw_edges: bool = false setget _set_has_edge
-export (bool) var mirror_angle: bool = true
 export (bool) var flip_edges: bool = false setget _set_flip_edge
 
 export (Resource) var shape_material = RMS2D_Material.new() setget _set_material
@@ -206,6 +205,7 @@ func _draw():
 		return
 
 	# Draw fill
+	var mesh_transform = Transform2D()
 	for mesh in meshes:
 		if (
 			mesh != null
@@ -214,7 +214,7 @@ func _draw():
 			and mesh.direction == DIRECTION.FILL
 		):
 			for m in mesh.meshes:
-				draw_mesh(m, mesh.texture, mesh.normal_texture)
+				draw_mesh(m, mesh.texture, mesh.normal_texture, mesh_transform)
 
 	# Draw Left and Right
 	for mesh in meshes:
@@ -1095,9 +1095,9 @@ func _build_corner_quad(
 	var width = (pt_prev_width + pt_width) / 2.0
 	var center = pt + (delta_12.normalized() * extents)
 
-	var offset_12 = normal_12 * custom_scale * pt_width * extents
-	var offset_23 = normal_23 * custom_scale * pt_prev_width * extents
-	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * extents
+	var offset_12 = (normal_12 * custom_scale * pt_width * extents)
+	var offset_23 = (normal_23 * custom_scale * pt_prev_width * extents)
+	var custom_offset_13 = ((normal_12 + normal_23) * custom_offset * extents)
 	if flip_edges:
 		offset_12 *= -1
 		offset_23 *= -1
@@ -1116,7 +1116,13 @@ func _build_corner_quad(
 		+ custom_offset_13
 		#+ offset_12
 	)
-	var pt_c = pt + (center + offset_23) - (center + offset_12) + custom_offset_13
+	#var pt_c = pt + (center + offset_23) - (center + offset_12) + custom_offset_13
+	var pt_c = (
+		pt
+		+ (offset_23)
+		- (offset_12)
+		+ custom_offset_13
+	)
 	var pt_b = (
 		pt
 		- (offset_23)
@@ -1221,7 +1227,6 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 			tex_size = tex.get_size()
 
 		# Get Perpendicular Vector
-		var vtx: Vector2 = Vector2(0, 0)
 		var delta = tess_pt_next - tess_pt
 		var delta_normal = delta.normalized()
 		var vtx_normal = Vector2(delta.y, -delta.x).normalized()
@@ -1229,7 +1234,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 		# This causes weird rendering if the texture isn't a square
 		# IE, if taller than wide, left/right edges look skinny, whereas top/bottom looks normal
 		# if wider than tall, top/bottom edges look skinny, whereas left/right looks normal
-		vtx = vtx_normal * (tex_size * 0.5)
+		var vtx:Vector2 = vtx_normal * (tex_size * 0.5)
 
 		var scale_in: float = 1
 		var scale_out: float = 1
@@ -1245,21 +1250,15 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 			vtx *= -1
 
 		var clr: Color = Color.white
-		var vert_adj: Vector2 = vtx
-		# TODO Replace this with "Render Offset"
 		match cardinal_direction:
 			DIRECTION.TOP:
 				clr = Color.green
-				vert_adj *= shape_material.top_offset
 			DIRECTION.LEFT:
 				clr = Color.yellow
-				vert_adj *= shape_material.left_offset
 			DIRECTION.RIGHT:
 				clr = Color.red
-				vert_adj *= shape_material.right_offset
 			DIRECTION.BOTTOM:
 				clr = Color.blue
-				vert_adj *= shape_material.bottom_offset
 
 		var offset = Vector2.ZERO
 		if tex != null and custom_offset != 0.0:
@@ -1288,13 +1287,13 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 		#print("(id1: %s, id2: %s) 1: %s |R: %8f |2: %s = %s" % [str(pt_index), str(pt_index_next), str(w1), ratio, str(w2), str(w)])
 
 		var new_quad = QuadInfo.new()
-		var final_offset_scale_in = ((vtx * scale_in) + vert_adj) * custom_scale
-		var final_offset_scale_out = ((vtx * scale_out) + vert_adj) * custom_scale
+		var final_offset_scale_in = (vtx * scale_in) * custom_scale
+		var final_offset_scale_out = (vtx * scale_out) * custom_scale
 		#print("VTX: %s  |  S_in: %s  |  CS: %s" % [str(vtx), str(scale_in), str(custom_scale)])
-		var pt_a = (tess_pt + final_offset_scale_in) + offset
-		var pt_b = (tess_pt - final_offset_scale_in) + offset
-		var pt_c = (tess_pt_next - final_offset_scale_out) + offset
-		var pt_d = (tess_pt_next + final_offset_scale_out) + offset
+		var pt_a = tess_pt + final_offset_scale_in + offset
+		var pt_b = tess_pt - final_offset_scale_in + offset
+		var pt_c = tess_pt_next - final_offset_scale_out + offset
+		var pt_d = tess_pt_next + final_offset_scale_out + offset
 		new_quad.pt_a = pt_a
 		new_quad.pt_b = pt_b
 		new_quad.pt_c = pt_c
@@ -1369,7 +1368,7 @@ func bake_collision():
 
 		if shape_material != null:
 			collision_width = shape_material.collision_width
-			collision_offset = shape_material.collision_offset
+			collision_offset = shape_material.collision_offset + shape_material.render_offset
 			collision_extends = shape_material.collision_extends
 
 		if closed_shape:
@@ -1462,22 +1461,18 @@ func bake_mesh(force: bool = false):
 
 	# Cant make a mesh without enough points
 	var points = get_tessellated_points()
-	var point_count = points.size()  #curve.get_point_count()
+	var point_count = points.size()
 	if (closed_shape and point_count < 3) or (not closed_shape and point_count < 2):
 		return
 
-	var fill_points: PoolVector2Array
 	var is_clockwise: bool = are_points_clockwise()
 	_quads = Array()
 
 	# Produce Fill Mesh
-	if fill_points == null:
-		fill_points = PoolVector2Array()
-
+	var fill_points:PoolVector2Array = PoolVector2Array()
 	fill_points.resize(point_count)
 	for i in point_count:
-		fill_points[i] = points[i]  #curve.get_point_position(i)
-	#fill_points = curve.get_baked_points()
+		fill_points[i] = points[i]
 
 	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
 	var st: SurfaceTool
@@ -1510,7 +1505,7 @@ func bake_mesh(force: bool = false):
 		return
 
 	# Build Edge Quads
-	_quads = _build_quads()
+	_quads = _build_quads(1.0, shape_material.render_offset)
 	_adjust_mesh_quads(_quads)
 
 
