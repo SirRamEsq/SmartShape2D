@@ -1,0 +1,306 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://addons/gut/GutScene.gd" type="Script" id=1]
+
+[sub_resource type="StyleBoxFlat" id=1]
+bg_color = Color( 0.193863, 0.205501, 0.214844, 1 )
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+
+[sub_resource type="StyleBoxFlat" id=2]
+bg_color = Color( 1, 1, 1, 1 )
+border_color = Color( 0, 0, 0, 1 )
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+
+[sub_resource type="Theme" id=3]
+resource_local_to_scene = true
+Panel/styles/panel = SubResource( 2 )
+Panel/styles/panelf = null
+Panel/styles/panelnc = null
+
+[node name="Gut" type="Panel"]
+margin_right = 740.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 740, 250 )
+custom_styles/panel = SubResource( 1 )
+script = ExtResource( 1 )
+
+[node name="TitleBar" type="Panel" parent="."]
+anchor_right = 1.0
+margin_bottom = 40.0
+theme = SubResource( 3 )
+
+[node name="Title" type="Label" parent="TitleBar"]
+anchor_right = 1.0
+margin_bottom = 40.0
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+text = "Gut"
+align = 1
+valign = 1
+
+[node name="Time" type="Label" parent="TitleBar"]
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -114.0
+margin_right = -53.0
+margin_bottom = 40.0
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+text = "9999.99"
+valign = 1
+
+[node name="Maximize" type="Button" parent="TitleBar"]
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -30.0
+margin_top = 10.0
+margin_right = -6.0
+margin_bottom = 30.0
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+text = "M"
+flat = true
+
+[node name="ScriptProgress" type="ProgressBar" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_left = 70.0
+margin_top = -100.0
+margin_right = 180.0
+margin_bottom = -70.0
+step = 1.0
+
+[node name="Label" type="Label" parent="ScriptProgress"]
+margin_left = -70.0
+margin_right = -10.0
+margin_bottom = 24.0
+text = "Scripts"
+align = 1
+valign = 1
+
+[node name="TestProgress" type="ProgressBar" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_left = 70.0
+margin_top = -70.0
+margin_right = 180.0
+margin_bottom = -40.0
+step = 1.0
+
+[node name="Label" type="Label" parent="TestProgress"]
+margin_left = -70.0
+margin_right = -10.0
+margin_bottom = 24.0
+text = "Tests"
+align = 1
+valign = 1
+
+[node name="TextDisplay" type="Panel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 40.0
+margin_bottom = -107.0
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="RichTextLabel" type="TextEdit" parent="TextDisplay"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_default_cursor_shape = 0
+readonly = true
+syntax_highlighting = true
+smooth_scrolling = true
+wrap_enabled = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="FocusBlocker" type="Panel" parent="TextDisplay"]
+self_modulate = Color( 1, 1, 1, 0 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -10.0
+
+[node name="Navigation" type="Panel" parent="."]
+self_modulate = Color( 1, 1, 1, 0 )
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_left = 220.0
+margin_top = -100.0
+margin_right = 580.0
+
+[node name="Previous" type="Button" parent="Navigation"]
+margin_left = -30.0
+margin_right = 50.0
+margin_bottom = 40.0
+text = "<"
+
+[node name="Next" type="Button" parent="Navigation"]
+margin_left = 230.0
+margin_right = 310.0
+margin_bottom = 40.0
+text = ">"
+
+[node name="Run" type="Button" parent="Navigation"]
+margin_left = 60.0
+margin_right = 220.0
+margin_bottom = 40.0
+text = "Run"
+
+[node name="CurrentScript" type="Button" parent="Navigation"]
+margin_left = -30.0
+margin_top = 50.0
+margin_right = 310.0
+margin_bottom = 90.0
+text = "res://test/unit/test_gut.gd"
+clip_text = true
+
+[node name="ShowScripts" type="Button" parent="Navigation"]
+margin_left = 320.0
+margin_top = 50.0
+margin_right = 360.0
+margin_bottom = 90.0
+text = "..."
+
+[node name="LogLevelSlider" type="HSlider" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_left = 80.0
+margin_top = -40.0
+margin_right = 130.0
+margin_bottom = -20.0
+rect_scale = Vector2( 2, 2 )
+max_value = 2.0
+tick_count = 3
+ticks_on_borders = true
+
+[node name="Label" type="Label" parent="LogLevelSlider"]
+margin_left = -35.0
+margin_top = 5.0
+margin_right = 25.0
+margin_bottom = 25.0
+rect_scale = Vector2( 0.5, 0.5 )
+text = "Log Level"
+align = 1
+valign = 1
+
+[node name="ScriptsList" type="ItemList" parent="."]
+anchor_bottom = 1.0
+margin_left = 180.0
+margin_top = 40.0
+margin_right = 620.0
+margin_bottom = -108.0
+allow_reselect = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ExtraOptions" type="Panel" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -210.0
+margin_top = -246.0
+margin_bottom = -106.0
+custom_styles/panel = SubResource( 1 )
+
+[node name="IgnorePause" type="CheckBox" parent="ExtraOptions"]
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 128.0
+margin_bottom = 34.0
+rect_scale = Vector2( 1.5, 1.5 )
+text = "Ignore Pauses"
+
+[node name="DisableBlocker" type="CheckBox" parent="ExtraOptions"]
+margin_left = 10.0
+margin_top = 50.0
+margin_right = 130.0
+margin_bottom = 74.0
+rect_scale = Vector2( 1.5, 1.5 )
+text = "Selectable"
+
+[node name="Copy" type="Button" parent="ExtraOptions"]
+margin_left = 20.0
+margin_top = 90.0
+margin_right = 200.0
+margin_bottom = 130.0
+text = "Copy"
+
+[node name="ResizeHandle" type="Control" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -40.0
+margin_top = -40.0
+
+[node name="Continue" type="Panel" parent="."]
+self_modulate = Color( 1, 1, 1, 0 )
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -150.0
+margin_top = -100.0
+margin_right = -30.0
+margin_bottom = -10.0
+
+[node name="Continue" type="Button" parent="Continue"]
+margin_top = 50.0
+margin_right = 119.0
+margin_bottom = 90.0
+disabled = true
+text = "Continue"
+
+[node name="ShowExtras" type="Button" parent="Continue"]
+margin_left = 50.0
+margin_right = 120.0
+margin_bottom = 40.0
+rect_pivot_offset = Vector2( 35, 20 )
+toggle_mode = true
+text = "_"
+
+[node name="Summary" type="Node2D" parent="."]
+position = Vector2( 0, 3 )
+
+[node name="Passing" type="Label" parent="Summary"]
+margin_top = 10.0
+margin_right = 40.0
+margin_bottom = 24.0
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+text = "0"
+align = 1
+valign = 1
+
+[node name="Failing" type="Label" parent="Summary"]
+margin_left = 40.0
+margin_top = 10.0
+margin_right = 80.0
+margin_bottom = 24.0
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+text = "0"
+align = 1
+valign = 1
+[connection signal="mouse_entered" from="TitleBar" to="." method="_on_TitleBar_mouse_entered"]
+[connection signal="mouse_exited" from="TitleBar" to="." method="_on_TitleBar_mouse_exited"]
+[connection signal="draw" from="TitleBar/Maximize" to="." method="_on_Maximize_draw"]
+[connection signal="pressed" from="TitleBar/Maximize" to="." method="_on_Maximize_pressed"]
+[connection signal="gui_input" from="TextDisplay/RichTextLabel" to="." method="_on_RichTextLabel_gui_input"]
+[connection signal="gui_input" from="TextDisplay/FocusBlocker" to="." method="_on_FocusBlocker_gui_input"]
+[connection signal="pressed" from="Navigation/Previous" to="." method="_on_Previous_pressed"]
+[connection signal="pressed" from="Navigation/Next" to="." method="_on_Next_pressed"]
+[connection signal="pressed" from="Navigation/Run" to="." method="_on_Run_pressed"]
+[connection signal="pressed" from="Navigation/CurrentScript" to="." method="_on_CurrentScript_pressed"]
+[connection signal="pressed" from="Navigation/ShowScripts" to="." method="_on_ShowScripts_pressed"]
+[connection signal="value_changed" from="LogLevelSlider" to="." method="_on_LogLevelSlider_value_changed"]
+[connection signal="item_selected" from="ScriptsList" to="." method="_on_ScriptsList_item_selected"]
+[connection signal="pressed" from="ExtraOptions/IgnorePause" to="." method="_on_IgnorePause_pressed"]
+[connection signal="toggled" from="ExtraOptions/DisableBlocker" to="." method="_on_DisableBlocker_toggled"]
+[connection signal="pressed" from="ExtraOptions/Copy" to="." method="_on_Copy_pressed"]
+[connection signal="mouse_entered" from="ResizeHandle" to="." method="_on_ResizeHandle_mouse_entered"]
+[connection signal="mouse_exited" from="ResizeHandle" to="." method="_on_ResizeHandle_mouse_exited"]
+[connection signal="pressed" from="Continue/Continue" to="." method="_on_Continue_pressed"]
+[connection signal="draw" from="Continue/ShowExtras" to="." method="_on_ShowExtras_draw"]
+[connection signal="toggled" from="Continue/ShowExtras" to="." method="_on_ShowExtras_toggled"]

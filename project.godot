@@ -1,0 +1,68 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[ {
+"base": "Resource",
+"class": "RMS2D_Material",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/RMSmartShapeMaterial.gd"
+}, {
+"base": "Reference",
+"class": "RMS2D_VertexProperties",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/vertex_properties.gd"
+}, {
+"base": "Reference",
+"class": "RMS2D_VertexPropertiesArray",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/vertex_properties_array.gd"
+}, {
+"base": "Reference",
+"class": "RMSS2D_NormalRange",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/normal_range.gd"
+}, {
+"base": "Reference",
+"class": "RMSS2D_Shape_Material",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/materials/shape_material.gd"
+}, {
+"base": "Node2D",
+"class": "RMSmartShape2D",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/RMSmartShape2D.gd"
+}, {
+"base": "Node2D",
+"class": "RMSmartShapeAnchor2D",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/RMSmartShapeAnchor2D.gd"
+} ]
+_global_script_class_icons={
+"RMS2D_Material": "",
+"RMS2D_VertexProperties": "",
+"RMS2D_VertexPropertiesArray": "",
+"RMSS2D_NormalRange": "",
+"RMSS2D_Shape_Material": "",
+"RMSmartShape2D": "res://addons/rmsmartshape/shape.png",
+"RMSmartShapeAnchor2D": "res://addons/rmsmartshape/shape_anchor.png"
+}
+
+[application]
+
+config/name="GUT"
+config/icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "gut", "rmsmartshape" )
+
+[rendering]
+
+environment/default_environment="res://default_env.tres"
