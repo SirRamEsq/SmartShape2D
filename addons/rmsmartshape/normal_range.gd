@@ -1,4 +1,5 @@
-extends Reference
+tool
+extends Resource
 class_name RMSS2D_NormalRange
 """
 This class will determine if the normal of a vector falls within the specifed angle ranges
@@ -6,13 +7,10 @@ This class will determine if the normal of a vector falls within the specifed an
 - 360.0 and 0.0 degrees are considered equivilent
 """
 
-var begin = 0
-var end = 0
+export (float, 0, 360, 5) var begin = 0
+export (float, 0, 360, 5) var end = 0
 
 static func get_angle_from_vector(vec: Vector2) -> float:
-	"""
-	This function is effectively the same as calling vec.angle()
-	"""
 	var normal = vec.normalized()
 	# With respect to the X-axis
 	# This is how Vector2.angle() is calculated, best to keep it consistent

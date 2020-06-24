@@ -67,10 +67,13 @@ class EdgeMaterialMetaData
   var weld:bool
   # z index for an edge
   var z_index:int
+  var offset:float
 
 # List of materials this shape can use
 var _edge_materials:Array = [:EdgeMaterialMetaData]
 
+# How much to offset this edge
+export var render_offset:float = 0.0 setget _set_render_offset
 # Get all valid edge materials for this normal
 func get_edge_materials(normal:Vector2)->Array(EdgeMaterialMetaData)
 func get_all_edge_materials()->Array(EdgeMaterialMetaData)
@@ -102,8 +105,6 @@ export var texture_taper_right:Texture = null setget _set_texture_taper_right
 export var texture_normal_taper_left:Texture = null setget _set_texture_normal_taper_left
 export var texture_normal_taper_right:Texture = null setget _set_texture_normal_taper_right
 
-export var z_index:int = 0 setget _set_z
-
 #########
 # Usage #
 #########
@@ -115,10 +116,7 @@ export var weld_quads:bool = true setget _set_weld_quads
 export var use_corner_tex:bool = true setget _set_use_corner
 # If taper textures should be used
 export var use_taper_tex:bool = true setget _set_use_taper
-# How much to offset this edge
-export var render_offset:float = 0.0 setget _set_render_offset
 
-signal z_changed
 signal textures_changed
 signal usage_changed
 
