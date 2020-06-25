@@ -39,6 +39,7 @@ export (bool) var use_taper_texture: bool = true setget _set_use_taper
 # max angle to use taper textures until. After this angle corners are used
 export (float) var taper_angle_max: float = 90.0 setget _set_taper_angle
 
+
 ###########
 # Setters #
 ###########
@@ -105,7 +106,8 @@ func _set_use_corner(b: bool):
 func _set_use_taper(b: bool):
 	use_taper_texture = b
 	emit_signal("changed")
-	
+
+
 func _set_taper_angle(v: float):
 	taper_angle_max = v
 	emit_signal("changed")

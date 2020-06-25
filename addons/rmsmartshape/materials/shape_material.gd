@@ -8,7 +8,7 @@ Each edge represents a set of textures used to render an edge
 """
 
 # List of materials this shape can use
-export (Array, Resource) var _edge_materials: Array = []
+export (Array, Resource) var _edge_materials: Array = [] setget set_edge_materials
 
 # How much to offset all edges
 export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0
@@ -33,5 +33,25 @@ func get_edge_materials(normal: Vector2) -> Array:
 func get_all_edge_materials() -> Array:
 	return _edge_materials
 
-func add_edge_material(e:RMSS2D_Material_Edge_Metadata):
-	_edge_materials.push_back(e)
+
+func add_edge_material(e: RMSS2D_Material_Edge_Metadata):
+	var new_array = _edge_materials.duplicate()
+	new_array.push_back(e)
+	set_edge_materials(new_array)
+
+
+func _on_edge_material_changed():
+	emit_signal("changed")
+
+
+func set_edge_materials(a: Array):
+	for e in _edge_materials:
+		if not a.has(e):
+			e.disconnect("changed", self, "_on_edge_material_changed")
+
+	for e in a:
+		if not e.is_connected("changed", self, "_on_edge_material_changed"):
+			e.connect("changed", self, "_on_edge_material_changed")
+
+	_edge_materials = a
+	emit_signal("changed")
