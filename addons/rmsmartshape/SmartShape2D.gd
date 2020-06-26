@@ -31,6 +31,24 @@ func _dir_to_string(d: int) -> String:
 	return "???"
 
 
+func _is_corner_style(s: int) -> bool:
+	match s:
+		TEXTURE_STYLE.LEFT_CORNER:
+			return true
+		TEXTURE_STYLE.RIGHT_CORNER:
+			return true
+	return false
+
+
+func _is_taper_style(s: int) -> bool:
+	match s:
+		TEXTURE_STYLE.LEFT_TAPER:
+			return true
+		TEXTURE_STYLE.RIGHT_TAPER:
+			return true
+	return false
+
+
 class MeshInfo:
 	extends Reference
 	"""
@@ -83,13 +101,13 @@ class QuadInfo:
 		return false
 
 
-export (bool) var editor_debug: bool = false setget set_editor_debug
+export (bool) var editor_debug = null setget set_editor_debug
 export (Curve2D) var _curve: Curve2D = null setget set_curve, get_curve
-export (bool) var closed_shape: bool = false setget set_close_shape
-export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
-export (float, 1, 8) var tessellation_tolerence: float = 4 setget set_tolerence
-export (NodePath) var collision_polygon_node_path: NodePath setget set_collision_polygon_node
-export (float, 1, 512) var collision_bake_interval: float = 20.0 setget set_collision_collision_back_interval
+export (bool) var closed_shape = false setget set_close_shape
+export (int, 1, 8) var tessellation_stages = 5 setget set_tessellation_stages
+export (float, 1, 8) var tessellation_tolerence = 4.0 setget set_tolerence
+export (NodePath) var collision_polygon_node_path setget set_collision_polygon_node
+export (float, 1, 512) var collision_bake_interval = 20.0 setget set_collision_collision_back_interval
 export (bool) var draw_edges: bool = true setget set_draw_edges
 
 export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_material
@@ -183,9 +201,9 @@ func set_collision_polygon_node(np: NodePath):
 		property_list_changed_notify()
 
 
-func set_collision_collision_back_interval(i: float):
-	collision_bake_interval = i
-	_curve.bake_interval = i
+func set_collision_collision_back_interval(f: float):
+	collision_bake_interval = f
+	_curve.bake_interval = f
 	if Engine.editor_hint:
 		property_list_changed_notify()
 
@@ -255,7 +273,8 @@ func _enter_tree():
 
 func _exit_tree():
 	if shape_material != null:
-		shape_material.disconnect("changed", self, "_handle_material_change")
+		if shape_material.is_connected("changed", self, "_handle_material_change"):
+			shape_material.disconnect("changed", self, "_handle_material_change")
 
 
 func _draw():
@@ -524,6 +543,10 @@ func set_as_dirty():
 	_dirty = true
 
 
+func _handle_material_change():
+	set_as_dirty()
+
+
 func fix_close_shape():
 	var point_count = get_point_count()
 	var first_point = _curve.get_point_position(0)
@@ -548,6 +571,19 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 	surface_tool.add_uv2(uv)
 
 
+func _convert_local_space_to_uv(point: Vector2, custom_size: Vector2 = Vector2(0, 0)):
+	var pt: Vector2 = point
+	var tex_size = Vector2(0, 0)
+	if custom_size != Vector2(0, 0):
+		tex_size = custom_size
+	else:
+		tex_size = shape_material.fill_texture.get_size()
+
+	var size: Vector2 = tex_size  #* Vector2(1.0 / scale.x, 1.0 / scale.y)
+	var rslt: Vector2 = Vector2(pt.x / size.x, pt.y / size.y)
+	return rslt
+
+
 func are_points_clockwise() -> bool:
 	var sum = 0.0
 	var point_count = _curve.get_point_count()
@@ -558,3 +594,64 @@ func are_points_clockwise() -> bool:
 
 	is_clockwise = sum > 0.0
 	return is_clockwise
+
+
+func _add_mesh(mesh: ArrayMesh, texture: Texture, normal_texture: Texture, style: int):
+	var found: bool = false
+
+	# Is there already a MeshInfo with these textures?
+	for m in meshes:
+		if m.texture == texture and m.normal_texture == normal_texture:
+			# if so, add this mesh to that MeshInfo
+			m.meshes.push_back(mesh)
+			found = true
+
+	if not found:
+		# If not, make a new mesh for these textures
+		var m = MeshInfo.new()
+		m.meshes = [mesh]
+		m.texture = texture
+		m.normal_texture = normal_texture
+		m.texture_style = style
+		meshes.push_back(m)
+
+
+func _weld_quads(a: QuadInfo, b: QuadInfo, custom_scale: float = 1.0):
+	var needed_length: float = 0.0
+	if a.texture != null and b.texture != null:
+		needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) * 0.5)
+
+	if not _is_corner_style(a.direction) and not _is_corner_style(b.direction):
+		var pt1 = (a.pt_d + b.pt_a) * 0.5
+		var pt2 = (a.pt_c + b.pt_b) * 0.5
+
+		var mid_point: Vector2 = (pt1 + pt2) * 0.5
+		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale * 0.5
+
+		if half_line != Vector2.ZERO:
+			pt2 = mid_point + half_line
+			pt1 = mid_point - half_line
+
+		b.pt_a = pt1
+		b.pt_b = pt2
+		a.pt_d = pt1
+		a.pt_c = pt2
+	else:
+		if _is_corner_style(a.direction):
+			b.pt_a = a.pt_c
+			b.pt_b = a.pt_b
+
+		if _is_corner_style(b.direction):
+			a.pt_d = b.pt_a
+			a.pt_c = b.pt_b
+
+
+func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
+	for index in range(quads.size()):
+		# Skip the first and last vert if the shape isn't closed
+		if not closed_shape and (index == 0 or index == quads.size()):
+			continue
+
+		var previous_quad: QuadInfo = quads[(index - 1) % quads.size()]
+		var this_quad: QuadInfo = quads[index % quads.size()]
+		_weld_quads(previous_quad, this_quad)
