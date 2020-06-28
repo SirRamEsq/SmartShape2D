@@ -14,7 +14,7 @@ class_name SmartShape2D, "shape.png"
 enum TEXTURE_STYLE { LEFT_CORNER, RIGHT_CORNER, LEFT_TAPER, RIGHT_TAPER, EDGE, FILL }
 
 
-func _dir_to_string(d: int) -> String:
+func _style_to_string(d: int) -> String:
 	match d:
 		TEXTURE_STYLE.EDGE:
 			return "EDGE"
@@ -49,6 +49,15 @@ func _is_taper_style(s: int) -> bool:
 	return false
 
 
+class EdgeData:
+	var indicies: Array = []
+	var material: RMSS2D_Material_Edge_Metadata = null
+
+	func _init(a: Array, m: RMSS2D_Material_Edge_Metadata):
+		indicies = a
+		material = m
+
+
 class MeshInfo:
 	extends Reference
 	"""
@@ -62,6 +71,15 @@ class MeshInfo:
 	var meshes: Array = []
 
 
+class QuadArray:
+	var quads: Array = []
+	var edge: EdgeData = null
+
+	func _init(q: Array, e: EdgeData):
+		quads = q
+		edge = e
+
+
 class QuadInfo:
 	extends Reference
 	"""
@@ -72,13 +90,14 @@ class QuadInfo:
 	var pt_c: Vector2
 	var pt_d: Vector2
 
-	var texture: Texture
-	var normal_texture: Texture
-	var color: Color
+	var texture: Texture = null
+	var normal_texture: Texture = null
+	var texture_style: int
+	var edge_material: RMSS2D_Material_Edge = null
+	var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 	var flip_texture: bool = false
 	var width_factor: float = 1.0
-	var texture_style: int
 	var control_point_index: int
 
 	func get_rotation() -> float:
@@ -511,6 +530,10 @@ func get_point_position(at_position: int):
 ########
 # MISC #
 ########
+func _in_range(v: float, low: float, high: float) -> bool:
+	return (v >= low) and (v <= high)
+
+
 static func sort_by_z(a: Array) -> Array:
 	a.sort_custom(RMSS2D_Common_Functions, "sort_z")
 	return a
@@ -563,6 +586,105 @@ func fix_close_shape():
 		set_as_dirty()
 
 
+func _get_next_point_index(idx: int, points: Array, closed: bool) -> int:
+	var new_idx = idx
+	if closed_shape:
+		new_idx = (idx + 1) % points.size()
+	else:
+		new_idx = int(min(idx + 1, points.size() - 1))
+
+	# First and last point are the same when closed
+	if points[idx] == points[new_idx] and closed:
+		new_idx = _get_next_point_index(new_idx, points, closed)
+	return new_idx
+
+
+func _get_previous_point_index(idx: int, points: Array, closed: bool) -> int:
+	var new_idx = idx
+	if closed_shape:
+		new_idx = idx - 1
+		if new_idx < 0:
+			new_idx += points.size()
+	else:
+		new_idx = int(max(idx - 1, 0))
+
+	# First and last point are the same when closed
+	if points[idx] == points[new_idx] and closed:
+		new_idx = _get_previous_point_index(new_idx, points, closed)
+	return new_idx
+
+
+# TODO
+# NEEDS TESTED
+func get_vertex_idx_from_tessellated_point(points: Array, tess_points: Array, tess_point_idx: int) -> int:
+	if tess_point_idx == 0:
+		return 0
+
+	var vertex_idx = -1
+	for i in range(0, tess_point_idx + 1, 1):
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		if tp == p:
+			vertex_idx += 1
+	return vertex_idx
+
+
+# TODO
+# NEEDS TESTED
+func get_tessellated_idx_from_point(points: Array, tess_points: Array, point_idx: int) -> int:
+	if point_idx == 0:
+		return 0
+
+	var vertex_idx = -1
+	var tess_idx = 0
+	for i in range(0, tess_points.size(), 1):
+		tess_idx = i
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		if tp == p:
+			vertex_idx += 1
+		if vertex_idx == point_idx:
+			break
+	return tess_idx
+
+
+# TODO
+# NEEDS TESTED
+func get_distance_as_ratio_from_tessellated_point(
+	points: Array, tess_points: Array, tess_point_idx: int
+) -> float:
+	"""
+	Returns a float between 0.0 and 1.0
+	0.0 means that this tessellated point is at the same position as the vertex
+	0.5 means that this tessellated point is half way between this vertex and the next
+	0.999 means that this tessellated point is basically at the next vertex
+	1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
+	"""
+	if tess_point_idx == 0:
+		return 0.0
+
+	var vertex_idx = -1
+	# The total tessellated points betwen two verts
+	var tess_point_count = 0
+	# The index of the passed tess_point_idx relative to the starting vert
+	var tess_index_count = 0
+	for i in range(0, tess_points.size(), 1):
+		var tp = tess_points[i]
+		var p = points[vertex_idx + 1]
+		tess_point_count += 1
+		if i < tess_point_idx:
+			tess_index_count += 1
+		if tp == p:
+			if i < tess_point_idx:
+				vertex_idx += 1
+				tess_point_count = 0
+				tess_index_count = 0
+			else:
+				break
+
+	return float(tess_index_count) / float(tess_point_count)
+
+
 ############
 # GEOMETRY #
 ############
@@ -596,37 +718,304 @@ func are_points_clockwise() -> bool:
 	return is_clockwise
 
 
-func _add_mesh(mesh: ArrayMesh, texture: Texture, normal_texture: Texture, style: int):
-	var found: bool = false
+func bake_mesh(force: bool = false):
+	if not _dirty and not force:
+		return
+	# Clear Meshes
+	for mesh in meshes:
+		if mesh.meshes != null:
+			mesh.meshes.clear()
 
+	var points = get_tessellated_points()
+	var point_count = points.size()
+	# Cant make a mesh without enough points
+	if (closed_shape and point_count < 3) or (not closed_shape and point_count < 2):
+		return
+
+	var is_clockwise: bool = are_points_clockwise()
+	_quads = Array()
+
+	# Produce Fill Mesh
+	var fill_points: PoolVector2Array = PoolVector2Array()
+	fill_points.resize(point_count)
+	for i in point_count:
+		fill_points[i] = points[i]
+
+	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
+	var st: SurfaceTool
+
+	if closed_shape and shape_material.fill_texture != null:
+		st = SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+		for i in range(0, fill_tris.size() - 1, 3):
+			st.add_color(Color.white)
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]]))
+			st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
+			st.add_color(Color.white)
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]]))
+			st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
+			st.add_color(Color.white)
+			_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]]))
+			st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
+		st.index()
+		st.generate_normals()
+		st.generate_tangents()
+		_add_mesh(
+			st.commit(),
+			shape_material.fill_texture,
+			shape_material.fill_texture_normal,
+			TEXTURE_STYLE.FILL
+		)
+
+	if closed_shape and not draw_edges:
+		return
+
+	# Build Edge Quads
+	_quads = _build_quads_edges(1.0, shape_material.render_offset)
+	_adjust_mesh_quads(_quads)
+
+
+func _get_textures_from_edge_material(
+	edge_material: RMSS2D_Material_Edge,
+	p: Vector2,
+	p_next: Vector2,
+	is_corner: bool,
+	is_first_point: bool,
+	is_last_point: bool
+) -> Array:
+	"""
+	Will return an array of two textures and the style
+	[0] = diffuse
+	[1] = normal
+	[2] = style
+	"""
+
+	var texture = null
+	var texture_normal = null
+	var texture_style = -1
+	if shape_material == null or edge_material == null:
+		return [texture, texture_normal, texture_style]
+
+	var is_taper = is_first_point or is_last_point
+	if is_corner:
+		#TODO, how to decide which corner texture?
+		texture_style = TEXTURE_STYLE.CORNER_LEFT
+		texture = edge_material.texture_corner_left
+		texture_normal = edge_material.texture_normal_corner_left
+
+	if is_taper and texture == null:
+		if is_first_point:
+			texture_style = TEXTURE_STYLE.LEFT_TAPER
+			texture = edge_material.texture_taper_left
+			texture_normal = edge_material.texture_normal_taper_left
+		elif is_last_point:
+			texture_style = TEXTURE_STYLE.RIGHT_TAPER
+			texture = edge_material.texture_taper_right
+			texture_normal = edge_material.texture_normal_taper_right
+
+	if not edge_material.textures.empty() and texture == null:
+		texture_style = TEXTURE_STYLE.EDGE
+		var textures_diffuse = edge_material.textures
+		var textures_normal = edge_material.texture_normals
+		var tex_index = 0
+
+		tex_index = (abs(vertex_properties.get_texture_idx(pt_index)) % textures_diffuse.size())
+		if textures_diffuse.size() > tex_index:
+			texture = textures_diffuse[tex_index]
+		if textures_normal != null:
+			if textures_normal.size() > tex_index:
+				tex_normal = textures_normal[tex_index]
+	return [texture, texture_normal, texture_style]
+
+
+func _get_edge_material_meta_from_delta(delta: Vector2) -> RMSS2D_Material_Edge_Metadata:
+	if shape_material == null:
+		return null
+
+	var delta_normal = delta.normalized()
+	var normal = Vector2(delta.y, -delta.x).normalized()
+
+	var edge_materials_meta = []
+	edge_materials_meta = shape_material.get_edge_materials(normal)
+	var edge_material_meta = vtx_edge_materials_meta[0]
+	return edge_material_meta
+
+
+func _build_quads_edge(edge: EdgeData, c_scale: float, c_offset: float, c_extends: float) -> QuadArray:
+	var quads = QuadArray.new([], edge)
+	var points = get_vertices()
+	var tess_points = get_tessellated_points()
+	if (points < 3 and closed_shape) or (points < 2 and not closed_shape):
+		return quads
+	if edge.indicies.size() < 2:
+		return quads
+
+	var edge_material_meta = edge.material
+	var edge_material = edge_material_meta.edge_material
+	# Generate entire edge using EDGE Style texturing
+	# All points are in the tess point context
+	for idx in edge.indicies:
+		var is_first_point = idx == edge.indicies[0]
+		var is_last_point = idx == edge.indicies[edge.indicies.size() - 1]
+
+		var idx_next = _get_next_point_index(idx, tess_points, closed_shape)
+		var idx_prev = _get_previous_point_index(idx, tess_points, closed_shape)
+		var pt_next = tess_points[idx_next]
+		var pt = tess_points[idx]
+		var pt_prev = tess_points[idx_prev]
+
+		var delta = next - pt
+		var delta_normal = delta.normalized()
+		var normal = Vector2(delta.y, -delta.x).normalized()
+
+		var tex = edge_material.textures[0]
+		var tex_normal = edge_material.texture_normal[0]
+		var tex_style = TEXTURE_STYLE.EDGE
+		var tex_size = Vector2(0, 0)
+		if tex != null:
+			tex_size = tex.get_size()
+
+		# This causes weird rendering if the texture isn't a square
+		var vtx: Vector2 = vtx_normal * (tex_size * 0.5)
+
+		var scale_in: float = 1.0
+		var scale_out: float = 1.0
+		var width = vertex_properties.get_width(pt_index)
+		if width != 0.0:
+			scale_in = width
+
+		if not are_points_clockwise():
+			vtx *= -1
+		#if flip_edges:
+		#vtx *= -1
+
+		var clr: Color = Color.white
+		var offset = Vector2.ZERO
+		if tex != null and custom_offset != 0.0:
+			offset = vtx
+			offset *= custom_offset
+
+		if not closed_shape:
+			if tex != null:
+				if tess_index == 0:
+					tess_pt -= (
+						(tess_pt_next - tess_pt).normalized()
+						* tex.get_size()
+						* custom_extends
+					)
+				if tess_index == tess_count - 2 and tex != null:
+					tess_pt_next -= (
+						(tess_pt - tess_pt_next).normalized()
+						* tex.get_size()
+						* custom_extends
+					)
+
+		var ratio = get_distance_as_ratio_from_tessellated_point(points, tess_points, tess_index)
+		var w1 = vertex_properties.get_width(pt_index)
+		var w2 = vertex_properties.get_width(pt_index_next)
+		var w = lerp(w1, w2, ratio)
+
+		var new_quad = QuadInfo.new()
+		var final_offset_scale_in = (vtx * scale_in) * custom_scale
+		var final_offset_scale_out = (vtx * scale_out) * custom_scale
+		var pt_a = tess_pt + final_offset_scale_in + offset
+		var pt_b = tess_pt - final_offset_scale_in + offset
+		var pt_c = tess_pt_next - final_offset_scale_out + offset
+		var pt_d = tess_pt_next + final_offset_scale_out + offset
+		new_quad.pt_a = pt_a
+		new_quad.pt_b = pt_b
+		new_quad.pt_c = pt_c
+		new_quad.pt_d = pt_d
+		new_quad.color = clr
+		new_quad.texture_style = TEXTURE_STYLE.EDGE
+		new_quad.texture = tex
+		new_quad.normal_tex = tex_normal
+		new_quad.flip_texture = vertex_properties.get_flip(pt_index)
+		new_quad.width_factor = w
+
+	# Generate textures at each end of the edge. Either Corners or Tapers
+	return quads
+
+
+func _get_edge_data(points: Array, s_material: RMSS2D_Material_Shape) -> Array:
+	var final_edges: Array = []
+	var edge_building: Dictionary = {}
+	for idx in range(0, points.size(), 1):
+		# Skip final point on closed shape. First and Last point are the same
+		if idx == points.size() - 1 and closed_shape:
+			break
+		var idx_next = _get_next_point_index(idx, points, closed_shape)
+		var pt = points[idx]
+		var pt_next = points[idx_next]
+		var delta = pt_next - pt
+		var delta_normal = delta.normalized()
+		var normal = Vector2(delta.y, -delta.x).normalized()
+
+		var edge_meta_materials = s_material.get_edge_materials(normal)
+
+		# Append to existing edges being built. Add new ones if needed
+		for e in edge_meta_materials:
+			if edge_building.has(e):
+				edge_building[e].indicies.push_back(idx)
+			else:
+				edge_building[e] = EdgeData.new([idx], e)
+
+		# Closeout and stop building edges that are no longer viable
+		for e in edge_building.keys():
+			if not edge_meta_materials.has(e):
+				edges.push_back(edge_building[e])
+				edge_building.erase(e)
+
+	# Closeout all edge building
+	for e in edge_building.keys():
+		edges.push_back(edge_building[e])
+
+	return edges
+
+
+func _build_quads_edges(c_scale: float = 1.0, c_offset: float = 0, c_extends: float = 0.0) -> Array:
+	"""
+	This function will generate an of quads for representing edges and return them
+	"""
+	var quads: Array = []
+	if shape_material == null:
+		return quads
+
+	for edge_data in _get_edge_data(get_tessellated_points, shape_material):
+		quads.push_back(_build_quads_edge(edge, c_scale, c_offset, c_extends))
+
+	return quads
+
+
+func _add_mesh(mesh: ArrayMesh, texture: Texture, normal_texture: Texture, style: int):
 	# Is there already a MeshInfo with these textures?
 	for m in meshes:
 		if m.texture == texture and m.normal_texture == normal_texture:
 			# if so, add this mesh to that MeshInfo
 			m.meshes.push_back(mesh)
-			found = true
+			return
 
-	if not found:
-		# If not, make a new mesh for these textures
-		var m = MeshInfo.new()
-		m.meshes = [mesh]
-		m.texture = texture
-		m.normal_texture = normal_texture
-		m.texture_style = style
-		meshes.push_back(m)
+	# If not, make a new mesh for these textures
+	var m = MeshInfo.new()
+	m.meshes = [mesh]
+	m.texture = texture
+	m.normal_texture = normal_texture
+	m.texture_style = style
+	meshes.push_back(m)
 
 
 func _weld_quads(a: QuadInfo, b: QuadInfo, custom_scale: float = 1.0):
 	var needed_length: float = 0.0
 	if a.texture != null and b.texture != null:
-		needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) * 0.5)
+		needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) / 2.0)
 
-	if not _is_corner_style(a.direction) and not _is_corner_style(b.direction):
+	if not _is_corner_style(a.texture_style) and not _is_corner_style(b.texture_style):
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
 
-		var mid_point: Vector2 = (pt1 + pt2) * 0.5
-		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale * 0.5
+		var mid_point: Vector2 = (pt1 + pt2) / 2.0
+		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale / 2.0
 
 		if half_line != Vector2.ZERO:
 			pt2 = mid_point + half_line
@@ -637,11 +1026,11 @@ func _weld_quads(a: QuadInfo, b: QuadInfo, custom_scale: float = 1.0):
 		a.pt_d = pt1
 		a.pt_c = pt2
 	else:
-		if _is_corner_style(a.direction):
+		if _is_corner_style(a.texture_style):
 			b.pt_a = a.pt_c
 			b.pt_b = a.pt_b
 
-		if _is_corner_style(b.direction):
+		if _is_corner_style(b.texture_style):
 			a.pt_d = b.pt_a
 			a.pt_c = b.pt_b
 
@@ -655,3 +1044,31 @@ func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
 		var previous_quad: QuadInfo = quads[(index - 1) % quads.size()]
 		var this_quad: QuadInfo = quads[index % quads.size()]
 		_weld_quads(previous_quad, this_quad)
+
+
+# Needs tested
+func _is_corner(point_prev: Vector2, point: Vector2, point_next: Vector2, corner_range: float) -> bool:
+	var ab = point - point_prev
+	var bc = point_next - point
+	var dot_prod = ab.dot(bc)
+	var determinant = (ab.x * bc.y) - (ab.y * bc.x)
+	var angle = atan2(determinant, dot_prod)
+
+	# This angle has a range of 360 degrees
+	# Is between 180 and - 180
+	var deg = rad2deg(angle)
+
+	if _in_range(abs(deg), 90.0 - corner_range, 90.0 + corner_range):
+		var ab_normal = ab.tangent().normalized()
+		var bc_normal = bc.tangent().normalized()
+		var averaged = (ab_normal + bc_normal) / 2.0
+		if not are_points_clockwise():
+			averaged *= -1.0
+
+		# Inner
+		if deg < 0:
+			return false
+		# Outer
+		else:
+			return true
+	return false

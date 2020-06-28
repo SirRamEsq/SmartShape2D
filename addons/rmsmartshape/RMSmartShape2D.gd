@@ -662,8 +662,6 @@ func _get_direction_three_points(
 
 	var clockwise = are_points_clockwise()
 	var dir = 0
-	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
-	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
 	var corner_range = 15.0
 	if _in_range(abs(deg), 90.0 - corner_range, 90.0 + corner_range):
 		var ab_normal = ab.tangent().normalized()
