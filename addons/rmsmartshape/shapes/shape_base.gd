@@ -111,7 +111,8 @@ func invert_point_order():
 	# Set Inverted Properties
 	for i in range(0, inverted_properties.size(), 1):
 		var prop = inverted_properties[i]
-		_vertex_properties.properties[inverted_properties.size() - i] = prop
+		_vertex_properties.properties[i] = prop
+		print(prop.width)
 
 	# Update and set as dirty
 	set_as_dirty()
@@ -251,10 +252,13 @@ func get_point_count():
 	return _curve.get_point_count()
 
 
-func get_point_position(at_position: int):
+func get_point_position(idx: int):
+	get_point(idx)
+
+func get_point(idx: int):
 	if _curve != null:
-		if at_position < _curve.get_point_count() and at_position >= 0:
-			return _curve.get_point_position(at_position)
+		if idx < _curve.get_point_count() and idx >= 0:
+			return _curve.get_point_position(idx)
 	return null
 
 
