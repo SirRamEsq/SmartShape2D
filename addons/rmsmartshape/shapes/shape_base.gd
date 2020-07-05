@@ -15,12 +15,12 @@ To use search to jump between categories, use the regex:
 # .+ #
 """
 
-export (bool) var editor_debug = null setget _set_editor_debug
-export (Curve2D) var _curve: Curve2D = null setget set_curve, get_curve
-export (int, 1, 8) var tessellation_stages = 5 setget set_tessellation_stages
-export (float, 1, 8) var tessellation_tolerence = 4.0 setget set_tessellation_tolerence
-export (NodePath) var collision_polygon_node_path = null
-export (float, 1, 512) var collision_bake_interval = 20.0 setget set_collision_collision_back_interval
+export (bool) var editor_debug: bool = false setget _set_editor_debug
+export (Curve2D) var _curve: Curve2D = Curve2D.new() setget set_curve, get_curve
+export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
+export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
+export (float, 1, 512) var collision_bake_interval: float = 20.0 setget set_collision_collision_back_interval
+export (NodePath) var collision_polygon_node_path: NodePath = ""
 
 var _dirty: bool = true
 var _edges: Array = []
@@ -112,7 +112,6 @@ func invert_point_order():
 	for i in range(0, inverted_properties.size(), 1):
 		var prop = inverted_properties[i]
 		_vertex_properties.properties[i] = prop
-		print(prop.width)
 
 	# Update and set as dirty
 	set_as_dirty()
@@ -255,6 +254,7 @@ func get_point_count():
 func get_point_position(idx: int):
 	get_point(idx)
 
+
 func get_point(idx: int):
 	if _curve != null:
 		if idx < _curve.get_point_count() and idx >= 0:
@@ -265,33 +265,20 @@ func get_point(idx: int):
 #####################
 # VERTEX PROPERTIES #
 #####################
-func set_point_width(width: float, at_position: int):
-	if _vertex_properties.set_width(width, at_position):
+func set_point_width(idx: int, width: float):
+	if _vertex_properties.set_width(width, idx):
 		set_as_dirty()
 		emit_signal("points_modified")
 		if Engine.editor_hint:
 			property_list_changed_notify()
 
 
-func get_point_width(at_position: int) -> float:
-	return _vertex_properties.get_width(at_position)
+func get_point_width(idx: int) -> float:
+	return _vertex_properties.get_width(idx)
 
 
-func set_point_texture_index(point_index: int, tex_index: int):
-	if _vertex_properties.set_texture_idx(tex_index, point_index):
-		set_as_dirty()
-		emit_signal("points_modified")
-
-		if Engine.editor_hint:
-			property_list_changed_notify()
-
-
-func get_point_texture_index(at_position: int) -> int:
-	return _vertex_properties.get_texture_idx(at_position)
-
-
-func set_point_texture_flip(flip: bool, at_position: int):
-	if _vertex_properties.set_flip(flip, at_position):
+func set_point_texture_index(idx: int, tex_idx: int):
+	if _vertex_properties.set_texture_idx(tex_idx, idx):
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -299,8 +286,21 @@ func set_point_texture_flip(flip: bool, at_position: int):
 			property_list_changed_notify()
 
 
-func get_point_texture_flip(at_position: int) -> bool:
-	return _vertex_properties.get_flip(at_position)
+func get_point_texture_index(idx: int) -> int:
+	return _vertex_properties.get_texture_idx(idx)
+
+
+func set_point_texture_flip(idx: int, flip: bool):
+	if _vertex_properties.set_flip(flip, idx):
+		set_as_dirty()
+		emit_signal("points_modified")
+
+		if Engine.editor_hint:
+			property_list_changed_notify()
+
+
+func get_point_texture_flip(idx: int) -> bool:
+	return _vertex_properties.get_flip(idx)
 
 
 #########
@@ -472,3 +472,24 @@ func get_tessellated_idx_from_point(points: Array, t_points: Array, point_idx: i
 		if vertex_idx == point_idx:
 			break
 	return tess_idx
+
+
+func duplicate_self():
+	var _new = __new()
+	_new.editor_debug = editor_debug
+	_new.set_curve(get_curve())
+	_new.tessellation_stages = tessellation_stages
+	_new.tessellation_tolerence = tessellation_tolerence
+	_new.collision_bake_interval = collision_bake_interval
+	_new.collision_polygon_node_path = ""
+	_new.set_as_dirty()
+	for i in range(0, get_vertices().size(), 1):
+		_new.set_point_width(i, get_point_width(i))
+		_new.set_point_texture_index(i, get_point_texture_index(i))
+		_new.set_point_texture_flip(i, get_point_texture_flip(i))
+	return _new
+
+
+# Workaround (class cannot reference itself)
+func __new():
+	return get_script().new()

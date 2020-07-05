@@ -114,7 +114,7 @@ func test_invert_point_order():
 	var size = points.size()
 	var last_idx = size -1
 	s_m.add_points_to_curve(points)
-	s_m.set_point_width(0, 5.0)
+	s_m.set_point_width(5.0, 0)
 	assert_eq(points[0], s_m.get_point(0))
 	assert_eq(points[last_idx], s_m.get_point(last_idx))
 
@@ -148,25 +148,28 @@ func test_duplicate():
 	]
 	s_m.add_points_to_curve(points)
 
-	s_m.set_point_width(0, 5.0)
-	s_m.set_point_width(2, 3.0)
-	s_m.set_point_width(5, 4.0)
+	s_m.set_point_width(5.0, 0)
+	s_m.set_point_width(3.0, 2)
+	s_m.set_point_width(4.0, 5)
 
-	s_m.set_point_texture_index(0, 1)
-	s_m.set_point_texture_index(2, 2)
-	s_m.set_point_texture_index(3, 3)
-	s_m.set_point_texture_index(5, 5)
+	s_m.set_point_texture_index(1, 0)
+	s_m.set_point_texture_index(3, 2)
 
-	s_m.set_point_texture_flip(1, true)
-	s_m.set_point_texture_flip(2, true)
-	s_m.set_point_texture_flip(4, true)
+	s_m.set_point_texture_flip(true, 1)
+	s_m.set_point_texture_flip(true, 2)
+	s_m.set_point_texture_flip(true, 4)
 
 	var copy = s_m.duplicate_self()
 	add_child_autofree(copy)
 	assert_ne(s_m.get_curve(), copy.get_curve())
 	assert_eq(s_m.get_point_count(), copy.get_point_count())
+	var base = "Test Point %s: "
 	for i in range(-1, points.size(), 1):
-		var s = "Test Point %s: " % i
+		var s = base % i
 		assert_eq(s_m.get_point_width(i), copy.get_point_width(i), s + "Width")
+	for i in range(-1, points.size(), 1):
+		var s = base % i
 		assert_eq(s_m.get_point_texture_flip(i), copy.get_point_texture_flip(i), s + "Flip")
+	for i in range(-1, points.size(), 1):
+		var s = base % i
 		assert_eq(s_m.get_point_texture_index(i), copy.get_point_texture_index(i), s + "Index")
