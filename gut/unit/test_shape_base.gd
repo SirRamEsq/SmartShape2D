@@ -54,14 +54,7 @@ func test_curve_duplicate():
 func test_tess_point_vertex_relationship():
 	var s_m = RMSS2D_Shape_Base.new()
 	add_child_autofree(s_m)
-	var points = [
-		Vector2(0, 0),
-		Vector2(50, -50),
-		Vector2(100, 0),
-		Vector2(100, 100),
-		Vector2(-50, 150),
-		Vector2(-100, 100)
-	]
+	var points = get_clockwise_points()
 
 	s_m.add_points_to_curve(points)
 
@@ -100,19 +93,13 @@ func test_tess_point_vertex_relationship():
 	results[-1] = s_m.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx - 1)
 	assert_true(results[-1] > results[0], message)
 
+
 func test_invert_point_order():
 	var s_m = RMSS2D_Shape_Base.new()
 	add_child_autofree(s_m)
-	var points = [
-		Vector2(0, 0),
-		Vector2(50, -50),
-		Vector2(100, 0),
-		Vector2(100, 100),
-		Vector2(-50, 150),
-		Vector2(-100, 100)
-	]
+	var points = get_clockwise_points()
 	var size = points.size()
-	var last_idx = size -1
+	var last_idx = size - 1
 	s_m.add_points_to_curve(points)
 	s_m.set_point_width(0, 5.0)
 	assert_eq(points[0], s_m.get_point(0))
@@ -129,23 +116,17 @@ func test_invert_point_order():
 	assert_eq(points[0], s_m.get_point(last_idx))
 	assert_eq(points[last_idx], s_m.get_point(0))
 
-	assert_eq(points[1], s_m.get_point(last_idx-1))
-	assert_eq(points[last_idx-1], s_m.get_point(1))
+	assert_eq(points[1], s_m.get_point(last_idx - 1))
+	assert_eq(points[last_idx - 1], s_m.get_point(1))
 
-	assert_eq(points[2], s_m.get_point(last_idx-2))
-	assert_eq(points[last_idx-2], s_m.get_point(2))
+	assert_eq(points[2], s_m.get_point(last_idx - 2))
+	assert_eq(points[last_idx - 2], s_m.get_point(2))
+
 
 func test_duplicate():
 	var s_m = RMSS2D_Shape_Base.new()
 	add_child_autofree(s_m)
-	var points = [
-		Vector2(0, 0),
-		Vector2(50, -50),
-		Vector2(100, 0),
-		Vector2(100, 100),
-		Vector2(-50, 150),
-		Vector2(-100, 100)
-	]
+	var points = get_clockwise_points()
 	s_m.add_points_to_curve(points)
 
 	s_m.set_point_width(0, 5.0)
@@ -170,3 +151,14 @@ func test_duplicate():
 		assert_eq(s_m.get_point_width(i), copy.get_point_width(i), s + "Width")
 		assert_eq(s_m.get_point_texture_flip(i), copy.get_point_texture_flip(i), s + "Flip")
 		assert_eq(s_m.get_point_texture_index(i), copy.get_point_texture_index(i), s + "Index")
+
+
+func get_clockwise_points() -> Array:
+	return [
+		Vector2(0, 0),
+		Vector2(50, -50),
+		Vector2(100, 0),
+		Vector2(100, 100),
+		Vector2(-50, 150),
+		Vector2(-100, 100)
+	]
