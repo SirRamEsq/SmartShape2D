@@ -31,6 +31,7 @@ export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stag
 export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
 export (float, 1, 512) var collision_bake_interval: float = 20.0 setget set_collision_collision_back_interval
 export (NodePath) var collision_polygon_node_path: NodePath = ""
+export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_material
 
 var _dirty: bool = true
 var _edges: Array = []
@@ -81,6 +82,19 @@ func set_collision_collision_back_interval(f: float):
 	_curve.bake_interval = f
 	if Engine.editor_hint:
 		property_list_changed_notify()
+
+
+func _set_material(value: RMS2D_Material):
+	if (
+		shape_material != null
+		and shape_material.is_connected("changed", self, "_handle_material_change")
+	):
+		shape_material.disconnect("changed", self, "_handle_material_change")
+
+	shape_material = value
+	if shape_material != null:
+		shape_material.connect("changed", self, "_handle_material_change")
+	set_as_dirty()
 
 
 #########
@@ -367,18 +381,94 @@ func _process(delta):
 	_on_dirty_update()
 
 
+func _exit_tree():
+	if shape_material != null:
+		if shape_material.is_connected("changed", self, "_handle_material_change"):
+			shape_material.disconnect("changed", self, "_handle_material_change")
+
+
 ############
 # GEOMETRY #
 ############
 
-func _bake_mesh(edges:Array)->Array:
+
+func cache_edges():
+	_edges = _build_edges(
+		shape_material,
+		shape_material.collision_width,
+		shape_material.collision_offset,
+		shape_material.collision_extends,
+		false
+	)
+
+
+func cache_meshes():
+	_meshes = _build_meshes(_edges)
+
+
+func _build_meshes(edges: Array) -> Array:
 	var meshes = []
-	# Produce Fill Mesh
-	# Produce edge Mesh
+
+	# Produce edge Meshes
 	for e in edges:
 		for m in e.get_meshes():
 			meshes.push_back(m)
+
 	return meshes
+
+
+func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
+	var meshes = []
+	if s_mat == null:
+		return meshes
+	if s_mat.fill_textures.empty():
+		return meshes
+	if points.size() < 3:
+		return meshes
+
+	# Produce Fill Mesh
+	var fill_points: PoolVector2Array = PoolVector2Array()
+	fill_points.resize(points.size())
+	for i in points.size():
+		fill_points[i] = points[i]
+
+	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
+	if fill_tris.empty():
+		push_error("'%s': Couldn't Triangulate shape" % name)
+		return []
+	var tex = s_mat.textures[0]
+	var tex_normal = s_mat.texture_normals[0]
+	var tex_size = tex.get_size()
+	var st: SurfaceTool
+	st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	for i in range(0, fill_tris.size() - 1, 3):
+		st.add_color(Color.white)
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
+		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
+		st.add_color(Color.white)
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
+		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
+		st.add_color(Color.white)
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
+		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
+	st.index()
+	st.generate_normals()
+	st.generate_tangents()
+	var array_mesh = st.commit()
+	var flip = false
+	var transform = Transform2D()
+	var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+	meshes.push_back(mesh_data)
+
+	return meshes
+
+
+func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
+	var pt: Vector2 = point
+	var rslt: Vector2 = Vector2(pt.x / size.x, pt.y / size.y)
+	return rslt
 
 
 func are_points_clockwise() -> bool:
@@ -416,13 +506,13 @@ func _build_quad_from_point(
 	if quad.texture == null:
 		return quad
 
-	var idx_next = _get_next_point_index(idx, tess_points)
-	var idx_prev = _get_previous_point_index(idx, tess_points)
+	var idx_next = _get_next_point_index(idx, points)
+	var idx_prev = _get_previous_point_index(idx, points)
 	var pt_next = points[idx_next]
 	var pt = points[idx]
 	var pt_prev = points[idx_prev]
 
-	var delta = next - pt
+	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
 	var normal = Vector2(delta.y, -delta.x).normalized()
 
@@ -449,22 +539,18 @@ func _build_quad_from_point(
 	return quad
 
 
-func _build_fill_mesh():
-	pass
-
-
 func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_extends: float) -> RMSS2D_Edge:
 	var edge = RMSS2D_Edge.new()
 	var edge_material: RMSS2D_Material_Edge = edge_dat.material
 	var t_points = get_tessellated_points()
 	var points = get_vertices()
 
-	for i in range(0, edge_dat.indicies, 1):
+	for i in range(0, edge_dat.indicies.size(), 1):
 		var idx = edge_dat.indicies[i]
 		var v_idx = get_vertex_idx_from_tessellated_point(t_points, points, idx)
 		var v_idx_next = _get_next_point_index(v_idx, points)
-		var w1 = vertex_properties.get_width(v_idx)
-		var w2 = vertex_properties.get_width(v_idx_next)
+		var w1 = _vertex_properties.get_width(v_idx)
+		var w2 = _vertex_properties.get_width(v_idx_next)
 		var ratio = get_ratio_from_tessellated_point_to_vertex(points, t_points, idx)
 		var width = lerp(w1, w2, ratio)
 		var is_first_point = idx == edge_dat.indicies[0]
@@ -475,7 +561,7 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 			idx,
 			edge_material,
 			width,
-			is_clockwise(),
+			are_points_clockwise(),
 			is_first_point,
 			is_last_point,
 			c_scale,
@@ -490,7 +576,7 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 	return edge
 
 
-func _weld_quads(a: QuadInfo, b: QuadInfo, custom_scale: float = 1.0):
+func _weld_quads(a: RMSS2D_Quad, b: RMSS2D_Quad, custom_scale: float = 1.0):
 	var needed_length: float = 0.0
 	if a.texture != null and b.texture != null:
 		needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) / 2.0)
@@ -513,22 +599,28 @@ func _weld_quads(a: QuadInfo, b: QuadInfo, custom_scale: float = 1.0):
 
 func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
 	for index in range(quads.size() - 1):
-		var this_quad: QuadInfo = quads[index]
-		var next_quad: QuadInfo = quads[index + 1]
+		var this_quad: RMSS2D_Quad = quads[index]
+		var next_quad: RMSS2D_Quad = quads[index + 1]
 		_weld_quads(this_quad, next_quad, custom_scale)
 
 
-func _build_edges() -> Array:
+func _build_edges(
+	s_mat: RMSS2D_Material_Shape,
+	c_scale: float,
+	c_offset: float,
+	c_extends: float,
+	wrap_around: bool
+) -> Array:
 	var edges: Array = []
-	if shape_material == null:
+	if s_mat == null:
 		return edges
 
-	for edge_material in _get_edge_materials(get_tessellated_points, shape_material):
+	for edge_material in get_edge_materials(get_tessellated_points(), s_mat, wrap_around):
 		edges.push_back(_build_edge(edge_material, c_scale, c_offset, c_extends))
 	return edges
 
 
-static func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
 	for idx in range(0, points.size(), 1):
@@ -551,20 +643,20 @@ static func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape,
 		# Closeout and stop building edges that are no longer viable
 		for e in edge_building.keys():
 			if not edge_meta_materials.has(e):
-				edges.push_back(edge_building[e])
+				final_edges.push_back(edge_building[e])
 				edge_building.erase(e)
 
 	# Closeout all edge building
 	for e in edge_building.keys():
-		edges.push_back(edge_building[e])
+		final_edges.push_back(edge_building[e])
 
 	# See if edges that contain the final point can be merged with those that contain the first point
 	if wrap_around:
 		var first_edges = []
 		var last_edges = []
-		for e in edges:
-			var has_first = e.indicies.has(_get_first_point_index())
-			var has_last = e.indicies.has(_get_last_point_index())
+		for e in final_edges:
+			var has_first = e.indicies.has(_get_first_point_index(points))
+			var has_last = e.indicies.has(_get_last_point_index(points))
 			# '^' is the XOR operator
 			if has_first ^ has_last:
 				if has_first:
@@ -591,17 +683,21 @@ static func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape,
 					if not edges_to_remove.has(last):
 						edges_to_remove.push_back(last)
 		for e in edges_to_remove:
-			var i = edges.find(e)
-			edges.remove(i)
+			var i = final_edges.find(e)
+			final_edges.remove(i)
 		for e in edges_to_add:
-			edges.push_back(e)
+			final_edges.push_back(e)
 
-	return edges
+	return final_edges
 
 
 ########
 # MISC #
 ########
+func _handle_material_change():
+	set_as_dirty()
+
+
 func set_as_dirty():
 	_dirty = true
 
@@ -621,12 +717,14 @@ static func sort_by_z_index(a: Array) -> Array:
 
 func clear_cached_data():
 	_edges = []
+	_meshes = []
 
 
 func _on_dirty_update():
 	if _dirty:
 		update()
-		_meshes = _bake_mesh(_edges)
+		cache_edges()
+		cache_meshes()
 		_dirty = false
 		emit_signal("on_dirty_update")
 

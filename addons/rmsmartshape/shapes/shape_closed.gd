@@ -2,27 +2,15 @@ tool
 extends RMSS2D_Shape_Base
 class_name RMSS2D_Shape_Closed
 
-export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_material
-
-#####################
-# SETTERS / GETTERS #
-#####################
-
-func _set_material(m:RMSS2D_Material_Shape):
-	if m == null:
-		return
-	shape_material = m
-
-
 ############
 # OVERRIDE #
 ############
-func duplicate_self()->RMSS2D_Shape_Base:
+func duplicate_self():
 	var _new = .duplicate()
 	return _new
 
 # Workaround (class cannot reference itself)
-func __new()->RMSS2D_Shape_Base:
+func __new():
 	return get_script().new()
 
 
@@ -45,3 +33,19 @@ func _get_previous_point_index(idx: int, points: Array) -> int:
 
 func _get_last_point_index(points: Array) -> int:
 	return points.size() - 2
+
+func _build_meshes(edges: Array) -> Array:
+	var meshes = []
+
+	var produced_fill_mesh = false
+	for e in edges:
+		if not produced_fill_mesh:
+			if e.z_index > shape_material.fill_texture_z_index:
+				# Produce Fill Meshes
+				for m in _build_fill_mesh(get_tessellated_points(), shape_material):
+					meshes.push_back(m)
+				produced_fill_mesh = true
+
+		# Produce edge Meshes
+		for m in e.get_meshes():
+			meshes.push_back(m)

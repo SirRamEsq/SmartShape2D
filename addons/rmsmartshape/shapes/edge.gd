@@ -179,8 +179,7 @@ func get_meshes() -> Array:
 		var tex_normal: Texture = consecutive_quads[0].normal_tex
 		var flip = consecutive_quads[0].flip_texture
 		var transform = Transform2D()
-		var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip)
-		mesh_data.meshes.push_back(array_mesh)
+		var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
 		meshes.push_back(mesh_data)
 
 	return meshes

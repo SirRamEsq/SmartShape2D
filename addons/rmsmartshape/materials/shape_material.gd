@@ -10,6 +10,10 @@ Each edge represents a set of textures used to render an edge
 # List of materials this shape can use
 export (Array, Resource) var _edge_materials: Array = [] setget set_edge_materials
 
+export (Array, Texture) var fill_textures: Array = []
+export (Array, Texture) var fill_texture_normals: Array = []
+export (int) var fill_texture_z_index: int = 0
+
 # How much to offset all edges
 export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0
 

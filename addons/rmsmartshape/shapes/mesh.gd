@@ -15,11 +15,16 @@ var mesh_transform: Transform2D = Transform2D()
 
 
 func _init(
-	t: Texture = null, tn: Texture = null, f: bool = false, xform: Transform2D = Transform2D()
+	t: Texture = null,
+	tn: Texture = null,
+	f: bool = false,
+	xform: Transform2D = Transform2D(),
+	m: Array = []
 ):
 	texture = t
 	texture_normal = tn
 	flip_texture = f
+	meshes = m
 
 
 func matches(tex: Texture, tex_n: Texture, f: bool, t: Transform2D) -> bool:

@@ -16,7 +16,15 @@ var width_factor: float = 1.0
 var control_point_index: int
 
 
-func _init(a: Vector2, b: Vector2, c: Vector2, d: Vector2, t: Texture, tn: Texture, f: bool):
+func _init(
+	a: Vector2 = Vector2.ZERO,
+	b: Vector2 = Vector2.ZERO,
+	c: Vector2 = Vector2.ZERO,
+	d: Vector2 = Vector2.ZERO,
+	t: Texture = null,
+	tn: Texture = null,
+	f: bool = false
+):
 	pt_a = a
 	pt_b = b
 	pt_c = c
