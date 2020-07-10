@@ -79,6 +79,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_open.gd"
 }, {
+"base": "Resource",
+"class": "RMSS2D_Strings",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/strings.gd"
+}, {
 "base": "Node2D",
 "class": "RMSmartShape2D",
 "language": "GDScript",
@@ -88,11 +93,6 @@ _global_script_classes=[ {
 "class": "RMSmartShapeAnchor2D",
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/RMSmartShapeAnchor2D.gd"
-}, {
-"base": "Node2D",
-"class": "SmartShape2D",
-"language": "GDScript",
-"path": "res://addons/rmsmartshape/SmartShape2D.gd"
 } ]
 _global_script_class_icons={
 "RMS2D_Material": "",
@@ -109,9 +109,9 @@ _global_script_class_icons={
 "RMSS2D_Shape_Base": "",
 "RMSS2D_Shape_Closed": "res://addons/rmsmartshape/closed_shape.png",
 "RMSS2D_Shape_Open": "res://addons/rmsmartshape/open_shape.png",
+"RMSS2D_Strings": "",
 "RMSmartShape2D": "res://addons/rmsmartshape/shape.png",
-"RMSmartShapeAnchor2D": "res://addons/rmsmartshape/shape_anchor.png",
-"SmartShape2D": "res://addons/rmsmartshape/shape.png"
+"RMSmartShapeAnchor2D": "res://addons/rmsmartshape/shape_anchor.png"
 }
 
 [application]

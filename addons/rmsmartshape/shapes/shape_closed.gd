@@ -6,12 +6,8 @@ class_name RMSS2D_Shape_Closed, "../closed_shape.png"
 # GODOT #
 #########
 func _init():
-	pass
+	_is_instantiable = true
 
-
-func _ready():
-	if _curve == null:
-		_curve = Curve2D.new()
 
 ############
 # OVERRIDE #

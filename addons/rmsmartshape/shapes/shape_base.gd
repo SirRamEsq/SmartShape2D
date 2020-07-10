@@ -37,6 +37,7 @@ var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
 var _vertex_properties = RMS2D_VertexPropertiesArray.new(0)
+var _is_instantiable = false
 
 signal points_modified
 signal on_dirty_update
@@ -108,6 +109,8 @@ func get_vertices() -> Array:
 
 
 func get_tessellated_points() -> PoolVector2Array:
+	if _curve.get_point_count() < 2:
+		return PoolVector2Array()
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
 	var points = _curve.tessellate(tessellation_stages, tessellation_tolerence)
@@ -332,11 +335,15 @@ func get_point_texture_flip(idx: int) -> bool:
 # GODOT #
 #########
 func _init():
-	push_error("'%s': RMSS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
+	pass
 
 
 func _ready():
-	queue_free()
+	if _curve == null:
+		_curve = Curve2D.new()
+	if not _is_instantiable:
+		push_error("'%s': RMSS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
+		queue_free()
 
 
 func _draw():
