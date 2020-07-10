@@ -332,12 +332,11 @@ func get_point_texture_flip(idx: int) -> bool:
 # GODOT #
 #########
 func _init():
-	pass
+	push_error("'%s': RMSS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
 
 
 func _ready():
-	if _curve == null:
-		_curve = Curve2D.new()
+	queue_free()
 
 
 func _draw():

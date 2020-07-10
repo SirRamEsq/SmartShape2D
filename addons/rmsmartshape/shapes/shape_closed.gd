@@ -1,6 +1,17 @@
 tool
 extends RMSS2D_Shape_Base
-class_name RMSS2D_Shape_Closed
+class_name RMSS2D_Shape_Closed, "../closed_shape.png"
+
+#########
+# GODOT #
+#########
+func _init():
+	pass
+
+
+func _ready():
+	if _curve == null:
+		_curve = Curve2D.new()
 
 ############
 # OVERRIDE #
@@ -49,3 +60,4 @@ func _build_meshes(edges: Array) -> Array:
 		# Produce edge Meshes
 		for m in e.get_meshes():
 			meshes.push_back(m)
+	return meshes
