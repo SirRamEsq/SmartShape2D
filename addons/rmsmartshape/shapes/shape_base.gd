@@ -728,9 +728,9 @@ func clear_cached_data():
 
 func _on_dirty_update():
 	if _dirty:
-		update()
 		cache_edges()
 		cache_meshes()
+		update()
 		_dirty = false
 		emit_signal("on_dirty_update")
 

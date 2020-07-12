@@ -1,6 +1,13 @@
 tool
 extends EditorPlugin
 
+"""
+- Could use a scene that's a child of the shape as a way to have data shown in the viewport
+
+- Snapping using the build in functionality isn't going to happen
+	- https://github.com/godotengine/godot/issues/11180
+"""
+
 enum MODE {
 	EDIT,
 	CREATE,
@@ -20,20 +27,20 @@ enum ACTION {
 }
 
 # Icons
-const HANDLE = preload("assets/icon_editor_handle.svg")
-const HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
-const ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
-const CURVE_EDIT = preload("assets/icon_curve_edit.svg")
-const CURVE_CREATE = preload("assets/icon_curve_create.svg")
-const CURVE_DELETE = preload("assets/icon_curve_delete.svg")
-const PIVOT_POINT = preload("assets/icon_editor_position.svg")
-const COLLISION = preload("assets/icon_collision_polygon_2d.svg")
+const ICON_HANDLE = preload("assets/icon_editor_handle.svg")
+const ICON_HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
+const ICON_ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
+const ICON_CURVE_EDIT = preload("assets/icon_curve_edit.svg")
+const ICON_CURVE_CREATE = preload("assets/icon_curve_create.svg")
+const ICON_CURVE_DELETE = preload("assets/icon_curve_delete.svg")
+const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
+const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
 
 # This is the shape node being edited
 var shape:RMSS2D_Shape_Base = null
 
 # Toolbar Stuff
-var hb:HBoxContainer = null
+var tb_hb:HBoxContainer = null
 var tb_edit:ToolButton = null
 var tb_create:ToolButton = null
 var tb_delete:ToolButton = null
@@ -75,14 +82,7 @@ class ActionData:
 	var starting_positions_control_out = []
 
 var current_action = ActionData.new([], [], [], [], ACTION.NONE)
-
-# Monitor change to node being edited
-var shape_transform:Transform2D
-var shape_collision_offset:float
-var shape_collision_width:float
-var shape_collision_extends:float
-# This also has an impact on open shaped collision
-var shape_top_offset:float
+var cached_shape_global_transform:Transform2D
 
 # Track our mode of operation
 var current_mode:int = MODE.EDIT
@@ -109,88 +109,88 @@ func _init_undo():
 
 func _build_toolbar():
 	# Build up tool bar when editing RMSmartShape2D
-	hb = HBoxContainer.new()
-	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
+	tb_hb = HBoxContainer.new()
+	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
 
 	var sep = VSeparator.new()
-	hb.add_child(sep)
+	tb_hb.add_child(sep)
 
 	tb_snap_x = SpinBox.new()
 	tb_snap_x.value = 1.0
 	tb_snap_x.editable = true
 	tb_snap_x.connect("value_changed", self, "_snap_changed")
 	tb_snap_x.hint_tooltip = "Snap X"
-	hb.add_child(tb_snap_x)
+	tb_hb.add_child(tb_snap_x)
 
 	tb_snap_y = SpinBox.new()
 	tb_snap_y.value = 1.0
 	tb_snap_y.editable = true
 	tb_snap_y.connect("value_changed", self, "_snap_changed")
 	tb_snap_y.hint_tooltip = "Snap Y"
-	hb.add_child(tb_snap_y)
+	tb_hb.add_child(tb_snap_y)
 
 	tb_snap_offset_x = SpinBox.new()
 	tb_snap_offset_x.editable = true
 	tb_snap_offset_x.connect("value_changed", self, "_snap_offset_changed")
 	tb_snap_offset_x.hint_tooltip = "Snap Offset X"
-	hb.add_child(tb_snap_offset_x)
+	tb_hb.add_child(tb_snap_offset_x)
 
 	tb_snap_offset_y = SpinBox.new()
 	tb_snap_offset_y.editable = true
 	tb_snap_offset_y.connect("value_changed", self, "_snap_offset_changed")
 	tb_snap_offset_y.hint_tooltip = "Snap Offset Y"
-	hb.add_child(tb_snap_offset_y)
+	tb_hb.add_child(tb_snap_offset_y)
 
 	tb_edit = ToolButton.new()
-	tb_edit.icon = CURVE_EDIT
+	tb_edit.icon = ICON_CURVE_EDIT
 	tb_edit.toggle_mode = true
 	tb_edit.pressed = true
 	tb_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT])
 	tb_edit.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_EDIT
-	hb.add_child(tb_edit)
+	tb_hb.add_child(tb_edit)
 
 	tb_create = ToolButton.new()
-	tb_create.icon = CURVE_CREATE
+	tb_create.icon = ICON_CURVE_CREATE
 	tb_create.toggle_mode = true
 	tb_create.pressed = false
 	tb_create.connect("pressed", self, "_enter_mode", [MODE.CREATE])
 	tb_create.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_CREATE
-	hb.add_child(tb_create)
+	tb_hb.add_child(tb_create)
 
 	tb_delete = ToolButton.new()
-	tb_delete.icon = CURVE_DELETE
+	tb_delete.icon = ICON_CURVE_DELETE
 	tb_delete.toggle_mode = true
 	tb_delete.pressed = false
 	tb_delete.connect("pressed", self, "_enter_mode", [MODE.DELETE])
 	tb_delete.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_DELETE
-	hb.add_child(tb_delete)
+	tb_hb.add_child(tb_delete)
 
 	tb_pivot = ToolButton.new()
-	tb_pivot.icon = PIVOT_POINT
+	tb_pivot.icon = ICON_PIVOT_POINT
 	tb_pivot.toggle_mode = true
 	tb_pivot.pressed = false
 	tb_pivot.connect("pressed", self, "_enter_mode", [MODE.SET_PIVOT])
 	tb_pivot.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_PIVOT
-	hb.add_child(tb_pivot)
+	tb_hb.add_child(tb_pivot)
 
 	tb_collision = ToolButton.new()
-	tb_collision.icon = COLLISION
+	tb_collision.icon = ICON_COLLISION
 	tb_collision.toggle_mode = false
 	tb_collision.pressed = false
 	tb_collision.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_COLLISION
 	tb_collision.connect("pressed", self, "_add_collision")
-	hb.add_child(tb_collision)
+	tb_hb.add_child(tb_collision)
 
 	lbl_index = Label.new()
 	lbl_index.text = "Idx: "
-	hb.hide()
-	hb.add_child(lbl_index)
+	tb_hb.hide()
+	tb_hb.add_child(lbl_index)
 
 func _enter_tree():
 	pass
 
 func _exit_tree():
-	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, hb)
+	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
 
 func _process(delta):
 	if Engine.editor_hint:
@@ -204,25 +204,24 @@ func _process(delta):
 				update_overlays()
 				return
 
-			if shape_transform != shape.get_global_transform():
-				# Force the bake so that directional changes can be made
+			# Force update if global transforma has been changed
+			if cached_shape_global_transform != shape.get_global_transform():
 				shape.set_as_dirty()
-				shape.update()
-				shape_transform = shape.get_global_transform()
+				cached_shape_global_transform = shape.get_global_transform()
 
 func handles(object):
 	if object is Resource:
 		return false
 
 	var rslt:bool = object is RMSS2D_Shape_Closed or object is RMSS2D_Shape_Open
-	hb.hide()
+	tb_hb.hide()
 	update_overlays()
 
 	return rslt
 
 func edit(object):
-	if hb != null:
-		hb.show()
+	if tb_hb != null:
+		tb_hb.show()
 
 	on_edge = false
 	deselect_control_points()
@@ -328,190 +327,6 @@ func _is_valid_keyboard_scancode(kb:InputEventKey)->bool:
 		KEY_SHIFT:
 			return true
 	return false
-func _input_handle_keyboard_event(event:InputEventKey)->bool:
-	var kb:InputEventKey = event
-	if _is_valid_keyboard_scancode(kb):
-		if is_single_point_index_valid():
-			if kb.pressed and kb.scancode == KEY_SPACE:
-				shape.set_point_texture_flip(!shape.get_point_texture_flip(current_point_index()), current_point_index())
-				shape.set_as_dirty()
-				shape.update()
-				update_toolbar_status_message()
-		return true
-	return false
-
-func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2D, grab_threshold:float)->bool:
-	var rslt:bool = false
-	var t:Transform2D = et * shape.get_global_transform()
-	var mb:InputEventMouseButton = event
-	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
-
-	#######################################
-	# Mouse Button released
-	if not mb.pressed and mb.button_index == BUTTON_LEFT:
-		if current_action.type == ACTION.MOVING_VERT:
-			if current_action.starting_positions[0].distance_to(shape.get_point_position(current_action.indices[0])) > grab_threshold:
-				_action_move_verticies()
-				rslt = true
-		var type = current_action.type
-		var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
-		var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
-		if _in or _out:
-			_action_move_control_points(_in, _out)
-			rslt = true
-		deselect_control_points()
-		return rslt
-
-
-	#########################################
-	# Mouse Right click in Edit Mode -OR- LEFT Click on Delete Mode
-	elif mb.pressed and ((mb.button_index == BUTTON_RIGHT and current_mode == MODE.EDIT) or (current_mode == MODE.DELETE and mb.button_index == BUTTON_LEFT)):
-		if is_single_point_index_valid():
-			_action_delete_point()
-			deselect_control_points()
-			rslt = true
-		else:
-			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
-			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
-			if not points_in.empty():
-				_action_delete_point_in(points_in[0])
-				rslt = true
-			elif not points_out.empty():
-				_action_delete_point_out(points_out[0])
-				rslt = true
-		return rslt
-
-	#########################################
-	# Mouse Wheel up on valid point
-	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_index_valid():
-		if Input.is_key_pressed(KEY_SHIFT):
-			var width = shape.get_point_width(current_point_index())
-			var new_width = width + 0.1
-			shape.set_point_width(new_width, current_point_index())
-
-			shape.set_as_dirty()
-			update_overlays()
-			update_toolbar_status_message()
-			
-			rslt = true
-		else:
-			var index:int = shape.get_point_texture_index(current_point_index()) + 1
-			var flip:bool = shape.get_point_texture_flip(current_point_index())
-			shape.set_point_texture_index(current_point_index(), index)
-			shape.set_point_texture_flip(flip, current_point_index())
-
-			shape.set_as_dirty()
-			update_overlays()
-			update_toolbar_status_message()
-			
-			rslt = true
-		return rslt
-
-	#########################################
-	# Mouse Wheel down on valid point
-	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_index_valid():
-		if Input.is_key_pressed(KEY_SHIFT):
-			var width = shape.get_point_width(current_point_index())
-			var new_width = width - 0.1
-			shape.set_point_width(new_width, current_point_index())
-
-			shape.set_as_dirty()
-			update_overlays()
-			update_toolbar_status_message()
-			
-			rslt = true
-		else:
-			var index = shape.get_point_texture_index(current_point_index()) - 1
-			shape.set_point_texture_index(current_point_index(), index)
-
-			shape.set_as_dirty()
-			update_overlays()
-			update_toolbar_status_message()
-			
-			rslt = true
-		return rslt
-
-	#########################################
-	# Mouse left click on valid point
-	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_single_point_index_valid():
-		if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
-			select_control_points_to_move([current_point_index()], viewport_mouse_position)
-			return true
-		# If you create a point at the same location as point idx "0"
-		elif current_mode == MODE.CREATE and current_point_index() == 0:
-			return false
-		else:
-			select_vertices_to_move([current_point_index()], viewport_mouse_position)
-			return true
-
-
-	#########################################
-	# Mouse Left click
-	elif mb.pressed and mb.button_index == BUTTON_LEFT:
-		#First, check if we are changing our pivot point
-		if (current_mode == MODE.SET_PIVOT) or (current_mode == MODE.EDIT and mb.control):
-			_action_set_pivot(mb.position, et)
-			return true
-
-		elif current_mode == MODE.EDIT and not on_edge:
-			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
-			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
-			if not points_in.empty():
-				select_control_points_to_move([points_in[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_IN)
-				return true
-			elif not points_out.empty():
-				select_control_points_to_move([points_out[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_OUT)
-				return true
-
-		elif current_mode == MODE.CREATE and not on_edge:
-			var snapped_pos = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
-			select_vertices_to_move([_action_add_point(snapped_pos)], viewport_mouse_position)
-
-			return true
-
-		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
-			# Grab Edge (2 points)
-			if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
-				var xform:Transform2D = t
-				var gpoint:Vector2 = mb.position
-				var insertion_point:int = -1
-				var mb_length = shape.get_closest_offset(xform.affine_inverse().xform(gpoint))
-				var length = shape.get_point_count()
-
-				for i in length - 1:
-					var compareLength = shape.get_closest_offset(shape.get_point_position(i + 1))
-					if mb_length >= shape.get_closest_offset(shape.get_point_position(i)) and mb_length <= compareLength:
-						insertion_point = i
-
-				if insertion_point == -1:
-					insertion_point = shape.get_point_count() - 2
-
-				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
-				return true
-
-			else:
-				var xform:Transform2D = t
-				var gpoint:Vector2 = mb.position
-				var insertion_point:int = -1
-				var mb_length = shape.get_closest_offset(xform.affine_inverse().xform(gpoint))
-				var length = shape.get_point_count()
-
-				for i in length - 1:
-					var compareLength = shape.get_closest_offset(shape.get_point_position(i + 1))
-					if mb_length >= shape.get_closest_offset(shape.get_point_position(i)) and mb_length <= compareLength:
-						insertion_point = i
-
-				if insertion_point == -1:
-					insertion_point = shape.get_point_count() - 2
-				var idx = insertion_point+1
-
-				idx = _action_split_curve(idx, gpoint, xform)
-				select_vertices_to_move([idx], viewport_mouse_position)
-				on_edge = false
-
-				return true
-
-	return false
 
 func _debug_mouse_positions(mm, t):
 	print("========================================")
@@ -527,90 +342,6 @@ func _debug_mouse_positions(mm, t):
 	print("Relative:  %s" % str(t.affine_inverse().xform(mm.relative)))
 	print("MouseDelta:%s" % str(t.affine_inverse().xform(_mouse_motion_delta_starting_pos)))
 
-func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2D, grab_threshold:float)->bool:
-	var t:Transform2D = et * shape.get_global_transform()
-	var mm:InputEventMouseMotion = event
-	var delta_current_pos = et.affine_inverse().xform(mm.position)
-	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
-	var rslt:bool = false
-
-	var type = current_action.type
-	var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
-	var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
-
-	#_debug_mouse_positions(mm, et)
-
-	if type == ACTION.MOVING_VERT:
-		for i in range(0, current_action.indices.size(), 1):
-			var idx = current_action.indices[i]
-			var from = current_action.starting_positions[i]
-			var new_position = from + delta
-			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
-			var snapped_position = _snap_position(new_position, _snapping) + _snapping_offset
-			shape.set_point_position(idx, snapped_position)
-			rslt = true
-			update_overlays()
-		return rslt
-
-	elif _in or _out:
-		for i in range(0, current_action.indices.size(), 1):
-			var idx = current_action.indices[i]
-			var from = current_action.starting_positions[i]
-			var out_multiplier = 1
-			# Invert the delta for position_out if moving both at once
-			if type == ACTION.MOVING_CONTROL:
-				out_multiplier = -1
-			var new_position_in = delta + current_action.starting_positions_control_in[i]
-			var new_position_out = (delta * out_multiplier) + current_action.starting_positions_control_out[i]
-			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
-			var snapped_position_in = _snap_position(new_position_in, _snapping) + _snapping_offset
-			var snapped_position_out = _snap_position(new_position_out, _snapping) + _snapping_offset
-			if _in:
-				shape.set_point_in(idx, snapped_position_in)
-				rslt = true
-			if _out:
-				shape.set_point_out(idx, snapped_position_out)
-				rslt = true
-			shape.set_as_dirty()
-			update_overlays()
-		return rslt
-
-
-	# Handle Edge Follow
-	var old_edge:bool = on_edge
-
-	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * shape.get_global_transform()
-	var gpoint:Vector2 = mm.position
-
-	if shape.get_point_count() < 2:
-		return rslt
-
-	# Find edge
-	var closest_point = shape.get_closest_point(xform.affine_inverse().xform(mm.position))
-	if closest_point != null:
-		edge_point = xform.xform(closest_point)
-		on_edge = false
-		if edge_point.distance_to(gpoint) <= grab_threshold:
-			on_edge = true
-
-		# However, if near a control point or one of its handles then we are not on the edge
-		deselect_control_points()
-		for i in shape.get_point_count():
-			var pp:Vector2 = shape.get_point_position(i)
-			var p:Vector2 = xform.xform(pp)
-			if p.distance_to(gpoint) <= grab_threshold:
-				on_edge = false
-				select_verticies([i], ACTION.NONE)
-				break
-
-		if current_mode != MODE.CREATE and current_mode != MODE.EDIT:
-			# Ensure we are not on the edge if not in the proper mode
-			on_edge = false
-
-		if on_edge or old_edge != on_edge:
-			update_overlays()
-
-	return rslt
 
 func forward_canvas_gui_input(event):
 	if shape == null:
@@ -901,7 +632,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 			#print ("%s:%s | %s | %s" % [str(i), str(shape.get_point_position(i)), str(shape.get_point_in(i)), str(shape.get_point_out(i))])
 			var smooth = false
 			var hp = t.xform(baked[i])
-			overlay.draw_texture(HANDLE, hp - HANDLE.get_size() * 0.5)
+			overlay.draw_texture(ICON_HANDLE, hp - ICON_HANDLE.get_size() * 0.5)
 
 			# Draw handles for control-point-out
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
@@ -909,7 +640,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 				var pointout = t.xform(baked[i] + shape.get_point_out(i));
 				if hp != pointout:
 					smooth = true;
-					_draw_control_point_line(overlay, hp, pointout, HANDLE_CONTROL)
+					_draw_control_point_line(overlay, hp, pointout, ICON_HANDLE_CONTROL)
 
 			# Draw handles for control-point-in
 			# Drawing the point-in for point 0 makes no sense, as there's no point behind it
@@ -917,10 +648,10 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 				var pointin = t.xform(baked[i] + shape.get_point_in(i));
 				if hp != pointin:
 					smooth = true;
-					_draw_control_point_line(overlay, hp, pointin, HANDLE_CONTROL)
+					_draw_control_point_line(overlay, hp, pointin, ICON_HANDLE_CONTROL)
 
 		if on_edge:
-			overlay.draw_texture(ADD_HANDLE, edge_point - ADD_HANDLE.get_size() * 0.5)
+			overlay.draw_texture(ICON_ADD_HANDLE, edge_point - ICON_ADD_HANDLE.get_size() * 0.5)
 
 		# Draw Highlighted Handle
 		if is_single_point_index_valid():
@@ -929,7 +660,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 
 		shape.update()
 
-func _draw_control_point_line(overlay:Control, point:Vector2, control_point:Vector2, texture:Texture=HANDLE):
+func _draw_control_point_line(overlay:Control, point:Vector2, control_point:Vector2, texture:Texture=ICON_HANDLE):
 	# Draw the line with a dark and light color to be visible on all backgrounds
 	var color_dark = Color(0, 0, 0, 0.5)
 	var color_light = Color(1, 1, 1, 0.5)
@@ -965,3 +696,273 @@ func _get_intersecting_control_point_out(mouse_pos:Vector2, grab_threshold:float
 
 func _on_shape_point_modified():
 	_action_invert_orientation()
+
+func _input_handle_keyboard_event(event:InputEventKey)->bool:
+	var kb:InputEventKey = event
+	if _is_valid_keyboard_scancode(kb):
+		if is_single_point_index_valid():
+			if kb.pressed and kb.scancode == KEY_SPACE:
+				shape.set_point_texture_flip(!shape.get_point_texture_flip(current_point_index()), current_point_index())
+				shape.set_as_dirty()
+				shape.update()
+				update_toolbar_status_message()
+		return true
+	return false
+
+func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2D, grab_threshold:float)->bool:
+	var rslt:bool = false
+	var t:Transform2D = et * shape.get_global_transform()
+	var mb:InputEventMouseButton = event
+	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
+
+	#######################################
+	# Mouse Button released
+	if not mb.pressed and mb.button_index == BUTTON_LEFT:
+		if current_action.type == ACTION.MOVING_VERT:
+			if current_action.starting_positions[0].distance_to(shape.get_point_position(current_action.indices[0])) > grab_threshold:
+				_action_move_verticies()
+				rslt = true
+		var type = current_action.type
+		var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
+		var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
+		if _in or _out:
+			_action_move_control_points(_in, _out)
+			rslt = true
+		deselect_control_points()
+		return rslt
+
+
+	#########################################
+	# Mouse Right click in Edit Mode -OR- LEFT Click on Delete Mode
+	elif mb.pressed and ((mb.button_index == BUTTON_RIGHT and current_mode == MODE.EDIT) or (current_mode == MODE.DELETE and mb.button_index == BUTTON_LEFT)):
+		if is_single_point_index_valid():
+			_action_delete_point()
+			deselect_control_points()
+			rslt = true
+		else:
+			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
+			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
+			if not points_in.empty():
+				_action_delete_point_in(points_in[0])
+				rslt = true
+			elif not points_out.empty():
+				_action_delete_point_out(points_out[0])
+				rslt = true
+		return rslt
+
+	#########################################
+	# Mouse Wheel up on valid point
+	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_index_valid():
+		if Input.is_key_pressed(KEY_SHIFT):
+			var width = shape.get_point_width(current_point_index())
+			var new_width = width + 0.1
+			shape.set_point_width(new_width, current_point_index())
+
+			shape.set_as_dirty()
+			update_overlays()
+			update_toolbar_status_message()
+			
+			rslt = true
+		else:
+			var index:int = shape.get_point_texture_index(current_point_index()) + 1
+			var flip:bool = shape.get_point_texture_flip(current_point_index())
+			shape.set_point_texture_index(current_point_index(), index)
+			shape.set_point_texture_flip(flip, current_point_index())
+
+			shape.set_as_dirty()
+			update_overlays()
+			update_toolbar_status_message()
+			
+			rslt = true
+		return rslt
+
+	#########################################
+	# Mouse Wheel down on valid point
+	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_index_valid():
+		if Input.is_key_pressed(KEY_SHIFT):
+			var width = shape.get_point_width(current_point_index())
+			var new_width = width - 0.1
+			shape.set_point_width(new_width, current_point_index())
+
+			shape.set_as_dirty()
+			update_overlays()
+			update_toolbar_status_message()
+			
+			rslt = true
+		else:
+			var index = shape.get_point_texture_index(current_point_index()) - 1
+			shape.set_point_texture_index(current_point_index(), index)
+
+			shape.set_as_dirty()
+			update_overlays()
+			update_toolbar_status_message()
+			
+			rslt = true
+		return rslt
+
+	#########################################
+	# Mouse left click on valid point
+	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_single_point_index_valid():
+		if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
+			select_control_points_to_move([current_point_index()], viewport_mouse_position)
+			return true
+		# If you create a point at the same location as point idx "0"
+		elif current_mode == MODE.CREATE and current_point_index() == 0:
+			return false
+		else:
+			select_vertices_to_move([current_point_index()], viewport_mouse_position)
+			return true
+
+
+	#########################################
+	# Mouse Left click
+	elif mb.pressed and mb.button_index == BUTTON_LEFT:
+		#First, check if we are changing our pivot point
+		if (current_mode == MODE.SET_PIVOT) or (current_mode == MODE.EDIT and mb.control):
+			_action_set_pivot(mb.position, et)
+			return true
+
+		elif current_mode == MODE.EDIT and not on_edge:
+			var points_in = _get_intersecting_control_point_in(mb.position, grab_threshold)
+			var points_out = _get_intersecting_control_point_out(mb.position, grab_threshold)
+			if not points_in.empty():
+				select_control_points_to_move([points_in[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_IN)
+				return true
+			elif not points_out.empty():
+				select_control_points_to_move([points_out[0]], viewport_mouse_position, ACTION.MOVING_CONTROL_OUT)
+				return true
+
+		elif current_mode == MODE.CREATE and not on_edge:
+			var snapped_pos = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
+			select_vertices_to_move([_action_add_point(snapped_pos)], viewport_mouse_position)
+
+			return true
+
+		elif (current_mode == MODE.CREATE or current_mode == MODE.EDIT) and on_edge:
+			# Grab Edge (2 points)
+			if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
+				var xform:Transform2D = t
+				var gpoint:Vector2 = mb.position
+				var insertion_point:int = -1
+				var mb_length = shape.get_closest_offset(xform.affine_inverse().xform(gpoint))
+				var length = shape.get_point_count()
+
+				for i in length - 1:
+					var compareLength = shape.get_closest_offset(shape.get_point_position(i + 1))
+					if mb_length >= shape.get_closest_offset(shape.get_point_position(i)) and mb_length <= compareLength:
+						insertion_point = i
+
+				if insertion_point == -1:
+					insertion_point = shape.get_point_count() - 2
+
+				select_vertices_to_move([insertion_point, insertion_point+1], viewport_mouse_position)
+				return true
+
+			else:
+				var xform:Transform2D = t
+				var gpoint:Vector2 = mb.position
+				var insertion_point:int = -1
+				var mb_length = shape.get_closest_offset(xform.affine_inverse().xform(gpoint))
+				var length = shape.get_point_count()
+
+				for i in length - 1:
+					var compareLength = shape.get_closest_offset(shape.get_point_position(i + 1))
+					if mb_length >= shape.get_closest_offset(shape.get_point_position(i)) and mb_length <= compareLength:
+						insertion_point = i
+
+				if insertion_point == -1:
+					insertion_point = shape.get_point_count() - 2
+				var idx = insertion_point+1
+
+				idx = _action_split_curve(idx, gpoint, xform)
+				select_vertices_to_move([idx], viewport_mouse_position)
+				on_edge = false
+
+				return true
+
+	return false
+
+func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2D, grab_threshold:float)->bool:
+	var t:Transform2D = et * shape.get_global_transform()
+	var mm:InputEventMouseMotion = event
+	var delta_current_pos = et.affine_inverse().xform(mm.position)
+	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
+	var rslt:bool = false
+
+	var type = current_action.type
+	var _in = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_IN
+	var _out = type == ACTION.MOVING_CONTROL or type == ACTION.MOVING_CONTROL_OUT
+
+	#_debug_mouse_positions(mm, et)
+
+	if type == ACTION.MOVING_VERT:
+		for i in range(0, current_action.indices.size(), 1):
+			var idx = current_action.indices[i]
+			var from = current_action.starting_positions[i]
+			var new_position = from + delta
+			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
+			var snapped_position = _snap_position(new_position, _snapping) + _snapping_offset
+			shape.set_point_position(idx, snapped_position)
+			rslt = true
+			update_overlays()
+		return rslt
+
+	elif _in or _out:
+		for i in range(0, current_action.indices.size(), 1):
+			var idx = current_action.indices[i]
+			var from = current_action.starting_positions[i]
+			var out_multiplier = 1
+			# Invert the delta for position_out if moving both at once
+			if type == ACTION.MOVING_CONTROL:
+				out_multiplier = -1
+			var new_position_in = delta + current_action.starting_positions_control_in[i]
+			var new_position_out = (delta * out_multiplier) + current_action.starting_positions_control_out[i]
+			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
+			var snapped_position_in = _snap_position(new_position_in, _snapping) + _snapping_offset
+			var snapped_position_out = _snap_position(new_position_out, _snapping) + _snapping_offset
+			if _in:
+				shape.set_point_in(idx, snapped_position_in)
+				rslt = true
+			if _out:
+				shape.set_point_out(idx, snapped_position_out)
+				rslt = true
+			shape.set_as_dirty()
+			update_overlays()
+		return rslt
+
+
+	# Handle Edge Follow
+	var old_edge:bool = on_edge
+
+	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * shape.get_global_transform()
+	var gpoint:Vector2 = mm.position
+
+	if shape.get_point_count() < 2:
+		return rslt
+
+	# Find edge
+	var closest_point = shape.get_closest_point(xform.affine_inverse().xform(mm.position))
+	if closest_point != null:
+		edge_point = xform.xform(closest_point)
+		on_edge = false
+		if edge_point.distance_to(gpoint) <= grab_threshold:
+			on_edge = true
+
+		# However, if near a control point or one of its handles then we are not on the edge
+		deselect_control_points()
+		for i in shape.get_point_count():
+			var pp:Vector2 = shape.get_point_position(i)
+			var p:Vector2 = xform.xform(pp)
+			if p.distance_to(gpoint) <= grab_threshold:
+				on_edge = false
+				select_verticies([i], ACTION.NONE)
+				break
+
+		if current_mode != MODE.CREATE and current_mode != MODE.EDIT:
+			# Ensure we are not on the edge if not in the proper mode
+			on_edge = false
+
+		if on_edge or old_edge != on_edge:
+			update_overlays()
+
+	return rslt
