@@ -2,10 +2,9 @@ tool
 extends EditorPlugin
 
 """
-- Could use a scene that's a child of the shape as a way to have data shown in the viewport
-
 - Snapping using the build in functionality isn't going to happen
 	- https://github.com/godotengine/godot/issues/11180
+	- https://godotengine.org/qa/18051/tool-script-in-3-0
 """
 
 enum MODE {
@@ -36,6 +35,9 @@ const ICON_CURVE_DELETE = preload("assets/icon_curve_delete.svg")
 const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
 const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
 
+var GUI_INFO_PANEL = preload("scenes/GUI_InfoPanel.tscn")
+var gui_info_panel = GUI_INFO_PANEL.instance()
+
 # This is the shape node being edited
 var shape:RMSS2D_Shape_Base = null
 
@@ -55,6 +57,7 @@ var lbl_index:Label = null
 # Edge Stuff
 var on_edge:bool = false
 var edge_point:Vector2
+var lbl:Label = null
 
 func _invert_idx(idx:int, array_size:int):
 	return array_size - idx - 1
@@ -102,6 +105,8 @@ var _mouse_motion_delta_starting_pos = Vector2(0,0)
 func _ready():
 	_init_undo()
 	_build_toolbar()
+	add_child(gui_info_panel)
+	gui_info_panel.visible = false
 
 func _init_undo():
 	# Support the undo-redo actions
@@ -278,19 +283,19 @@ func _snap_position(pos:Vector2, snap:Vector2):
 		y = pos.y - fmod(pos.y, snap.y)
 	return Vector2(x,y)
 
-func update_toolbar_status_message():
-	lbl_index.text = _get_toolbar_status_message(current_point_index())
-
-func _get_toolbar_status_message(idx:int)->String:
+func update_gui_info_panel():
+	var idx = current_point_index()
 	if not is_point_index_valid(idx):
-		return "Idx: None"
-	return "Idx:%d T:%s F:%s W:%s" % \
-		[
-		idx,
-		shape.get_point_texture_index(idx),
-		shape.get_point_texture_flip(idx),
-		shape.get_point_width(idx)
-		]
+		gui_info_panel.visible = false
+		return
+	gui_info_panel.visible = true
+	# Shrink panel
+	gui_info_panel.rect_size = Vector2(1,1)
+
+	gui_info_panel.set_idx(idx)
+	gui_info_panel.set_texture_idx(shape.get_point_texture_index(idx))
+	gui_info_panel.set_width(shape.get_point_width(idx))
+	gui_info_panel.set_flip(shape.get_point_texture_flip(idx))
 
 func is_single_point_index_valid()->bool:
 	if current_action.indices.size() == 1:
@@ -352,7 +357,7 @@ func forward_canvas_gui_input(event):
 
 	var et = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 	var grab_threshold = get_editor_interface().get_editor_settings().get("editors/poly_editor/point_grab_radius")
-	update_toolbar_status_message()
+	update_gui_info_panel()
 
 	if event is InputEventKey:
 		return _input_handle_keyboard_event(event)
@@ -705,7 +710,7 @@ func _input_handle_keyboard_event(event:InputEventKey)->bool:
 				shape.set_point_texture_flip(!shape.get_point_texture_flip(current_point_index()), current_point_index())
 				shape.set_as_dirty()
 				shape.update()
-				update_toolbar_status_message()
+				update_gui_info_panel()
 		return true
 	return false
 
@@ -760,7 +765,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 			shape.set_as_dirty()
 			update_overlays()
-			update_toolbar_status_message()
+			update_gui_info_panel()
 			
 			rslt = true
 		else:
@@ -771,7 +776,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 			shape.set_as_dirty()
 			update_overlays()
-			update_toolbar_status_message()
+			update_gui_info_panel()
 			
 			rslt = true
 		return rslt
@@ -786,7 +791,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 			shape.set_as_dirty()
 			update_overlays()
-			update_toolbar_status_message()
+			update_gui_info_panel()
 			
 			rslt = true
 		else:
@@ -795,7 +800,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 			shape.set_as_dirty()
 			update_overlays()
-			update_toolbar_status_message()
+			update_gui_info_panel()
 			
 			rslt = true
 		return rslt
@@ -886,6 +891,8 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	var t:Transform2D = et * shape.get_global_transform()
 	var mm:InputEventMouseMotion = event
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
+	print(mm.position)
+	gui_info_panel.rect_position = mm.position + Vector2(256,-24)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 	var rslt:bool = false
 

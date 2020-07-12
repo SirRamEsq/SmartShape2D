@@ -1,0 +1,55 @@
+[gd_resource type="Theme" load_steps=6 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/assets/SourceCodeVariable-Roman.ttf" type="DynamicFontData" id=1]
+
+[sub_resource type="DynamicFont" id=1]
+outline_size = 1
+outline_color = Color( 0.298039, 0.392157, 0.384314, 1 )
+use_mipmaps = true
+font_data = ExtResource( 1 )
+
+[sub_resource type="StyleBoxFlat" id=2]
+draw_center = false
+border_width_bottom = 3
+border_color = Color( 0.764706, 0.992157, 0.972549, 1 )
+border_blend = true
+
+[sub_resource type="StyleBoxFlat" id=3]
+content_margin_left = 3.0
+content_margin_right = 3.0
+content_margin_top = 3.0
+content_margin_bottom = 3.0
+bg_color = Color( 0.501961, 0.662745, 0.65098, 1 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.298039, 0.392157, 0.384314, 1 )
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+expand_margin_left = 1.0
+expand_margin_right = 1.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+shadow_size = 1
+
+[sub_resource type="StyleBoxLine" id=4]
+color = Color( 0.298039, 0.392157, 0.384314, 1 )
+thickness = 3
+vertical = true
+
+[resource]
+Label/colors/font_color = Color( 0.819608, 0.819608, 0.819608, 1 )
+Label/colors/font_color_shadow = Color( 0.858824, 0.858824, 0.858824, 0 )
+Label/colors/font_outline_modulate = Color( 1, 1, 1, 1 )
+Label/constants/line_spacing = 1
+Label/constants/shadow_as_outline = 0
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/fonts/font = SubResource( 1 )
+Label/styles/normal = SubResource( 2 )
+PanelContainer/styles/panel = SubResource( 3 )
+VSeparator/constants/separation = 0
+VSeparator/styles/separator = SubResource( 4 )
