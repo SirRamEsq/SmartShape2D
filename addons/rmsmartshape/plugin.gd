@@ -34,9 +34,12 @@ const ICON_CURVE_CREATE = preload("assets/icon_curve_create.svg")
 const ICON_CURVE_DELETE = preload("assets/icon_curve_delete.svg")
 const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
 const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
+const ICON_SNAP = preload("assets/icon_editor_snap.svg")
 
+var GUI_SNAP_POPUP = preload("scenes/SnapPopup.tscn")
 var GUI_INFO_PANEL = preload("scenes/GUI_InfoPanel.tscn")
 var gui_info_panel = GUI_INFO_PANEL.instance()
+
 
 # This is the shape node being edited
 var shape:RMSS2D_Shape_Base = null
@@ -47,17 +50,12 @@ var tb_edit:ToolButton = null
 var tb_create:ToolButton = null
 var tb_delete:ToolButton = null
 var tb_pivot:ToolButton = null
-var tb_snap_x:SpinBox = null
-var tb_snap_y:SpinBox = null
-var tb_snap_offset_x:SpinBox = null
-var tb_snap_offset_y:SpinBox = null
 var tb_collision:ToolButton = null
-var lbl_index:Label = null
+var tb_snapping:MenuButton = null
 
 # Edge Stuff
 var on_edge:bool = false
 var edge_point:Vector2
-var lbl:Label = null
 
 func _invert_idx(idx:int, array_size:int):
 	return array_size - idx - 1
@@ -102,8 +100,36 @@ var _snapping_offset = Vector2(0,0)
 # Action Move Variables
 var _mouse_motion_delta_starting_pos = Vector2(0,0)
 
+var snap_popup_menu
+var snap_popup_settings
+func display_snap_popup():
+	var win_size = OS.get_window_size()
+	snap_popup_settings.popup_centered_ratio(0.5)
+	snap_popup_settings.set_as_minsize()
+	# Get Centered
+	snap_popup_settings.rect_position = (win_size / 2.0) - snap_popup_settings.rect_size / 2.0
+	# Move up
+	snap_popup_settings.rect_position.y = (win_size.y / 8.0)
+
+func _create_snap_configure_popup():
+	if snap_popup_settings == null:
+		print("creating popup")
+		snap_popup_settings = GUI_SNAP_POPUP.instance()
+		#snap_popup_settings.popup_exclusive = true
+		add_child(snap_popup_settings)
+
+
+func _snapping_item_selected(id:int):
+	print(id)
+	if id == 0:
+		snap_popup_menu.set_item_checked(id, not snap_popup_menu.is_item_checked(id))
+	elif id == 2:
+		display_snap_popup()
+
+
 func _ready():
 	_init_undo()
+	_create_snap_configure_popup()
 	_build_toolbar()
 	add_child(gui_info_panel)
 	gui_info_panel.visible = false
@@ -119,32 +145,6 @@ func _build_toolbar():
 
 	var sep = VSeparator.new()
 	tb_hb.add_child(sep)
-
-	tb_snap_x = SpinBox.new()
-	tb_snap_x.value = 1.0
-	tb_snap_x.editable = true
-	tb_snap_x.connect("value_changed", self, "_snap_changed")
-	tb_snap_x.hint_tooltip = "Snap X"
-	tb_hb.add_child(tb_snap_x)
-
-	tb_snap_y = SpinBox.new()
-	tb_snap_y.value = 1.0
-	tb_snap_y.editable = true
-	tb_snap_y.connect("value_changed", self, "_snap_changed")
-	tb_snap_y.hint_tooltip = "Snap Y"
-	tb_hb.add_child(tb_snap_y)
-
-	tb_snap_offset_x = SpinBox.new()
-	tb_snap_offset_x.editable = true
-	tb_snap_offset_x.connect("value_changed", self, "_snap_offset_changed")
-	tb_snap_offset_x.hint_tooltip = "Snap Offset X"
-	tb_hb.add_child(tb_snap_offset_x)
-
-	tb_snap_offset_y = SpinBox.new()
-	tb_snap_offset_y.editable = true
-	tb_snap_offset_y.connect("value_changed", self, "_snap_offset_changed")
-	tb_snap_offset_y.hint_tooltip = "Snap Offset Y"
-	tb_hb.add_child(tb_snap_offset_y)
 
 	tb_edit = ToolButton.new()
 	tb_edit.icon = ICON_CURVE_EDIT
@@ -186,10 +186,17 @@ func _build_toolbar():
 	tb_collision.connect("pressed", self, "_add_collision")
 	tb_hb.add_child(tb_collision)
 
-	lbl_index = Label.new()
-	lbl_index.text = "Idx: "
+	tb_snapping = MenuButton.new()
+	snap_popup_menu = tb_snapping.get_popup()
+	tb_snapping.icon = ICON_SNAP
+	snap_popup_menu.add_check_item("Snapping Enabled?")
+	snap_popup_menu.add_separator()
+	snap_popup_menu.add_item("Configure Snap...")
+	snap_popup_menu.hide_on_checkable_item_selection = false
+	tb_hb.add_child(tb_snapping)
+	snap_popup_menu.connect("id_pressed", self, "_snapping_item_selected")
+
 	tb_hb.hide()
-	tb_hb.add_child(lbl_index)
 
 func _enter_tree():
 	pass
@@ -396,7 +403,7 @@ func _add_deferred_collision():
 		staticBody.add_child(colPolygon)
 		colPolygon.owner = get_editor_interface().get_edited_scene_root()
 		# TODO: Make this a option at some point
-		colPolygon.modulate.a = 0.3 
+		colPolygon.modulate.a = 0.3
 		colPolygon.visible = false
 
 		shape.collision_polygon_node = shape.get_path_to(colPolygon)
@@ -407,10 +414,14 @@ func _handle_auto_collision_press():
 	pass
 
 
-func _snap_changed(ignore_value):
-	_snapping = Vector2(tb_snap_x.value, tb_snap_y.value)
-func _snap_offset_changed(ignore_value):
-	_snapping_offset = Vector2(tb_snap_offset_x.value, tb_snap_offset_y.value)
+func use_snap()->bool:
+	return snap_popup_menu.is_item_checked(0)
+
+func get_snap_offset()->Vector2:
+	return snap_popup_settings.get_snap_offset
+
+func get_snap_step()->Vector2:
+	return snap_popup_settings.get_snap_step
 
 ###########
 # ACTIONS #
@@ -891,7 +902,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	var t:Transform2D = et * shape.get_global_transform()
 	var mm:InputEventMouseMotion = event
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
-	print(mm.position)
+	#print(mm.position)
 	gui_info_panel.rect_position = mm.position + Vector2(256,-24)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 	var rslt:bool = false
