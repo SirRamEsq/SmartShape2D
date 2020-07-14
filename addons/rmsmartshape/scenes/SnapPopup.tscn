@@ -12,6 +12,10 @@ script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+p_snap_offset_x = NodePath("VBoxContainer/SnapOffset/x")
+p_snap_offset_y = NodePath("VBoxContainer/SnapOffset/y")
+p_snap_step_x = NodePath("VBoxContainer/SnapStep/x")
+p_snap_step_y = NodePath("VBoxContainer/SnapStep/y")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 margin_right = 40.0

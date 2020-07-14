@@ -280,7 +280,7 @@ func get_point_count():
 
 
 func get_point_position(idx: int):
-	get_point(idx)
+	return get_point(idx)
 
 
 func get_point(idx: int):
@@ -399,17 +399,19 @@ func _exit_tree():
 
 
 func cache_edges():
-	_edges = _build_edges(
-		shape_material,
-		shape_material.collision_width,
-		shape_material.collision_offset,
-		shape_material.collision_extends,
-		false
-	)
+	if shape_material != null:
+		_edges = _build_edges(
+			shape_material,
+			shape_material.collision_width,
+			shape_material.collision_offset,
+			shape_material.collision_extends,
+			false
+		)
 
 
 func cache_meshes():
-	_meshes = _build_meshes(_edges)
+	if shape_material != null:
+		_meshes = _build_meshes(_edges)
 
 
 func _build_meshes(edges: Array) -> Array:

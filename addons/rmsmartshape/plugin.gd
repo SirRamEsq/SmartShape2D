@@ -73,6 +73,11 @@ class ActionData:
 		for i in range(0, indices.size(), 1):
 			var new_idx = array_size - indices[i] - 1
 			indices[i] = new_idx
+
+	func to_string()->String:
+		var s = "%s: %s\n%s"
+		return s % [type, indices, starting_positions]
+
 	#Type of Action ("Action" Enum)
 	var type:int = 0
 
@@ -92,10 +97,6 @@ var previous_mode:int = MODE.EDIT
 # Undo stuff
 var undo:UndoRedo = null
 var undo_version:int = 0
-
-# Snapping
-var _snapping = Vector2(1,1)
-var _snapping_offset = Vector2(0,0)
 
 # Action Move Variables
 var _mouse_motion_delta_starting_pos = Vector2(0,0)
@@ -281,14 +282,18 @@ func _set_pivot(point:Vector2):
 func make_visible(visible):
 	pass
 
-func _snap_position(pos:Vector2, snap:Vector2):
+func _snap_position(pos:Vector2, snap_offset:Vector2, snap_step:Vector2) -> Vector2:
+	if not use_snap():
+		return pos
 	var x = pos.x
-	if snap.x != 0:
-		x = pos.x - fmod(pos.x, snap.x)
+	if snap_step.x != 0:
+		x = pos.x - fmod(pos.x, snap_step.x)
+
 	var y = pos.y
-	if snap.y != 0:
-		y = pos.y - fmod(pos.y, snap.y)
-	return Vector2(x,y)
+	if snap_step.y != 0:
+		y = pos.y - fmod(pos.y, snap_step.y)
+
+	return Vector2(x,y) + snap_offset
 
 func update_gui_info_panel():
 	var idx = current_point_index()
@@ -418,10 +423,10 @@ func use_snap()->bool:
 	return snap_popup_menu.is_item_checked(0)
 
 func get_snap_offset()->Vector2:
-	return snap_popup_settings.get_snap_offset
+	return snap_popup_settings.get_snap_offset()
 
 func get_snap_step()->Vector2:
-	return snap_popup_settings.get_snap_step
+	return snap_popup_settings.get_snap_step()
 
 ###########
 # ACTIONS #
@@ -429,7 +434,7 @@ func get_snap_step()->Vector2:
 func _action_set_pivot(pos:Vector2, et:Transform2D):
 	var old_pos = et.xform( shape.get_parent().get_global_transform().xform(shape.position))
 	undo.create_action("Set Pivot")
-	var snapped_position = _snap_position(et.affine_inverse().xform(pos), _snapping) + _snapping_offset
+	var snapped_position = _snap_position(et.affine_inverse().xform(pos), get_snap_offset(), get_snap_step())
 	undo.add_do_method(self, "_set_pivot", snapped_position)
 	undo.add_undo_method(self, "_set_pivot", et.affine_inverse().xform(old_pos))
 	undo.add_do_method(shape, "set_as_dirty")
@@ -531,7 +536,7 @@ func _action_add_point(new_point:Vector2)->int:
 	"""
 	Will return index of added point
 	"""
-	undo.create_action("Add Point")
+	undo.create_action("Add Point: %s" % new_point)
 	undo.add_do_method(shape, "add_point_to_curve", new_point)
 	undo.add_undo_method(shape,"remove_point", shape.get_point_count())
 	undo.add_do_method(shape, "set_as_dirty")
@@ -594,7 +599,7 @@ func _action_invert_orientation()->bool:
 func deselect_control_points():
 	current_action = ActionData.new([], [], [], [], ACTION.NONE)
 
-func select_verticies(indices:Array, action:int):
+func select_verticies(indices:Array, action:int)->ActionData:
 	var from_positions = []
 	var from_positions_c_in = []
 	var from_positions_c_out = []
@@ -602,14 +607,15 @@ func select_verticies(indices:Array, action:int):
 		from_positions.push_back(shape.get_point_position(idx))
 		from_positions_c_in.push_back(shape.get_point_in(idx))
 		from_positions_c_out.push_back(shape.get_point_out(idx))
-	current_action = ActionData.new(indices, from_positions, from_positions_c_in, from_positions_c_out, action)
+	return ActionData.new(indices, from_positions, from_positions_c_in, from_positions_c_out, action)
 
 func select_vertices_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
-	select_verticies(indices, ACTION.MOVING_VERT)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
+	current_action = select_verticies(indices, ACTION.MOVING_VERT)
+
 
 func select_control_points_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2, action=ACTION.MOVING_CONTROL):
-	select_verticies(indices, action)
+	current_action = select_verticies(indices, action)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
 
@@ -849,7 +855,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				return true
 
 		elif current_mode == MODE.CREATE and not on_edge:
-			var snapped_pos = _snap_position(t.affine_inverse().xform(mb.position), _snapping) + _snapping_offset
+			var snapped_pos = _snap_position(t.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step())
 			select_vertices_to_move([_action_add_point(snapped_pos)], viewport_mouse_position)
 
 			return true
@@ -918,8 +924,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			var idx = current_action.indices[i]
 			var from = current_action.starting_positions[i]
 			var new_position = from + delta
-			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
-			var snapped_position = _snap_position(new_position, _snapping) + _snapping_offset
+			var snapped_position = _snap_position(new_position, get_snap_offset(), get_snap_step())
 			shape.set_point_position(idx, snapped_position)
 			rslt = true
 			update_overlays()
@@ -935,9 +940,9 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 				out_multiplier = -1
 			var new_position_in = delta + current_action.starting_positions_control_in[i]
 			var new_position_out = (delta * out_multiplier) + current_action.starting_positions_control_out[i]
-			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), _snapping) + _snapping_offset
-			var snapped_position_in = _snap_position(new_position_in, _snapping) + _snapping_offset
-			var snapped_position_out = _snap_position(new_position_out, _snapping) + _snapping_offset
+			#var snapped_position = _snap_position(t.affine_inverse().xform(mm.position), get_snap_offset(), get_snap_step())
+			var snapped_position_in = _snap_position(new_position_in, get_snap_offset(), get_snap_step())
+			var snapped_position_out = _snap_position(new_position_out, get_snap_offset(), get_snap_step())
 			if _in:
 				shape.set_point_in(idx, snapped_position_in)
 				rslt = true
@@ -973,7 +978,7 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			var p:Vector2 = xform.xform(pp)
 			if p.distance_to(gpoint) <= grab_threshold:
 				on_edge = false
-				select_verticies([i], ACTION.NONE)
+				current_action = select_verticies([i], ACTION.NONE)
 				break
 
 		if current_mode != MODE.CREATE and current_mode != MODE.EDIT:
