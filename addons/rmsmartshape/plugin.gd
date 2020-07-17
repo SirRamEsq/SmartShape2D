@@ -413,7 +413,7 @@ func _add_deferred_collision():
 
 		shape.collision_polygon_node = shape.get_path_to(colPolygon)
 
-		shape.bake_collision()
+		shape.set_as_dirty()
 
 func _handle_auto_collision_press():
 	pass
@@ -628,7 +628,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 	# in this case do some updating to be sure
 	if undo_version != undo.get_version():
 		if undo.get_current_action_name() == "Move CanvasItem" or undo.get_current_action_name() == "Rotate CanvasItem" or undo.get_current_action_name() == "Scale CanvasItem":
-			shape.bake_collision()
+			shape.set_as_dirty()
 			undo_version = undo.get_version()
 
 	if shape != null:

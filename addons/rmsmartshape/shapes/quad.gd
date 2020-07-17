@@ -15,6 +15,9 @@ var flip_texture: bool = false
 var width_factor: float = 1.0
 var control_point_index: int
 
+func _to_string()->String:
+	return "[Quad] A:%s B:%s C:%s D:%s" % [pt_a, pt_b, pt_c, pt_d]
+
 
 func _init(
 	a: Vector2 = Vector2.ZERO,

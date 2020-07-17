@@ -18,6 +18,10 @@ export (int) var z_index: int = 0 setget set_z_index
 export (float, -1.5, 1.5, 0.1) var offset: float = 0.0 setget set_offset
 
 
+func _to_string() -> String:
+	return "%s | %s" % [str(edge_material), normal_range]
+
+
 func set_edge_material(m: RMSS2D_Material_Edge):
 	if edge_material != null:
 		if edge_material.is_connected("changed", self, "_on_edge_changed"):
@@ -28,6 +32,8 @@ func set_edge_material(m: RMSS2D_Material_Edge):
 
 
 func set_normal_range(nr: RMSS2D_NormalRange):
+	if nr == null:
+		return
 	normal_range = nr
 	emit_signal("changed")
 

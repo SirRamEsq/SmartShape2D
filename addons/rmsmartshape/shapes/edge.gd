@@ -175,8 +175,8 @@ func get_meshes() -> Array:
 		# Iterate over the quads now until change in direction or texture or looped around
 		var st: SurfaceTool = SurfaceTool.new()
 		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(consecutive_quads)
-		var tex: Texture = consecutive_quads[0].tex
-		var tex_normal: Texture = consecutive_quads[0].normal_tex
+		var tex: Texture = consecutive_quads[0].texture
+		var tex_normal: Texture = consecutive_quads[0].texture_normal
 		var flip = consecutive_quads[0].flip_texture
 		var transform = Transform2D()
 		var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])

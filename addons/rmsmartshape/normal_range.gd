@@ -7,8 +7,13 @@ This class will determine if the normal of a vector falls within the specifed an
 - 360.0 and 0.0 degrees are considered equivilent
 """
 
-export (float, 0, 360, 5) var begin = 0
-export (float, 0, 360, 5) var end = 0
+export (float, 0, 360, 5) var begin = 0.0
+export (float, 0, 360, 5) var end = 0.0
+
+
+func _to_string() -> String:
+	return "NormalRange: %s - %s" % [begin, end]
+
 
 static func get_angle_from_vector(vec: Vector2) -> float:
 	var normal = vec.normalized()
@@ -40,7 +45,10 @@ static func _get_positive_angle_deg(degrees: float) -> float:
 	return fmod(degrees, 360.0)
 
 
-func _init(_begin: float, _end: float):
+# Saving a scene with this resource requires a parameter-less init method
+func _init(_begin: float = 0.0, _end: float = 0.0):
+	if _begin == 0.0 and _end == 0.0:
+		return
 	_begin = _get_positive_angle_deg(_begin)
 	_end = _get_positive_angle_deg(_end)
 

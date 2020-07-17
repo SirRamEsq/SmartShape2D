@@ -24,6 +24,9 @@ class EdgeMaterialData:
 		material = m
 		indicies = i
 
+	func _to_string() -> String:
+		return "%s | %s" % [str(material), indicies]
+
 
 export (bool) var editor_debug: bool = false setget _set_editor_debug
 export (Curve2D) var _curve: Curve2D = Curve2D.new() setget set_curve, get_curve
@@ -85,7 +88,7 @@ func set_collision_collision_back_interval(f: float):
 		property_list_changed_notify()
 
 
-func _set_material(value: RMS2D_Material):
+func _set_material(value: RMSS2D_Material_Shape):
 	if (
 		shape_material != null
 		and shape_material.is_connected("changed", self, "_handle_material_change")
@@ -334,10 +337,6 @@ func get_point_texture_flip(idx: int) -> bool:
 #########
 # GODOT #
 #########
-func _init():
-	pass
-
-
 func _ready():
 	if _curve == null:
 		_curve = Curve2D.new()
@@ -351,7 +350,7 @@ func _draw():
 	for e in _sorted_edges:
 		var meshes = e.get_meshes()
 		for m in meshes:
-			m.render()
+			m.render(self)
 
 	if editor_debug and Engine.editor_hint:
 		_draw_debug(_sorted_edges)
@@ -360,25 +359,25 @@ func _draw():
 func _draw_debug(edges: Array):
 	for e in edges:
 		for q in e.quads:
-			q.render_lines()
+			q.render_lines(self)
 
 		for i in range(0, e.quads.size(), 1):
 			var q = e.quads[i]
 			if not (i % 3 == 0):
 				continue
-			q.render_points(3, 0.5)
+			q.render_points(3, 0.5, self)
 
 		for i in range(0, e.quads.size(), 1):
 			var q = e.quads[i]
 			if not ((i + 1) % 3 == 0):
 				continue
-			q.render_points(2, 0.75)
+			q.render_points(2, 0.75, self)
 
 		for i in range(0, e.quads.size(), 1):
 			var q = e.quads[i]
 			if not ((i + 2) % 3 == 0):
 				continue
-			q.render_points(1, 1.0)
+			q.render_points(1, 1.0, self)
 
 
 func _process(delta):
@@ -508,8 +507,13 @@ func _build_quad_from_point(
 	custom_extends: float
 ) -> RMSS2D_Quad:
 	var quad = RMSS2D_Quad.new()
+	if mat == null:
+		return quad
+	if mat.textures.empty():
+		return quad
 	quad.texture = mat.textures[0]
-	quad.texture_normal = mat.texture_normals[0]
+	if not mat.texture_normals.empty():
+		quad.texture_normal = mat.texture_normals[0]
 	quad.color = Color(1.0, 1.0, 1.0, 1.0)
 	if quad.texture == null:
 		return quad
@@ -550,10 +554,16 @@ func _build_quad_from_point(
 func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_extends: float) -> RMSS2D_Edge:
 	var edge = RMSS2D_Edge.new()
 	var edge_material: RMSS2D_Material_Edge = edge_dat.material
+	if edge_material == null:
+		return edge
 	var t_points = get_tessellated_points()
 	var points = get_vertices()
 
-	for i in range(0, edge_dat.indicies.size(), 1):
+	if edge_dat.indicies.size() < 2:
+		return edge
+
+	# Skip final point
+	for i in range(0, edge_dat.indicies.size()-1, 1):
 		var idx = edge_dat.indicies[i]
 		var v_idx = get_vertex_idx_from_tessellated_point(t_points, points, idx)
 		var v_idx_next = _get_next_point_index(v_idx, points)
@@ -562,7 +572,7 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 		var ratio = get_ratio_from_tessellated_point_to_vertex(points, t_points, idx)
 		var width = lerp(w1, w2, ratio)
 		var is_first_point = idx == edge_dat.indicies[0]
-		var is_last_point = idx == edge_dat.indicies[edge.indicies.size() - 1]
+		var is_last_point = idx == edge_dat.indicies[edge_dat.indicies.size() - 1]
 
 		var quad = _build_quad_from_point(
 			t_points,
@@ -577,6 +587,7 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 			c_extends
 		)
 		edge.quads.push_back(quad)
+		print(quad)
 
 	if edge_material.weld_quads:
 		_weld_quad_array(edge.quads)
@@ -646,7 +657,7 @@ func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape, wrap_a
 			if edge_building.has(e):
 				edge_building[e].indicies.push_back(idx)
 			else:
-				edge_building[e] = EdgeMaterialData.new([idx], e)
+				edge_building[e] = EdgeMaterialData.new([idx], e.edge_material)
 
 		# Closeout and stop building edges that are no longer viable
 		for e in edge_building.keys():
