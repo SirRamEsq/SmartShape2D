@@ -191,29 +191,44 @@ func test_get_edge_materials():
 		assert_eq(e.material, edge_mat)
 
 
-func test_build_quad_from_point():
+var scale_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
+
+
+func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var shape_base = RMSS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
 	var edge_mat = RMSS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
 
-	var points = [Vector2(100, 100), Vector2(200, 100)]
+	var start_point_1 = Vector2(100, 150)
+	var start_point_2 = Vector2(200, 100)
+	var points = [start_point_1, start_point_2]
+
+	var delta = points[1] - points[0]
+	var delta_normal = delta.normalized()
+	var normal = Vector2(delta.y, -delta.x).normalized()
+
 	var tex_size = TEST_TEXTURE.get_size()
-	var extents = tex_size / 2.0
+	var extents = ((tex_size / 2.0) * scale) * normal
+
 	var quad = shape_base._build_quad_from_point(
-		points, 0, edge_mat, 1.0, true, false, false, 1.0, 0.0, 0.0
+		points, 0, edge_mat, 1.0, true, false, false, scale, 0.0, 0.0
 	)
 	var expected_points = [
-		Vector2(100, 100 - extents.y),
-		Vector2(100, 100 + extents.y),
-		Vector2(200, 100 - extents.y),
-		Vector2(200, 100 + extents.y)
+		# Top Left (A)
+		start_point_1 + extents,
+		# Bottom Left (B)
+		start_point_1 - extents,
+		# Bottom Right (C)
+		start_point_2 - extents,
+		# Top Right (D)
+		start_point_2 + extents
 	]
-	assert_true(expected_points.has(quad.pt_a), "PT_A(%s) contained in expected points" % quad.pt_a)
-	assert_true(expected_points.has(quad.pt_b), "PT_B(%s) contained in expected points" % quad.pt_b)
-	assert_true(expected_points.has(quad.pt_c), "PT_C(%s) contained in expected points" % quad.pt_c)
-	assert_true(expected_points.has(quad.pt_d), "PT_D(%s) contained in expected points" % quad.pt_d)
+	assert_eq(quad.pt_a, expected_points[0])
+	assert_eq(quad.pt_b, expected_points[1])
+	assert_eq(quad.pt_c, expected_points[2])
+	assert_eq(quad.pt_d, expected_points[3])
 
 
 func get_clockwise_points() -> Array:

@@ -172,7 +172,8 @@ func get_meshes() -> Array:
 	var consecutive_quad_arrays = get_consecutive_quads_for_mesh(quads)
 	var meshes = []
 	for consecutive_quads in consecutive_quad_arrays:
-		# Iterate over the quads now until change in direction or texture or looped around
+		if consecutive_quads.empty():
+			continue
 		var st: SurfaceTool = SurfaceTool.new()
 		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(consecutive_quads)
 		var tex: Texture = consecutive_quads[0].texture

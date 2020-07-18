@@ -347,10 +347,8 @@ func _ready():
 
 func _draw():
 	var _sorted_edges = sort_by_z_index(_edges)
-	for e in _sorted_edges:
-		var meshes = e.get_meshes()
-		for m in meshes:
-			m.render(self)
+	for m in _meshes:
+		m.render(self)
 
 	if editor_debug and Engine.editor_hint:
 		_draw_debug(_sorted_edges)
@@ -410,7 +408,7 @@ func cache_edges():
 
 func cache_meshes():
 	if shape_material != null:
-		_meshes = _build_meshes(_edges)
+		_meshes = _build_meshes(sort_by_z_index(_edges))
 
 
 func _build_meshes(edges: Array) -> Array:
@@ -587,7 +585,6 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 			c_extends
 		)
 		edge.quads.push_back(quad)
-		print(quad)
 
 	if edge_material.weld_quads:
 		_weld_quad_array(edge.quads)

@@ -38,5 +38,4 @@ func debug_print_array_mesh(am:ArrayMesh)->String:
 
 func render(ci: CanvasItem):
 	for mesh in meshes:
-		print(debug_print_array_mesh(mesh))
-		ci.draw_mesh(mesh, texture, texture_normal, mesh_transform)
+		ci.draw_mesh(mesh, texture, texture_normal)

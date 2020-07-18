@@ -29,7 +29,6 @@ func test_generate_mesh_from_quad_sequence():
 	var quads = generate_quads(16, TEST_TEXTURE, [4, 8], quad_extent)
 	var quad_arrays = RMSS2D_Edge.get_consecutive_quads_for_mesh(quads)
 	var texture_distance_per_quad = quad_extent / TEST_TEXTURE.get_size()
-	print(texture_distance_per_quad)
 
 	for quad_array in quad_arrays:
 		var am = RMSS2D_Edge.generate_array_mesh_from_quad_sequence(quad_array)
@@ -63,9 +62,9 @@ func generate_quads(
 ) -> Array:
 	var quads = []
 	var a = Vector2(-extents.x, -extents.y)
-	var d = Vector2(extents.x, -extents.y)
-	var c = Vector2(extents.x, extents.y)
 	var b = Vector2(-extents.x, extents.y)
+	var c = Vector2(extents.x, extents.y)
+	var d = Vector2(extents.x, -extents.y)
 	var t = tex
 	var tn = null
 	var f = false
