@@ -346,12 +346,11 @@ func _ready():
 
 
 func _draw():
-	var _sorted_edges = sort_by_z_index(_edges)
 	for m in _meshes:
 		m.render(self)
 
 	if editor_debug and Engine.editor_hint:
-		_draw_debug(_sorted_edges)
+		_draw_debug(sort_by_z_index(_edges))
 
 
 func _draw_debug(edges: Array):
@@ -379,8 +378,6 @@ func _draw_debug(edges: Array):
 
 
 func _process(delta):
-	if not is_inside_tree():
-		return
 	_on_dirty_update()
 
 
@@ -561,9 +558,9 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 		return edge
 
 	# Skip final point
-	for i in range(0, edge_dat.indicies.size()-1, 1):
+	for i in range(0, edge_dat.indicies.size() - 1, 1):
 		var idx = edge_dat.indicies[i]
-		var v_idx = get_vertex_idx_from_tessellated_point(t_points, points, idx)
+		var v_idx = get_vertex_idx_from_tessellated_point(points, t_points, idx)
 		var v_idx_next = _get_next_point_index(v_idx, points)
 		var w1 = _vertex_properties.get_width(v_idx)
 		var w2 = _vertex_properties.get_width(v_idx_next)

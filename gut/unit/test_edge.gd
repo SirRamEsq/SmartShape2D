@@ -25,10 +25,9 @@ func test_consecutive_quads():
 
 
 func test_generate_mesh_from_quad_sequence():
-	var quad_extent = Vector2(6.0,6.0)
+	var quad_extent = Vector2(6.0, 6.0)
 	var quads = generate_quads(16, TEST_TEXTURE, [4, 8], quad_extent)
 	var quad_arrays = RMSS2D_Edge.get_consecutive_quads_for_mesh(quads)
-	var texture_distance_per_quad = quad_extent / TEST_TEXTURE.get_size()
 
 	for quad_array in quad_arrays:
 		var am = RMSS2D_Edge.generate_array_mesh_from_quad_sequence(quad_array)
@@ -45,13 +44,14 @@ func test_generate_mesh_from_quad_sequence():
 		assert_eq(verts[verts.size() - 1], RMSS2D_Common_Functions.to_vector3(last_q.pt_d))
 		assert_eq(verts.size(), uvs.size())
 		assert_eq(verts.size(), normals.size())
-		#for uv in uvs:
-			#assert_true(uv.y == 1.0 or uv.y == 0.0, "UV is 1 or 0")
-			#var remainder = fmod(uv.x, texture_distance_per_quad.x)
-			#gut.p(uv)
-			#gut.p(remainder)
-			#assert_eq(remainder, 0.0)
-		#gut.p(uvs)
+	#var texture_distance_per_quad = quad_extent / TEST_TEXTURE.get_size()
+	#for uv in uvs:
+	#assert_true(uv.y == 1.0 or uv.y == 0.0, "UV is 1 or 0")
+	#var remainder = fmod(uv.x, texture_distance_per_quad.x)
+	#gut.p(uv)
+	#gut.p(remainder)
+	#assert_eq(remainder, 0.0)
+	#gut.p(uvs)
 
 
 func generate_quads(

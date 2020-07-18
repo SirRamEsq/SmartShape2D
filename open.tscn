@@ -1,0 +1,43 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/materials/shape_material.gd" type="Script" id=1]
+[ext_resource path="res://addons/rmsmartshape/shapes/shape_open.gd" type="Script" id=2]
+[ext_resource path="res://demo/materials/edge/edge_grass.tres" type="Resource" id=3]
+[ext_resource path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" type="Script" id=4]
+[ext_resource path="res://addons/rmsmartshape/normal_range.gd" type="Script" id=5]
+
+[sub_resource type="Curve2D" id=1]
+_data = {
+"points": PoolVector2Array(  )
+}
+
+[sub_resource type="Resource" id=2]
+script = ExtResource( 5 )
+begin = 0.0
+end = 360.0
+
+[sub_resource type="Resource" id=3]
+script = ExtResource( 4 )
+edge_material = ExtResource( 3 )
+normal_range = SubResource( 2 )
+weld = true
+z_index = 0
+offset = 0.0
+
+[sub_resource type="Resource" id=4]
+script = ExtResource( 1 )
+_edge_materials = [ SubResource( 3 ) ]
+fill_textures = [  ]
+fill_texture_normals = [  ]
+fill_texture_z_index = 0
+render_offset = 0.0
+collision_width = 1.0
+collision_offset = 0.0
+collision_extends = 0.0
+
+[node name="Node2D" type="Node2D"]
+
+[node name="RMSS2D_Shape_Open" type="Node2D" parent="."]
+script = ExtResource( 2 )
+_curve = SubResource( 1 )
+shape_material = SubResource( 4 )
