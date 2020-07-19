@@ -39,13 +39,13 @@ func test_curve_duplicate():
 	add_child_autofree(shape)
 	shape.add_point_to_curve(Vector2(-10, -20))
 	var points = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
-	shape.collision_bake_interval = 35.0
+	shape.curve_bake_interval = 35.0
 	var curve = shape.get_curve()
 
 	assert_eq(shape.get_point_count(), curve.get_point_count())
-	assert_eq(shape.collision_bake_interval, curve.bake_interval)
-	shape.collision_bake_interval = 25.0
-	assert_ne(shape.collision_bake_interval, curve.bake_interval)
+	assert_eq(shape.curve_bake_interval, curve.bake_interval)
+	shape.curve_bake_interval = 25.0
+	assert_ne(shape.curve_bake_interval, curve.bake_interval)
 
 	curve.add_point(points[0])
 	assert_ne(shape.get_point_count(), curve.get_point_count())
@@ -213,7 +213,7 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var extents = ((tex_size / 2.0) * scale) * normal
 
 	var quad = shape_base._build_quad_from_point(
-		points, 0, edge_mat, 1.0, true, false, false, scale, 0.0, 0.0
+		points, 0, null, null, tex_size, 1.0, false, false, false, scale, 0.0, 0.0
 	)
 	var expected_points = [
 		# Top Left (A)
@@ -229,6 +229,15 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	assert_eq(quad.pt_b, expected_points[1])
 	assert_eq(quad.pt_c, expected_points[2])
 	assert_eq(quad.pt_d, expected_points[3])
+
+	# Flip edges
+	quad = shape_base._build_quad_from_point(
+		points, 0, null, null, tex_size, 1.0, true, false, false, scale, 0.0, 0.0
+	)
+	assert_eq(quad.pt_a, expected_points[1])
+	assert_eq(quad.pt_b, expected_points[0])
+	assert_eq(quad.pt_c, expected_points[3])
+	assert_eq(quad.pt_d, expected_points[2])
 
 
 func get_clockwise_points() -> Array:

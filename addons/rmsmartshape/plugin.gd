@@ -411,7 +411,7 @@ func _add_deferred_collision():
 		colPolygon.modulate.a = 0.3
 		colPolygon.visible = false
 
-		shape.collision_polygon_node = shape.get_path_to(colPolygon)
+		shape.collision_polygon_node_path = shape.get_path_to(colPolygon)
 
 		shape.set_as_dirty()
 
@@ -570,6 +570,10 @@ func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
 	return idx
 
 func _should_invert_orientation()->bool:
+	if shape == null:
+		return false
+	if shape is RMSS2D_Shape_Open:
+		return false
 	return not shape.are_points_clockwise() and shape.get_point_count() >= 3
 
 func _action_invert_orientation()->bool:

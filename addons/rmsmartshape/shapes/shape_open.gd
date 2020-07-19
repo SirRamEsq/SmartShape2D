@@ -21,3 +21,7 @@ func duplicate_self():
 # Workaround (class cannot reference itself)
 func __new():
 	return get_script().new()
+
+
+func should_flip_edges() -> bool:
+	return flip_edges
