@@ -18,14 +18,6 @@ export (int) var fill_texture_z_index: int = 0
 # How much to offset all edges
 export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0
 
-# Width of collision quads
-export (float, -1.5, 1.5, 0.1) var collision_width: float = 1.0
-# Offset of collision quads
-export (float, -1.5, 1.5, 0.1) var collision_offset: float = 0.0
-# Extents of collision quads for open shapes
-export (float, -1.5, 1.5, 0.1) var collision_extends: float = 0.0
-
-
 # Get all valid edge materials for this normal
 func get_edge_materials(normal: Vector2) -> Array:
 	var materials = []

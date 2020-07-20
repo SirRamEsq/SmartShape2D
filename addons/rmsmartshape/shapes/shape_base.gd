@@ -30,7 +30,9 @@ class EdgeMaterialData:
 
 export (bool) var editor_debug: bool = false setget _set_editor_debug
 export (Curve2D) var _curve: Curve2D = Curve2D.new() setget set_curve, get_curve
-export (bool) var flip_edges = false setget set_flip_edges
+export (bool) var flip_edges: bool = false setget set_flip_edges
+export (float) var collision_size: float = 32 setget set_collision_size
+export (float) var collision_offset: float = 0.0 setget set_collision_offset
 export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
 export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
@@ -52,6 +54,15 @@ signal on_dirty_update
 #####################
 func set_flip_edges(b: bool):
 	flip_edges = b
+	set_as_dirty()
+
+
+func set_collision_size(s: float):
+	collision_size = s
+	set_as_dirty()
+
+func set_collision_offset(s: float):
+	collision_offset = s
 	set_as_dirty()
 
 
@@ -408,13 +419,13 @@ func bake_collision():
 		return
 	var polygon = get_node(collision_polygon_node_path)
 	var collision_width = 1.0
-	var collision_offset = 0.0
-	var collision_extends = 1.0
-	var collision_size = Vector2(16,16)
+	var collision_extends = 0.0
 	var verts = get_vertices()
 	var t_points = get_tessellated_points()
+	if t_points.size() < 2:
+		return
 	var collision_quads = []
-	for i in range(0, t_points.size()-1, 1):
+	for i in range(0, t_points.size() - 1, 1):
 		var width = _get_width_for_tessellated_point(verts, t_points, i)
 		collision_quads.push_back(
 			_build_quad_from_point(
@@ -422,11 +433,11 @@ func bake_collision():
 				i,
 				null,
 				null,
-				collision_size,
+				Vector2(collision_size, collision_size),
 				width,
 				should_flip_edges(),
 				i == 0,
-				i == t_points.size()-1,
+				i == t_points.size() - 1,
 				collision_width,
 				collision_offset,
 				collision_extends
@@ -438,17 +449,13 @@ func bake_collision():
 		# PT A
 		for quad in collision_quads:
 			points.push_back(
-				polygon.get_global_transform().xform_inv(
-					get_global_transform().xform(quad.pt_a)
-				)
+				polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
 			)
 
 		# PT D
 		points.push_back(
 			polygon.get_global_transform().xform_inv(
-				get_global_transform().xform(
-					collision_quads[collision_quads.size() - 1].pt_d
-				)
+				get_global_transform().xform(collision_quads[collision_quads.size() - 1].pt_d)
 			)
 		)
 
@@ -456,9 +463,7 @@ func bake_collision():
 		for quad_index in collision_quads.size():
 			var quad = collision_quads[collision_quads.size() - 1 - quad_index]
 			points.push_back(
-				polygon.get_global_transform().xform_inv(
-					get_global_transform().xform(quad.pt_c)
-				)
+				polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_c))
 			)
 
 		# PT B
@@ -473,13 +478,7 @@ func bake_collision():
 
 func cache_edges():
 	if shape_material != null:
-		_edges = _build_edges(
-			shape_material,
-			shape_material.collision_width,
-			shape_material.collision_offset,
-			shape_material.collision_extends,
-			false
-		)
+		_edges = _build_edges(shape_material, false)
 
 
 func cache_meshes():
@@ -619,7 +618,7 @@ func _build_quad_from_point(
 	return quad
 
 
-func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_extends: float) -> RMSS2D_Edge:
+func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	var edge = RMSS2D_Edge.new()
 	var edge_material: RMSS2D_Material_Edge = edge_dat.material
 	if edge_material == null:
@@ -629,6 +628,10 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 
 	if edge_dat.indicies.size() < 2:
 		return edge
+
+	var c_scale = 1.0
+	var c_offset = 0.0
+	var c_extends = 0.0
 
 	# Skip final point
 	for i in range(0, edge_dat.indicies.size() - 1, 1):
@@ -668,7 +671,8 @@ func _build_edge(edge_dat: EdgeMaterialData, c_scale: float, c_offset: float, c_
 
 	return edge
 
-func _get_width_for_tessellated_point(points:Array, t_points:Array, t_idx) -> float:
+
+func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> float:
 	var v_idx = get_vertex_idx_from_tessellated_point(points, t_points, t_idx)
 	var v_idx_next = _get_next_point_index(v_idx, points)
 	var w1 = _vertex_properties.get_width(v_idx)
@@ -705,19 +709,13 @@ func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
 		_weld_quads(this_quad, next_quad, custom_scale)
 
 
-func _build_edges(
-	s_mat: RMSS2D_Material_Shape,
-	c_scale: float,
-	c_offset: float,
-	c_extends: float,
-	wrap_around: bool
-) -> Array:
+func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	var edges: Array = []
 	if s_mat == null:
 		return edges
 
 	for edge_material in get_edge_materials(get_tessellated_points(), s_mat, wrap_around):
-		edges.push_back(_build_edge(edge_material, c_scale, c_offset, c_extends))
+		edges.push_back(_build_edge(edge_material))
 	return edges
 
 
