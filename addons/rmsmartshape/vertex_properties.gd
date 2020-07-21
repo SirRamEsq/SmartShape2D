@@ -15,3 +15,12 @@ func duplicate()->RMS2D_VertexProperties:
 # Workaround (class cannot reference itself)
 func __new()->RMS2D_VertexProperties:
 	return get_script().new()
+
+func equals(p:RMS2D_VertexProperties):
+	if p.flip != flip:
+		return false
+	if p.texture_idx != texture_idx:
+		return false
+	if p.width != width:
+		return false
+	return true

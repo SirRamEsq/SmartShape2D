@@ -61,6 +61,7 @@ func set_collision_size(s: float):
 	collision_size = s
 	set_as_dirty()
 
+
 func set_collision_offset(s: float):
 	collision_offset = s
 	set_as_dirty()
@@ -375,19 +376,20 @@ func _draw_debug(edges: Array):
 		for q in e.quads:
 			q.render_lines(self)
 
-		for i in range(0, e.quads.size(), 1):
+		var _range = range(0, e.quads.size(), 1)
+		for i in _range:
 			var q = e.quads[i]
 			if not (i % 3 == 0):
 				continue
 			q.render_points(3, 0.5, self)
 
-		for i in range(0, e.quads.size(), 1):
+		for i in _range:
 			var q = e.quads[i]
 			if not ((i + 1) % 3 == 0):
 				continue
 			q.render_points(2, 0.75, self)
 
-		for i in range(0, e.quads.size(), 1):
+		for i in _range:
 			var q = e.quads[i]
 			if not ((i + 2) % 3 == 0):
 				continue
@@ -439,7 +441,7 @@ func bake_collision():
 				i == 0,
 				i == t_points.size() - 1,
 				collision_width,
-				collision_offset,
+				collision_offset - 1.0,
 				collision_extends
 			)
 		)
@@ -516,8 +518,13 @@ func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
 	if fill_tris.empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
 		return []
-	var tex = s_mat.textures[0]
-	var tex_normal = s_mat.texture_normals[0]
+	var tex = null
+	if s_mat.fill_textures.empty():
+		return meshes
+	tex = s_mat.fill_textures[0]
+	var tex_normal = null
+	if not s_mat.fill_texture_normals.empty():
+		tex_normal = s_mat.fill_texture_normals[0]
 	var tex_size = tex.get_size()
 	var st: SurfaceTool
 	st = SurfaceTool.new()
@@ -716,6 +723,14 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 
 	for edge_material in get_edge_materials(get_tessellated_points(), s_mat, wrap_around):
 		edges.push_back(_build_edge(edge_material))
+
+	if s_mat.weld_edges:
+		if edges.size() > 1:
+			for i in range(0, edges.size(), 1):
+				var this_edge = edges[i]
+				var next_edge = edges[i + 1]
+				_weld_quads(this_edge.quads[this_edge.quads.size() - 1], next_edge.quads[0], 1.0)
+
 	return edges
 
 
@@ -819,11 +834,16 @@ func clear_cached_data():
 	_meshes = []
 
 
+func _has_minimum_point_count() -> bool:
+	return get_point_count() >= 2
+
+
 func _on_dirty_update():
 	if _dirty:
-		bake_collision()
-		cache_edges()
-		cache_meshes()
+		if _has_minimum_point_count():
+			bake_collision()
+			cache_edges()
+			cache_meshes()
 		update()
 		_dirty = false
 		emit_signal("on_dirty_update")

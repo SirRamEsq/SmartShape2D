@@ -60,6 +60,16 @@ _global_script_classes=[ {
 "path": "res://addons/rmsmartshape/normal_range.gd"
 }, {
 "base": "Reference",
+"class": "RMSS2D_Point",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/shapes/point.gd"
+}, {
+"base": "Reference",
+"class": "RMSS2D_Point_Array",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/shapes/point_array.gd"
+}, {
+"base": "Reference",
 "class": "RMSS2D_Quad",
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/shapes/quad.gd"
@@ -105,6 +115,8 @@ _global_script_class_icons={
 "RMSS2D_Material_Shape": "",
 "RMSS2D_Mesh": "",
 "RMSS2D_NormalRange": "",
+"RMSS2D_Point": "",
+"RMSS2D_Point_Array": "",
 "RMSS2D_Quad": "",
 "RMSS2D_Shape_Base": "",
 "RMSS2D_Shape_Closed": "res://addons/rmsmartshape/closed_shape.png",
