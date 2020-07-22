@@ -87,9 +87,9 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 				var this_edge = edges[i]
 				var next_edge = edges[i + 1]
 				_weld_quads(this_edge.quads[this_edge.quads.size() - 1], next_edge.quads[0], 1.0)
-		var first_edge = edges[0]
-		var last_edge = edges[edges.size() - 1]
-		_weld_quads(last_edge.quads[last_edge.quads.size() - 1], first_edge.quads[0], 1.0)
+			var first_edge = edges[0]
+			var last_edge = edges[edges.size() - 1]
+			_weld_quads(last_edge.quads[last_edge.quads.size() - 1], first_edge.quads[0], 1.0)
 	return edges
 
 
@@ -99,17 +99,42 @@ func _close_shape() -> bool:
 	last point will be constrained to first point
 	returns true if _points is modified
 	"""
+	if is_shape_closed():
+		return false
+	if not _has_minimum_point_count():
+		return false
+	var key_first = _points.get_point_key_at_index(0)
+	# Manually add final point
+	var key_last = _points.add_point(_points.get_point_position(key_first))
+	_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
+	_add_point_update()
+	return true
+
+
+func is_shape_closed() -> bool:
 	var point_count = get_point_count()
 	if not _has_minimum_point_count():
 		return false
 	var first_point = _points.get_point_at_index(0)
 	var final_point = _points.get_point_at_index(point_count - 1)
-	if not first_point.equals(final_point):
-		var key_first = _points.get_point_key_at_index(0)
-		var key_last = add_point(first_point.position)
-		_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
-		return true
-	return false
+	return (not first_point.equals(final_point))
+
+func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
+	# Don't allow a point to be added after the last point of the closed shape or before the first
+	if starting_index < 0 or (starting_index > get_point_count() - 2 and is_shape_closed()):
+		starting_index = get_point_count() - 2
+	if (starting_index < 1 and is_shape_closed()):
+		starting_index = 1
+	return .add_points(verts, starting_index, update)
+
+
+func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
+	# Don't allow a point to be added after the last point of the closed shape
+	if index < 0 or (index > get_point_count() - 2 and is_shape_closed()):
+		index = get_point_count() - 2
+	if (index < 1 and is_shape_closed()):
+		index = 1
+	return .add_point(position, index, update)
 
 
 func _add_point_update():
@@ -117,5 +142,4 @@ func _add_point_update():
 	# _add_point_update() will be called again by having another point added
 	if _close_shape():
 		return
-	set_as_dirty()
-	emit_signal("points_modified")
+	._add_point_update()

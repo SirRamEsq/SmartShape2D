@@ -214,14 +214,27 @@ func remove_point(key: int):
 #######################
 # POINT ARRAY WRAPPER #
 #######################
+
+
+func has_point(key: int) -> bool:
+	return _points.has_point(key)
+
+
 func get_all_point_keys() -> Array:
 	return _points.get_all_point_keys()
 
-func get_point_key_at_index(idx:int) -> int:
+
+func get_point_key_at_index(idx: int) -> int:
 	return _points.get_point_key_at_index(idx)
 
-func get_point_at_index(idx:int) -> int:
+
+func get_point_at_index(idx: int) -> int:
 	return _points.get_point_at_index(idx)
+
+
+func get_point_index(key: int) -> int:
+	return _points.get_point_index(key)
+
 
 func set_point_in(key: int, v: Vector2):
 	"""

@@ -62,27 +62,27 @@ func _invert_idx(idx:int, array_size:int):
 
 # Data related to an action being taken
 class ActionData:
-	func _init(_indices:Array, positions:Array, positions_in:Array, positions_out:Array, t:int):
+	func _init(_keys:Array, positions:Array, positions_in:Array, positions_out:Array, t:int):
 		type = t
-		indices = _indices
+		keys = _keys
 		starting_positions = positions
 		starting_positions_control_in = positions_in
 		starting_positions_control_out = positions_out
 
 	func invert(array_size:int):
-		for i in range(0, indices.size(), 1):
-			var new_idx = array_size - indices[i] - 1
-			indices[i] = new_idx
+		for i in range(0, keys.size(), 1):
+			var new_idx = array_size - keys[i] - 1
+			keys[i] = new_idx
 
 	func to_string()->String:
 		var s = "%s: %s\n%s"
-		return s % [type, indices, starting_positions]
+		return s % [type, keys, starting_positions]
 
 	#Type of Action ("Action" Enum)
 	var type:int = 0
 
 	# The affected Verticies and their initial positions
-	var indices = []
+	var keys = []
 	var starting_positions = []
 	var starting_positions_control_in = []
 	var starting_positions_control_out = []
@@ -297,7 +297,7 @@ func _snap_position(pos:Vector2, snap_offset:Vector2, snap_step:Vector2) -> Vect
 
 func update_gui_info_panel():
 	var idx = current_point_index()
-	if not is_point_index_valid(idx):
+	if not is_key_valid(idx):
 		gui_info_panel.visible = false
 		return
 	gui_info_panel.visible = true
@@ -309,9 +309,9 @@ func update_gui_info_panel():
 	gui_info_panel.set_width(shape.get_point_width(idx))
 	gui_info_panel.set_flip(shape.get_point_texture_flip(idx))
 
-func is_single_point_index_valid()->bool:
-	if current_action.indices.size() == 1:
-		return is_point_index_valid(current_action.indices[0])
+func is_single_point_valid()->bool:
+	if current_action.keys.size() == 1:
+		return is_key_valid(current_action.keys[0])
 	return false
 
 func is_shape_valid()->bool:
@@ -321,21 +321,26 @@ func is_shape_valid()->bool:
 		return false
 	return true
 
-func are_point_indices_valid(indices:Array)->bool:
-	for idx in indices:
-		if not is_point_index_valid(idx):
+func are_keys_valid(keys:Array)->bool:
+	for key in keys:
+		if not is_key_valid(key):
 			return false
 	return true
 
-func is_point_index_valid(idx:int)->bool:
+func is_key_valid(key:int)->bool:
 	if not is_shape_valid():
 		return false
-	return (idx >= 0 and idx < shape.get_point_count())
+	return shape.has_point(key)
 
 func current_point_index()->int:
-	if not is_single_point_index_valid():
+	if not is_single_point_valid():
 		return -1
-	return current_action.indices[0]
+	return shape.get_point_index(current_action.keys[0])
+
+func current_point_key()->int:
+	if not is_single_point_valid():
+		return -1
+	return current_action.keys[0]
 
 func _is_valid_keyboard_scancode(kb:InputEventKey)->bool:
 	match(kb.scancode):
@@ -447,12 +452,12 @@ func _action_set_pivot(pos:Vector2, et:Transform2D):
 func _action_move_verticies():
 	undo.create_action("Move Vertex")
 
-	for i in range(0, current_action.indices.size(), 1):
-		var idx = current_action.indices[i]
+	for i in range(0, current_action.keys.size(), 1):
+		var key = current_action.keys[i]
 		var from_position = current_action.starting_positions[i]
-		var this_position = shape.get_point_position(idx)
-		undo.add_do_method(shape, "set_point_position", idx, this_position)
-		undo.add_undo_method(shape, "set_point_position", idx, from_position)
+		var this_position = shape.get_point_position(key)
+		undo.add_do_method(shape, "set_point_position", key, this_position)
+		undo.add_undo_method(shape, "set_point_position", key, from_position)
 
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_undo_method(shape, "set_as_dirty")
@@ -469,29 +474,29 @@ func _action_move_control_points(_in:bool, _out:bool):
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_do_method(self, "update_overlays")
 
-	for i in range(0, current_action.indices.size(), 1):
-		var idx = current_action.indices[i]
+	for i in range(0, current_action.keys.size(), 1):
+		var key = current_action.keys[i]
 		var from_position_in = current_action.starting_positions_control_in[i]
 		var from_position_out = current_action.starting_positions_control_out[i]
 		if _in:
-			undo.add_undo_method(shape, "set_point_in", idx, from_position_in)
+			undo.add_undo_method(shape, "set_point_in", key, from_position_in)
 		if _out:
-			undo.add_undo_method(shape, "set_point_out", idx, from_position_out)
+			undo.add_undo_method(shape, "set_point_out", key, from_position_out)
 
 	undo.add_undo_method(shape, "set_as_dirty")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
 
-func _action_delete_point_in(idx:int):
-	var from_position_in = shape.get_point_in(idx)
+func _action_delete_point_in(key:int):
+	var from_position_in = shape.get_point_in(key)
 	undo.create_action("Delete Control Point In")
 
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_do_method(self, "update_overlays")
 
-	undo.add_undo_method(shape, "set_point_in", idx, from_position_in)
-	shape.set_point_in(idx, Vector2(0,0))
+	undo.add_undo_method(shape, "set_point_in", key, from_position_in)
+	shape.set_point_in(key, Vector2(0,0))
 
 	undo.add_undo_method(shape, "set_as_dirty")
 	undo.add_undo_method(self, "update_overlays")
@@ -499,15 +504,15 @@ func _action_delete_point_in(idx:int):
 	undo_version = undo.get_version()
 	_action_invert_orientation()
 
-func _action_delete_point_out(idx:int):
-	var from_position_out = shape.get_point_out(idx)
+func _action_delete_point_out(key:int):
+	var from_position_out = shape.get_point_out(key)
 	undo.create_action("Delete Control Point Out")
 
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_do_method(self, "update_overlays")
 
-	undo.add_undo_method(shape, "set_point_out", idx, from_position_out)
-	shape.set_point_out(idx, Vector2(0,0))
+	undo.add_undo_method(shape, "set_point_out", key, from_position_out)
+	shape.set_point_out(key, Vector2(0,0))
 
 	undo.add_undo_method(shape, "set_as_dirty")
 	undo.add_undo_method(self, "update_overlays")
@@ -518,9 +523,10 @@ func _action_delete_point_out(idx:int):
 func _action_delete_point():
 	var fix_close_shape = false
 	undo.create_action("Delete Point")
-	var pt:Vector2 = shape.get_point_position(current_point_index())
-	undo.add_do_method(shape, "remove_point", current_point_index())
-	undo.add_undo_method(shape, "add_point", pt, current_point_index())
+	var pt:Vector2 = shape.get_point_position(current_point_key())
+	var current_index = current_point_index()
+	undo.add_do_method(shape, "remove_point", current_point_key())
+	undo.add_undo_method(shape, "add_point", pt, current_index)
 
 	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
@@ -603,23 +609,23 @@ func _action_invert_orientation()->bool:
 func deselect_control_points():
 	current_action = ActionData.new([], [], [], [], ACTION.NONE)
 
-func select_verticies(indices:Array, action:int)->ActionData:
+func select_verticies(keys:Array, action:int)->ActionData:
 	var from_positions = []
 	var from_positions_c_in = []
 	var from_positions_c_out = []
-	for idx in indices:
-		from_positions.push_back(shape.get_point_position(idx))
-		from_positions_c_in.push_back(shape.get_point_in(idx))
-		from_positions_c_out.push_back(shape.get_point_out(idx))
-	return ActionData.new(indices, from_positions, from_positions_c_in, from_positions_c_out, action)
+	for key in keys:
+		from_positions.push_back(shape.get_point_position(key))
+		from_positions_c_in.push_back(shape.get_point_in(key))
+		from_positions_c_out.push_back(shape.get_point_out(key))
+	return ActionData.new(keys, from_positions, from_positions_c_in, from_positions_c_out, action)
 
-func select_vertices_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2):
+func select_vertices_to_move(keys:Array, _mouse_starting_pos_viewport:Vector2):
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
-	current_action = select_verticies(indices, ACTION.MOVING_VERT)
+	current_action = select_verticies(keys, ACTION.MOVING_VERT)
 
 
-func select_control_points_to_move(indices:Array, _mouse_starting_pos_viewport:Vector2, action=ACTION.MOVING_CONTROL):
-	current_action = select_verticies(indices, action)
+func select_control_points_to_move(keys:Array, _mouse_starting_pos_viewport:Vector2, action=ACTION.MOVING_CONTROL):
+	current_action = select_verticies(keys, action)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
 
@@ -680,7 +686,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 			overlay.draw_texture(ICON_ADD_HANDLE, edge_point - ICON_ADD_HANDLE.get_size() * 0.5)
 
 		# Draw Highlighted Handle
-		if is_single_point_index_valid():
+		if is_single_point_valid():
 			overlay.draw_circle(t.xform( baked[current_point_index()] ), 5, Color.white )
 			overlay.draw_circle(t.xform( baked[current_point_index()] ), 3, Color.black)
 
@@ -726,9 +732,9 @@ func _on_shape_point_modified():
 func _input_handle_keyboard_event(event:InputEventKey)->bool:
 	var kb:InputEventKey = event
 	if _is_valid_keyboard_scancode(kb):
-		if is_single_point_index_valid():
+		if is_single_point_valid():
 			if kb.pressed and kb.scancode == KEY_SPACE:
-				shape.set_point_texture_flip(!shape.get_point_texture_flip(current_point_index()), current_point_index())
+				shape.set_point_texture_flip(!shape.get_point_texture_flip(current_point_key()), current_point_key())
 				shape.set_as_dirty()
 				shape.update()
 				update_gui_info_panel()
@@ -745,7 +751,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	# Mouse Button released
 	if not mb.pressed and mb.button_index == BUTTON_LEFT:
 		if current_action.type == ACTION.MOVING_VERT:
-			if current_action.starting_positions[0].distance_to(shape.get_point_position(current_action.indices[0])) > grab_threshold:
+			if current_action.starting_positions[0].distance_to(shape.get_point_position(current_action.keys[0])) > grab_threshold:
 				_action_move_verticies()
 				rslt = true
 		var type = current_action.type
@@ -761,7 +767,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 	#########################################
 	# Mouse Right click in Edit Mode -OR- LEFT Click on Delete Mode
 	elif mb.pressed and ((mb.button_index == BUTTON_RIGHT and current_mode == MODE.EDIT) or (current_mode == MODE.DELETE and mb.button_index == BUTTON_LEFT)):
-		if is_single_point_index_valid():
+		if is_single_point_valid():
 			_action_delete_point()
 			deselect_control_points()
 			rslt = true
@@ -778,11 +784,11 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 	#########################################
 	# Mouse Wheel up on valid point
-	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_index_valid():
+	elif mb.pressed and mb.button_index == BUTTON_WHEEL_UP and is_single_point_valid():
 		if Input.is_key_pressed(KEY_SHIFT):
-			var width = shape.get_point_width(current_point_index())
+			var width = shape.get_point_width(current_point_key())
 			var new_width = width + 0.1
-			shape.set_point_width(new_width, current_point_index())
+			shape.set_point_width(new_width, current_point_key())
 
 			shape.set_as_dirty()
 			update_overlays()
@@ -790,10 +796,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			
 			rslt = true
 		else:
-			var index:int = shape.get_point_texture_index(current_point_index()) + 1
-			var flip:bool = shape.get_point_texture_flip(current_point_index())
-			shape.set_point_texture_index(current_point_index(), index)
-			shape.set_point_texture_flip(flip, current_point_index())
+			var index:int = shape.get_point_texture_index(current_point_key()) + 1
+			var flip:bool = shape.get_point_texture_flip(current_point_key())
+			shape.set_point_texture_index(current_point_key(), index)
+			shape.set_point_texture_flip(flip, current_point_key())
 
 			shape.set_as_dirty()
 			update_overlays()
@@ -804,11 +810,11 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 	#########################################
 	# Mouse Wheel down on valid point
-	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_index_valid():
+	elif mb.pressed and mb.button_index == BUTTON_WHEEL_DOWN and is_single_point_valid():
 		if Input.is_key_pressed(KEY_SHIFT):
-			var width = shape.get_point_width(current_point_index())
+			var width = shape.get_point_width(current_point_key())
 			var new_width = width - 0.1
-			shape.set_point_width(new_width, current_point_index())
+			shape.set_point_width(new_width, current_point_key())
 
 			shape.set_as_dirty()
 			update_overlays()
@@ -816,8 +822,8 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 			
 			rslt = true
 		else:
-			var index = shape.get_point_texture_index(current_point_index()) - 1
-			shape.set_point_texture_index(current_point_index(), index)
+			var index = shape.get_point_texture_index(current_point_key()) - 1
+			shape.set_point_texture_index(current_point_key(), index)
 
 			shape.set_as_dirty()
 			update_overlays()
@@ -828,15 +834,15 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 
 	#########################################
 	# Mouse left click on valid point
-	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_single_point_index_valid():
+	elif mb.pressed and mb.button_index == BUTTON_LEFT and is_single_point_valid():
 		if Input.is_key_pressed(KEY_SHIFT) and current_mode == MODE.EDIT:
-			select_control_points_to_move([current_point_index()], viewport_mouse_position)
+			select_control_points_to_move([current_point_key()], viewport_mouse_position)
 			return true
 		# If you create a point at the same location as point idx "0"
 		elif current_mode == MODE.CREATE and current_point_index() == 0:
 			return false
 		else:
-			select_vertices_to_move([current_point_index()], viewport_mouse_position)
+			select_vertices_to_move([current_point_key()], viewport_mouse_position)
 			return true
 
 
@@ -901,7 +907,7 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				var idx = insertion_point+1
 
 				idx = _action_split_curve(idx, gpoint, xform)
-				select_vertices_to_move([idx], viewport_mouse_position)
+				select_vertices_to_move([shape.get_point_key_at_index(idx)], viewport_mouse_position)
 				on_edge = false
 
 				return true
@@ -924,19 +930,19 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 	#_debug_mouse_positions(mm, et)
 
 	if type == ACTION.MOVING_VERT:
-		for i in range(0, current_action.indices.size(), 1):
-			var idx = current_action.indices[i]
+		for i in range(0, current_action.keys.size(), 1):
+			var key = current_action.keys[i]
 			var from = current_action.starting_positions[i]
 			var new_position = from + delta
 			var snapped_position = _snap_position(new_position, get_snap_offset(), get_snap_step())
-			shape.set_point_position(idx, snapped_position)
+			shape.set_point_position(key, snapped_position)
 			rslt = true
 			update_overlays()
 		return rslt
 
 	elif _in or _out:
-		for i in range(0, current_action.indices.size(), 1):
-			var idx = current_action.indices[i]
+		for i in range(0, current_action.keys.size(), 1):
+			var key = current_action.keys[i]
 			var from = current_action.starting_positions[i]
 			var out_multiplier = 1
 			# Invert the delta for position_out if moving both at once
@@ -948,10 +954,10 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 			var snapped_position_in = _snap_position(new_position_in, get_snap_offset(), get_snap_step())
 			var snapped_position_out = _snap_position(new_position_out, get_snap_offset(), get_snap_step())
 			if _in:
-				shape.set_point_in(idx, snapped_position_in)
+				shape.set_point_in(key, snapped_position_in)
 				rslt = true
 			if _out:
-				shape.set_point_out(idx, snapped_position_out)
+				shape.set_point_out(key, snapped_position_out)
 				rslt = true
 			shape.set_as_dirty()
 			update_overlays()
@@ -977,12 +983,12 @@ func _input_handle_mouse_motion_event(event:InputEventMouseMotion, et:Transform2
 
 		# However, if near a control point or one of its handles then we are not on the edge
 		deselect_control_points()
-		for i in shape.get_point_count():
-			var pp:Vector2 = shape.get_point_position(i)
+		for k in shape.get_all_point_keys():
+			var pp:Vector2 = shape.get_point_position(k)
 			var p:Vector2 = xform.xform(pp)
 			if p.distance_to(gpoint) <= grab_threshold:
 				on_edge = false
-				current_action = select_verticies([i], ACTION.NONE)
+				current_action = select_verticies([k], ACTION.NONE)
 				break
 
 		if current_mode != MODE.CREATE and current_mode != MODE.EDIT:
