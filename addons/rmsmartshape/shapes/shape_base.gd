@@ -42,7 +42,7 @@ export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_m
 var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
-var _vertex_properties = RMS2D_VertexPropertiesArray.new(0)
+var _points = RMSS2D_Point_Array.new()
 var _is_instantiable = false
 
 signal points_modified
@@ -69,9 +69,11 @@ func set_collision_offset(s: float):
 
 func set_curve(value: Curve2D):
 	_curve = value
-	if _vertex_properties.resize(_curve.get_point_count()):
-		set_as_dirty()
-		emit_signal("points_modified")
+	_points.clear()
+	for i in range(0, _curve.get_point_count(), 1):
+		_points.add_point(_curve.get_point_position(i))
+	set_as_dirty()
+	emit_signal("points_modified")
 	if Engine.editor_hint:
 		property_list_changed_notify()
 
@@ -122,11 +124,22 @@ func _set_material(value: RMSS2D_Material_Shape):
 #########
 # CURVE #
 #########
+
+
+func _update_curve(p_array: RMSS2D_Point_Array):
+	_curve.clear_points()
+	for p_key in p_array.get_all_point_keys():
+		var pos = p_array.get_point_position(p_key)
+		var _in = p_array.get_point_in(p_key)
+		var out = p_array.get_point_out(p_key)
+		_curve.add_point(pos, _in, out)
+
+
 func get_vertices() -> Array:
-	var verts = []
-	for i in range(0, _curve.get_point_count(), 1):
-		verts.push_back(_curve.get_point_position(i))
-	return verts
+	var positions = []
+	for p_key in _points.get_all_point_keys():
+		positions.push_back(_points.get_point_position(p_key))
+	return positions
 
 
 func get_tessellated_points() -> PoolVector2Array:
@@ -141,74 +154,41 @@ func get_tessellated_points() -> PoolVector2Array:
 
 
 func invert_point_order():
-	var verts = get_vertices()
-
-	# Store inverted verts and properties
-	var inverted_properties = []
-	var inverted = []
-	for i in range(0, verts.size(), 1):
-		var vert = verts[i]
-		var prop = _vertex_properties.properties[i]
-		inverted.push_front(vert)
-		inverted_properties.push_front(prop)
-
-	# Clear Verts, add Inverted Verts
-	_curve.clear_points()
-	clear_cached_data()
-	add_points_to_curve(inverted, -1, false)
-
-	# Set Inverted Properties
-	for i in range(0, inverted_properties.size(), 1):
-		var prop = inverted_properties[i]
-		_vertex_properties.properties[i] = prop
-
-	# Update and set as dirty
+	_points.invert_point_order()
+	_update_curve(_points)
 	set_as_dirty()
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
 
 
 func clear_points():
-	_curve.clear_points()
-	_vertex_properties = RMS2D_VertexPropertiesArray.new(0)
-	_edges = []
+	_points.clear()
+	_update_curve(_points)
+	set_as_dirty()
 
 
-func add_points_to_curve(verts: Array, starting_index: int = -1, update: bool = true):
+func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
+	var keys = []
 	for i in range(0, verts.size(), 1):
 		var v = verts[i]
 		if starting_index != -1:
-			_curve.add_point(v, Vector2.ZERO, Vector2.ZERO, starting_index + i)
-			_vertex_properties.add_point(starting_index + i)
+			keys.push_back(_points.add_point(v, starting_index + i))
 		else:
-			_curve.add_point(v, Vector2.ZERO, Vector2.ZERO, starting_index)
-			_vertex_properties.add_point(starting_index)
-
+			keys.push_back(_points.add_point(v))
 	if update:
 		_add_point_update()
+	return keys
 
 
-func add_point_to_curve(position: Vector2, index: int = -1, update: bool = true):
-	_curve.add_point(position, Vector2.ZERO, Vector2.ZERO, index)
-	_vertex_properties.add_point(index)
-
+func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
+	var key = _points.add_point(position, index)
 	if update:
 		_add_point_update()
+	return key
 
 
 func _add_point_update():
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
-
-	if Engine.editor_hint:
-		property_list_changed_notify()
-
-
-func _is_curve_index_in_range(i: int) -> bool:
-	if _curve.get_point_count() > i and i >= 0:
-		return true
-	return false
 
 
 func _is_array_index_in_range(a: Array, i: int) -> bool:
@@ -217,69 +197,58 @@ func _is_array_index_in_range(a: Array, i: int) -> bool:
 	return false
 
 
-func set_point_position(at_position: int, position: Vector2):
-	if _curve != null:
-		if _is_curve_index_in_range(at_position):
-			_curve.set_point_position(at_position, position)
-			set_as_dirty()
-			emit_signal("points_modified")
+func set_point_position(key: int, position: Vector2):
+	_points.set_point_position(key, position)
+	_update_curve(_points)
+	set_as_dirty()
+	emit_signal("points_modified")
 
 
-func remove_point(idx: int):
-	_curve.remove_point(idx)
-	if _vertex_properties.remove_point(idx):
-		set_as_dirty()
-		emit_signal("points_modified")
-
-		if Engine.editor_hint:
-			property_list_changed_notify()
+func remove_point(key: int):
+	_points.remove_point(key)
+	_update_curve(_points)
+	set_as_dirty()
+	emit_signal("points_modified")
 
 
-func resize_points(size: int):
-	if size < 0:
-		size = 0
+#######################
+# POINT ARRAY WRAPPER #
+#######################
+func get_all_point_keys() -> Array:
+	return _points.get_all_point_keys()
 
-	_curve.resize(size)
-	if _vertex_properties.resize(size):
-		set_as_dirty()
+func get_point_key_at_index(idx:int) -> int:
+	return _points.get_point_key_at_index(idx)
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+func get_point_at_index(idx:int) -> int:
+	return _points.get_point_at_index(idx)
 
-
-#################
-# CURVE WRAPPER #
-#################
-func set_point_in(idx: int, p: Vector2):
+func set_point_in(key: int, v: Vector2):
 	"""
 	point_in controls the edge leading from the previous vertex to this one
 	"""
-	if _curve != null:
-		_curve.set_point_in(idx, p)
-		set_as_dirty()
-		emit_signal("points_modified")
+	_points.set_point_in(key, v)
+	_update_curve(_points)
+	set_as_dirty()
+	emit_signal("points_modified")
 
 
-func set_point_out(idx: int, p: Vector2):
+func set_point_out(key: int, v: Vector2):
 	"""
 	point_out controls the edge leading from this vertex to the next
 	"""
-	if _curve != null:
-		_curve.set_point_out(idx, p)
-		set_as_dirty()
-		emit_signal("points_modified")
+	_points.set_point_out(key, v)
+	_update_curve(_points)
+	set_as_dirty()
+	emit_signal("points_modified")
 
 
-func get_point_in(idx: int) -> Vector2:
-	if _curve != null:
-		return _curve.get_point_in(idx)
-	return Vector2(0, 0)
+func get_point_in(key: int) -> Vector2:
+	return _points.get_point_in(key)
 
 
-func get_point_out(idx: int) -> Vector2:
-	if _curve != null:
-		return _curve.get_point_out(idx)
-	return Vector2(0, 0)
+func get_point_out(key: int) -> Vector2:
+	return _points.get_point_in(key)
 
 
 func get_closest_point(to_point: Vector2):
@@ -295,61 +264,45 @@ func get_closest_offset(to_point: Vector2):
 
 
 func get_point_count():
-	if _curve == null:
-		return 0
-	return _curve.get_point_count()
+	return _points.get_point_count()
 
 
-func get_point_position(idx: int):
-	return get_point(idx)
+func get_point_position(key: int):
+	return _points.get_point_position(key)
 
 
-func get_point(idx: int):
-	if _curve != null:
-		if idx < _curve.get_point_count() and idx >= 0:
-			return _curve.get_point_position(idx)
-	return null
+func get_point(key: int):
+	return get_point_position(key)
 
 
-#####################
-# VERTEX PROPERTIES #
-#####################
-func set_point_width(idx: int, width: float):
-	if _vertex_properties.set_width(width, idx):
-		set_as_dirty()
-		emit_signal("points_modified")
-		if Engine.editor_hint:
-			property_list_changed_notify()
+func set_point_width(key: int, width: float):
+	var props = _points.get_point_properties(key)
+	props.width = width
+	_points.set_point_properties(key, props)
 
 
-func get_point_width(idx: int) -> float:
-	return _vertex_properties.get_width(idx)
+func get_point_width(key: int) -> float:
+	return _points.get_point_properties(key).width
 
 
-func set_point_texture_index(idx: int, tex_idx: int):
-	if _vertex_properties.set_texture_idx(tex_idx, idx):
-		set_as_dirty()
-		emit_signal("points_modified")
-
-		if Engine.editor_hint:
-			property_list_changed_notify()
+func set_point_texture_index(key: int, tex_idx: int):
+	var props = _points.get_point_properties(key)
+	props.texture_idx = tex_idx
+	_points.set_point_properties(key, props)
 
 
-func get_point_texture_index(idx: int) -> int:
-	return _vertex_properties.get_texture_idx(idx)
+func get_point_texture_index(key: int) -> int:
+	return _points.get_point_properties(key).texture_idx
 
 
-func set_point_texture_flip(idx: int, flip: bool):
-	if _vertex_properties.set_flip(flip, idx):
-		set_as_dirty()
-		emit_signal("points_modified")
-
-		if Engine.editor_hint:
-			property_list_changed_notify()
+func set_point_texture_flip(key: int, flip: bool):
+	var props = _points.get_point_properties(key)
+	props.flip = flip
+	_points.set_point_properties(key, props)
 
 
-func get_point_texture_flip(idx: int) -> bool:
-	return _vertex_properties.get_flip(idx)
+func get_point_texture_flip(key: int) -> bool:
+	return _points.get_point_properties(key).flip
 
 
 #########
@@ -682,8 +635,8 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> float:
 	var v_idx = get_vertex_idx_from_tessellated_point(points, t_points, t_idx)
 	var v_idx_next = _get_next_point_index(v_idx, points)
-	var w1 = _vertex_properties.get_width(v_idx)
-	var w2 = _vertex_properties.get_width(v_idx_next)
+	var w1 = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
+	var w2 = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
 	var ratio = get_ratio_from_tessellated_point_to_vertex(points, t_points, t_idx)
 	return lerp(w1, w2, ratio)
 
@@ -840,6 +793,7 @@ func _has_minimum_point_count() -> bool:
 
 func _on_dirty_update():
 	if _dirty:
+		clear_cached_data()
 		if _has_minimum_point_count():
 			bake_collision()
 			cache_edges()
@@ -950,3 +904,7 @@ func duplicate_self():
 # Workaround (class cannot reference itself)
 func __new():
 	return get_script().new()
+
+
+func debug_print_points():
+	_points.debug_print()

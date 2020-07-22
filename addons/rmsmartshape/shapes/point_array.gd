@@ -28,11 +28,14 @@ class Tuple:
 
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
+# Maps a key to each point
 var _points: Dictionary = {}
+# Contains all keys; the order of the keys determines the order of the points
 var _point_order: Array = []
-var _next_key = 0
 # Key is tuple of point_keys; Value is the CONSTRAINT enum
 var _constraints = {}
+# Next key value to generate
+var _next_key = 0
 
 signal changed
 
@@ -64,6 +67,23 @@ func add_point(point: Vector2, idx: int = -1) -> int:
 	return next_key
 
 
+func is_index_in_range(idx: int) -> bool:
+	return idx > 0 and idx < _point_order.size()
+
+
+func get_point_key_at_index(idx: int) -> int:
+	return _point_order[idx]
+
+func get_point_at_index(idx: int) -> int:
+	return _points[_point_order[idx]].duplicate()
+
+func get_point(key: int) -> int:
+	return _points[key].duplicate()
+
+func get_point_count()->int:
+	return _point_order.size()
+
+
 func get_point_index(key: int) -> int:
 	if has_point(key):
 		var idx = 0
@@ -74,6 +94,8 @@ func get_point_index(key: int) -> int:
 		return idx
 	return -1
 
+func invert_point_order():
+	_point_order.invert()
 
 func set_point_index(key: int, idx: int):
 	if not has_point(key):
@@ -91,6 +113,13 @@ func has_point(key: int) -> bool:
 	return _points.has(key)
 
 
+func get_all_point_keys() -> Array:
+	"""
+	_point_order should contain every single point ONLY ONCE
+	"""
+	return _point_order.duplicate()
+
+
 func remove_point(key: int) -> bool:
 	if has_point(key):
 		var p = _points[key]
@@ -102,10 +131,17 @@ func remove_point(key: int) -> bool:
 	return false
 
 
+func clear():
+	_points.clear()
+	_point_order.clear()
+	_constraints.clear()
+	_next_key = 0
+	emit_signal("changed")
+
+
 func set_point_in(key: int, value: Vector2):
 	if has_point(key):
 		_points[key].point_in = value
-		#update_constraints(key)
 
 
 func get_point_in(key: int) -> Vector2:
@@ -117,7 +153,6 @@ func get_point_in(key: int) -> Vector2:
 func set_point_out(key: int, value: Vector2):
 	if has_point(key):
 		_points[key].point_out = value
-		#update_constraints(key)
 
 
 func get_point_out(key: int) -> Vector2:
@@ -129,7 +164,6 @@ func get_point_out(key: int) -> Vector2:
 func set_point_position(key: int, value: Vector2):
 	if has_point(key):
 		_points[key].position = value
-		#update_constraints(key)
 
 
 func get_point_position(key: int) -> Vector2:
@@ -141,12 +175,11 @@ func get_point_position(key: int) -> Vector2:
 func set_point_properties(key: int, value: RMS2D_VertexProperties):
 	if has_point(key):
 		_points[key].properties = value
-		#update_constraints(key)
 
 
 func get_point_properties(key: int) -> RMS2D_VertexProperties:
 	if has_point(key):
-		return _points[key].properties
+		return _points[key].properties.duplicate()
 	return RMS2D_VertexProperties.new()
 
 
@@ -172,29 +205,31 @@ func _on_point_changed(p: RMSS2D_Point):
 var _updating_constraints = false
 var _keys_to_update_constraints = []
 
-func _update_constraints(src:int):
+
+func _update_constraints(src: int):
 	var constraints = get_constraints(src)
 	for tuple in constraints:
 		var constraint = constraints[tuple]
 		if constraint == CONSTRAINT.NONE:
 			continue
 		var dst = tuple.get_other_value(src)
-		if (constraint && CONSTRAINT.AXIS_X):
+		if constraint & CONSTRAINT.AXIS_X:
 			set_point_position(dst, Vector2(get_point_position(src).x, get_point_position(dst).y))
-		if (constraint && CONSTRAINT.AXIS_Y):
+		if constraint & CONSTRAINT.AXIS_Y:
 			set_point_position(dst, Vector2(get_point_position(dst).x, get_point_position(src).y))
-		if (constraint && CONSTRAINT.CONTROL_POINTS):
+		if constraint & CONSTRAINT.CONTROL_POINTS:
 			set_point_in(dst, get_point_in(src))
 			set_point_out(dst, get_point_out(src))
-		if (constraint && CONSTRAINT.PROPERTIES):
+		if constraint & CONSTRAINT.PROPERTIES:
 			set_point_properties(dst, get_point_properties(src))
+
 
 func update_constraints(src: int):
 	"""
 	Will mutate points based on constraints
 	values from Passed key will be used to update constrained points
 	"""
-	if not has_point(src):
+	if not has_point(src) or _updating_constraints:
 		return
 	_updating_constraints = true
 	# Initial pass of updating constraints
@@ -212,6 +247,9 @@ func update_constraints(src: int):
 
 
 func get_constraints(key1: int) -> Dictionary:
+	"""
+	Will Return all constraints for a given key
+	"""
 	var constraints = {}
 	for tuple in _constraints:
 		if tuple.has(key1):
@@ -220,6 +258,9 @@ func get_constraints(key1: int) -> Dictionary:
 
 
 func get_constraint(key1: int, key2: int) -> int:
+	"""
+	Will Return the constraint for a pair of keys
+	"""
 	var t = Tuple.new(key1, key2)
 	var t_index = _find_tuple_in_array(_constraints.keys(), t)
 	if t_index == -1:
@@ -227,14 +268,18 @@ func get_constraint(key1: int, key2: int) -> int:
 	return _constraints[t_index]
 
 
-func add_constraint(key1: int, key2: int, constraint: int):
+func set_constraint(key1: int, key2: int, constraint: int):
 	var t = Tuple.new(key1, key2)
 	var existing_tuples = _constraints.keys()
 	var existing_t_index = _find_tuple_in_array(existing_tuples, t)
 	if existing_t_index != -1:
 		t = existing_tuples[existing_t_index]
 	_constraints[t] = constraint
-	update_constraints(key1)
+	if _constraints[t] == CONSTRAINT.NONE:
+		_constraints.erase(t)
+	else:
+		update_constraints(key1)
+
 
 ########
 # MISC #
@@ -245,3 +290,10 @@ func _find_tuple_in_array(a: Array, t: Tuple) -> int:
 		if e.equals(t):
 			return i
 	return -1
+
+func debug_print():
+	for k in get_all_point_keys():
+		var pos = get_point_position(k)
+		var _in = get_point_in(k)
+		var out = get_point_out(k)
+		print("%s = P:%s | I:%s | O:%s" % [k, pos, _in, out])

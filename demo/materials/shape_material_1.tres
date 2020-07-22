@@ -26,3 +26,4 @@ fill_textures = [ ExtResource( 5 ) ]
 fill_texture_normals = [  ]
 fill_texture_z_index = -10
 render_offset = 0.0
+weld_edges = true

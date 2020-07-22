@@ -95,16 +95,19 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 
 func _close_shape() -> bool:
 	"""
-	Will mutate the _curve to ensure this is a closed_shape
-	returns true if _cuve is modified
+	Will mutate the _points to ensure this is a closed_shape
+	last point will be constrained to first point
+	returns true if _points is modified
 	"""
 	var point_count = get_point_count()
 	if not _has_minimum_point_count():
 		return false
-	var first_point = _curve.get_point_position(0)
-	var final_point = _curve.get_point_position(point_count - 1)
-	if first_point != final_point:
-		add_point_to_curve(get_point_position(0))
+	var first_point = _points.get_point_at_index(0)
+	var final_point = _points.get_point_at_index(point_count - 1)
+	if not first_point.equals(final_point):
+		var key_first = _points.get_point_key_at_index(0)
+		var key_last = add_point(first_point.position)
+		_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
 		return true
 	return false
 

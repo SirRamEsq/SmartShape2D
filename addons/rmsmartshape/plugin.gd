@@ -520,7 +520,7 @@ func _action_delete_point():
 	undo.create_action("Delete Point")
 	var pt:Vector2 = shape.get_point_position(current_point_index())
 	undo.add_do_method(shape, "remove_point", current_point_index())
-	undo.add_undo_method(shape, "add_point_to_curve", pt, current_point_index())
+	undo.add_undo_method(shape, "add_point", pt, current_point_index())
 
 	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
@@ -537,7 +537,7 @@ func _action_add_point(new_point:Vector2)->int:
 	Will return index of added point
 	"""
 	undo.create_action("Add Point: %s" % new_point)
-	undo.add_do_method(shape, "add_point_to_curve", new_point)
+	undo.add_do_method(shape, "add_point", new_point)
 	undo.add_undo_method(shape,"remove_point", shape.get_point_count())
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_undo_method(shape, "set_as_dirty")
@@ -557,7 +557,7 @@ func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
 	If the orientation is changed, idx will be updated
 	"""
 	undo.create_action("Split Curve")
-	undo.add_do_method(shape, "add_point_to_curve", xform.affine_inverse().xform(gpoint), idx)
+	undo.add_do_method(shape, "add_point", xform.affine_inverse().xform(gpoint), idx)
 	undo.add_undo_method(shape, "remove_point", idx)
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_undo_method(shape, "set_as_dirty")

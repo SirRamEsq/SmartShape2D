@@ -26,18 +26,18 @@ func test_are_points_clockwise():
 	var points_c_clockwise = points_clockwise.duplicate()
 	points_c_clockwise.invert()
 
-	shape.add_points_to_curve(points_clockwise)
+	shape.add_points(points_clockwise)
 	assert_true(shape.are_points_clockwise())
 
 	shape.clear_points()
-	shape.add_points_to_curve(points_c_clockwise)
+	shape.add_points(points_c_clockwise)
 	assert_false(shape.are_points_clockwise())
 
 
 func test_curve_duplicate():
 	var shape = RMSS2D_Shape_Base.new()
 	add_child_autofree(shape)
-	shape.add_point_to_curve(Vector2(-10, -20))
+	shape.add_point(Vector2(-10, -20))
 	var points = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
 	shape.curve_bake_interval = 35.0
 	var curve = shape.get_curve()
@@ -58,7 +58,7 @@ func test_tess_point_vertex_relationship():
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 
-	shape_base.add_points_to_curve(points)
+	shape_base.add_points(points)
 
 	var verts = shape_base.get_vertices()
 	var t_verts = shape_base.get_tessellated_points()
@@ -104,34 +104,34 @@ func test_invert_point_order():
 	var points = get_clockwise_points()
 	var size = points.size()
 	var last_idx = size - 1
-	shape_base.add_points_to_curve(points)
-	shape_base.set_point_width(0, 5.0)
-	assert_eq(points[0], shape_base.get_point(0))
-	assert_eq(points[last_idx], shape_base.get_point(last_idx))
+	var keys = shape_base.add_points(points)
+	shape_base.set_point_width(keys[0], 5.0)
+	assert_eq(points[0], shape_base.get_point_at_index(0).position)
+	assert_eq(points[last_idx], shape_base.get_point_at_index(last_idx).position)
 
-	assert_eq(1.0, shape_base.get_point_width(last_idx))
-	assert_eq(5.0, shape_base.get_point_width(0))
+	assert_eq(1.0, shape_base.get_point_at_index(last_idx).properties.width)
+	assert_eq(5.0, shape_base.get_point_at_index(0).properties.width)
 
 	shape_base.invert_point_order()
 
-	assert_eq(5.0, shape_base.get_point_width(last_idx))
-	assert_eq(1.0, shape_base.get_point_width(0))
+	assert_eq(5.0, shape_base.get_point_at_index(last_idx).properties.width)
+	assert_eq(1.0, shape_base.get_point_at_index(0).properties.width)
 
-	assert_eq(points[0], shape_base.get_point(last_idx))
-	assert_eq(points[last_idx], shape_base.get_point(0))
+	assert_eq(points[0], shape_base.get_point_at_index(last_idx).position)
+	assert_eq(points[last_idx], shape_base.get_point_at_index(0).position)
 
-	assert_eq(points[1], shape_base.get_point(last_idx - 1))
-	assert_eq(points[last_idx - 1], shape_base.get_point(1))
+	assert_eq(points[1], shape_base.get_point_at_index(last_idx - 1).position)
+	assert_eq(points[last_idx - 1], shape_base.get_point_at_index(1).position)
 
-	assert_eq(points[2], shape_base.get_point(last_idx - 2))
-	assert_eq(points[last_idx - 2], shape_base.get_point(2))
+	assert_eq(points[2], shape_base.get_point_at_index(last_idx - 2).position)
+	assert_eq(points[last_idx - 2], shape_base.get_point_at_index(2).position)
 
 
 func test_duplicate():
 	var shape_base = RMSS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
-	shape_base.add_points_to_curve(points)
+	shape_base.add_points(points)
 
 	shape_base.set_point_width(0, 5.0)
 	shape_base.set_point_width(2, 3.0)
@@ -206,7 +206,6 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var points = [start_point_1, start_point_2]
 
 	var delta = points[1] - points[0]
-	var delta_normal = delta.normalized()
 	var normal = Vector2(delta.y, -delta.x).normalized()
 
 	var tex_size = TEST_TEXTURE.get_size()

@@ -1,26 +1,29 @@
 extends Reference
 class_name RMS2D_VertexProperties
 
-var texture_idx:int = 0
-var flip:bool = false
-var width:float = 1.0
+var texture_idx: int = 0
+var flip: bool = false
+var width: float = 1.0
 
-func duplicate()->RMS2D_VertexProperties:
+
+func duplicate() -> RMS2D_VertexProperties:
 	var _new = __new()
 	_new.texture_idx = texture_idx
 	_new.flip = flip
 	_new.width = width
 	return _new
 
+
 # Workaround (class cannot reference itself)
-func __new()->RMS2D_VertexProperties:
+func __new() -> RMS2D_VertexProperties:
 	return get_script().new()
 
-func equals(p:RMS2D_VertexProperties):
-	if p.flip != flip:
+
+func equals(other: RMS2D_VertexProperties):
+	if other.flip != flip:
 		return false
-	if p.texture_idx != texture_idx:
+	if other.texture_idx != texture_idx:
 		return false
-	if p.width != width:
+	if other.width != width:
 		return false
 	return true

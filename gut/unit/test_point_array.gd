@@ -1,5 +1,6 @@
 extends "res://addons/gut/test.gd"
 
+
 func test_point_order():
 	var p_array = RMSS2D_Point_Array.new()
 	var points = {}
@@ -41,15 +42,76 @@ func test_point_order():
 	assert_eq(p_array.get_point_index(keys[1]), 1)
 	assert_eq(p_array.get_point_index(keys[0]), 0)
 
+
 func test_point_constraints():
 	var p_array = RMSS2D_Point_Array.new()
 	var points = {}
 	for p in generate_points():
 		points[p_array.add_point(p)] = p
 	var keys = points.keys()
-	p_array.add_constraint(keys[1], keys[2], RMSS2D_Point_Array.CONSTRAINT.ALL)
-	assert_eq(p_array.get_point_position(keys[1]), Vector2(10,10))
-	assert_eq(p_array.get_point_position(keys[2]), Vector2(10,10))
+
+	assert_eq(p_array.get_point_position(keys[1]), Vector2(10, 10))
+	assert_eq(p_array.get_point_position(keys[2]), Vector2(20, 20))
+
+	# CONSTRAIN POINTS
+	p_array.set_constraint(keys[1], keys[2], RMSS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[2], keys[3], RMSS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[3], keys[4], RMSS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[4], keys[5], RMSS2D_Point_Array.CONSTRAINT.AXIS_X)
+	p_array.set_constraint(keys[4], keys[6], RMSS2D_Point_Array.CONSTRAINT.AXIS_Y)
+	assert_eq(p_array.get_point_position(keys[1]), Vector2(10, 10))
+	assert_eq(p_array.get_point_position(keys[2]), Vector2(10, 10))
+	assert_eq(p_array.get_point_position(keys[3]), Vector2(10, 10))
+	assert_eq(p_array.get_point_position(keys[4]), Vector2(10, 10))
+	assert_eq(p_array.get_point_position(keys[5]), Vector2(10, 50))
+	assert_eq(p_array.get_point_position(keys[6]), Vector2(60, 10))
+
+	# SET POSITION
+	p_array.set_point_position(keys[1], Vector2(123, 321))
+	assert_eq(p_array.get_point_position(keys[1]), Vector2(123, 321))
+	assert_eq(p_array.get_point_position(keys[2]), Vector2(123, 321))
+	assert_eq(p_array.get_point_position(keys[3]), Vector2(123, 321))
+	assert_eq(p_array.get_point_position(keys[4]), Vector2(123, 321))
+	assert_eq(p_array.get_point_position(keys[5]), Vector2(123, 50))
+	assert_eq(p_array.get_point_position(keys[6]), Vector2(60, 321))
+
+	# REMOVE CONSTRAINT
+	assert_eq(p_array.get_constraints(keys[1]).size(), 1)
+	assert_eq(p_array.get_constraints(keys[2]).size(), 2)
+	assert_eq(p_array.get_constraints(keys[3]).size(), 2)
+	p_array.set_constraint(keys[1], keys[2], RMSS2D_Point_Array.CONSTRAINT.NONE)
+	assert_eq(p_array.get_constraints(keys[1]).size(), 0)
+	assert_eq(p_array.get_constraints(keys[2]).size(), 1)
+	assert_eq(p_array.get_constraints(keys[3]).size(), 2)
+	p_array.set_point_position(keys[1], Vector2(777, 888))
+	assert_eq(p_array.get_point_position(keys[1]), Vector2(777, 888))
+	assert_eq(p_array.get_point_position(keys[2]), Vector2(123, 321))
+
+	# POINT IN/OUT AND PROPERTIES
+	assert_eq(p_array.get_point_in(keys[3]), Vector2(0, 0))
+	assert_eq(p_array.get_point_out(keys[3]), Vector2(0, 0))
+	assert_eq(p_array.get_point_properties(keys[3]).flip, false)
+	assert_eq(p_array.get_point_in(keys[4]), Vector2(0, 0))
+	assert_eq(p_array.get_point_out(keys[4]), Vector2(0, 0))
+	assert_eq(p_array.get_point_properties(keys[4]).flip, false)
+	p_array.set_point_in(keys[3], Vector2(33, 44))
+	p_array.set_point_out(keys[3], Vector2(11, 22))
+	var props = p_array.get_point_properties(keys[3])
+	props.flip = true
+	p_array.set_point_properties(keys[3], props)
+
+	assert_eq(p_array.get_point_in(keys[3]), Vector2(33, 44))
+	assert_eq(p_array.get_point_out(keys[3]), Vector2(11, 22))
+	assert_eq(p_array.get_point_properties(keys[3]).flip, true)
+	assert_eq(p_array.get_point_in(keys[4]), Vector2(33, 44))
+	assert_eq(p_array.get_point_out(keys[4]), Vector2(11, 22))
+	assert_eq(p_array.get_point_properties(keys[4]).flip, true)
+	assert_eq(p_array.get_point_in(keys[2]), Vector2(33, 44))
+	assert_eq(p_array.get_point_out(keys[2]), Vector2(11, 22))
+	assert_eq(p_array.get_point_properties(keys[2]).flip, true)
+	assert_eq(p_array.get_point_in(keys[1]), Vector2(0, 0))
+	assert_eq(p_array.get_point_out(keys[1]), Vector2(0, 0))
+	assert_eq(p_array.get_point_properties(keys[1]).flip, false)
 
 func generate_points() -> Array:
 	return [

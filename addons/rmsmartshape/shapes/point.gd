@@ -12,6 +12,26 @@ var properties: RMS2D_VertexProperties = RMS2D_VertexProperties.new() setget _se
 # If assigned data is the same as the existing data, no signal is emitted
 signal changed(this)
 
+func equals(other:RMSS2D_Point)->bool:
+	if position != other.position:
+		return false
+	if point_in != other.point_in:
+		return false
+	if point_out != other.point_out:
+		return false
+	if not properties.equals(other.properties):
+		return false
+	return true
+
+func duplicate() -> RMSS2D_Point:
+	var _new = __new()
+	_new.position = position
+	_new.point_in = point_in
+	_new.point_out = point_out
+	_new.properties = properties.duplicate()
+	return _new
+
+
 func _init(pos: Vector2 = Vector2(0, 0)):
 	position = pos
 
@@ -34,7 +54,12 @@ func _set_point_out(v: Vector2):
 		emit_signal("changed", self)
 
 
-func _set_properties(p: RMS2D_VertexProperties):
-	if not properties.equals(p):
-		properties = p.duplicate()
+func _set_properties(other: RMS2D_VertexProperties):
+	if not properties.equals(other):
+		properties = other.duplicate()
 		emit_signal("changed", self)
+
+
+# Workaround (class cannot reference itself)
+func __new() -> RMSS2D_Point:
+	return get_script().new()
