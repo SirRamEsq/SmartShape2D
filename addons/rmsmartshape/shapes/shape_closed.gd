@@ -9,6 +9,7 @@ var _constrained_points: Array = []
 # GODOT #
 #########
 func _init():
+	._init()
 	_is_instantiable = true
 
 

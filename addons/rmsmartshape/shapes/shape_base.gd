@@ -29,7 +29,6 @@ class EdgeMaterialData:
 
 
 export (bool) var editor_debug: bool = false setget _set_editor_debug
-export (Curve2D) var _curve: Curve2D = Curve2D.new() setget set_curve, get_curve
 export (bool) var flip_edges: bool = false setget set_flip_edges
 export (float) var collision_size: float = 32 setget set_collision_size
 export (float) var collision_offset: float = 0.0 setget set_collision_offset
@@ -38,12 +37,13 @@ export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessella
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
 export (NodePath) var collision_polygon_node_path: NodePath = ""
 export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_material
+export (Resource) var _points = RMSS2D_Point_Array.new()
 
 var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
-var _points = RMSS2D_Point_Array.new()
 var _is_instantiable = false
+var _curve: Curve2D = Curve2D.new()# setget set_curve, get_curve
 
 signal points_modified
 signal on_dirty_update
@@ -324,9 +324,13 @@ func get_point_texture_flip(key: int) -> bool:
 #########
 # GODOT #
 #########
+func _init():
+	pass
+
 func _ready():
 	if _curve == null:
 		_curve = Curve2D.new()
+	_update_curve(_points)
 	if not _is_instantiable:
 		push_error("'%s': RMSS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
 		queue_free()

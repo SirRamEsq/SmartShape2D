@@ -1,47 +1,37 @@
 tool
-extends Reference
+extends Resource
 class_name RMSS2D_Point_Array
-
-
-class Tuple:
-	extends Reference
-	var a = null
-	var b = null
-
-	func _init(_a, _b):
-		a = _a
-		b = _b
-
-	func has(value) -> bool:
-		return a == value or b == value
-
-	func get_other_value(value):
-		if a == value:
-			return b
-		elif b == value:
-			return a
-		return null
-
-	func equals(t: Tuple) -> bool:
-		return (a == t.a and b == t.b) or (b == t.a and a == t.b)
-
 
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
 # Maps a key to each point
-var _points: Dictionary = {}
+export var _points: Dictionary = {} setget set_points
 # Contains all keys; the order of the keys determines the order of the points
-var _point_order: Array = []
+export var _point_order: Array = []
 # Key is tuple of point_keys; Value is the CONSTRAINT enum
-var _constraints = {}
+export var _constraints = {}
 # Next key value to generate
-var _next_key = 0
-
-signal changed
+export var _next_key = 0
 
 ###################
 # HANDLING POINTS #
 ###################
+
+
+func _init():
+	# Required by Godot to correctly make unique instances of this resource
+	_points = {}
+	_point_order = []
+	_constraints = {}
+	_next_key = 0
+
+
+func set_points(ps: Dictionary):
+	# Called by Godot when loading from a saved scene
+	for k in ps:
+		var p = ps[k]
+		p.connect("changed", self, "_on_point_changed")
+	_points = ps
 
 
 func __generate_key(next: int) -> int:
@@ -74,13 +64,16 @@ func is_index_in_range(idx: int) -> bool:
 func get_point_key_at_index(idx: int) -> int:
 	return _point_order[idx]
 
+
 func get_point_at_index(idx: int) -> int:
 	return _points[_point_order[idx]].duplicate()
+
 
 func get_point(key: int) -> int:
 	return _points[key].duplicate()
 
-func get_point_count()->int:
+
+func get_point_count() -> int:
 	return _point_order.size()
 
 
@@ -94,8 +87,10 @@ func get_point_index(key: int) -> int:
 		return idx
 	return -1
 
+
 func invert_point_order():
 	_point_order.invert()
+
 
 func set_point_index(key: int, idx: int):
 	if not has_point(key):
@@ -180,7 +175,8 @@ func set_point_properties(key: int, value: RMS2D_VertexProperties):
 func get_point_properties(key: int) -> RMS2D_VertexProperties:
 	if has_point(key):
 		return _points[key].properties.duplicate()
-	return RMS2D_VertexProperties.new()
+	var new_props = RMS2D_VertexProperties.new()
+	return new_props
 
 
 func get_key_from_point(p: RMSS2D_Point) -> int:
@@ -212,7 +208,7 @@ func _update_constraints(src: int):
 		var constraint = constraints[tuple]
 		if constraint == CONSTRAINT.NONE:
 			continue
-		var dst = tuple.get_other_value(src)
+		var dst = get_other_value_from_tuple(tuple, src)
 		if constraint & CONSTRAINT.AXIS_X:
 			set_point_position(dst, Vector2(get_point_position(src).x, get_point_position(dst).y))
 		if constraint & CONSTRAINT.AXIS_Y:
@@ -261,17 +257,17 @@ func get_constraint(key1: int, key2: int) -> int:
 	"""
 	Will Return the constraint for a pair of keys
 	"""
-	var t = Tuple.new(key1, key2)
-	var t_index = _find_tuple_in_array(_constraints.keys(), t)
+	var t = create_tuple(key1, key2)
+	var t_index = _find_tuple_in_array_of_tuples(_constraints.keys(), t)
 	if t_index == -1:
 		return CONSTRAINT.NONE
 	return _constraints[t_index]
 
 
 func set_constraint(key1: int, key2: int, constraint: int):
-	var t = Tuple.new(key1, key2)
+	var t = create_tuple(key1, key2)
 	var existing_tuples = _constraints.keys()
-	var existing_t_index = _find_tuple_in_array(existing_tuples, t)
+	var existing_t_index = _find_tuple_in_array_of_tuples(existing_tuples, t)
 	if existing_t_index != -1:
 		t = existing_tuples[existing_t_index]
 	_constraints[t] = constraint
@@ -284,16 +280,55 @@ func set_constraint(key1: int, key2: int, constraint: int):
 ########
 # MISC #
 ########
-func _find_tuple_in_array(a: Array, t: Tuple) -> int:
-	for i in range(a.size()):
-		var e = a[i]
-		if e.equals(t):
-			return i
-	return -1
-
 func debug_print():
 	for k in get_all_point_keys():
 		var pos = get_point_position(k)
 		var _in = get_point_in(k)
 		var out = get_point_out(k)
 		print("%s = P:%s | I:%s | O:%s" % [k, pos, _in, out])
+
+
+func duplicate(sub_resource: bool = true):
+	var _new = __new()
+	if sub_resource:
+		pass
+	else:
+		_new._points = _points
+		_new._point_order = _point_order
+		_new._constraints = _constraints
+		_new._next_key = _next_key
+	return _new
+
+
+# Workaround (class cannot reference itself)
+func __new():
+	return get_script().new()
+
+
+#########
+# TUPLE #
+#########
+
+
+func create_tuple(a: int, b: int) -> Array:
+	return [a, b]
+
+
+func get_other_value_from_tuple(t: Array, value: int) -> int:
+	if t[0] == value:
+		return t[1]
+	elif t[1] == value:
+		return t[0]
+	return -1
+
+
+func tuples_are_equal(t1: Array, t2: Array) -> bool:
+	return (t1[0] == t2[0] and t1[1] == t2[1]) or (t1[0] == t2[1] and t1[1] == t2[0])
+
+
+func _find_tuple_in_array_of_tuples(tuple_array: Array, t: Array) -> int:
+	for i in range(tuple_array.size()):
+		var other = tuple_array[i]
+		if tuples_are_equal(t, other):
+			return i
+	return -1

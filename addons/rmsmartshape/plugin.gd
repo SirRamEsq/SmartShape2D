@@ -546,8 +546,6 @@ func _action_add_point(new_point:Vector2)->int:
 	undo.create_action("Add Point: %s" % new_point)
 	undo.add_do_method(shape, "add_point", new_point)
 	undo.add_undo_method(shape,"remove_point_at_index", shape.get_last_point_index(shape.get_vertices())+1)
-	undo.add_do_method(shape, "set_as_dirty")
-	undo.add_undo_method(shape, "set_as_dirty")
 	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()

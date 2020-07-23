@@ -7,7 +7,9 @@ class_name RMSS2D_Shape_Open, "../open_shape.png"
 # GODOT #
 #########
 func _init():
+	._init()
 	_is_instantiable = true
+
 
 
 ############

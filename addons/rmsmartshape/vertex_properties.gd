@@ -1,12 +1,18 @@
-extends Reference
+extends Resource
 class_name RMS2D_VertexProperties
 
-var texture_idx: int = 0
-var flip: bool = false
-var width: float = 1.0
+export (int) var texture_idx: int = 0
+export (bool) var flip: bool = false
+export (float) var width: float = 1.0
 
 
-func duplicate() -> RMS2D_VertexProperties:
+func _init():
+	texture_idx = 0
+	flip = false
+	width = 1.0
+
+
+func duplicate(sub_resources: bool = false):
 	var _new = __new()
 	_new.texture_idx = texture_idx
 	_new.flip = flip

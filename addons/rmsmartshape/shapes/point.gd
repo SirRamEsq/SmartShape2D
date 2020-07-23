@@ -1,18 +1,25 @@
 tool
-extends Reference
+extends Resource
 class_name RMSS2D_Point
 
-var position: Vector2 = Vector2(0, 0) setget _set_position
-var point_in: Vector2 = Vector2(0, 0) setget _set_point_in
-var point_out: Vector2 = Vector2(0, 0) setget _set_point_out
-var properties: RMS2D_VertexProperties = RMS2D_VertexProperties.new() setget _set_properties
+export (Vector2) var position: Vector2 = Vector2(0, 0) setget _set_position
+export (Vector2) var point_in: Vector2 = Vector2(0, 0) setget _set_point_in
+export (Vector2) var point_out: Vector2 = Vector2(0, 0) setget _set_point_out
+export (Resource) var properties = RMS2D_VertexProperties.new() setget _set_properties
 
-# If class members are written to, the signal may not be emitted
+# If class members are written to, the 'changed' signal may not be emitted
 # Signal is only emitted when data is actually changed
 # If assigned data is the same as the existing data, no signal is emitted
-signal changed(this)
 
-func equals(other:RMSS2D_Point)->bool:
+
+func _init(pos: Vector2 = Vector2(0, 0)):
+	position = pos
+	point_in = Vector2(0, 0)
+	point_out = Vector2(0, 0)
+	properties = RMS2D_VertexProperties.new()
+
+
+func equals(other: RMSS2D_Point) -> bool:
 	if position != other.position:
 		return false
 	if point_in != other.point_in:
@@ -23,17 +30,17 @@ func equals(other:RMSS2D_Point)->bool:
 		return false
 	return true
 
-func duplicate() -> RMSS2D_Point:
+
+func duplicate(sub_resource: bool = true):
 	var _new = __new()
 	_new.position = position
 	_new.point_in = point_in
 	_new.point_out = point_out
-	_new.properties = properties.duplicate()
+	if sub_resource:
+		_new.properties = properties.duplicate()
+	else:
+		_new.properties = properties
 	return _new
-
-
-func _init(pos: Vector2 = Vector2(0, 0)):
-	position = pos
 
 
 func _set_position(v: Vector2):
