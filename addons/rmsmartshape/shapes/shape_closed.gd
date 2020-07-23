@@ -2,6 +2,8 @@ tool
 extends RMSS2D_Shape_Base
 class_name RMSS2D_Shape_Closed, "../closed_shape.png"
 
+var _constrained_points: Array = []
+
 
 #########
 # GODOT #
@@ -107,6 +109,7 @@ func _close_shape() -> bool:
 	# Manually add final point
 	var key_last = _points.add_point(_points.get_point_position(key_first))
 	_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
+	_constrained_points = [key_first, key_last]
 	_add_point_update()
 	return true
 
@@ -115,26 +118,28 @@ func is_shape_closed() -> bool:
 	var point_count = get_point_count()
 	if not _has_minimum_point_count():
 		return false
-	var first_point = _points.get_point_at_index(0)
-	var final_point = _points.get_point_at_index(point_count - 1)
-	return (not first_point.equals(final_point))
+	var key1 = _points.get_point_key_at_index(0)
+	var key2 = _points.get_point_key_at_index(point_count - 1)
+	var first_point = _points.get_point(key1)
+	var final_point = _points.get_point(key2)
+	return first_point.equals(final_point)
+
 
 func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
-	# Don't allow a point to be added after the last point of the closed shape or before the first
-	if starting_index < 0 or (starting_index > get_point_count() - 2 and is_shape_closed()):
-		starting_index = get_point_count() - 2
-	if (starting_index < 1 and is_shape_closed()):
-		starting_index = 1
-	return .add_points(verts, starting_index, update)
+	return .add_points(verts, adjust_add_point_index(starting_index), update)
 
 
 func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
-	# Don't allow a point to be added after the last point of the closed shape
-	if index < 0 or (index > get_point_count() - 2 and is_shape_closed()):
-		index = get_point_count() - 2
-	if (index < 1 and is_shape_closed()):
-		index = 1
-	return .add_point(position, index, update)
+	return .add_point(position, adjust_add_point_index(index), update)
+
+func adjust_add_point_index(index:int)->int:
+	# Don't allow a point to be added after the last point of the closed shape or before the first
+	if is_shape_closed():
+		if index < 0 or (index > get_point_count() - 1):
+			index = max(get_point_count() - 1, 0)
+		if index < 1:
+			index = 1
+	return index
 
 
 func _add_point_update():
