@@ -271,10 +271,11 @@ func _set_pivot(point:Vector2):
 	ct.origin = np
 
 	for i in shape.get_point_count():
-		var pt = shape.get_global_transform().xform(shape.get_point_position(i))
-		shape.set_point_position(i, ct.affine_inverse().xform(pt))
+		var key = shape.get_point_key_at_index(i)
+		var pt = shape.get_global_transform().xform(shape.get_point_position(key))
+		shape.set_point_position(key, ct.affine_inverse().xform(pt))
 
-	shape.position = shape.get_parent().get_global_transform().affine_inverse().xform( np)
+	shape.position = shape.get_parent().get_global_transform().affine_inverse().xform(np)
 	current_mode = previous_mode
 	_enter_mode(current_mode)
 	update_overlays()
@@ -544,7 +545,7 @@ func _action_add_point(new_point:Vector2)->int:
 	"""
 	undo.create_action("Add Point: %s" % new_point)
 	undo.add_do_method(shape, "add_point", new_point)
-	undo.add_undo_method(shape,"remove_point", shape.get_point_count())
+	undo.add_undo_method(shape,"remove_point_at_index", shape.get_last_point_index(shape.get_vertices())+1)
 	undo.add_do_method(shape, "set_as_dirty")
 	undo.add_undo_method(shape, "set_as_dirty")
 	undo.add_do_method(self, "update_overlays")
@@ -564,9 +565,7 @@ func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
 	"""
 	undo.create_action("Split Curve")
 	undo.add_do_method(shape, "add_point", xform.affine_inverse().xform(gpoint), idx)
-	undo.add_undo_method(shape, "remove_point", idx)
-	undo.add_do_method(shape, "set_as_dirty")
-	undo.add_undo_method(shape, "set_as_dirty")
+	undo.add_undo_method(shape, "remove_point_at_index", idx)
 	undo.add_do_method(self, "update_overlays")
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
@@ -643,7 +642,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 
 	if shape != null:
 		var t:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * shape.get_global_transform()
-		var baked = shape.get_vertices()
+		var verts = shape.get_vertices()
 		var points = shape.get_tessellated_points()
 		var length = points.size()
 
@@ -659,17 +658,16 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 				fpt = ppt
 
 		# Draw handles
-		for i in range(0, baked.size(), 1):
-			#print ("%s:%s" % [str(i), str(baked.size())])
-			#print ("%s:%s | %s | %s" % [str(i), str(shape.get_point_position(i)), str(shape.get_point_in(i)), str(shape.get_point_out(i))])
+		for i in range(0, verts.size(), 1):
+			var key = shape.get_point_key_at_index(i)
 			var smooth = false
-			var hp = t.xform(baked[i])
+			var hp = t.xform(verts[i])
 			overlay.draw_texture(ICON_HANDLE, hp - ICON_HANDLE.get_size() * 0.5)
 
 			# Draw handles for control-point-out
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
-			if i < baked.size() - 1:
-				var pointout = t.xform(baked[i] + shape.get_point_out(i));
+			if i < verts.size() - 1:
+				var pointout = t.xform(verts[i] + shape.get_point_out(key));
 				if hp != pointout:
 					smooth = true;
 					_draw_control_point_line(overlay, hp, pointout, ICON_HANDLE_CONTROL)
@@ -677,7 +675,7 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 			# Draw handles for control-point-in
 			# Drawing the point-in for point 0 makes no sense, as there's no point behind it
 			if i > 0:
-				var pointin = t.xform(baked[i] + shape.get_point_in(i));
+				var pointin = t.xform(verts[i] + shape.get_point_in(key));
 				if hp != pointin:
 					smooth = true;
 					_draw_control_point_line(overlay, hp, pointin, ICON_HANDLE_CONTROL)
@@ -687,8 +685,8 @@ func forward_canvas_draw_over_viewport(overlay:Control):
 
 		# Draw Highlighted Handle
 		if is_single_point_valid():
-			overlay.draw_circle(t.xform( baked[current_point_index()] ), 5, Color.white )
-			overlay.draw_circle(t.xform( baked[current_point_index()] ), 3, Color.black)
+			overlay.draw_circle(t.xform( verts[current_point_index()] ), 5, Color.white )
+			overlay.draw_circle(t.xform( verts[current_point_index()] ), 3, Color.black)
 
 		shape.update()
 
@@ -706,8 +704,9 @@ func _get_intersecting_control_point_in(mouse_pos:Vector2, grab_threshold:float)
 	var points = []
 	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * shape.get_global_transform()
 	for i in range(0, shape.get_point_count(), 1):
-		var vec = shape.get_point_position(i)
-		var c_in = vec + shape.get_point_in(i)
+		var key = shape.get_point_key_at_index(i)
+		var vec = shape.get_point_position(key)
+		var c_in = vec + shape.get_point_in(key)
 		c_in = xform.xform(c_in)
 		if c_in.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(i)
@@ -718,8 +717,9 @@ func _get_intersecting_control_point_out(mouse_pos:Vector2, grab_threshold:float
 	var points = []
 	var xform:Transform2D = get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform * shape.get_global_transform()
 	for i in range(0, shape.get_point_count(), 1):
-		var vec = shape.get_point_position(i)
-		var c_out = vec + shape.get_point_out(i)
+		var key = shape.get_point_key_at_index(i)
+		var vec = shape.get_point_position(key)
+		var c_out = vec + shape.get_point_out(key)
 		c_out = xform.xform(c_out)
 		if c_out.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(i)
@@ -880,8 +880,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				var length = shape.get_point_count()
 
 				for i in length - 1:
-					var compareLength = shape.get_closest_offset(shape.get_point_position(i + 1))
-					if mb_length >= shape.get_closest_offset(shape.get_point_position(i)) and mb_length <= compareLength:
+					var key = shape.get_point_key_at_index(i)
+					var key_next = shape.get_point_key_at_index(i+1)
+					var compareLength = shape.get_closest_offset(shape.get_point_position(key_next))
+					if mb_length >= shape.get_closest_offset(shape.get_point_position(key)) and mb_length <= compareLength:
 						insertion_point = i
 
 				if insertion_point == -1:
@@ -898,8 +900,10 @@ func _input_handle_mouse_button_event(event:InputEventMouseButton, et:Transform2
 				var length = shape.get_point_count()
 
 				for i in length - 1:
-					var compareLength = shape.get_closest_offset(shape.get_point_position(i + 1))
-					if mb_length >= shape.get_closest_offset(shape.get_point_position(i)) and mb_length <= compareLength:
+					var key = shape.get_point_key_at_index(i)
+					var key_next = shape.get_point_key_at_index(i+1)
+					var compareLength = shape.get_closest_offset(shape.get_point_position(key_next))
+					if mb_length >= shape.get_closest_offset(shape.get_point_position(key)) and mb_length <= compareLength:
 						insertion_point = i
 
 				if insertion_point == -1:

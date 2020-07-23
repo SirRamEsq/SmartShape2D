@@ -48,7 +48,7 @@ func _get_previous_point_index(idx: int, points: Array) -> int:
 	return new_idx
 
 
-func _get_last_point_index(points: Array) -> int:
+func get_last_point_index(points: Array) -> int:
 	return points.size() - 2
 
 

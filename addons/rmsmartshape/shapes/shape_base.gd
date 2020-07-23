@@ -210,6 +210,9 @@ func remove_point(key: int):
 	set_as_dirty()
 	emit_signal("points_modified")
 
+func remove_point_at_index(idx: int):
+	remove_point(get_point_key_at_index(idx))
+
 
 #######################
 # POINT ARRAY WRAPPER #
@@ -261,7 +264,7 @@ func get_point_in(key: int) -> Vector2:
 
 
 func get_point_out(key: int) -> Vector2:
-	return _points.get_point_in(key)
+	return _points.get_point_out(key)
 
 
 func get_closest_point(to_point: Vector2):
@@ -735,8 +738,8 @@ func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape, wrap_a
 		var first_edges = []
 		var last_edges = []
 		for e in final_edges:
-			var has_first = e.indicies.has(_get_first_point_index(points))
-			var has_last = e.indicies.has(_get_last_point_index(points))
+			var has_first = e.indicies.has(get_first_point_index(points))
+			var has_last = e.indicies.has(get_last_point_index(points))
 			# '^' is the XOR operator
 			if has_first ^ has_last:
 				if has_first:
@@ -816,11 +819,11 @@ func _on_dirty_update():
 		emit_signal("on_dirty_update")
 
 
-func _get_first_point_index(points: Array) -> int:
+func get_first_point_index(points: Array) -> int:
 	return 0
 
 
-func _get_last_point_index(points: Array) -> int:
+func get_last_point_index(points: Array) -> int:
 	return points.size() - 1
 
 

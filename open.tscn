@@ -1,16 +1,35 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://demo/materials/shape_material_1.tres" type="Resource" id=1]
 [ext_resource path="res://addons/rmsmartshape/shapes/shape_open.gd" type="Script" id=2]
+[ext_resource path="res://addons/rmsmartshape/shapes/shape_closed.gd" type="Script" id=3]
 
 [sub_resource type="Curve2D" id=1]
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, -267.872, 83.3663, 0, 0, 0, 0, -213.382, 96.3077, 0, 0, 0, 0, -155.487, 119.466, 0, 0, 0, 0, -67.9621, 159.993 )
+"points": PoolVector2Array( 0, 0, 0, 0, -290.055, 37.2935, -88.2347, -53.737, 88.2347, 53.737, -253.774, 189.63, 0, 0, 0, 0, -114.218, 225.476, 0, 0, 0, 0, -36.4921, 204.988 )
+}
+
+[sub_resource type="Curve2D" id=2]
+_data = {
+"points": PoolVector2Array( 0, 0, 0, 0, 167.591, 75.1445, 0, 0, 0, 0, 333.342, 128.889, 0, 0, 0, 0, 300.92, 230.135, 0, 0, 0, 0, 142.225, 171.549, 0, 0, 0, 0, 167.591, 75.1445 )
 }
 
 [node name="Node2D" type="Node2D"]
 
-[node name="RMSS2D_Shape_Open" type="Node2D" parent="."]
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="RMSS2D_Shape_Open" type="Node2D" parent="StaticBody2D"]
 script = ExtResource( 2 )
 _curve = SubResource( 1 )
+collision_size = 16.0
+collision_polygon_node_path = NodePath("../CollisionPolygon2D")
+shape_material = ExtResource( 1 )
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+modulate = Color( 1, 1, 1, 0.3 )
+polygon = PoolVector2Array( -290.055, 37.2935, -296.794, 53.5393, -301.84, 71.3248, -303.798, 81.8977, -305.003, 93.3104, -305.173, 105.353, -304.029, 117.815, -301.287, 130.486, -299.229, 136.835, -296.667, 143.157, -293.565, 149.427, -289.887, 155.617, -285.599, 161.702, -280.666, 167.656, -275.052, 173.452, -268.722, 179.064, -261.641, 184.465, -253.774, 189.63, -222.444, 206.599, -194.744, 217.901, -170.843, 224.587, -150.908, 227.704, -135.109, 228.303, -123.616, 227.432, -116.595, 226.14, -114.218, 225.476, -36.4921, 204.988, -32.414, 220.46, -110.027, 240.917, -112.996, 241.713, -121.563, 243.277, -134.808, 244.274, -152.447, 243.602, -174.234, 240.195, -199.922, 233.013, -229.277, 221.04, -261.974, 203.352, -270.884, 197.513, -278.881, 191.41, -286.105, 185.004, -292.572, 178.326, -298.299, 171.415, -303.305, 164.311, -307.613, 157.061, -311.251, 149.71, -314.254, 142.306, -316.716, 134.645, -319.814, 120.238, -321.139, 105.971, -320.958, 92.3571, -319.62, 79.6016, -317.403, 67.6848, -311.88, 48.2903, -304.834, 31.1629 )
+
+[node name="RMSS2D_Shape_Closed" type="Node2D" parent="."]
+script = ExtResource( 3 )
+_curve = SubResource( 2 )
 shape_material = ExtResource( 1 )
