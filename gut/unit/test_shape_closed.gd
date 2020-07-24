@@ -19,7 +19,8 @@ func test_add_points():
 
 	keys.push_back(shape.add_point(points[2]))
 	keys.push_back(shape.get_point_key_at_index(3))
-	assert_eq(shape.get_point_count(), 4)
+	assert_eq(shape.get_real_point_count(), 4)
+	assert_eq(shape.get_point_count(), 3)
 	assert_eq(shape.get_point_index(keys[0]), 0)
 	assert_eq(shape.get_point_index(keys[1]), 1)
 	assert_eq(shape.get_point_index(keys[2]), 2)
@@ -30,7 +31,8 @@ func test_add_points():
 	assert_true(shape.get_point_at_index(0).equals(shape.get_point_at_index(3)))
 
 	keys.push_back(shape.add_point(points[3]))
-	assert_eq(shape.get_point_count(), 5)
+	assert_eq(shape.get_real_point_count(), 5)
+	assert_eq(shape.get_point_count(), 4)
 	assert_eq(shape.get_point_index(keys[0]), 0)
 	assert_eq(shape.get_point_index(keys[1]), 1)
 	assert_eq(shape.get_point_index(keys[2]), 2)
@@ -38,7 +40,8 @@ func test_add_points():
 	assert_eq(shape.get_point_index(keys[3]), 4)
 
 	keys.push_back(shape.add_point(points[4], 0))
-	assert_eq(shape.get_point_count(), 6)
+	assert_eq(shape.get_real_point_count(), 6)
+	assert_eq(shape.get_point_count(), 5)
 	assert_eq(shape.get_point_index(keys[0]), 0)
 	assert_eq(shape.get_point_index(keys[1]), 2)
 	assert_eq(shape.get_point_index(keys[2]), 3)
@@ -47,7 +50,8 @@ func test_add_points():
 	assert_eq(shape.get_point_index(keys[3]), 5)
 
 	keys.push_back(shape.add_point(points[5], 6))
-	assert_eq(shape.get_point_count(), 7)
+	assert_eq(shape.get_real_point_count(), 7)
+	assert_eq(shape.get_point_count(), 6)
 	assert_eq(shape.get_point_index(keys[0]), 0)
 	assert_eq(shape.get_point_index(keys[1]), 2)
 	assert_eq(shape.get_point_index(keys[2]), 3)
@@ -57,7 +61,8 @@ func test_add_points():
 	assert_eq(shape.get_point_index(keys[3]), 6)
 
 	keys.push_back(shape.add_point(points[5], 80))
-	assert_eq(shape.get_point_count(), 8)
+	assert_eq(shape.get_real_point_count(), 8)
+	assert_eq(shape.get_point_count(), 7)
 	assert_eq(shape.get_point_index(keys[0]), 0)
 	assert_eq(shape.get_point_index(keys[1]), 2)
 	assert_eq(shape.get_point_index(keys[2]), 3)

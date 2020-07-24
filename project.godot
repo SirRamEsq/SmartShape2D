@@ -94,11 +94,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/strings.gd"
 }, {
-"base": "Resource",
-"class": "RMSS2D_Tuple_Int",
-"language": "GDScript",
-"path": "res://addons/rmsmartshape/shapes/tuple_int.gd"
-}, {
 "base": "Node2D",
 "class": "RMSmartShape2D",
 "language": "GDScript",
@@ -127,7 +122,6 @@ _global_script_class_icons={
 "RMSS2D_Shape_Closed": "res://addons/rmsmartshape/closed_shape.png",
 "RMSS2D_Shape_Open": "res://addons/rmsmartshape/open_shape.png",
 "RMSS2D_Strings": "",
-"RMSS2D_Tuple_Int": "",
 "RMSmartShape2D": "res://addons/rmsmartshape/shape.png",
 "RMSmartShapeAnchor2D": "res://addons/rmsmartshape/shape_anchor.png"
 }

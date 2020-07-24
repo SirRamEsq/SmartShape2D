@@ -828,7 +828,7 @@ func get_first_point_index(points: Array) -> int:
 
 
 func get_last_point_index(points: Array) -> int:
-	return points.size() - 1
+	return get_point_count() - 1
 
 
 func _get_next_point_index(idx: int, points: Array) -> int:

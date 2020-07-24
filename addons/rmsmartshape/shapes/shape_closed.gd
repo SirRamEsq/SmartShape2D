@@ -17,7 +17,7 @@ func _init():
 # OVERRIDE #
 ############
 func _has_minimum_point_count() -> bool:
-	return get_point_count() >= 3
+	return _points.get_point_count() >= 3
 
 
 func duplicate_self():
@@ -31,8 +31,11 @@ func __new():
 
 
 func _get_next_point_index(idx: int, points: Array) -> int:
-	var new_idx = idx
-	new_idx = idx % (points.size() - 1)
+	if not is_shape_closed():
+		return ._get_next_point_index(idx, points)
+
+	var new_idx = idx + 1
+	new_idx = new_idx % (points.size() - 1)
 	# Skip last point; First and last point are the same when closed
 	if new_idx == points.size() - 1:
 		new_idx = _get_next_point_index(new_idx, points)
@@ -40,6 +43,9 @@ func _get_next_point_index(idx: int, points: Array) -> int:
 
 
 func _get_previous_point_index(idx: int, points: Array) -> int:
+	if not is_shape_closed():
+		return ._get_next_point_index(idx, points)
+
 	var new_idx = idx - 1
 	if new_idx < 0:
 		new_idx += points.size()
@@ -49,9 +55,13 @@ func _get_previous_point_index(idx: int, points: Array) -> int:
 	return new_idx
 
 
-func get_last_point_index(points: Array) -> int:
-	return points.size() - 2
+func get_real_point_count():
+	return _points.get_point_count()
 
+func get_point_count():
+	if is_shape_closed():
+		return get_real_point_count() - 1
+	return get_real_point_count()
 
 func _build_meshes(edges: Array) -> Array:
 	var meshes = []
@@ -116,7 +126,7 @@ func _close_shape() -> bool:
 
 
 func is_shape_closed() -> bool:
-	var point_count = get_point_count()
+	var point_count = _points.get_point_count()
 	if not _has_minimum_point_count():
 		return false
 	var key1 = _points.get_point_key_at_index(0)
@@ -136,8 +146,8 @@ func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
 func adjust_add_point_index(index:int)->int:
 	# Don't allow a point to be added after the last point of the closed shape or before the first
 	if is_shape_closed():
-		if index < 0 or (index > get_point_count() - 1):
-			index = max(get_point_count() - 1, 0)
+		if index < 0 or (index > _points.get_point_count() - 1):
+			index = max(_points.get_point_count() - 1, 0)
 		if index < 1:
 			index = 1
 	return index
