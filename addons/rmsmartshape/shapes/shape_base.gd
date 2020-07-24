@@ -165,6 +165,9 @@ func clear_points():
 	set_as_dirty()
 
 
+func adjust_add_point_index(index: int) -> int:
+	return index
+
 func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
 	var keys = []
 	for i in range(0, verts.size(), 1):

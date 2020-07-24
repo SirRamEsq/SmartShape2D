@@ -58,10 +58,12 @@ func _get_previous_point_index(idx: int, points: Array) -> int:
 func get_real_point_count():
 	return _points.get_point_count()
 
+
 func get_point_count():
 	if is_shape_closed():
 		return get_real_point_count() - 1
 	return get_real_point_count()
+
 
 func _build_meshes(edges: Array) -> Array:
 	var meshes = []
@@ -143,7 +145,8 @@ func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> 
 func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
 	return .add_point(position, adjust_add_point_index(index), update)
 
-func adjust_add_point_index(index:int)->int:
+
+func adjust_add_point_index(index: int) -> int:
 	# Don't allow a point to be added after the last point of the closed shape or before the first
 	if is_shape_closed():
 		if index < 0 or (index > _points.get_point_count() - 1):
@@ -159,3 +162,43 @@ func _add_point_update():
 	if _close_shape():
 		return
 	._add_point_update()
+
+
+func bake_collision():
+	if not has_node(collision_polygon_node_path) or not is_shape_closed():
+		return
+	var polygon = get_node(collision_polygon_node_path)
+	var collision_width = 1.0
+	var collision_extends = 0.0
+	var verts = get_vertices()
+	var t_points = get_tessellated_points()
+	if t_points.size() < 2:
+		return
+	var collision_quads = []
+	for i in range(0, t_points.size() - 1, 1):
+		var width = _get_width_for_tessellated_point(verts, t_points, i)
+		collision_quads.push_back(
+			_build_quad_from_point(
+				t_points,
+				i,
+				null,
+				null,
+				Vector2(collision_size, collision_size),
+				width,
+				should_flip_edges(),
+				i == 0,
+				i == t_points.size() - 1,
+				collision_width,
+				collision_offset - 1.0,
+				collision_extends
+			)
+		)
+	_weld_quad_array(collision_quads)
+	var points: PoolVector2Array = PoolVector2Array()
+	# PT A
+	for quad in collision_quads:
+		points.push_back(
+			polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
+		)
+
+	polygon.polygon = points

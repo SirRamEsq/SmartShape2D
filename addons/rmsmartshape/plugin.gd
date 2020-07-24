@@ -522,7 +522,6 @@ func _action_delete_point_out(key:int):
 	_action_invert_orientation()
 
 func _action_delete_point():
-	var fix_close_shape = false
 	undo.create_action("Delete Point")
 	var pt:Vector2 = shape.get_point_position(current_point_key())
 	var current_index = current_point_index()
@@ -535,13 +534,11 @@ func _action_delete_point():
 	undo.add_undo_method(shape, "set_as_dirty")
 	undo.commit_action()
 	undo_version = undo.get_version()
-	if fix_close_shape:
-		shape.fix_close_shape()
 	_action_invert_orientation()
 
 func _action_add_point(new_point:Vector2)->int:
 	"""
-	Will return index of added point
+	Will return key of added point
 	"""
 	undo.create_action("Add Point: %s" % new_point)
 	undo.add_do_method(shape, "add_point", new_point)
@@ -550,17 +547,18 @@ func _action_add_point(new_point:Vector2)->int:
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
-	if _action_invert_orientation():
-		return 0
-	return shape.get_point_count() - 1
+	var key = shape.get_point_at_index(shape.get_point_count() - 1)
+	_action_invert_orientation()
+	return key
 
 
 func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
 	"""
 	Will split the shape at the given index
-	The idx of the new point will be returned
+	The key of the new point will be returned
 	If the orientation is changed, idx will be updated
 	"""
+	idx = shape.adjust_add_point_index(idx)
 	undo.create_action("Split Curve")
 	undo.add_do_method(shape, "add_point", xform.affine_inverse().xform(gpoint), idx)
 	undo.add_undo_method(shape, "remove_point_at_index", idx)
@@ -568,9 +566,9 @@ func _action_split_curve(idx:int, gpoint:Vector2, xform:Transform2D):
 	undo.add_undo_method(self, "update_overlays")
 	undo.commit_action()
 	undo_version = undo.get_version()
-	if _action_invert_orientation():
-		return _invert_idx(idx, shape.get_point_count())
-	return idx
+	var key = shape.get_point_at_index(idx)
+	_action_invert_orientation()
+	return key
 
 func _should_invert_orientation()->bool:
 	if shape == null:
