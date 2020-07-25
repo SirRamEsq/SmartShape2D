@@ -43,7 +43,7 @@ var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
 var _is_instantiable = false
-var _curve: Curve2D = Curve2D.new()# setget set_curve, get_curve
+var _curve: Curve2D = Curve2D.new()  # setget set_curve, get_curve
 
 signal points_modified
 signal on_dirty_update
@@ -168,6 +168,7 @@ func clear_points():
 func adjust_add_point_index(index: int) -> int:
 	return index
 
+
 func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
 	var keys = []
 	for i in range(0, verts.size(), 1):
@@ -200,6 +201,10 @@ func _is_array_index_in_range(a: Array, i: int) -> bool:
 	return false
 
 
+func is_index_in_range(idx: int) -> bool:
+	return _points.is_index_in_range(idx)
+
+
 func set_point_position(key: int, position: Vector2):
 	_points.set_point_position(key, position)
 	_update_curve(_points)
@@ -212,6 +217,7 @@ func remove_point(key: int):
 	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
+
 
 func remove_point_at_index(idx: int):
 	remove_point(get_point_key_at_index(idx))
@@ -329,6 +335,7 @@ func get_point_texture_flip(key: int) -> bool:
 #########
 func _init():
 	pass
+
 
 func _ready():
 	if _curve == null:
