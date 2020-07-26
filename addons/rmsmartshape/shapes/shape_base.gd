@@ -291,6 +291,10 @@ func get_closest_offset(to_point: Vector2):
 func get_point_count():
 	return _points.get_point_count()
 
+# Intent is to override
+func get_real_point_count():
+	return get_point_count()
+
 
 func get_point_position(key: int):
 	return _points.get_point_position(key)

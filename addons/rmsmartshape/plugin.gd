@@ -425,7 +425,7 @@ func _get_intersecting_control_point_in(mouse_pos: Vector2, grab_threshold: floa
 		var c_in = vec + shape.get_point_in(key)
 		c_in = xform.xform(c_in)
 		if c_in.distance_to(mouse_pos) <= grab_threshold:
-			points.push_back(i)
+			points.push_back(key)
 
 	return points
 
@@ -442,7 +442,7 @@ func _get_intersecting_control_point_out(mouse_pos: Vector2, grab_threshold: flo
 		var c_out = vec + shape.get_point_out(key)
 		c_out = xform.xform(c_out)
 		if c_out.distance_to(mouse_pos) <= grab_threshold:
-			points.push_back(i)
+			points.push_back(key)
 
 	return points
 
@@ -581,7 +581,9 @@ func _action_split_curve(idx: int, gpoint: Vector2, xform: Transform2D):
 	The key of the new point will be returned
 	If the orientation is changed, idx will be updated
 	"""
+	print("Initial %s" % idx)
 	idx = shape.adjust_add_point_index(idx)
+	print("Final %s" % idx)
 	undo.create_action("Split Curve")
 	undo.add_do_method(shape, "add_point", xform.affine_inverse().xform(gpoint), idx)
 	undo.add_undo_method(shape, "remove_point_at_index", idx)
@@ -901,20 +903,18 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 		return false
 	var gpoint: Vector2 = mb.position
 	var insertion_point: int = -1
-	var mb_length = shape.get_closest_offset(t.affine_inverse().xform(gpoint))
+	var mb_offset = shape.get_closest_offset(t.affine_inverse().xform(gpoint))
 
-	for i in range(0, shape.get_point_count(), 1):
+	for i in range(0, shape.get_real_point_count() - 2, 1):
 		var key = shape.get_point_key_at_index(i)
 		var key_next = shape.get_point_key_at_index(i + 1)
-		var compareLength = shape.get_closest_offset(shape.get_point_position(key_next))
-		if (
-			mb_length >= shape.get_closest_offset(shape.get_point_position(key))
-			and mb_length <= compareLength
-		):
+		var this_offset = shape.get_closest_offset(shape.get_point_position(key))
+		var next_offset = shape.get_closest_offset(shape.get_point_position(key_next))
+		if mb_offset >= this_offset and mb_offset <= next_offset:
 			insertion_point = i + 1
 
 	if insertion_point == -1:
-		insertion_point = shape.get_point_count() - 1
+		insertion_point = shape.get_real_point_count() - 1
 
 	var key = _action_split_curve(insertion_point, gpoint, t)
 	select_vertices_to_move([key], vp_m_pos)

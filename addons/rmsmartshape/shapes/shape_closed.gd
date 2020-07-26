@@ -149,8 +149,8 @@ func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
 func adjust_add_point_index(index: int) -> int:
 	# Don't allow a point to be added after the last point of the closed shape or before the first
 	if is_shape_closed():
-		if index < 0 or (index > _points.get_point_count() - 1):
-			index = max(_points.get_point_count() - 1, 0)
+		if index < 0 or (index > get_real_point_count() - 1):
+			index = max(get_real_point_count() - 1, 0)
 		if index < 1:
 			index = 1
 	return index
