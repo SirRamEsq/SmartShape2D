@@ -60,8 +60,9 @@ func get_real_point_count():
 
 
 func get_point_count():
-	if is_shape_closed():
-		return get_real_point_count() - 1
+	#if is_shape_closed():
+		#return get_real_point_count() - 1
+	#return get_real_point_count()
 	return get_real_point_count()
 
 
