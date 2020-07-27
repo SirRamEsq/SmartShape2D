@@ -35,8 +35,8 @@ func set_points(ps: Dictionary):
 
 
 func __generate_key(next: int) -> int:
-	if _points.has(next):
-		return __generate_key(next + 1)
+	if not is_key_valid(next):
+		return __generate_key(max(next + 1, 0))
 	return next
 
 
@@ -46,8 +46,25 @@ func _generate_key() -> int:
 	return next
 
 
-func add_point(point: Vector2, idx: int = -1) -> int:
-	var next_key = _generate_key()
+func get_next_key() -> int:
+	"""
+	Will return the next key that will be used when adding a point
+	"""
+	return __generate_key(_next_key)
+
+
+func is_key_valid(k: int) -> bool:
+	if k < 0:
+		return false
+	if _points.has(k):
+		return false
+	return true
+
+
+func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
+	var next_key = use_key
+	if next_key == -1 or not is_key_valid(next_key):
+		next_key = _generate_key()
 	var new_point = RMSS2D_Point.new(point)
 	new_point.connect("changed", self, "_on_point_changed")
 	_points[next_key] = new_point
@@ -71,6 +88,11 @@ func get_point_at_index(idx: int) -> int:
 
 func get_point(key: int) -> int:
 	return _points[key].duplicate()
+
+
+func set_point(key: int, value: RMSS2D_Point):
+	if has_point(key):
+		_points[key] = value.duplicate()
 
 
 func get_point_count() -> int:

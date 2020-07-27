@@ -169,24 +169,26 @@ func adjust_add_point_index(index: int) -> int:
 	return index
 
 
-func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
+func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
 	var keys = []
 	for i in range(0, verts.size(), 1):
 		var v = verts[i]
 		if starting_index != -1:
-			keys.push_back(_points.add_point(v, starting_index + i))
+			keys.push_back(_points.add_point(v, starting_index + i, key))
 		else:
-			keys.push_back(_points.add_point(v))
-	if update:
-		_add_point_update()
+			keys.push_back(_points.add_point(v, starting_index, key))
+	_add_point_update()
 	return keys
 
 
-func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
-	var key = _points.add_point(position, index)
-	if update:
-		_add_point_update()
+func add_point(position: Vector2, index: int = -1, key: int = -1) -> int:
+	key = _points.add_point(position, index, key)
+	_add_point_update()
 	return key
+
+
+func get_next_key() -> int:
+	return _points.get_next_key()
 
 
 func _add_point_update():
@@ -291,6 +293,7 @@ func get_closest_offset(to_point: Vector2):
 func get_point_count():
 	return _points.get_point_count()
 
+
 # Intent is to override
 func get_real_point_count():
 	return get_point_count()
@@ -301,13 +304,20 @@ func get_point_position(key: int):
 
 
 func get_point(key: int):
-	return get_point_position(key)
+	return _points.get_point(key)
+
+
+func set_point(key: int, value: RMSS2D_Point):
+	_points.set_point(key, value)
+	_update_curve(_points)
+	set_as_dirty()
 
 
 func set_point_width(key: int, width: float):
 	var props = _points.get_point_properties(key)
 	props.width = width
 	_points.set_point_properties(key, props)
+	set_as_dirty()
 
 
 func get_point_width(key: int) -> float:

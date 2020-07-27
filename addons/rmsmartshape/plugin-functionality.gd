@@ -96,14 +96,12 @@ static func action_delete_point_in(e: EditorPlugin, undo: UndoRedo, s: RMSS2D_Sh
 	var from_position_in = s.get_point_in(key)
 	undo.create_action("Delete Control Point In")
 
-	undo.add_do_method(s, "set_as_dirty")
+	undo.add_do_method(s, "set_point_in", key, Vector2.ZERO)
 	undo.add_do_method(e, "update_overlays")
 
 	undo.add_undo_method(s, "set_point_in", key, from_position_in)
-	s.set_point_in(key, Vector2(0, 0))
-
-	undo.add_undo_method(s, "set_as_dirty")
 	undo.add_undo_method(e, "update_overlays")
+
 	undo.commit_action()
 	action_invert_orientation(undo, s)
 
@@ -111,28 +109,26 @@ static func action_delete_point_out(e: EditorPlugin, undo: UndoRedo, s: RMSS2D_S
 	var from_position_out = s.get_point_out(key)
 	undo.create_action("Delete Control Point Out")
 
-	undo.add_do_method(s, "set_as_dirty")
+	undo.add_do_method(s, "set_point_out", key, Vector2.ZERO)
 	undo.add_do_method(e, "update_overlays")
 
 	undo.add_undo_method(s, "set_point_out", key, from_position_out)
-	s.set_point_out(key, Vector2(0, 0))
-
-	undo.add_undo_method(s, "set_as_dirty")
 	undo.add_undo_method(e, "update_overlays")
+
 	undo.commit_action()
 	action_invert_orientation(undo, s)
 
 static func action_delete_point(e: EditorPlugin, undo: UndoRedo, s: RMSS2D_Shape_Base, key: int):
 	undo.create_action("Delete Point")
-	var pt: Vector2 = s.get_point_position(key)
+	var pos: Vector2 = s.get_point_position(key)
+	var pt = s.get_point(key)
 	var current_index = s.get_point_index(key)
 	undo.add_do_method(s, "remove_point", key)
-	undo.add_undo_method(s, "add_point", pt, current_index)
+	undo.add_undo_method(s, "add_point", pos, current_index, key)
+	undo.add_undo_method(s, "set_point", key, pt)
 
 	undo.add_do_method(e, "update_overlays")
 	undo.add_undo_method(e, "update_overlays")
-	undo.add_do_method(s, "set_as_dirty")
-	undo.add_undo_method(s, "set_as_dirty")
 	undo.commit_action()
 	action_invert_orientation(undo, s)
 
@@ -141,15 +137,15 @@ static func action_add_point(e: EditorPlugin, undo: UndoRedo, s: RMSS2D_Shape_Ba
 	Will return key of added point
 	"""
 	var idx = -1
+	var new_key = s.get_next_key()
 	undo.create_action("Add Point: %s" % new_point)
-	undo.add_do_method(s, "add_point", new_point, idx)
-	undo.add_undo_method(s, "remove_point_at_index", s.adjust_add_point_index(idx))
+	undo.add_do_method(s, "add_point", new_point, idx, new_key)
+	undo.add_undo_method(s, "remove_point", new_key)
 	undo.add_do_method(e, "update_overlays")
 	undo.add_undo_method(e, "update_overlays")
 	undo.commit_action()
-	var key = s.get_point_key_at_index(idx)
 	action_invert_orientation(undo, s)
-	return key
+	return new_key
 
 static func action_split_curve(
 	e: EditorPlugin,
@@ -202,4 +198,3 @@ static func action_invert_orientation(undo: UndoRedo, s: RMSS2D_Shape_Base) -> b
 		undo.commit_action()
 		return true
 	return false
-

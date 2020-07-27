@@ -55,17 +55,6 @@ func _get_previous_point_index(idx: int, points: Array) -> int:
 	return new_idx
 
 
-func get_real_point_count():
-	return _points.get_point_count()
-
-
-func get_point_count():
-	#if is_shape_closed():
-		#return get_real_point_count() - 1
-	#return get_real_point_count()
-	return get_real_point_count()
-
-
 func _build_meshes(edges: Array) -> Array:
 	var meshes = []
 
@@ -139,19 +128,19 @@ func is_shape_closed() -> bool:
 	return first_point.equals(final_point)
 
 
-func add_points(verts: Array, starting_index: int = -1, update: bool = true) -> Array:
-	return .add_points(verts, adjust_add_point_index(starting_index), update)
+func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
+	return .add_points(verts, adjust_add_point_index(starting_index), key)
 
 
-func add_point(position: Vector2, index: int = -1, update: bool = true) -> int:
-	return .add_point(position, adjust_add_point_index(index), update)
+func add_point(position: Vector2, index: int = -1, key: int = -1) -> int:
+	return .add_point(position, adjust_add_point_index(index), key)
 
 
 func adjust_add_point_index(index: int) -> int:
 	# Don't allow a point to be added after the last point of the closed shape or before the first
 	if is_shape_closed():
-		if index < 0 or (index > get_real_point_count() - 1):
-			index = max(get_real_point_count() - 1, 0)
+		if index < 0 or (index > get_point_count() - 1):
+			index = max(get_point_count() - 1, 0)
 		if index < 1:
 			index = 1
 	return index
