@@ -118,17 +118,26 @@ static func action_delete_point_out(e: EditorPlugin, undo: UndoRedo, s: RMSS2D_S
 	undo.commit_action()
 	action_invert_orientation(undo, s)
 
-static func action_delete_point(e: EditorPlugin, undo: UndoRedo, s: RMSS2D_Shape_Base, key: int):
-	undo.create_action("Delete Point")
-	var pos: Vector2 = s.get_point_position(key)
-	var pt = s.get_point(key)
-	var current_index = s.get_point_index(key)
-	undo.add_do_method(s, "remove_point", key)
-	undo.add_undo_method(s, "add_point", pos, current_index, key)
-	undo.add_undo_method(s, "set_point", key, pt)
+static func get_constrained_points_to_delete(s: RMSS2D_Shape_Base, k: int, keys = []):
+	keys.push_back(k)
+	var constraints = s.get_point_constraints(k)
+	for tuple in constraints:
+		var constraint = constraints[tuple]
+		if constraint == RMSS2D_Point_Array.CONSTRAINT.NONE:
+			continue
+		var k2 = RMSS2D_Point_Array.get_other_value_from_tuple(tuple, k)
+		if constraint & RMSS2D_Point_Array.CONSTRAINT.ALL:
+			if not keys.has(k2):
+				get_constrained_points_to_delete(s, k2, keys)
+	return keys
 
-	undo.add_do_method(e, "update_overlays")
-	undo.add_undo_method(e, "update_overlays")
+static func action_delete_point(undo: UndoRedo, s: RMSS2D_Shape_Base, first_key: int):
+	var dupe = s.get_point_array().duplicate(true)
+	var keys = get_constrained_points_to_delete(s, first_key)
+	undo.create_action("Delete Point")
+	for key in keys:
+		undo.add_do_method(s, "remove_point", key)
+	undo.add_undo_method(s, "set_point_array", dupe)
 	undo.commit_action()
 	action_invert_orientation(undo, s)
 

@@ -31,13 +31,13 @@ func equals(other: RMSS2D_Point) -> bool:
 	return true
 
 
-func duplicate(sub_resource: bool = true):
+func duplicate(sub_resource: bool = false):
 	var _new = __new()
 	_new.position = position
 	_new.point_in = point_in
 	_new.point_out = point_out
 	if sub_resource:
-		_new.properties = properties.duplicate()
+		_new.properties = properties.duplicate(true)
 	else:
 		_new.properties = properties
 	return _new
@@ -47,24 +47,28 @@ func _set_position(v: Vector2):
 	if position != v:
 		position = v
 		emit_signal("changed", self)
+	property_list_changed_notify()
 
 
 func _set_point_in(v: Vector2):
 	if point_in != v:
 		point_in = v
 		emit_signal("changed", self)
+	property_list_changed_notify()
 
 
 func _set_point_out(v: Vector2):
 	if point_out != v:
 		point_out = v
 		emit_signal("changed", self)
+	property_list_changed_notify()
 
 
 func _set_properties(other: RMS2D_VertexProperties):
 	if not properties.equals(other):
-		properties = other.duplicate()
+		properties = other.duplicate(true)
 		emit_signal("changed", self)
+	property_list_changed_notify()
 
 
 # Workaround (class cannot reference itself)

@@ -7,11 +7,13 @@ enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTI
 # Maps a key to each point
 export var _points: Dictionary = {} setget set_points
 # Contains all keys; the order of the keys determines the order of the points
-export var _point_order: Array = []
+export var _point_order: Array = [] setget set_point_order
 # Key is tuple of point_keys; Value is the CONSTRAINT enum
-export var _constraints = {}
+export var _constraints = {} setget set_constraints
 # Next key value to generate
-export var _next_key = 0
+export var _next_key = 0 setget set_next_key
+
+signal constraint_removed(key1, key2)
 
 ###################
 # HANDLING POINTS #
@@ -32,6 +34,19 @@ func set_points(ps: Dictionary):
 		var p = ps[k]
 		p.connect("changed", self, "_on_point_changed")
 	_points = ps
+	property_list_changed_notify()
+
+func set_point_order(po: Array):
+	_point_order = po
+	property_list_changed_notify()
+
+func set_constraints(cs: Dictionary):
+	_constraints = cs
+	property_list_changed_notify()
+
+func set_next_key(i: int):
+	_next_key = i
+	property_list_changed_notify()
 
 
 func __generate_key(next: int) -> int:
@@ -83,16 +98,16 @@ func get_point_key_at_index(idx: int) -> int:
 
 
 func get_point_at_index(idx: int) -> int:
-	return _points[_point_order[idx]].duplicate()
+	return _points[_point_order[idx]].duplicate(true)
 
 
 func get_point(key: int) -> int:
-	return _points[key].duplicate()
+	return _points[key].duplicate(true)
 
 
 func set_point(key: int, value: RMSS2D_Point):
 	if has_point(key):
-		_points[key] = value.duplicate()
+		_points[key] = value.duplicate(true)
 
 
 func get_point_count() -> int:
@@ -134,11 +149,12 @@ func get_all_point_keys() -> Array:
 	"""
 	_point_order should contain every single point ONLY ONCE
 	"""
-	return _point_order.duplicate()
+	return _point_order.duplicate(true)
 
 
 func remove_point(key: int) -> bool:
 	if has_point(key):
+		remove_constraints(key)
 		var p = _points[key]
 		if p.is_connected("changed", self, "_on_point_changed"):
 			p.disconnect("changed", self, "_on_point_changed")
@@ -196,7 +212,7 @@ func set_point_properties(key: int, value: RMS2D_VertexProperties):
 
 func get_point_properties(key: int) -> RMS2D_VertexProperties:
 	if has_point(key):
-		return _points[key].properties.duplicate()
+		return _points[key].properties.duplicate(true)
 	var new_props = RMS2D_VertexProperties.new()
 	return new_props
 
@@ -225,7 +241,7 @@ var _keys_to_update_constraints = []
 
 
 func _update_constraints(src: int):
-	var constraints = get_constraints(src)
+	var constraints = get_point_constraints(src)
 	for tuple in constraints:
 		var constraint = constraints[tuple]
 		if constraint == CONSTRAINT.NONE:
@@ -255,7 +271,7 @@ func update_constraints(src: int):
 
 	# Subsequent required passes of updating constraints
 	while not _keys_to_update_constraints.empty():
-		var key_set = _keys_to_update_constraints.duplicate()
+		var key_set = _keys_to_update_constraints.duplicate(true)
 		_keys_to_update_constraints.clear()
 		for k in key_set:
 			_update_constraints(k)
@@ -264,7 +280,7 @@ func update_constraints(src: int):
 	emit_signal("changed")
 
 
-func get_constraints(key1: int) -> Dictionary:
+func get_point_constraints(key1: int) -> Dictionary:
 	"""
 	Will Return all constraints for a given key
 	"""
@@ -275,28 +291,52 @@ func get_constraints(key1: int) -> Dictionary:
 	return constraints
 
 
-func get_constraint(key1: int, key2: int) -> int:
+func get_point_constraint(key1: int, key2: int) -> int:
 	"""
 	Will Return the constraint for a pair of keys
 	"""
 	var t = create_tuple(key1, key2)
-	var t_index = _find_tuple_in_array_of_tuples(_constraints.keys(), t)
+	var keys = _constraints.keys()
+	var t_index = find_tuple_in_array_of_tuples(keys, t)
 	if t_index == -1:
 		return CONSTRAINT.NONE
-	return _constraints[t_index]
+	var t_key = keys[t_index]
+	return _constraints[t_key]
 
 
 func set_constraint(key1: int, key2: int, constraint: int):
 	var t = create_tuple(key1, key2)
 	var existing_tuples = _constraints.keys()
-	var existing_t_index = _find_tuple_in_array_of_tuples(existing_tuples, t)
+	var existing_t_index = find_tuple_in_array_of_tuples(existing_tuples, t)
 	if existing_t_index != -1:
 		t = existing_tuples[existing_t_index]
 	_constraints[t] = constraint
 	if _constraints[t] == CONSTRAINT.NONE:
 		_constraints.erase(t)
+		emit_signal("constraint_removed", key1, key2)
 	else:
 		update_constraints(key1)
+
+
+func remove_constraints(key1: int):
+	var constraints = get_point_constraints(key1)
+	for tuple in constraints:
+		var constraint = constraints[tuple]
+		var key2 = get_other_value_from_tuple(tuple, key1)
+		set_constraint(key1, key2, CONSTRAINT.NONE)
+
+
+func remove_constraint(key1: int, key2: int):
+	set_constraint(key1, key2, CONSTRAINT.NONE)
+
+
+func get_all_constraints_of_type(type: int) -> int:
+	var constraints = []
+	for t in _constraints:
+		var c = _constraints[t]
+		if c == type:
+			constraints.push_back(t)
+	return constraints
 
 
 ########
@@ -310,15 +350,23 @@ func debug_print():
 		print("%s = P:%s | I:%s | O:%s" % [k, pos, _in, out])
 
 
-func duplicate(sub_resource: bool = true):
+func duplicate(sub_resource: bool = false):
 	var _new = __new()
+	_new._next_key = _next_key
 	if sub_resource:
-		pass
+		var new_point_dict = {}
+		for k in _points:
+			new_point_dict[k] = _points[k].duplicate(true)
+		_new._points = new_point_dict
+		_new._point_order = _point_order.duplicate(true)
+
+		_new._constraints = {}
+		for tuple in _constraints:
+			_new._constraints[tuple] = _constraints[tuple]
 	else:
 		_new._points = _points
 		_new._point_order = _point_order
 		_new._constraints = _constraints
-		_new._next_key = _next_key
 	return _new
 
 
@@ -331,24 +379,20 @@ func __new():
 # TUPLE #
 #########
 
-
-func create_tuple(a: int, b: int) -> Array:
+static func create_tuple(a: int, b: int) -> Array:
 	return [a, b]
 
-
-func get_other_value_from_tuple(t: Array, value: int) -> int:
+static func get_other_value_from_tuple(t: Array, value: int) -> int:
 	if t[0] == value:
 		return t[1]
 	elif t[1] == value:
 		return t[0]
 	return -1
 
-
-func tuples_are_equal(t1: Array, t2: Array) -> bool:
+static func tuples_are_equal(t1: Array, t2: Array) -> bool:
 	return (t1[0] == t2[0] and t1[1] == t2[1]) or (t1[0] == t2[1] and t1[1] == t2[0])
 
-
-func _find_tuple_in_array_of_tuples(tuple_array: Array, t: Array) -> int:
+static func find_tuple_in_array_of_tuples(tuple_array: Array, t: Array) -> int:
 	for i in range(tuple_array.size()):
 		var other = tuple_array[i]
 		if tuples_are_equal(t, other):

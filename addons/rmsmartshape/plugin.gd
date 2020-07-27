@@ -521,7 +521,7 @@ func select_control_points_to_move(
 func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float) -> bool:
 	# Mouse over a single vertex?
 	if current_action.is_single_vert_selected():
-		FUNC.action_delete_point(self, undo, shape, current_action.keys[0])
+		FUNC.action_delete_point(undo, shape, current_action.keys[0])
 		undo_version = undo.get_version()
 		deselect_control_points()
 		return true

@@ -12,5 +12,10 @@ static func sort_int_ascending(a:int, b:int) -> bool:
 		return true
 	return false
 
+static func sort_int_descending(a:int, b:int) -> bool:
+	if a < b:
+		return false
+	return true
+
 static func to_vector3(vector: Vector2):
 	return Vector3(vector.x, vector.y, 0)
