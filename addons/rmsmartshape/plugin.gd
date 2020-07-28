@@ -274,10 +274,12 @@ func edit(object):
 
 	on_edge = false
 	deselect_control_points()
-	if shape != null:
-		shape.disconnect("points_modified", self, "_on_shape_point_modified")
+	if is_shape_valid(shape):
+		if shape.is_connected("points_modified", self, "_on_shape_point_modified"):
+			shape.disconnect("points_modified", self, "_on_shape_point_modified")
 	shape = object as RMSS2D_Shape_Base
-	shape.connect("points_modified", self, "_on_shape_point_modified")
+	if not shape.is_connected("points_modified", self, "_on_shape_point_modified"):
+		shape.connect("points_modified", self, "_on_shape_point_modified")
 	update_overlays()
 
 
