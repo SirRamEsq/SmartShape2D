@@ -54,7 +54,7 @@ signal on_dirty_update
 #####################
 func get_point_array() -> RMSS2D_Point_Array:
 	# Duplicating this causes Godot Editor to crash
-	return _points#.duplicate(true)
+	return _points  #.duplicate(true)
 
 
 func set_point_array(a: RMSS2D_Point_Array):
@@ -752,10 +752,10 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 
 	if s_mat.weld_edges:
 		if edges.size() > 1:
-			for i in range(0, edges.size(), 1):
+			for i in range(0, edges.size() - 1, 1):
 				var this_edge = edges[i]
 				var next_edge = edges[i + 1]
-				_weld_quads(this_edge.quads[this_edge.quads.size() - 1], next_edge.quads[0], 1.0)
+				_weld_quads(this_edge.quads.back(), next_edge.quads[0], 1.0)
 
 	return edges
 

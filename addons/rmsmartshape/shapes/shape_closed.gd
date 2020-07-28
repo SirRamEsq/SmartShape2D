@@ -21,6 +21,7 @@ func remove_point(key: int):
 	set_as_dirty()
 	emit_signal("points_modified")
 
+
 func set_point_array(a: RMSS2D_Point_Array):
 	_points = a.duplicate(true)
 	_close_shape()
@@ -28,6 +29,7 @@ func set_point_array(a: RMSS2D_Point_Array):
 	_update_curve(_points)
 	set_as_dirty()
 	property_list_changed_notify()
+
 
 func _has_minimum_point_count() -> bool:
 	return _points.get_point_count() >= 3
@@ -101,13 +103,13 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 
 	if s_mat.weld_edges:
 		if edges.size() > 1:
-			for i in range(0, edges.size(), 1):
+			for i in range(0, edges.size() - 1, 1):
 				var this_edge = edges[i]
 				var next_edge = edges[i + 1]
-				_weld_quads(this_edge.quads[this_edge.quads.size() - 1], next_edge.quads[0], 1.0)
-			var first_edge = edges[0]
-			var last_edge = edges[edges.size() - 1]
-			_weld_quads(last_edge.quads[last_edge.quads.size() - 1], first_edge.quads[0], 1.0)
+				_weld_quads(this_edge.quads.back(), next_edge.quads[0], 1.0)
+		var first_edge = edges[0]
+		var last_edge = edges.back()
+		_weld_quads(last_edge.quads.back(), first_edge.quads[0], 1.0)
 	return edges
 
 
@@ -194,6 +196,9 @@ func bake_collision():
 			)
 		)
 	_weld_quad_array(collision_quads)
+	var first_quad = collision_quads[0]
+	var last_quad = collision_quads.back()
+	_weld_quads(last_quad, first_quad, 1.0)
 	var points: PoolVector2Array = PoolVector2Array()
 	# PT A
 	for quad in collision_quads:
