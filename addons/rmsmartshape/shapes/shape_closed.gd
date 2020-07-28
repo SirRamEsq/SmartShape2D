@@ -2,8 +2,6 @@ tool
 extends RMSS2D_Shape_Base
 class_name RMSS2D_Shape_Closed, "../closed_shape.png"
 
-var _closed_shape_constrained_points: Array = []
-
 
 #########
 # GODOT #
@@ -11,38 +9,26 @@ var _closed_shape_constrained_points: Array = []
 func _init():
 	._init()
 	_is_instantiable = true
-	_points.connect("constraint_removed", self, "_on_constraint_removed")
-
-
-func is_first_and_last_point_key(key1: int, key2: int) -> bool:
-	var idx1 = _points.get_point_index(key1)
-	var idx2 = _points.get_point_index(key2)
-	var search = [0, _points.get_point_count() - 1]
-	# If the constraint between the first and last point have been removed
-	return search.has(idx1) and search.has(idx2)
-
-
-func _on_constraint_removed(key1: int, key2: int):
-	if is_first_and_last_point_key(key1, key2):
-		set_as_dirty()
-
-
-func remove_close_shape_constraint():
-	return
-	var t = _closed_shape_constrained_points
-	var idx1 = _points.get_point_index(t[0])
-	var idx2 = _points.get_point_index(t[1])
-	var point_to_remove = t[0]
-	# The higher index point was auto-generated
-	if idx2 > idx1:
-		point_to_remove = t[1]
-	_points.remove_constraint(t[0], t[1])
-	_points.remove_point(point_to_remove)
 
 
 ############
 # OVERRIDE #
 ############
+func remove_point(key: int):
+	_points.remove_point(key)
+	_close_shape()
+	_update_curve(_points)
+	set_as_dirty()
+	emit_signal("points_modified")
+
+func set_point_array(a: RMSS2D_Point_Array):
+	_points = a.duplicate(true)
+	_close_shape()
+	clear_cached_data()
+	_update_curve(_points)
+	set_as_dirty()
+	property_list_changed_notify()
+
 func _has_minimum_point_count() -> bool:
 	return _points.get_point_count() >= 3
 
@@ -139,9 +125,6 @@ func _close_shape() -> bool:
 	# Manually add final point
 	var key_last = _points.add_point(_points.get_point_position(key_first))
 	_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
-	if not _closed_shape_constrained_points.empty():
-		remove_close_shape_constraint()
-	_closed_shape_constrained_points = [key_first, key_last]
 	_add_point_update()
 	return true
 

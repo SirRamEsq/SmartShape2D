@@ -69,6 +69,7 @@ class ActionDataVert:
 			return -1
 		return s.get_point_index(keys[0])
 
+
 # PRELOADS
 var GUI_SNAP_POPUP = preload("scenes/SnapPopup.tscn")
 var GUI_POINT_INFO_PANEL = preload("scenes/GUI_InfoPanel.tscn")
@@ -329,7 +330,7 @@ static func is_shape_valid(s: RMSS2D_Shape_Base) -> bool:
 
 
 func _on_shape_point_modified():
-	FUNC.action_invert_orientation(undo, shape)
+	FUNC.action_invert_orientation(self, "update_overlays", undo, shape)
 
 
 func get_et() -> Transform2D:
@@ -469,8 +470,12 @@ func forward_canvas_draw_over_viewport(overlay: Control):
 
 	# Draw Highlighted Handle
 	if current_action.is_single_vert_selected():
-		overlay.draw_circle(t.xform(verts[current_action.current_point_index(shape)]), 5, Color.white)
-		overlay.draw_circle(t.xform(verts[current_action.current_point_index(shape)]), 3, Color.black)
+		overlay.draw_circle(
+			t.xform(verts[current_action.current_point_index(shape)]), 5, Color.white
+		)
+		overlay.draw_circle(
+			t.xform(verts[current_action.current_point_index(shape)]), 3, Color.black
+		)
 
 	shape.update()
 
@@ -523,7 +528,7 @@ func select_control_points_to_move(
 func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float) -> bool:
 	# Mouse over a single vertex?
 	if current_action.is_single_vert_selected():
-		FUNC.action_delete_point(undo, shape, current_action.keys[0])
+		FUNC.action_delete_point(self, "update_overlays", undo, shape, current_action.keys[0])
 		undo_version = undo.get_version()
 		deselect_control_points()
 		return true
@@ -537,11 +542,11 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 			shape, et, mb_position, grab_threshold
 		)
 		if not points_in.empty():
-			FUNC.action_delete_point_in(self, undo, shape, points_in[0])
+			FUNC.action_delete_point_in(self, "update_overlays", undo, shape, points_in[0])
 			undo_version = undo.get_version()
 			return true
 		elif not points_out.empty():
-			FUNC.action_delete_point_out(self, undo, shape, points_out[0])
+			FUNC.action_delete_point_out(self, "update_overlays", undo, shape, points_out[0])
 			undo_version = undo.get_version()
 			return true
 	return false
@@ -559,7 +564,7 @@ func _input_handle_left_click(
 		var snapped_pos = snap_position(
 			et.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
 		)
-		FUNC.action_set_pivot(self, undo, shape, et, snapped_pos)
+		FUNC.action_set_pivot(self, "_set_pivot", undo, shape, et, snapped_pos)
 		undo_version = undo.get_version()
 		return true
 
@@ -585,7 +590,7 @@ func _input_handle_left_click(
 		var snapped_pos = snap_position(
 			t.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
 		)
-		var new_key = FUNC.action_add_point(self, undo, shape, snapped_pos)
+		var new_key = FUNC.action_add_point(self, "update_overlays", undo, shape, snapped_pos)
 		undo_version = undo.get_version()
 		select_vertices_to_move([new_key], vp_m_pos)
 		return true
@@ -664,14 +669,16 @@ func _input_handle_mouse_button_event(
 				)
 				> grab_threshold
 			):
-				FUNC.action_move_verticies(self, undo, shape, current_action)
+				FUNC.action_move_verticies(self, "update_overlays", undo, shape, current_action)
 				undo_version = undo.get_version()
 				rslt = true
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
 		var _out = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_OUT
 		if _in or _out:
-			FUNC.action_move_control_points(self, undo, shape, current_action, _in, _out)
+			FUNC.action_move_control_points(
+				self, "update_overlays", undo, shape, current_action, _in, _out
+			)
 			undo_version = undo.get_version()
 			rslt = true
 		deselect_control_points()
@@ -712,7 +719,9 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 	if insertion_point == -1:
 		insertion_point = shape.get_real_point_count() - 1
 
-	var key = FUNC.action_split_curve(self, undo, shape, insertion_point, gpoint, t)
+	var key = FUNC.action_split_curve(
+		self, "update_overlays", undo, shape, insertion_point, gpoint, t
+	)
 	undo_version = undo.get_version()
 	select_vertices_to_move([key], vp_m_pos)
 	on_edge = false
@@ -762,6 +771,7 @@ func _input_motion_is_on_edge(mm: InputEventMouseMotion, grab_threshold: float) 
 				break
 	return is_on_edge
 
+
 func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) -> bool:
 	var rslt = false
 	for i in range(0, current_action.keys.size(), 1):
@@ -776,9 +786,7 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 			(delta * out_multiplier)
 			+ current_action.starting_positions_control_out[i]
 		)
-		var snapped_position_in = snap_position(
-			new_position_in, get_snap_offset(), get_snap_step()
-		)
+		var snapped_position_in = snap_position(new_position_in, get_snap_offset(), get_snap_step())
 		var snapped_position_out = snap_position(
 			new_position_out, get_snap_offset(), get_snap_step()
 		)
@@ -792,6 +800,7 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		update_overlays()
 	return false
 
+
 func _input_motion_move_verts(delta: Vector2) -> bool:
 	for i in range(0, current_action.keys.size(), 1):
 		var key = current_action.keys[i]
@@ -801,6 +810,7 @@ func _input_motion_move_verts(delta: Vector2) -> bool:
 		shape.set_point_position(key, snapped_position)
 		update_overlays()
 	return true
+
 
 func _input_handle_mouse_motion_event(
 	event: InputEventMouseMotion, et: Transform2D, grab_threshold: float
@@ -832,6 +842,7 @@ func _input_handle_mouse_motion_event(
 		update_overlays()
 
 	return false
+
 
 #########
 # DEBUG #

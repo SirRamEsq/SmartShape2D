@@ -116,34 +116,51 @@ func test_point_constraints():
 
 func test_duplicate():
 	var p_array = RMSS2D_Point_Array.new()
-	var points = {}
 	for p in generate_points():
-		var new_key = p_array.add_point(p)
+		p_array.add_point(p)
+
 	var other = p_array.duplicate(true)
 	assert_ne(p_array, other)
-	assert_eq(p_array._next_key, other._next_key)
-	assert_eq(p_array._point_order, other._point_order)
 	assert_ne(p_array._constraints, other._constraints)
-	assert_eq(p_array._constraints.size(), other._constraints.size())
 	assert_ne(p_array._points, other._points)
+
+	assert_eq(p_array._point_order, other._point_order)
+	p_array._point_order.push_back(31337)
+	assert_ne(p_array._point_order, other._point_order)
+	p_array._point_order.pop_back()
+	assert_eq(p_array._point_order, other._point_order)
+
+	assert_eq(p_array._next_key, other._next_key)
+	assert_eq(p_array._constraints.size(), other._constraints.size())
 	assert_eq(p_array._points.size(), other._points.size())
 	for i in range(0, p_array._point_order.size(), 1):
-		var p1 = p_array._point_order[i]
-		var p2 = other._point_order[i]
-		assert_eq(p1, p2, "Same Point Order")
+		var key1 = p_array._point_order[i]
+		var key2 = other._point_order[i]
+		assert_eq(key1, key2, "Same Point Order")
 
 	for k in p_array._points:
 		var p1 = p_array._points[k]
 		var p2 = other._points[k]
-		assert_eq(p1.get_signal_connection_list("changed").size(), 1, "SIGNALS CONNECTED")
-		assert_eq(p1.get_signal_connection_list("changed")[0].target, p_array, "SIGNALS CONNECTED")
-		assert_eq(p2.get_signal_connection_list("changed")[0].target, other, "SIGNALS CONNECTED")
-		assert_eq(p1.get_signal_connection_list("changed").size(), p2.get_signal_connection_list("changed").size(), "SIGNALS CONNECTED")
 		assert_ne(p1, p2, "Unique Point with key %s" % k)
+		assert_ne(p1.properties, p2.properties)
+
+		assert_eq(p1.get_signal_connection_list("changed").size(), 1, "SIGNALS CONNECTED")
+		assert_eq(
+			p1.get_signal_connection_list("changed")[0].target,
+			p_array,
+			"SIGNALS CONNECTED to Parent"
+		)
+		assert_eq(
+			p2.get_signal_connection_list("changed")[0].target, other, "SIGNALS CONNECTED to Parent"
+		)
+		assert_eq(
+			p1.get_signal_connection_list("changed").size(),
+			p2.get_signal_connection_list("changed").size(),
+			"SIGNALS CONNECTED Size"
+		)
 		assert_eq(p1.position, p2.position, "pos Same Values")
 		assert_eq(p1.point_in, p2.point_in, "p_in Same Values")
 		assert_eq(p1.point_out, p2.point_out, "p_out Same Values")
-		assert_ne(p1.properties, p2.properties)
 		assert_eq(p1.properties.texture_idx, p2.properties.texture_idx, "tex_idx Same Values")
 		assert_eq(p1.properties.flip, p2.properties.flip, "flip Same Values")
 		assert_eq(p1.properties.width, p2.properties.width, "width Same Values")
