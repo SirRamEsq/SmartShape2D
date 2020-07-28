@@ -8,6 +8,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 margin_right = -918.0
 margin_bottom = -486.0
+mouse_filter = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 theme = ExtResource( 1 )
@@ -25,12 +26,14 @@ margin_left = 3.0
 margin_top = 3.0
 margin_right = 103.0
 margin_bottom = 111.0
+mouse_filter = 2
 
 [node name="Properties" type="VBoxContainer" parent="."]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 103.0
 margin_bottom = 111.0
+mouse_filter = 2
 
 [node name="IDX" type="Label" parent="Properties"]
 margin_right = 100.0

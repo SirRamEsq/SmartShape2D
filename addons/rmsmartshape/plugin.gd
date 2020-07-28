@@ -747,29 +747,29 @@ func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, gr
 
 func _input_motion_is_on_edge(mm: InputEventMouseMotion, grab_threshold: float) -> bool:
 	var xform: Transform2D = get_et() * shape.get_global_transform()
-	var gpoint: Vector2 = mm.position
 	if shape.get_point_count() < 2:
 		return false
 	if current_mode != MODE.EDIT_VERT:
 		return false
 
 	# Find edge
-	var is_on_edge = false
 	var closest_point = shape.get_closest_point(xform.affine_inverse().xform(mm.position))
 	if closest_point != null:
 		edge_point = xform.xform(closest_point)
-		if edge_point.distance_to(gpoint) <= grab_threshold:
-			is_on_edge = true
+		if edge_point.distance_to(mm.position) <= grab_threshold:
+			return true
+	return false
 
-		# However, if near a control point or one of its handles then we are not on the edge
-		for k in shape.get_all_point_keys():
-			var pp: Vector2 = shape.get_point_position(k)
-			var p: Vector2 = xform.xform(pp)
-			if p.distance_to(gpoint) <= grab_threshold:
-				is_on_edge = false
-				current_action = select_verticies([k], ACTION_VERT.NONE)
-				break
-	return is_on_edge
+
+func get_mouse_over_vert_key(mm: InputEventMouseMotion, grab_threshold: float) -> int:
+	var xform: Transform2D = get_et() * shape.get_global_transform()
+	# However, if near a control point or one of its handles then we are not on the edge
+	for k in shape.get_all_point_keys():
+		var pp: Vector2 = shape.get_point_position(k)
+		var p: Vector2 = xform.xform(pp)
+		if p.distance_to(mm.position) <= grab_threshold:
+			return k
+	return -1
 
 
 func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) -> bool:
@@ -818,7 +818,6 @@ func _input_handle_mouse_motion_event(
 	var t: Transform2D = et * shape.get_global_transform()
 	var mm: InputEventMouseMotion = event
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
-	#print(mm.position)
 	gui_point_info_panel.rect_position = mm.position + Vector2(256, -24)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 
@@ -830,16 +829,18 @@ func _input_handle_mouse_motion_event(
 
 	if type == ACTION_VERT.MOVE_VERT:
 		return _input_motion_move_verts(delta)
-
 	elif _in or _out:
 		return _input_motion_move_control_points(delta, _in, _out)
 
-	# Handle Edge Follow
-	var old_edge: bool = on_edge
-	on_edge = _input_motion_is_on_edge(mm, grab_threshold)
-	if on_edge or old_edge != on_edge:
+	var mouse_over_key = get_mouse_over_vert_key(event, grab_threshold)
+	if mouse_over_key != -1:
+		on_edge = false
+		current_action = select_verticies([mouse_over_key], ACTION_VERT.NONE)
+	else:
 		deselect_control_points()
-		update_overlays()
+		var old_edge: bool = on_edge
+		on_edge = _input_motion_is_on_edge(mm, grab_threshold)
+	update_overlays()
 
 	return false
 
