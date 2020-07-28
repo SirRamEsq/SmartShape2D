@@ -8,16 +8,19 @@ export (float) var width: float = 1.0 setget set_width
 
 func set_texture_idx(i: int):
 	texture_idx = i
+	emit_signal("changed")
 	property_list_changed_notify()
 
 
 func set_flip(b: bool):
 	flip = b
+	emit_signal("changed")
 	property_list_changed_notify()
 
 
 func set_width(w: float):
 	width = w
+	emit_signal("changed")
 	property_list_changed_notify()
 
 

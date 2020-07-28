@@ -191,10 +191,11 @@ func _gui_update_info_panel():
 	# Shrink panel
 	gui_point_info_panel.rect_size = Vector2(1, 1)
 
+	var properties = shape.get_point_properties(key)
 	gui_point_info_panel.set_idx(idx)
-	gui_point_info_panel.set_texture_idx(shape.get_point_texture_index(idx))
-	gui_point_info_panel.set_width(shape.get_point_width(idx))
-	gui_point_info_panel.set_flip(shape.get_point_texture_flip(idx))
+	gui_point_info_panel.set_texture_idx(properties.texture_idx)
+	gui_point_info_panel.set_width(properties.width)
+	gui_point_info_panel.set_flip(properties.flip)
 
 
 #########
@@ -598,24 +599,23 @@ func _input_handle_left_click(
 
 
 func _input_handle_mouse_wheel(btn: int) -> bool:
+	var key = current_action.current_point_key()
 	if Input.is_key_pressed(KEY_SHIFT):
-		var width = shape.get_point_width(current_action.current_point_key())
+		var width = shape.get_point_width(key)
 		var width_step = 0.1
 		if btn == BUTTON_WHEEL_DOWN:
 			width_step *= -1
 		var new_width = width + width_step
-		shape.set_point_width(new_width, current_action.current_point_key())
+		print("NEW_WIODTH: %s" % new_width)
+		shape.set_point_width(key, new_width)
 
 	else:
 		var texture_idx_step = 1
 		if btn == BUTTON_WHEEL_DOWN:
 			texture_idx_step *= -1
 
-		var tex_idx: int = (
-			shape.get_point_texture_index(current_action.current_point_key())
-			+ texture_idx_step
-		)
-		shape.set_point_texture_index(current_action.current_point_key(), tex_idx)
+		var tex_idx: int = shape.get_point_texture_index(key) + texture_idx_step
+		shape.set_point_texture_index(key, tex_idx)
 
 	shape.set_as_dirty()
 	update_overlays()
