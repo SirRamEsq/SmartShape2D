@@ -29,14 +29,17 @@ static func _get_intersecting_control_point(
 	var xform: Transform2D = et * s.get_global_transform()
 	for i in range(0, s.get_point_count(), 1):
 		var key = s.get_point_key_at_index(i)
-		var vec = s.get_point_position(key)
-		var c_pos = vec
+		var vec_pos = s.get_point_position(key)
+		var c_pos = Vector2.ZERO
 		if _in:
-			c_pos += s.get_point_in(key)
+			c_pos = s.get_point_in(key)
 		else:
-			c_pos += s.get_point_out(key)
-		c_pos = xform.xform(c_pos)
-		if c_pos.distance_to(mouse_pos) <= grab_threshold:
+			c_pos = s.get_point_out(key)
+		if c_pos == Vector2.ZERO:
+			continue
+		var final_pos = vec_pos + c_pos
+		final_pos = xform.xform(final_pos)
+		if final_pos.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(key)
 
 	return points

@@ -278,7 +278,7 @@ func edit(object):
 		tb_hb.show()
 
 	on_edge = false
-	deselect_control_points()
+	deselect_verts()
 	if is_shape_valid(shape):
 		if shape.is_connected("points_modified", self, "_on_shape_point_modified"):
 			shape.disconnect("points_modified", self, "_on_shape_point_modified")
@@ -522,7 +522,7 @@ func _draw_control_point_line(c: Control, vert: Vector2, cp: Vector2, tex: Textu
 ##########
 # PLUGIN #
 ##########
-func deselect_control_points():
+func deselect_verts():
 	current_action = ActionDataVert.new([], [], [], [], ACTION_VERT.NONE)
 
 
@@ -559,7 +559,7 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 	if current_action.is_single_vert_selected():
 		FUNC.action_delete_point(self, "update_overlays", undo, shape, current_action.keys[0])
 		undo_version = undo.get_version()
-		deselect_control_points()
+		deselect_verts()
 		return true
 	else:
 		# Mouse over a control point?
@@ -589,7 +589,7 @@ func _input_handle_left_click(
 	grab_threshold: float
 ) -> bool:
 	# Set Pivot?
-	if (current_mode == MODE.SET_PIVOT) or (mb.control):
+	if (current_mode == MODE.SET_PIVOT) or (mb.control and current_mode == MODE.EDIT_VERT):
 		var snapped_pos = snap_position(
 			et.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
 		)
@@ -597,32 +597,33 @@ func _input_handle_left_click(
 		undo_version = undo.get_version()
 		return true
 
-	# Highlighting a vert to move or add control points to
-	if current_action.is_single_vert_selected():
-		if Input.is_key_pressed(KEY_SHIFT):
-			select_control_points_to_move([current_action.current_point_key()], vp_m_pos)
-			return true
-		else:
-			select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
-			return true
+	if current_mode == MODE.EDIT_VERT:
+		# Highlighting a vert to move or add control points to
+		if current_action.is_single_vert_selected():
+			if Input.is_key_pressed(KEY_SHIFT):
+				select_control_points_to_move([current_action.current_point_key()], vp_m_pos)
+				return true
+			else:
+				select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
+				return true
 
-	# Split the Edge?
-	if _input_split_edge(mb, vp_m_pos, t):
-		return true
-
-	if not on_edge:
-		# Any nearby control points to move?
-		if _input_move_control_points(mb, vp_m_pos, grab_threshold):
+		# Split the Edge?
+		if _input_split_edge(mb, vp_m_pos, t):
 			return true
 
-		# Create new point
-		var snapped_pos = snap_position(
-			t.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
-		)
-		var new_key = FUNC.action_add_point(self, "update_overlays", undo, shape, snapped_pos)
-		undo_version = undo.get_version()
-		select_vertices_to_move([new_key], vp_m_pos)
-		return true
+		if not on_edge:
+			# Any nearby control points to move?
+			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
+				return true
+
+			# Create new point
+			var snapped_pos = snap_position(
+				t.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
+			)
+			var new_key = FUNC.action_add_point(self, "update_overlays", undo, shape, snapped_pos)
+			undo_version = undo.get_version()
+			select_vertices_to_move([new_key], vp_m_pos)
+			return true
 	return false
 
 
@@ -708,7 +709,7 @@ func _input_handle_mouse_button_event(
 			)
 			undo_version = undo.get_version()
 			rslt = true
-		deselect_control_points()
+		deselect_verts()
 		return rslt
 
 	# PRESSED RIGHT CLICK
@@ -881,11 +882,11 @@ func _input_handle_mouse_motion_event(
 			on_edge = false
 			current_action = select_verticies([mouse_over_key], ACTION_VERT.NONE)
 		else:
-			deselect_control_points()
+			deselect_verts()
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
 
 	elif current_mode == MODE.EDIT_EDGE:
-		deselect_control_points()
+		deselect_verts()
 		on_edge = _input_motion_is_on_edge(mm, grab_threshold)
 
 	update_overlays()
