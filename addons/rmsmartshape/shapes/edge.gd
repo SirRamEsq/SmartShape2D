@@ -3,6 +3,8 @@ extends Reference
 class_name RMSS2D_Edge
 
 var quads: Array = []
+var first_point_key:int = -1
+var last_point_key:int = -1
 var z_index: int = 0
 
 static func different_render(q1: RMSS2D_Quad, q2: RMSS2D_Quad) -> bool:

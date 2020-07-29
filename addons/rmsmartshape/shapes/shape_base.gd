@@ -43,7 +43,9 @@ var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
 var _is_instantiable = false
-var _curve: Curve2D = Curve2D.new()  # setget set_curve, get_curve
+var _curve: Curve2D = Curve2D.new()
+# Used for calculating straight edges
+var _curve_no_control_points: Curve2D = Curve2D.new()
 
 signal points_modified
 signal on_dirty_update
@@ -83,11 +85,17 @@ func set_collision_offset(s: float):
 	property_list_changed_notify()
 
 
+func _update_curve_no_control():
+	_curve_no_control_points.clear_points()
+	for i in range(0, _curve.get_point_count(), 1):
+		_curve_no_control_points.add_point(_curve.get_point_position(i))
+
 func set_curve(value: Curve2D):
 	_curve = value
 	_points.clear()
 	for i in range(0, _curve.get_point_count(), 1):
 		_points.add_point(_curve.get_point_position(i))
+	_update_curve_no_control()
 	set_as_dirty()
 	emit_signal("points_modified")
 	property_list_changed_notify()
@@ -147,6 +155,7 @@ func _update_curve(p_array: RMSS2D_Point_Array):
 		var _in = p_array.get_point_in(p_key)
 		var out = p_array.get_point_out(p_key)
 		_curve.add_point(pos, _in, out)
+	_update_curve_no_control()
 
 
 func get_vertices() -> Array:
@@ -300,6 +309,16 @@ func get_closest_point(to_point: Vector2):
 		return _curve.get_closest_point(to_point)
 	return null
 
+func get_closest_point_straight_edge(to_point: Vector2):
+	if _curve != null:
+		return _curve_no_control_points.get_closest_point(to_point)
+	return null
+
+func get_closest_offset_straight_edge(to_point: Vector2):
+	if _curve != null:
+		return _curve_no_control_points.get_closest_offset(to_point)
+	return null
+
 
 func get_closest_offset(to_point: Vector2):
 	if _curve != null:
@@ -311,9 +330,8 @@ func get_point_count():
 	return _points.get_point_count()
 
 
-# Intent is to override
-func get_real_point_count():
-	return get_point_count()
+func get_edges() -> Array:
+	return _edges
 
 
 func get_point_position(key: int):
@@ -372,8 +390,10 @@ func set_point_texture_flip(key: int, flip: bool):
 func get_point_texture_flip(key: int) -> bool:
 	return _points.get_point_properties(key).flip
 
+
 func get_point_properties(key: int):
 	return _points.get_point_properties(key)
+
 
 func set_point_properties(key: int, properties):
 	return _points.set_point_properties(key, properties)
@@ -659,6 +679,8 @@ func _build_quad_from_point(
 
 func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	var edge = RMSS2D_Edge.new()
+	edge.first_point_key = edge_dat.indicies[0]
+	edge.last_point_key = edge_dat.indicies.back()
 	var edge_material: RMSS2D_Material_Edge = edge_dat.material
 	if edge_material == null:
 		return edge
@@ -753,7 +775,7 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	for edge_material in get_edge_materials(get_tessellated_points(), s_mat, wrap_around):
+	for edge_material in get_edge_materials(get_vertices(), s_mat, wrap_around):
 		edges.push_back(_build_edge(edge_material))
 
 	if s_mat.weld_edges:
@@ -962,7 +984,6 @@ func get_tessellated_idx_from_point(points: Array, t_points: Array, point_idx: i
 		if vertex_idx == point_idx:
 			break
 	return tess_idx
-
 
 
 # Workaround (class cannot reference itself)
