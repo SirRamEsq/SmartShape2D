@@ -50,6 +50,9 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 	var total_length: float = 0.0
 	for q in _quads:
 		total_length += q.get_length()
+	if total_length == 0.0:
+		print("total length is 0? Quads: %s" % _quads)
+		return ArrayMesh.new()
 
 	var first_quad = _quads[0]
 	var tex: Texture = first_quad.texture

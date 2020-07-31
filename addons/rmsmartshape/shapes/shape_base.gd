@@ -17,15 +17,18 @@ To use search to jump between categories, use the regex:
 
 
 class EdgeMaterialData:
-	var material: RMSS2D_Material_Edge
+	var meta_material: RMSS2D_Material_Edge_Metadata
 	var indicies: Array = []
 
-	func _init(i: Array, m: RMSS2D_Material_Edge):
-		material = m
+	func _init(i: Array, m: RMSS2D_Material_Edge_Metadata):
+		meta_material = m
 		indicies = i
 
 	func _to_string() -> String:
-		return "%s | %s" % [str(material), indicies]
+		return "%s | %s" % [str(meta_material), indicies]
+
+	func is_valid() -> bool:
+		return indicies.size() >= 2
 
 
 export (bool) var editor_debug: bool = false setget _set_editor_debug
@@ -89,6 +92,7 @@ func _update_curve_no_control():
 	_curve_no_control_points.clear_points()
 	for i in range(0, _curve.get_point_count(), 1):
 		_curve_no_control_points.add_point(_curve.get_point_position(i))
+
 
 func set_curve(value: Curve2D):
 	_curve = value
@@ -309,10 +313,12 @@ func get_closest_point(to_point: Vector2):
 		return _curve.get_closest_point(to_point)
 	return null
 
+
 func get_closest_point_straight_edge(to_point: Vector2):
 	if _curve != null:
 		return _curve_no_control_points.get_closest_point(to_point)
 	return null
+
 
 func get_closest_offset_straight_edge(to_point: Vector2):
 	if _curve != null:
@@ -679,30 +685,40 @@ func _build_quad_from_point(
 
 func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	var edge = RMSS2D_Edge.new()
-	edge.first_point_key = edge_dat.indicies[0]
-	edge.last_point_key = edge_dat.indicies.back()
-	var edge_material: RMSS2D_Material_Edge = edge_dat.material
+	if not edge_dat.is_valid():
+		return edge
+
+	var first_idx = edge_dat.indicies[0]
+	var last_idx = edge_dat.indicies.back()
+	edge.first_point_key = _points.get_point_key_at_index(first_idx)
+	edge.last_point_key = _points.get_point_key_at_index(last_idx)
+
+	var edge_material_meta: RMSS2D_Material_Edge_Metadata = edge_dat.meta_material
+	if edge_material_meta == null:
+		return edge
+
+	var edge_material: RMSS2D_Material_Edge = edge_material_meta.edge_material
 	if edge_material == null:
 		return edge
+	edge.z_index = edge_material_meta.z_index
+
 	var t_points = get_tessellated_points()
 	var points = get_vertices()
-
-	if edge_dat.indicies.size() < 2:
-		return edge
+	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
+	var last_t_idx = get_tessellated_idx_from_point(points, t_points, last_idx)
 
 	var c_scale = 1.0
 	var c_offset = 0.0
 	var c_extends = 0.0
 
-	# Skip final point
-	for i in range(0, edge_dat.indicies.size() - 1, 1):
-		var idx = edge_dat.indicies[i]
-		var width = _get_width_for_tessellated_point(points, t_points, idx)
-		var is_first_point = idx == edge_dat.indicies[0]
-		var is_last_point = idx == edge_dat.indicies[edge_dat.indicies.size() - 1]
-		var mat = edge_dat.material
-		if mat == null:
-			continue
+	#for i in range(0, edge_dat.indicies.size(), 1):
+	for tess_idx in range(first_t_idx, last_t_idx + 1, 1):
+		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
+		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
+		var is_first_point = vert_idx == first_idx
+		var is_last_point = vert_idx == last_idx
+		var meta_mat = edge_dat.meta_material
+		var mat = meta_mat.edge_material
 		if mat.textures.empty():
 			continue
 		var tex = mat.textures[0]
@@ -713,7 +729,7 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 
 		var quad = _build_quad_from_point(
 			t_points,
-			idx,
+			tess_idx,
 			tex,
 			tex_normal,
 			tex_size,
@@ -775,23 +791,36 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	for edge_material in get_edge_materials(get_vertices(), s_mat, wrap_around):
-		edges.push_back(_build_edge(edge_material))
+	for edge_material in get_edge_material_data(get_vertices(), s_mat, wrap_around):
+		var new_edge = _build_edge(edge_material)
+		edges.push_back(new_edge)
 
+	# Weld each pair of edges with neighboring indicies
 	if s_mat.weld_edges:
 		if edges.size() > 1:
 			for i in range(0, edges.size() - 1, 1):
-				var this_edge = edges[i]
-				var next_edge = edges[i + 1]
-				_weld_quads(this_edge.quads.back(), next_edge.quads[0], 1.0)
+				var edge1 = edges[i]
+				var idx1_first = _points.get_point_index(edge1.first_point_key)
+				var idx1_last = _points.get_point_index(edge1.first_point_key)
+				for j in range(0, edges.size() - 1, 1):
+					if i == j:
+						continue
+					var edge2 = edges[j]
+					var idx2_first = _points.get_point_index(edge1.first_point_key)
+					var idx2_last = _points.get_point_index(edge1.first_point_key)
+					if (idx1_last + 1) == idx2_first:
+						_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
+					elif idx1_first == (idx2_last + 1):
+						_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
 
 	return edges
 
 
-func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+func get_edge_material_data(points: Array, s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+	wrap_around = false
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
-	for idx in range(0, points.size(), 1):
+	for idx in range(0, points.size() - 1, 1):
 		var idx_next = _get_next_point_index(idx, points)
 		var pt = points[idx]
 		var pt_next = points[idx_next]
@@ -804,9 +833,9 @@ func get_edge_materials(points: Array, s_material: RMSS2D_Material_Shape, wrap_a
 		# Append to existing edges being built. Add new ones if needed
 		for e in edge_meta_materials:
 			if edge_building.has(e):
-				edge_building[e].indicies.push_back(idx)
+				edge_building[e].indicies.push_back(idx_next)
 			else:
-				edge_building[e] = EdgeMaterialData.new([idx], e.edge_material)
+				edge_building[e] = EdgeMaterialData.new([idx, idx_next], e)
 
 		# Closeout and stop building edges that are no longer viable
 		for e in edge_building.keys():

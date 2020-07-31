@@ -1,15 +1,17 @@
-[gd_resource type="Resource" load_steps=8 format=2]
+[gd_resource type="Resource" load_steps=13 format=2]
 
 [ext_resource path="res://addons/rmsmartshape/materials/shape_material.gd" type="Script" id=1]
 [ext_resource path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" type="Script" id=2]
 [ext_resource path="res://addons/rmsmartshape/normal_range.gd" type="Script" id=3]
 [ext_resource path="res://demo/materials/edge/edge_grass.tres" type="Resource" id=4]
 [ext_resource path="res://demo/assets/fill.png" type="Texture" id=5]
+[ext_resource path="res://demo/assets/Spring/rock.png" type="Texture" id=6]
+[ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=7]
 
 [sub_resource type="Resource" id=1]
 script = ExtResource( 3 )
 begin = 0.0
-end = 360.0
+end = 180.0
 
 [sub_resource type="Resource" id=2]
 script = ExtResource( 2 )
@@ -19,9 +21,31 @@ weld = true
 z_index = 0
 offset = 0.0
 
+[sub_resource type="Resource" id=3]
+script = ExtResource( 7 )
+textures = [ ExtResource( 6 ) ]
+texture_normals = [  ]
+weld_quads = true
+use_corner_texture = true
+use_taper_texture = true
+taper_angle_max = 90.0
+
+[sub_resource type="Resource" id=4]
+script = ExtResource( 3 )
+begin = 0.0
+end = 360.0
+
+[sub_resource type="Resource" id=5]
+script = ExtResource( 2 )
+edge_material = SubResource( 3 )
+normal_range = SubResource( 4 )
+weld = true
+z_index = -10
+offset = 0.0
+
 [resource]
 script = ExtResource( 1 )
-_edge_materials = [ SubResource( 2 ) ]
+_edge_materials = [ SubResource( 2 ), SubResource( 5 ) ]
 fill_textures = [ ExtResource( 5 ) ]
 fill_texture_normals = [  ]
 fill_texture_z_index = -10

@@ -93,12 +93,12 @@ func _build_meshes(edges: Array) -> Array:
 
 
 func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
-	var points = get_tessellated_points()
+	var points = get_vertices()
 	var edges: Array = []
 	if s_mat == null:
 		return edges
 
-	for edge_material in get_edge_materials(points, s_mat, wrap_around):
+	for edge_material in get_edge_material_data(points, s_mat, wrap_around):
 		edges.push_back(_build_edge(edge_material))
 
 	if s_mat.weld_edges:

@@ -7,8 +7,18 @@ This class will determine if the normal of a vector falls within the specifed an
 - 360.0 and 0.0 degrees are considered equivilent
 """
 
-export (float, 0, 360, 5) var begin = 0.0
-export (float, 0, 360, 5) var end = 0.0
+export (float, 0, 360, 1) var begin = 0.0 setget set_begin
+export (float, 0, 360, 1) var end = 0.0 setget set_end
+
+
+func set_begin(f: float):
+	begin = f
+	emit_signal("changed")
+
+
+func set_end(f: float):
+	end = f
+	emit_signal("changed")
 
 
 func _to_string() -> String:

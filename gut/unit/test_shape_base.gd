@@ -127,39 +127,39 @@ func test_invert_point_order():
 	assert_eq(points[last_idx - 2], shape_base.get_point_at_index(2).position)
 
 
-func test_duplicate():
-	var shape_base = RMSS2D_Shape_Base.new()
-	add_child_autofree(shape_base)
-	var points = get_clockwise_points()
-	shape_base.add_points(points)
+#func test_duplicate():
+#var shape_base = RMSS2D_Shape_Base.new()
+#add_child_autofree(shape_base)
+#var points = get_clockwise_points()
+#shape_base.add_points(points)
+#
+#shape_base.set_point_width(0, 5.0)
+#shape_base.set_point_width(2, 3.0)
+#shape_base.set_point_width(5, 4.0)
+#
+#shape_base.set_point_texture_index(0, 1)
+#shape_base.set_point_texture_index(2, 2)
+#shape_base.set_point_texture_index(3, 3)
+#shape_base.set_point_texture_index(5, 5)
+#
+#shape_base.set_point_texture_flip(1, true)
+#shape_base.set_point_texture_flip(2, true)
+#shape_base.set_point_texture_flip(4, true)
+#
+#var copy = shape_base.duplicate_self()
+#add_child_autofree(copy)
+#assert_ne(shape_base.get_curve(), copy.get_curve())
+#assert_eq(shape_base.get_point_count(), copy.get_point_count())
+#for i in range(-1, points.size(), 1):
+#var s = "Test Point %s: " % i
+#assert_eq(shape_base.get_point_width(i), copy.get_point_width(i), s + "Width")
+#assert_eq(shape_base.get_point_texture_flip(i), copy.get_point_texture_flip(i), s + "Flip")
+#assert_eq(
+#shape_base.get_point_texture_index(i), copy.get_point_texture_index(i), s + "Index"
+#)
 
-	shape_base.set_point_width(0, 5.0)
-	shape_base.set_point_width(2, 3.0)
-	shape_base.set_point_width(5, 4.0)
 
-	shape_base.set_point_texture_index(0, 1)
-	shape_base.set_point_texture_index(2, 2)
-	shape_base.set_point_texture_index(3, 3)
-	shape_base.set_point_texture_index(5, 5)
-
-	shape_base.set_point_texture_flip(1, true)
-	shape_base.set_point_texture_flip(2, true)
-	shape_base.set_point_texture_flip(4, true)
-
-	var copy = shape_base.duplicate_self()
-	add_child_autofree(copy)
-	assert_ne(shape_base.get_curve(), copy.get_curve())
-	assert_eq(shape_base.get_point_count(), copy.get_point_count())
-	for i in range(-1, points.size(), 1):
-		var s = "Test Point %s: " % i
-		assert_eq(shape_base.get_point_width(i), copy.get_point_width(i), s + "Width")
-		assert_eq(shape_base.get_point_texture_flip(i), copy.get_point_texture_flip(i), s + "Flip")
-		assert_eq(
-			shape_base.get_point_texture_index(i), copy.get_point_texture_index(i), s + "Index"
-		)
-
-
-func test_get_edge_materials():
+func test_get_edge_materials_one():
 	var shape_base = RMSS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
@@ -181,7 +181,7 @@ func test_get_edge_materials():
 		assert_eq(e.edge_material, edge_mat)
 
 	var points = get_clockwise_points()
-	var edge_data = shape_base.get_edge_materials(points, s_m, false)
+	var edge_data = shape_base.get_edge_material_data(points, s_m, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
 	assert_eq(edge_data.size(), 1, "Should be one EdgeData specified")
@@ -189,6 +189,55 @@ func test_get_edge_materials():
 		assert_not_null(e)
 		assert_not_null(e.material)
 		assert_eq(e.material, edge_mat)
+
+
+func test_get_edge_materials_many():
+	var shape_base = RMSS2D_Shape_Base.new()
+	add_child_autofree(shape_base)
+
+	var edge_materials_count = 4
+	var edge_materials = []
+	var edge_materials_meta = []
+	for i in range(0, edge_materials_count, 1):
+		var edge_mat = RMSS2D_Material_Edge.new()
+		edge_materials.push_back(edge_mat)
+		edge_mat.textures = [TEST_TEXTURE]
+
+		var edge_mat_meta = RMSS2D_Material_Edge_Metadata.new()
+		edge_materials_meta.push_back(edge_mat_meta)
+		var division = 360.0 / edge_materials_count
+		var offset = -45
+		var normal_range = RMSS2D_NormalRange.new(
+			(division * i) + offset, (division * (i + 1)) + offset
+		)
+		edge_mat_meta.edge_material = edge_mat
+		edge_mat_meta.normal_range = normal_range
+		assert_not_null(edge_mat_meta.edge_material)
+
+	var s_m = RMSS2D_Material_Shape.new()
+	s_m.set_edge_materials(edge_materials_meta)
+	var n_right = Vector2(1, 0)
+	var n_left = Vector2(-1, 0)
+	var n_down = Vector2(0, 1)
+	var n_up = Vector2(0, -1)
+	var normals = [n_right, n_up, n_left, n_down]
+
+	# Ensure that the correct matierlas are given for the correct normals
+	for i in range(0, normals.size(), 1):
+		var n = normals[i]
+		for e in s_m.get_edge_materials(n):
+			assert_not_null(e)
+			assert_not_null(e.edge_material)
+			assert_eq(e, edge_materials_meta[i])
+			assert_eq(e.edge_material, edge_materials[i])
+
+	var points = get_square_points()
+	var em_data = shape_base.get_edge_material_data(points, s_m, false)
+	assert_eq(em_data.size(), 4)
+	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
+	for i in range(0, em_data.size(), 1):
+		var ed = em_data[i]
+		assert_eq(expected_indicies[i], ed.indicies)
 
 
 var scale_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
@@ -214,14 +263,14 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var quad = shape_base._build_quad_from_point(
 		points, 0, null, null, tex_size, 1.0, false, false, false, scale, 0.0, 0.0
 	)
+	# Top Left (A)
+	# Bottom Left (B)
+	# Bottom Right (C)
+	# Top Right (D)
 	var expected_points = [
-		# Top Left (A)
 		start_point_1 + extents,
-		# Bottom Left (B)
 		start_point_1 - extents,
-		# Bottom Right (C)
 		start_point_2 - extents,
-		# Top Right (D)
 		start_point_2 + extents
 	]
 	assert_eq(quad.pt_a, expected_points[0])
@@ -247,4 +296,15 @@ func get_clockwise_points() -> Array:
 		Vector2(100, 100),
 		Vector2(-50, 150),
 		Vector2(-100, 100)
+	]
+
+
+func get_square_points() -> Array:
+	return [
+		Vector2(-100, -100),
+		Vector2(0, -100),
+		Vector2(100, -100),
+		Vector2(100, 100),
+		Vector2(-100, 100),
+		Vector2(-100, -100)
 	]

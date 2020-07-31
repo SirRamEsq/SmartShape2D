@@ -34,7 +34,10 @@ func set_edge_material(m: RMSS2D_Material_Edge):
 func set_normal_range(nr: RMSS2D_NormalRange):
 	if nr == null:
 		return
+	if normal_range.is_connected("changed", self, "_on_edge_changed"):
+		normal_range.disconnect("changed", self, "_on_edge_changed")
 	normal_range = nr
+	normal_range.connect("changed", self, "_on_edge_changed")
 	emit_signal("changed")
 
 
