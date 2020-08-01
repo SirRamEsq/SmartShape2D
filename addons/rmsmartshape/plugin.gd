@@ -451,8 +451,7 @@ func draw_mode_edit_edge(overlay: Control):
 	draw_vert_handles(overlay, t, verts, false)
 	if on_edge:
 		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
-		#var offset = shape.get_closest_offset(t.affine_inverse().xform(edge_point))
-		var edge_point_keys = _get_point_keys_from_offset(offset, true)
+		var edge_point_keys = _get_edge_point_keys_from_offset(offset, true)
 		var p1 = shape.get_point_position(edge_point_keys[0])
 		var p2 = shape.get_point_position(edge_point_keys[1])
 		overlay.draw_line(t.xform(p1), t.xform(p2), color_highlight, 5.0)
@@ -624,6 +623,13 @@ func _input_handle_left_click(
 			undo_version = undo.get_version()
 			select_vertices_to_move([new_key], vp_m_pos)
 			return true
+	elif current_mode == MODE.EDIT_EDGE:
+		if on_edge:
+			# Grab Edge (2 points)
+			var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
+			var edge_point_keys = _get_edge_point_keys_from_offset(offset, true)
+			select_vertices_to_move([edge_point_keys[0], edge_point_keys[1]], vp_m_pos)
+		return true
 	return false
 
 
@@ -736,7 +742,7 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 	var insertion_point: int = -1
 	var mb_offset = shape.get_closest_offset(t.affine_inverse().xform(gpoint))
 
-	insertion_point = shape.get_point_index(_get_point_keys_from_offset(mb_offset)[1])
+	insertion_point = shape.get_point_index(_get_edge_point_keys_from_offset(mb_offset)[1])
 
 	if insertion_point == -1:
 		insertion_point = shape.get_point_count() - 1
@@ -767,7 +773,7 @@ func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, gr
 	return false
 
 
-func _get_point_keys_from_offset(offset: float, straight: bool = false):
+func _get_edge_point_keys_from_offset(offset: float, straight: bool = false):
 	for i in range(0, shape.get_point_count() - 1, 1):
 		var key = shape.get_point_key_at_index(i)
 		var key_next = shape.get_point_key_at_index(i + 1)
@@ -886,7 +892,11 @@ func _input_handle_mouse_motion_event(
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
 
 	elif current_mode == MODE.EDIT_EDGE:
-		deselect_verts()
+		var type = current_action.type
+		if type == ACTION_VERT.MOVE_VERT:
+			return _input_motion_move_verts(delta)
+		else:
+			deselect_verts()
 		on_edge = _input_motion_is_on_edge(mm, grab_threshold)
 
 	update_overlays()
