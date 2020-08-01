@@ -45,30 +45,6 @@ func __new():
 	return get_script().new()
 
 
-func _get_next_point_index(idx: int, points: Array) -> int:
-	if not is_shape_closed():
-		return ._get_next_point_index(idx, points)
-
-	var new_idx = idx + 1
-	new_idx = new_idx % (points.size() - 1)
-	# Skip last point; First and last point are the same when closed
-	if new_idx == points.size() - 1:
-		new_idx = _get_next_point_index(new_idx, points)
-	return new_idx
-
-
-func _get_previous_point_index(idx: int, points: Array) -> int:
-	if not is_shape_closed():
-		return ._get_next_point_index(idx, points)
-
-	var new_idx = idx - 1
-	if new_idx < 0:
-		new_idx += points.size()
-	# Skip last point; First and last point are the same when closed
-	if new_idx == points.size() - 1:
-		new_idx = _get_previous_point_index(new_idx, points)
-	return new_idx
-
 
 func _build_meshes(edges: Array) -> Array:
 	var meshes = []
@@ -92,25 +68,6 @@ func _build_meshes(edges: Array) -> Array:
 	return meshes
 
 
-func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
-	var points = get_vertices()
-	var edges: Array = []
-	if s_mat == null:
-		return edges
-
-	for edge_material in get_edge_material_data(points, s_mat, wrap_around):
-		edges.push_back(_build_edge(edge_material))
-
-	if s_mat.weld_edges:
-		if edges.size() > 1:
-			for i in range(0, edges.size() - 1, 1):
-				var this_edge = edges[i]
-				var next_edge = edges[i + 1]
-				_weld_quads(this_edge.quads.back(), next_edge.quads[0], 1.0)
-		var first_edge = edges[0]
-		var last_edge = edges.back()
-		_weld_quads(last_edge.quads.back(), first_edge.quads[0], 1.0)
-	return edges
 
 
 func _close_shape() -> bool:

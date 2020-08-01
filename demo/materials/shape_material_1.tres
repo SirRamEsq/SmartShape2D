@@ -48,6 +48,6 @@ script = ExtResource( 1 )
 _edge_materials = [ SubResource( 2 ), SubResource( 5 ) ]
 fill_textures = [ ExtResource( 5 ) ]
 fill_texture_normals = [  ]
-fill_texture_z_index = -10
+fill_texture_z_index = -100
 render_offset = 0.0
 weld_edges = true

@@ -792,8 +792,7 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 		return edges
 
 	for edge_material in get_edge_material_data(get_vertices(), s_mat, wrap_around):
-		var new_edge = _build_edge(edge_material)
-		edges.push_back(new_edge)
+		edges.push_back(_build_edge(edge_material))
 
 	# Weld each pair of edges with neighboring indicies
 	if s_mat.weld_edges:
