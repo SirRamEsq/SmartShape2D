@@ -74,7 +74,9 @@ class ActionDataVert:
 # PRELOADS
 var GUI_SNAP_POPUP = preload("scenes/SnapPopup.tscn")
 var GUI_POINT_INFO_PANEL = preload("scenes/GUI_InfoPanel.tscn")
+var GUI_EDGE_INFO_PANEL = preload("scenes/GUI_Edge_InfoPanel.tscn")
 var gui_point_info_panel = GUI_POINT_INFO_PANEL.instance()
+var gui_edge_info_panel = GUI_EDGE_INFO_PANEL.instance()
 var gui_snap_settings = GUI_SNAP_POPUP.instance()
 
 # This is the shape node being edited
@@ -184,7 +186,7 @@ func _gui_build_toolbar():
 	tb_hb.hide()
 
 
-func _gui_update_info_panel():
+func _gui_update_vert_info_panel():
 	var idx = current_action.current_point_index(shape)
 	var key = current_action.current_point_key()
 	if not is_key_valid(shape, key):
@@ -201,6 +203,32 @@ func _gui_update_info_panel():
 	gui_point_info_panel.set_flip(properties.flip)
 
 
+func _gui_update_edge_info_panel():
+	# Don't update if already visible
+	if gui_edge_info_panel.visible:
+		return
+	var indicies = [-1, -1]
+	if on_edge:
+		var t: Transform2D = get_et() * shape.get_global_transform()
+		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
+		var keys = _get_edge_point_keys_from_offset(offset, true)
+		indicies = [shape.get_point_index(keys[0]), shape.get_point_index(keys[1])]
+	gui_edge_info_panel.set_indicies(indicies)
+
+	# Shrink panel to minimum size
+	gui_edge_info_panel.rect_size = Vector2(1, 1)
+
+
+func _gui_update_info_panels():
+	match current_mode:
+		MODE.EDIT_VERT:
+			_gui_update_vert_info_panel()
+			gui_edge_info_panel.visible = false
+		MODE.EDIT_EDGE:
+			_gui_update_edge_info_panel()
+			gui_point_info_panel.visible = false
+
+
 #########
 # GODOT #
 #########
@@ -214,6 +242,8 @@ func _ready():
 	_gui_build_toolbar()
 	add_child(gui_point_info_panel)
 	gui_point_info_panel.visible = false
+	add_child(gui_edge_info_panel)
+	gui_edge_info_panel.visible = false
 	add_child(gui_snap_settings)
 
 
@@ -244,7 +274,7 @@ func forward_canvas_gui_input(event):
 	elif event is InputEventMouseMotion:
 		return_value = _input_handle_mouse_motion_event(event, et, grab_threshold)
 
-	_gui_update_info_panel()
+	_gui_update_info_panels()
 	return return_value
 
 
@@ -554,29 +584,33 @@ func select_control_points_to_move(
 # INPUT #
 #########
 func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float) -> bool:
-	# Mouse over a single vertex?
-	if current_action.is_single_vert_selected():
-		FUNC.action_delete_point(self, "update_overlays", undo, shape, current_action.keys[0])
-		undo_version = undo.get_version()
-		deselect_verts()
-		return true
-	else:
-		# Mouse over a control point?
-		var et = get_et()
-		var points_in = FUNC.get_intersecting_control_point_in(
-			shape, et, mb_position, grab_threshold
-		)
-		var points_out = FUNC.get_intersecting_control_point_out(
-			shape, et, mb_position, grab_threshold
-		)
-		if not points_in.empty():
-			FUNC.action_delete_point_in(self, "update_overlays", undo, shape, points_in[0])
+	if current_mode == MODE.EDIT_VERT:
+		# Mouse over a single vertex?
+		if current_action.is_single_vert_selected():
+			FUNC.action_delete_point(self, "update_overlays", undo, shape, current_action.keys[0])
 			undo_version = undo.get_version()
+			deselect_verts()
 			return true
-		elif not points_out.empty():
-			FUNC.action_delete_point_out(self, "update_overlays", undo, shape, points_out[0])
-			undo_version = undo.get_version()
-			return true
+		else:
+			# Mouse over a control point?
+			var et = get_et()
+			var points_in = FUNC.get_intersecting_control_point_in(
+				shape, et, mb_position, grab_threshold
+			)
+			var points_out = FUNC.get_intersecting_control_point_out(
+				shape, et, mb_position, grab_threshold
+			)
+			if not points_in.empty():
+				FUNC.action_delete_point_in(self, "update_overlays", undo, shape, points_in[0])
+				undo_version = undo.get_version()
+				return true
+			elif not points_out.empty():
+				FUNC.action_delete_point_out(self, "update_overlays", undo, shape, points_out[0])
+				undo_version = undo.get_version()
+				return true
+	elif current_mode == MODE.EDIT_EDGE:
+		gui_edge_info_panel.rect_position = mb_position + Vector2(256, -24)
+		gui_edge_info_panel.visible = true
 	return false
 
 
@@ -597,6 +631,7 @@ func _input_handle_left_click(
 		return true
 
 	if current_mode == MODE.EDIT_VERT:
+		gui_edge_info_panel.visible = false
 		# Highlighting a vert to move or add control points to
 		if current_action.is_single_vert_selected():
 			if Input.is_key_pressed(KEY_SHIFT):
@@ -624,9 +659,14 @@ func _input_handle_left_click(
 			select_vertices_to_move([new_key], vp_m_pos)
 			return true
 	elif current_mode == MODE.EDIT_EDGE:
+		if gui_edge_info_panel.visible:
+			gui_edge_info_panel.visible = false
+			return true
 		if on_edge:
 			# Grab Edge (2 points)
-			var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
+			var offset = shape.get_closest_offset_straight_edge(
+				t.affine_inverse().xform(edge_point)
+			)
 			var edge_point_keys = _get_edge_point_keys_from_offset(offset, true)
 			select_vertices_to_move([edge_point_keys[0], edge_point_keys[1]], vp_m_pos)
 		return true
@@ -653,7 +693,7 @@ func _input_handle_mouse_wheel(btn: int) -> bool:
 
 	shape.set_as_dirty()
 	update_overlays()
-	_gui_update_info_panel()
+	_gui_update_info_panels()
 
 	return true
 
@@ -667,13 +707,19 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 				shape.set_point_texture_flip(! shape.get_point_texture_flip(key), key)
 				shape.set_as_dirty()
 				shape.update()
-				_gui_update_info_panel()
+				_gui_update_info_panels()
+		if kb.pressed and kb.scancode == KEY_ESCAPE:
+			# Hide edge_info_panel
+			if gui_edge_info_panel.visible:
+				gui_edge_info_panel.visible = false
 		return true
 	return false
 
 
 func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 	match kb.scancode:
+		KEY_ESCAPE:
+			return true
 		KEY_SPACE:
 			return true
 		KEY_SHIFT:
@@ -892,6 +938,9 @@ func _input_handle_mouse_motion_event(
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
 
 	elif current_mode == MODE.EDIT_EDGE:
+		# Don't update if edge panel is visible
+		if gui_edge_info_panel.visible:
+			return false
 		var type = current_action.type
 		if type == ACTION_VERT.MOVE_VERT:
 			return _input_motion_move_verts(delta)
