@@ -208,12 +208,20 @@ func _gui_update_edge_info_panel():
 	if gui_edge_info_panel.visible:
 		return
 	var indicies = [-1, -1]
+	var override = null
 	if on_edge:
 		var t: Transform2D = get_et() * shape.get_global_transform()
 		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
 		var keys = _get_edge_point_keys_from_offset(offset, true)
 		indicies = [shape.get_point_index(keys[0]), shape.get_point_index(keys[1])]
+		if shape.has_material_override(keys):
+			override = shape.get_material_override(keys)
 	gui_edge_info_panel.set_indicies(indicies)
+	if override != null:
+		gui_edge_info_panel.set_material_override(true)
+		gui_edge_info_panel.set_render(override.render)
+	else:
+		gui_edge_info_panel.set_material_override(false)
 
 	# Shrink panel to minimum size
 	gui_edge_info_panel.rect_size = Vector2(1, 1)
@@ -244,6 +252,8 @@ func _ready():
 	gui_point_info_panel.visible = false
 	add_child(gui_edge_info_panel)
 	gui_edge_info_panel.visible = false
+	gui_edge_info_panel.connect("set_material_override", self, "_on_set_edge_material_override")
+	gui_edge_info_panel.connect("set_render", self, "_on_set_edge_material_override_render")
 	add_child(gui_snap_settings)
 
 
@@ -354,6 +364,30 @@ func snap_position(pos: Vector2, snap_offset: Vector2, snap_step: Vector2, force
 ##########
 # PLUGIN #
 ##########
+func _on_set_edge_material_override_render(enabled: bool):
+	if not shape.has_material_override(gui_edge_info_panel.indicies):
+		return
+	var override = shape.get_material_override(gui_edge_info_panel.indicies)
+	override.render = enabled
+
+
+func _on_set_edge_material_override(enabled: bool):
+	if enabled:
+		# Get the relevant Override data if any exists
+		var indicies = gui_edge_info_panel.indicies
+		if indicies.has(-1) or indicies.size() != 2:
+			return
+		var override = null
+		if shape.has_material_override(indicies):
+			override = shape.get_material_override(indicies)
+		else:
+			override = RMSS2D_Material_Edge_Metadata.new()
+			override.edge_material = null
+			shape.set_material_override(indicies, override)
+
+		# Load override data into the info panel
+		gui_edge_info_panel.set_render(override.render)
+
 
 static func is_shape_valid(s: RMSS2D_Shape_Base) -> bool:
 	if s == null:
@@ -609,8 +643,9 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 				undo_version = undo.get_version()
 				return true
 	elif current_mode == MODE.EDIT_EDGE:
-		gui_edge_info_panel.rect_position = mb_position + Vector2(256, -24)
-		gui_edge_info_panel.visible = true
+		if on_edge:
+			gui_edge_info_panel.visible = not gui_edge_info_panel.visible
+			gui_edge_info_panel.rect_position = mb_position + Vector2(256, -24)
 	return false
 
 

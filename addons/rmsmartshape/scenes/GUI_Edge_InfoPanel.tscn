@@ -17,63 +17,77 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 p_lbl_idx = NodePath("Container/Properties/IDX")
+p_btn_material_override = NodePath("Container/Functions/MaterialOverride")
+p_ctr_override = NodePath("Container/Override")
+p_chk_render = NodePath("Container/Override/Render")
 
 [node name="Panel" type="Panel" parent="."]
 margin_left = 3.0
 margin_top = 3.0
-margin_right = 143.0
-margin_bottom = 155.0
+margin_right = 127.0
+margin_bottom = 111.0
 mouse_filter = 2
 
 [node name="Container" type="VBoxContainer" parent="."]
 margin_left = 3.0
 margin_top = 3.0
-margin_right = 143.0
-margin_bottom = 155.0
+margin_right = 127.0
+margin_bottom = 111.0
 
 [node name="Properties" type="VBoxContainer" parent="Container"]
-margin_right = 140.0
+margin_right = 124.0
 margin_bottom = 24.0
 mouse_filter = 2
 
 [node name="IDX" type="Label" parent="Container/Properties"]
-margin_right = 140.0
+margin_right = 124.0
 margin_bottom = 24.0
 text = "IDX: [1,2]"
 
 [node name="Functions" type="VBoxContainer" parent="Container"]
 margin_top = 28.0
-margin_right = 140.0
-margin_bottom = 152.0
+margin_right = 124.0
+margin_bottom = 48.0
 mouse_filter = 2
 
-[node name="Render" type="CheckBox" parent="Container/Functions"]
-margin_right = 140.0
-margin_bottom = 24.0
-pressed = true
-text = "Render"
-
-[node name="Material Override" type="CheckBox" parent="Container/Functions"]
-margin_top = 28.0
-margin_right = 140.0
-margin_bottom = 52.0
-pressed = true
-text = "Material Override"
-
-[node name="SetMaterial" type="Button" parent="Container/Functions"]
-margin_top = 56.0
-margin_right = 140.0
-margin_bottom = 76.0
-text = "Set Material"
-
 [node name="Make Inner Curve" type="Button" parent="Container/Functions"]
-margin_top = 80.0
+visible = false
 margin_right = 140.0
-margin_bottom = 100.0
+margin_bottom = 20.0
 text = "Make Inner Curve"
 
 [node name="Make Outer Curve" type="Button" parent="Container/Functions"]
-margin_top = 104.0
+visible = false
+margin_top = 24.0
 margin_right = 140.0
-margin_bottom = 124.0
+margin_bottom = 44.0
 text = "Make Outer Curve"
+
+[node name="MaterialOverride" type="Button" parent="Container/Functions"]
+margin_right = 124.0
+margin_bottom = 20.0
+toggle_mode = true
+text = "Material Override"
+
+[node name="Override" type="VBoxContainer" parent="Container"]
+visible = false
+margin_top = 52.0
+margin_right = 124.0
+margin_bottom = 108.0
+
+[node name="HSeparator" type="HSeparator" parent="Container/Override"]
+margin_right = 124.0
+margin_bottom = 4.0
+
+[node name="Render" type="CheckBox" parent="Container/Override"]
+margin_top = 8.0
+margin_right = 124.0
+margin_bottom = 32.0
+pressed = true
+text = "Render"
+
+[node name="SetMaterial" type="Button" parent="Container/Override"]
+margin_top = 36.0
+margin_right = 124.0
+margin_bottom = 56.0
+text = "Set Material"

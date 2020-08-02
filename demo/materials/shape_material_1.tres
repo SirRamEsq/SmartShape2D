@@ -18,6 +18,7 @@ script = ExtResource( 2 )
 edge_material = ExtResource( 4 )
 normal_range = SubResource( 1 )
 weld = true
+render = true
 z_index = 0
 offset = 0.0
 
@@ -40,6 +41,7 @@ script = ExtResource( 2 )
 edge_material = SubResource( 3 )
 normal_range = SubResource( 4 )
 weld = true
+render = true
 z_index = -10
 offset = 0.0
 

@@ -38,9 +38,11 @@ export (float) var collision_offset: float = 0.0 setget set_collision_offset
 export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
 export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
+# Dictionary of (Array of 2 points) to (RMSS2D_Material_Edge_Metadata)
 export (NodePath) var collision_polygon_node_path: NodePath = ""
 export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_material
 export (Resource) var _points = RMSS2D_Point_Array.new() setget set_point_array, get_point_array
+export (Dictionary) var material_overrides: Dictionary = {} setget set_material_overrides
 
 var _dirty: bool = true
 var _edges: Array = []
@@ -145,6 +147,58 @@ func _set_material(value: RMSS2D_Material_Shape):
 		shape_material.connect("changed", self, "_handle_material_change")
 	set_as_dirty()
 	property_list_changed_notify()
+
+
+func set_material_overrides(dict: Dictionary):
+	for k in dict:
+		if not k is Array and k.size() == 2:
+			push_error("Material Override Dictionary KEY is not an Array with 2 points!")
+		var v = dict[k]
+		if not v is RMSS2D_Material_Edge_Metadata:
+			push_error("Material Override Dictionary VALUE is not RMSS2D_Material_Edge_Metadata!")
+	material_overrides = dict
+
+
+func get_material_override_tuple(tuple: Array) -> Array:
+	var keys = material_overrides.keys()
+	var idx = RMSS2D_Point_Array.find_tuple_in_array_of_tuples(keys, tuple)
+	if idx != -1:
+		tuple = keys[idx]
+	return tuple
+
+
+func has_material_override(tuple: Array) -> bool:
+	tuple = get_material_override_tuple(tuple)
+	return material_overrides.has(tuple)
+
+
+func remove_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
+	if has_material_override(tuple):
+		var old = get_material_override(tuple)
+		if old == null:
+			return
+		else:
+			if old.is_connected("changed", self, "_handle_material_change"):
+				old.disconnect("changed", self, "_handle_material_change")
+	material_overrides[get_material_override_tuple(tuple)] = null
+
+
+func set_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
+	if has_material_override(tuple):
+		var old = get_material_override(tuple)
+		if old == mat:
+			return
+		else:
+			if old.is_connected("changed", self, "_handle_material_change"):
+				old.disconnect("changed", self, "_handle_material_change")
+	mat.connect("changed", self, "_handle_material_change")
+	material_overrides[get_material_override_tuple(tuple)] = mat
+
+
+func get_material_override(tuple: Array) -> RMSS2D_Material_Edge_Metadata:
+	if not has_material_override(tuple):
+		return null
+	return material_overrides[get_material_override_tuple(tuple)]
 
 
 #########
@@ -712,15 +766,28 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	var c_extends = 0.0
 
 	#for i in range(0, edge_dat.indicies.size(), 1):
-	for tess_idx in range(first_t_idx, last_t_idx + 1, 1):
+	for tess_idx in range(first_t_idx, last_t_idx, 1):
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
+		var next_vert_idx = vert_idx + 1
+		var override_tuple = [vert_idx, next_vert_idx]
+		var override = null
+		if has_material_override(override_tuple):
+			override = get_material_override(override_tuple)
+
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
 		var is_first_point = vert_idx == first_idx
 		var is_last_point = vert_idx == last_idx
-		var meta_mat = edge_dat.meta_material
-		var mat = meta_mat.edge_material
+
+		# If override exists, use it instead of the default
+		var mat = edge_material
+		#if override != null:
+		#if override.edge_material != null:
+		#mat = override.edge_material
+		#if not override.render:
+		#continue
 		if mat.textures.empty():
 			continue
+
 		var tex = mat.textures[0]
 		var tex_normal = null
 		var tex_size = tex.get_size()
@@ -794,22 +861,33 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	for edge_material in get_edge_material_data(get_vertices(), s_mat, wrap_around):
 		edges.push_back(_build_edge(edge_material))
 
+	var empty_edges = []
+	for i in range(edges.size()):
+		var e = edges[i]
+		if e.quads.empty():
+			empty_edges.push_back(i)
+
+	# traverse in reverse
+	for i in range(empty_edges.size(), 0, -1):
+		var idx = empty_edges[i]
+		edges.erase(idx)
+
 	# Weld each pair of edges with neighboring indicies
 	if s_mat.weld_edges:
 		if edges.size() > 1:
 			for i in range(0, edges.size() - 1, 1):
 				var edge1 = edges[i]
 				var idx1_first = _points.get_point_index(edge1.first_point_key)
-				var idx1_last = _points.get_point_index(edge1.first_point_key)
+				var idx1_last = _points.get_point_index(edge1.last_point_key)
 				for j in range(0, edges.size() - 1, 1):
 					if i == j:
 						continue
 					var edge2 = edges[j]
-					var idx2_first = _points.get_point_index(edge1.first_point_key)
-					var idx2_last = _points.get_point_index(edge1.first_point_key)
-					if (idx1_last + 1) == idx2_first:
+					var idx2_first = _points.get_point_index(edge2.first_point_key)
+					var idx2_last = _points.get_point_index(edge2.last_point_key)
+					if idx1_last == idx2_first:
 						_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
-					elif idx1_first == (idx2_last + 1):
+					elif idx1_first == idx2_last:
 						_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
 
 	return edges
@@ -828,6 +906,21 @@ func get_edge_material_data(points: Array, s_material: RMSS2D_Material_Shape, wr
 		var normal = Vector2(delta.y, -delta.x).normalized()
 
 		var edge_meta_materials = s_material.get_edge_materials(normal)
+
+		# Override the material for this point?
+		var override_tuple = [idx, idx_next]
+		var override = null
+		if has_material_override(override_tuple):
+			override = get_material_override(override_tuple)
+		if override != null:
+			if not override.render:
+				# Closeout all edge building
+				for e in edge_building.keys():
+					final_edges.push_back(edge_building[e])
+					edge_building.erase(e)
+				continue
+			if override.edge_material != null:
+				edge_meta_materials = [override.edge_material]
 
 		# Append to existing edges being built. Add new ones if needed
 		for e in edge_meta_materials:

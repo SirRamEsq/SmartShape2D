@@ -12,6 +12,8 @@ export (Resource) var edge_material = RMSS2D_Material_Edge.new() setget set_edge
 export (Resource) var normal_range = RMSS2D_NormalRange.new(0, 360) setget set_normal_range
 # If edge should be welded to the edges surrounding it
 export (bool) var weld: bool = true setget set_weld
+# If this edge should be visible
+export (bool) var render: bool = true setget set_render
 # z index for an edge
 export (int) var z_index: int = 0 setget set_z_index
 # Distance from center
@@ -22,12 +24,18 @@ func _to_string() -> String:
 	return "%s | %s" % [str(edge_material), normal_range]
 
 
+func set_render(b: bool):
+	render = b
+	emit_signal("changed")
+
+
 func set_edge_material(m: RMSS2D_Material_Edge):
 	if edge_material != null:
 		if edge_material.is_connected("changed", self, "_on_edge_changed"):
 			edge_material.disconnect("changed", self, "_on_edge_changed")
 	edge_material = m
-	edge_material.connect("changed", self, "_on_edge_changed")
+	if edge_material != null:
+		edge_material.connect("changed", self, "_on_edge_changed")
 	emit_signal("changed")
 
 
