@@ -365,9 +365,12 @@ func snap_position(pos: Vector2, snap_offset: Vector2, snap_step: Vector2, force
 # PLUGIN #
 ##########
 func _on_set_edge_material_override_render(enabled: bool):
-	if not shape.has_material_override(gui_edge_info_panel.indicies):
+	var keys = []
+	for i in gui_edge_info_panel.indicies:
+		keys.push_back(shape.get_point_key_at_index(i))
+	if not shape.has_material_override(keys):
 		return
-	var override = shape.get_material_override(gui_edge_info_panel.indicies)
+	var override = shape.get_material_override(keys)
 	override.render = enabled
 
 
@@ -377,13 +380,17 @@ func _on_set_edge_material_override(enabled: bool):
 		var indicies = gui_edge_info_panel.indicies
 		if indicies.has(-1) or indicies.size() != 2:
 			return
+		var keys = []
+		for i in indicies:
+			keys.push_back(shape.get_point_key_at_index(i))
+
 		var override = null
-		if shape.has_material_override(indicies):
-			override = shape.get_material_override(indicies)
+		if shape.has_material_override(keys):
+			override = shape.get_material_override(keys)
 		else:
 			override = RMSS2D_Material_Edge_Metadata.new()
 			override.edge_material = null
-			shape.set_material_override(indicies, override)
+			shape.set_material_override(keys, override)
 
 		# Load override data into the info panel
 		gui_edge_info_panel.set_render(override.render)

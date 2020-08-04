@@ -32,6 +32,7 @@ func set_material_override(enabled: bool):
 
 
 func set_render(enabled: bool):
+	get_node(p_chk_render).pressed = enabled
 	_on_toggle_render(enabled)
 
 

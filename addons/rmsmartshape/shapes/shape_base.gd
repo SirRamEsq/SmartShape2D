@@ -908,7 +908,8 @@ func get_edge_material_data(points: Array, s_material: RMSS2D_Material_Shape, wr
 		var edge_meta_materials = s_material.get_edge_materials(normal)
 
 		# Override the material for this point?
-		var override_tuple = [idx, idx_next]
+		var keys = [get_point_key_at_index(idx), get_point_key_at_index(idx_next)]
+		var override_tuple = keys
 		var override = null
 		if has_material_override(override_tuple):
 			override = get_material_override(override_tuple)
