@@ -172,15 +172,14 @@ func has_material_override(tuple: Array) -> bool:
 	return material_overrides.has(tuple)
 
 
-func remove_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
-	if has_material_override(tuple):
-		var old = get_material_override(tuple)
-		if old == null:
-			return
-		else:
-			if old.is_connected("changed", self, "_handle_material_change"):
-				old.disconnect("changed", self, "_handle_material_change")
-	material_overrides[get_material_override_tuple(tuple)] = null
+func remove_material_override(tuple: Array):
+	if not has_material_override(tuple):
+		return
+	var old = get_material_override(tuple)
+	if old.is_connected("changed", self, "_handle_material_change"):
+		old.disconnect("changed", self, "_handle_material_change")
+	material_overrides.erase(get_material_override_tuple(tuple))
+	set_as_dirty()
 
 
 func set_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
@@ -193,6 +192,7 @@ func set_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
 				old.disconnect("changed", self, "_handle_material_change")
 	mat.connect("changed", self, "_handle_material_change")
 	material_overrides[get_material_override_tuple(tuple)] = mat
+	set_as_dirty()
 
 
 func get_material_override(tuple: Array) -> RMSS2D_Material_Edge_Metadata:

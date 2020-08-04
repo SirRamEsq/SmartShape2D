@@ -375,25 +375,29 @@ func _on_set_edge_material_override_render(enabled: bool):
 
 
 func _on_set_edge_material_override(enabled: bool):
-	if enabled:
-		# Get the relevant Override data if any exists
-		var indicies = gui_edge_info_panel.indicies
-		if indicies.has(-1) or indicies.size() != 2:
-			return
-		var keys = []
-		for i in indicies:
-			keys.push_back(shape.get_point_key_at_index(i))
+	var indicies = gui_edge_info_panel.indicies
+	if indicies.has(-1) or indicies.size() != 2:
+		return
+	var keys = []
+	for i in indicies:
+		keys.push_back(shape.get_point_key_at_index(i))
 
-		var override = null
-		if shape.has_material_override(keys):
-			override = shape.get_material_override(keys)
-		else:
+	# Get the relevant Override data if any exists
+	var override = null
+	if shape.has_material_override(keys):
+		override = shape.get_material_override(keys)
+
+	if enabled:
+		if override == null:
 			override = RMSS2D_Material_Edge_Metadata.new()
 			override.edge_material = null
 			shape.set_material_override(keys, override)
 
 		# Load override data into the info panel
 		gui_edge_info_panel.set_render(override.render)
+	else:
+		if override != null:
+			shape.remove_material_override(keys)
 
 
 static func is_shape_valid(s: RMSS2D_Shape_Base) -> bool:
