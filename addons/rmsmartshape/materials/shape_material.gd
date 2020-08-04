@@ -9,7 +9,7 @@ Each edge represents a set of textures used to render an edge
 
 # List of materials this shape can use
 # Should be RMSS2D_Material_Edge_Metadata
-export (Array, Resource) var _edge_materials: Array = [] setget set_edge_materials
+export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_meta_materials
 export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
 export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
 export (int) var fill_texture_z_index: int = -10 setget set_fill_texture_z_index
@@ -22,9 +22,9 @@ export (bool) var weld_edges: bool = true setget set_weld_edges
 
 
 # Get all valid edge materials for this normal
-func get_edge_materials(normal: Vector2) -> Array:
+func get_edge_meta_materials(normal: Vector2) -> Array:
 	var materials = []
-	for e in _edge_materials:
+	for e in _edge_meta_materials:
 		if e == null:
 			continue
 		if e.normal_range.is_in_range(normal):
@@ -32,14 +32,21 @@ func get_edge_materials(normal: Vector2) -> Array:
 	return materials
 
 
+func get_all_edge_meta_materials() -> Array:
+	return _edge_meta_materials
+
 func get_all_edge_materials() -> Array:
-	return _edge_materials
+	var materials = []
+	for meta in _edge_meta_materials:
+		if meta.edge_material != null:
+			materials.push_back(meta.edge_material)
+	return materials
 
 
 func add_edge_material(e: RMSS2D_Material_Edge_Metadata):
-	var new_array = _edge_materials.duplicate()
+	var new_array = _edge_meta_materials.duplicate()
 	new_array.push_back(e)
-	set_edge_materials(new_array)
+	set_edge_meta_materials(new_array)
 
 
 func _on_edge_material_changed():
@@ -66,8 +73,8 @@ func set_fill_texture_z_index(i: int):
 	emit_signal("changed")
 
 
-func set_edge_materials(a: Array):
-	for e in _edge_materials:
+func set_edge_meta_materials(a: Array):
+	for e in _edge_meta_materials:
 		if e == null:
 			continue
 		if not a.has(e):
@@ -79,5 +86,5 @@ func set_edge_materials(a: Array):
 		if not e.is_connected("changed", self, "_on_edge_material_changed"):
 			e.connect("changed", self, "_on_edge_material_changed")
 
-	_edge_materials = a
+	_edge_meta_materials = a
 	emit_signal("changed")

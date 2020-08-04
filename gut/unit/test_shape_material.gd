@@ -23,21 +23,21 @@ func test_edges_correct_ranges():
 	var vectors_nr2 = [Vector2(-1, 1), Vector2(-1, 0), Vector2(-1, -1)]
 
 	for v in vectors_nr1:
-		var materials = shape_material.get_edge_materials(v)
+		var materials = shape_material.get_edge_meta_materials(v)
 		assert_eq(materials[0].edge_material, edge_mat_1)
 
 	for v in vectors_nr2:
-		var materials = shape_material.get_edge_materials(v)
+		var materials = shape_material.get_edge_meta_materials(v)
 		assert_eq(materials[0].edge_material, edge_mat_2)
 
 	for v in vectors_nr1:
-		var materials = shape_material.get_edge_materials(v)
+		var materials = shape_material.get_edge_meta_materials(v)
 		assert_ne(materials[0].edge_material, edge_mat_2)
 
 	for v in vectors_nr2:
-		var materials = shape_material.get_edge_materials(v)
+		var materials = shape_material.get_edge_meta_materials(v)
 		assert_ne(materials[0].edge_material, edge_mat_1)
 
-	var m = shape_material.get_all_edge_materials()
+	var m = shape_material.get_all_edge_meta_materials()
 	assert_true(m[0] == edge_mat_meta_1)
 	assert_true(m[1] == edge_mat_meta_2)

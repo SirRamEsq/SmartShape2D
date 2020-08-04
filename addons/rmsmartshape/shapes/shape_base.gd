@@ -858,7 +858,7 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	for edge_material in get_edge_material_data(get_vertices(), s_mat, wrap_around):
+	for edge_material in get_edge_material_data(s_mat, wrap_around):
 		edges.push_back(_build_edge(edge_material))
 
 	var empty_edges = []
@@ -893,7 +893,8 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	return edges
 
 
-func get_edge_material_data(points: Array, s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+func get_edge_material_data(s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+	var points = get_vertices()
 	wrap_around = false
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
@@ -905,7 +906,7 @@ func get_edge_material_data(points: Array, s_material: RMSS2D_Material_Shape, wr
 		var delta_normal = delta.normalized()
 		var normal = Vector2(delta.y, -delta.x).normalized()
 
-		var edge_meta_materials = s_material.get_edge_materials(normal)
+		var edge_meta_materials = s_material.get_edge_meta_materials(normal)
 
 		# Override the material for this point?
 		var keys = [get_point_key_at_index(idx), get_point_key_at_index(idx_next)]

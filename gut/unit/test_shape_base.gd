@@ -159,7 +159,7 @@ func test_invert_point_order():
 #)
 
 
-func test_get_edge_materials_one():
+func test_get_edge_meta_materials_one():
 	var shape_base = RMSS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
@@ -173,25 +173,26 @@ func test_get_edge_materials_one():
 	assert_not_null(edge_mat_meta.edge_material)
 
 	var s_m = RMSS2D_Material_Shape.new()
-	s_m.set_edge_materials([edge_mat_meta])
-	for e in s_m.get_edge_materials(Vector2(1, 0)):
+	s_m.set_edge_meta_materials([edge_mat_meta])
+	for e in s_m.get_edge_meta_materials(Vector2(1, 0)):
 		assert_not_null(e)
 		assert_not_null(e.edge_material)
 		assert_eq(e, edge_mat_meta)
 		assert_eq(e.edge_material, edge_mat)
 
 	var points = get_clockwise_points()
-	var edge_data = shape_base.get_edge_material_data(points, s_m, false)
+	shape_base.add_points(points)
+	var edge_data = shape_base.get_edge_material_data(s_m, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
 	assert_eq(edge_data.size(), 1, "Should be one EdgeData specified")
 	for e in edge_data:
 		assert_not_null(e)
-		assert_not_null(e.material)
-		assert_eq(e.material, edge_mat)
+		assert_not_null(e.meta_material)
+		assert_eq(e.meta_material.edge_material, edge_mat)
 
 
-func test_get_edge_materials_many():
+func test_get_edge_meta_materials_many():
 	var shape_base = RMSS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
@@ -215,7 +216,7 @@ func test_get_edge_materials_many():
 		assert_not_null(edge_mat_meta.edge_material)
 
 	var s_m = RMSS2D_Material_Shape.new()
-	s_m.set_edge_materials(edge_materials_meta)
+	s_m.set_edge_meta_materials(edge_materials_meta)
 	var n_right = Vector2(1, 0)
 	var n_left = Vector2(-1, 0)
 	var n_down = Vector2(0, 1)
@@ -225,14 +226,15 @@ func test_get_edge_materials_many():
 	# Ensure that the correct matierlas are given for the correct normals
 	for i in range(0, normals.size(), 1):
 		var n = normals[i]
-		for e in s_m.get_edge_materials(n):
+		for e in s_m.get_edge_meta_materials(n):
 			assert_not_null(e)
 			assert_not_null(e.edge_material)
 			assert_eq(e, edge_materials_meta[i])
 			assert_eq(e.edge_material, edge_materials[i])
 
 	var points = get_square_points()
-	var em_data = shape_base.get_edge_material_data(points, s_m, false)
+	shape_base.add_points(points)
+	var em_data = shape_base.get_edge_material_data(s_m, false)
 	assert_eq(em_data.size(), 4)
 	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
 	for i in range(0, em_data.size(), 1):
