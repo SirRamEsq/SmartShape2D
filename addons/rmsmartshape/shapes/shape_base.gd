@@ -611,59 +611,6 @@ func _build_meshes(edges: Array) -> Array:
 	return meshes
 
 
-func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
-	var meshes = []
-	if s_mat == null:
-		return meshes
-	if s_mat.fill_textures.empty():
-		return meshes
-	if points.size() < 3:
-		return meshes
-
-	# Produce Fill Mesh
-	var fill_points: PoolVector2Array = PoolVector2Array()
-	fill_points.resize(points.size())
-	for i in points.size():
-		fill_points[i] = points[i]
-
-	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
-	if fill_tris.empty():
-		push_error("'%s': Couldn't Triangulate shape" % name)
-		return []
-	var tex = null
-	if s_mat.fill_textures.empty():
-		return meshes
-	tex = s_mat.fill_textures[0]
-	var tex_normal = null
-	if not s_mat.fill_texture_normals.empty():
-		tex_normal = s_mat.fill_texture_normals[0]
-	var tex_size = tex.get_size()
-	var st: SurfaceTool
-	st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	for i in range(0, fill_tris.size() - 1, 3):
-		st.add_color(Color.white)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
-		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-		st.add_color(Color.white)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
-		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-		st.add_color(Color.white)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
-		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
-	st.index()
-	st.generate_normals()
-	st.generate_tangents()
-	var array_mesh = st.commit()
-	var flip = false
-	var transform = Transform2D()
-	var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
-	meshes.push_back(mesh_data)
-
-	return meshes
-
-
 func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
 	var pt: Vector2 = point
 	var rslt: Vector2 = Vector2(pt.x / size.x, pt.y / size.y)

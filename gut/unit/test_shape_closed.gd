@@ -1,5 +1,6 @@
 extends "res://addons/gut/test.gd"
 
+var TEST_TEXTURE = load("res://gut/unit/test.png")
 
 func test_adjust_point_index():
 	var shape = RMSS2D_Shape_Closed.new()
@@ -16,6 +17,18 @@ func test_adjust_point_index():
 	assert_eq(shape.adjust_add_point_index(point_count - 1), point_count - 1)
 	assert_eq(shape.adjust_add_point_index(80), point_count - 1)
 
+
+func test_scale_points():
+	var points = [Vector2(-100, -100), Vector2(100, -100), Vector2(100, 100), Vector2(-100, 100)]
+	var tex_size = TEST_TEXTURE.get_size()
+	#var expected_points = [Vector2(-100, -100 + tex_size.y), Vector2(100,
+	var scaled_points = RMSS2D_Shape_Closed.scale_points(points, tex_size, 0.0)
+	for i in range(points.size()):
+		var p1 = points[i]
+		var p2 = scaled_points[i]
+		assert_eq(p1, p2)
+	scaled_points = RMSS2D_Shape_Closed.scale_points(points, tex_size, 1.0)
+	gut.p(scaled_points)
 
 
 func test_add_points():
