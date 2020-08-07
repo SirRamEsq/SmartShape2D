@@ -15,6 +15,8 @@ To use search to jump between categories, use the regex:
 # .+ #
 """
 
+enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
+
 
 class EdgeMaterialData:
 	var meta_material: RMSS2D_Material_Edge_Metadata
@@ -617,15 +619,45 @@ func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
 	return rslt
 
 
-func are_points_clockwise() -> bool:
+static func on_segment(p: Vector2, q: Vector2, r: Vector2) -> bool:
+	"""
+	Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'
+	See: https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+	"""
+	if (
+		q.x <= max(p.x, r.x)
+		and q.x >= min(p.x, r.x)
+		and q.y <= max(p.y, r.y)
+		and q.y >= min(p.y, r.y)
+	):
+		return true
+	return false
+
+static func get_points_orientation(points: Array) -> int:
+	var point_count = points.size()
+	if point_count < 3:
+		return ORIENTATION.COLINEAR
+
 	var sum = 0.0
-	var point_count = _curve.get_point_count()
 	for i in point_count:
-		var pt = _curve.get_point_position(i)
-		var pt2 = _curve.get_point_position((i + 1) % point_count)
+		var pt = points[i]
+		var pt2 = points[(i + 1) % point_count]
 		sum += pt.cross(pt2)
 
-	return sum > 0.0
+	# Colinear
+	if sum == 0:
+		return ORIENTATION.COLINEAR
+
+	# Clockwise
+	if sum > 0.0:
+		return ORIENTATION.CLOCKWISE
+	return ORIENTATION.C_CLOCKWISE
+
+
+func are_points_clockwise() -> bool:
+	var points = get_tessellated_points()
+	var orient = get_points_orientation(points)
+	return orient == ORIENTATION.CLOCKWISE
 
 
 func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):

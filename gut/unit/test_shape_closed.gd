@@ -18,17 +18,43 @@ func test_adjust_point_index():
 	assert_eq(shape.adjust_add_point_index(80), point_count - 1)
 
 
+func test_edges_intersect():
+	var p1 = Vector2(0,0)
+	var p2 = Vector2(-100,0)
+	var p3 = Vector2(100,0)
+	var p4 = Vector2(-50,-50)
+	var p5 = Vector2(50,50)
+	var p6 = Vector2(-1,0)
+	assert_true(RMSS2D_Shape_Closed.do_edges_intersect(p1, p1, p1, p1))
+	assert_true(RMSS2D_Shape_Closed.do_edges_intersect(p2, p3, p4, p5))
+	assert_true(RMSS2D_Shape_Closed.do_edges_intersect(p1, p3, p4, p5))
+	assert_true(RMSS2D_Shape_Closed.do_edges_intersect(p1, p2, p4, p5))
+	assert_true(RMSS2D_Shape_Closed.do_edges_intersect(p3, p1, p4, p5))
+	assert_false(RMSS2D_Shape_Closed.do_edges_intersect(p2, p6, p4, p5))
+	assert_false(RMSS2D_Shape_Closed.do_edges_intersect(p2, p6, p1, p5))
+	assert_false(RMSS2D_Shape_Closed.do_edges_intersect(p2, p6, p1, p4))
+
 func test_scale_points():
 	var points = [Vector2(-100, -100), Vector2(100, -100), Vector2(100, 100), Vector2(-100, 100)]
 	var tex_size = TEST_TEXTURE.get_size()
 	#var expected_points = [Vector2(-100, -100 + tex_size.y), Vector2(100,
-	var scaled_points = RMSS2D_Shape_Closed.scale_points(points, tex_size, 0.0)
+	var no_scale_points = RMSS2D_Shape_Closed.scale_points(points, 0.0)
 	for i in range(points.size()):
 		var p1 = points[i]
-		var p2 = scaled_points[i]
+		var p2 = no_scale_points[i]
 		assert_eq(p1, p2)
-	scaled_points = RMSS2D_Shape_Closed.scale_points(points, tex_size, 1.0)
-	gut.p(scaled_points)
+	var scale_out_points = RMSS2D_Shape_Closed.scale_points(points, tex_size.x * 1.5)
+	for i in range(points.size()):
+		var p1 = points[i]
+		var p2 = scale_out_points[i]
+		assert_almost_eq((p2 - p1).length(), tex_size.x * 1.5, 0.1)
+	gut.p(scale_out_points)
+	var scale_in_points = RMSS2D_Shape_Closed.scale_points(points, tex_size.x * -1.5)
+	for i in range(points.size()):
+		var p1 = points[i]
+		var p2 = scale_in_points[i]
+		assert_almost_eq((p2 - p1).length(), tex_size.x * 1.5, 0.1)
+	gut.p(scale_in_points)
 
 
 func test_add_points():

@@ -74,31 +74,228 @@ func _build_meshes(edges: Array) -> Array:
 	return meshes
 
 
-static func scale_points(points: Array, unit_size: Vector2, units: float) -> Array:
+static func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> bool:
+	"""
+	Returns true if line segment 'a1a2' and 'b1b2' intersect.
+	Find the four orientations needed for general and special cases
+	"""
+	var o1: int = get_points_orientation([a1, a2, b1])
+	var o2: int = get_points_orientation([a1, a2, b2])
+	var o3: int = get_points_orientation([b1, b2, a1])
+	var o4: int = get_points_orientation([b1, b2, a2])
+
+	# General case
+	if o1 != o2 and o3 != o4:
+		return true
+
+	# Special Cases
+	# a1, a2 and b1 are colinear and b1 lies on segment p1q1
+	if o1 == ORIENTATION.COLINEAR and on_segment(a1, b1, a2):
+		return true
+
+	# a1, a2 and b2 are colinear and b2 lies on segment p1q1
+	if o2 == ORIENTATION.COLINEAR and on_segment(a1, b2, a2):
+		return true
+
+	# b1, b2 and a1 are colinear and a1 lies on segment p2q2
+	if o3 == ORIENTATION.COLINEAR and on_segment(b1, a1, b2):
+		return true
+
+	# b1, b2 and a2 are colinear and a2 lies on segment p2q2
+	if o4 == ORIENTATION.COLINEAR and on_segment(b1, a2, b2):
+		return true
+
+	# Doesn't fall in any of the above cases
+	return false
+
+static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2):
+	var den = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y)
+
+	# Check if lines are parallel or coincident
+	if den == 0:
+		return null
+
+	var ua = ((b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x)) / den
+	var ub = ((a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x)) / den
+
+	if ua < 0 or ub < 0 or ua > 1 or ub > 1:
+		return null
+
+	return Vector2(a1.x + ua * (a2.x - a1.x), a1.y + ua * (a2.y - a1.y))
+
+#static func resolve_edge_collisions(points: Array) -> Array:
+#var new_points = []
+#for p in points:
+#new_points.push_back(p)
+#
+#var intersecting_edges = true
+## Keep restarting the for loop until there are no more intersecting edges
+#while intersecting_edges:
+#intersecting_edges = false
+#var merge_index = null
+#for i in range(new_points.size() - 1, 1, -1):
+#var a1 = new_points[i]
+#var a2 = new_points[i - 1]
+#var b1 = new_points[i - 2]
+#var b2 = new_points[i - 3]
+#if do_edges_intersect(a1, a2, b1, b2):
+#intersecting_edges = true
+#merge_index = i
+#break
+#
+#if merge_index != null:
+#var a1 = new_points[merge_index]
+#var a2 = new_points[merge_index - 1]
+#var b1 = new_points[merge_index - 2]
+#var b2 = new_points[merge_index - 3]
+#new_points.remove(merge_index - 1)
+#new_points.remove(merge_index - 2)
+#new_points.insert(merge_index - 1, get_edge_intersection(a1, a2, b1, b2))
+#
+#return new_points
+
+static func resolve_edge_shrink_collisions(original_points, shrunk_points: Array) -> Array:
+	var new_points = []
+	for p in shrunk_points:
+		new_points.push_back(p)
+
+	var merge_indicies = []
+	for i in range(0, original_points.size() - 1, 1):
+		var a1 = original_points[i]
+		var a2 = original_points[i + 1]
+		var b1 = shrunk_points[i]
+		var b2 = shrunk_points[i + 1]
+		var delta_a_x = a1.x - a2.x
+		var delta_a_y = a1.y - a2.y
+		var delta_b_x = b1.x - b2.x
+		var delta_b_y = b1.y - b2.y
+
+		var x_axis_equal = (a1.x == a2.x)
+		var y_axis_equal = (a1.y == a2.y)
+
+		# If shrinking the points has changed the sign of the delta, they need merged
+		if ((sign(delta_a_x) != sign(delta_b_x)) ) or (sign(delta_a_y) != sign(delta_b_y)):
+			merge_indicies.push_back([i, i + 1])
+
+	# Iterate in reverse order
+	var already_merged = []
+	for i in range(merge_indicies.size()-1, -1, -1):
+		var merge_idx = merge_indicies[i]
+		var idx = merge_idx[0]
+		var idx_next = merge_idx[1]
+		#if already_merged.has(idx) or already_merged.has(idx_next):
+			#continue
+		already_merged.push_back(idx)
+		already_merged.push_back(idx_next)
+		var p1 = shrunk_points[idx]
+		var p2 = shrunk_points[idx_next]
+		new_points.remove(idx_next)
+		new_points.remove(idx)
+		new_points.insert(idx, (p1 + p2) / 2.0)
+
+	return new_points
+
+static func resolve_edge_shrink_collisions_2(original_points, shrunk_points: Array) -> Array:
+	var new_points = []
+	for p in shrunk_points:
+		new_points.push_back(p)
+
+	var poly_orient = get_points_orientation(original_points)
+
+	var working = true
+	while working:
+		working = false
+		var merge_indicies = []
+		for i in range(0, new_points.size(), 1):
+			var p1 = new_points[i]
+			var i_2 = (i + 1) % new_points.size()
+			var i_3 =(i + 2) % new_points.size()
+			var p2 = new_points[i_2]
+			var p3 = new_points[i_3]
+
+			# If shrinking the points has changed the sign of the delta, they need merged
+			var new_orient = get_points_orientation([p1,p2,p3])
+			if new_orient != poly_orient and not new_orient == ORIENTATION.COLINEAR:
+				merge_indicies = [i, i_2]
+				working = true
+				break
+
+		if not merge_indicies.empty():
+			var idx = min(merge_indicies[0], merge_indicies[1])
+			var idx_next = max(merge_indicies[0], merge_indicies[1])
+			var p1 = new_points[idx]
+			var p2 = new_points[idx_next]
+			new_points.remove(idx_next)
+			new_points.remove(idx)
+			new_points.insert(idx, (p1 + p2) / 2.0)
+
+	return new_points
+
+static func resolve_edge_shrink_collisions_3(original_points, shrunk_points: Array) -> Array:
+	var new_points = []
+	for p in shrunk_points:
+		new_points.push_back(p)
+
+	var poly_orient = get_points_orientation(original_points)
+
+	var merge_indicies = []
+	for i in range(0, original_points.size(), 1):
+		var i_2 = (i + 1) % new_points.size()
+		var i_3 =(i + 2) % new_points.size()
+
+		var a1 = original_points[i]
+		var a2 = original_points[i_2]
+		var a3 = original_points[i_3]
+
+		var b1 = shrunk_points[i]
+		var b2 = shrunk_points[i_2]
+		var b3 = shrunk_points[i_3]
+
+		# If shrinking the points has changed the sign of the delta, they need merged
+		var orient_a = get_points_orientation([a1,a2,a3])
+		var orient_b = get_points_orientation([b1,b2,b3])
+		if orient_a != orient_b:# and not new_orient == ORIENTATION.COLINEAR:
+			merge_indicies.push_back([i, i_2])
+
+	# Reverse iteration
+	for i in range(merge_indicies.size()-1, -1, -1):
+		var merge_index = merge_indicies[i]
+		var idx = min(merge_index[0], merge_index[1])
+		var idx_next = max(merge_index[0], merge_index[1])
+		var p1 = new_points[idx]
+		var p2 = new_points[idx_next]
+		new_points.remove(idx_next)
+		new_points.remove(idx)
+		new_points.insert(idx, (p1 + p2) / 2.0)
+
+	return new_points
+
+static func scale_points(points: Array, units: float) -> Array:
 	var new_points = []
 	for i in range(points.size()):
 		var i_next = (i + 1) % points.size()
-		var i_prev = (i - 1)
+		var i_prev = i - 1
 		if i_prev < 0:
 			i_prev += points.size()
 
 		var pt = points[i]
-		# Wrap around
 		var pt_next = points[i_next]
 		var pt_prev = points[i_prev]
 
 		var ab = pt - pt_prev
 		var bc = pt_next - pt
-		var delta = (ab + bc)/2.0
-		var delta_normal = delta.normalized()
+		var delta = (ab + bc) / 2.0
 		var normal = Vector2(delta.y, -delta.x).normalized()
-
-		# This causes weird rendering if the texture isn't a square
-		var vtx: Vector2 = normal * unit_size
-		var offset = vtx * units
+		var offset = normal * units
 
 		var new_point = Vector2(pt + offset)
 		new_points.push_back(new_point)
+
+	new_points[new_points.size()-1] = new_points[0]
+
+	if units < 0:
+		return resolve_edge_shrink_collisions_3(points, new_points)
+
 	return new_points
 
 
@@ -122,9 +319,9 @@ func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
 
 	# Points to produce the fill mesh
 	var fill_points: PoolVector2Array = PoolVector2Array()
+	points = scale_points(points, tex_size.x * fill_mesh_offset)
 	fill_points.resize(points.size())
-	points = scale_points(points, tex_size, fill_mesh_offset)
-	for i in points.size():
+	for i in range(points.size()):
 		fill_points[i] = points[i]
 
 	# Produce the fill mesh

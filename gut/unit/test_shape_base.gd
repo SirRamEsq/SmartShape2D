@@ -18,6 +18,24 @@ func test_z_sort():
 	assert_eq(a[2].z_index, 3)
 	assert_eq(a[3].z_index, 5)
 
+func test_on_segment():
+	var p1 = Vector2(0,0)
+	var p2 = Vector2(-100,0)
+	var p3 = Vector2(100,0)
+	var p4 = Vector2(100,10)
+	var p5 = Vector2(100,20)
+	assert_true(RMSS2D_Shape_Base.on_segment(p2, p1, p3))
+	assert_false(RMSS2D_Shape_Base.on_segment(p2, p3, p1))
+	assert_false(RMSS2D_Shape_Base.on_segment(p1, p2, p3))
+	assert_false(RMSS2D_Shape_Base.on_segment(p1, p3, p2))
+	assert_false(RMSS2D_Shape_Base.on_segment(p3, p2, p1))
+	assert_true(RMSS2D_Shape_Base.on_segment(p3, p1, p2))
+
+	assert_true(RMSS2D_Shape_Base.on_segment(p3, p4, p5))
+	assert_false(RMSS2D_Shape_Base.on_segment(p3, p5, p4))
+
+	assert_true(RMSS2D_Shape_Base.on_segment(p1, p1, p1))
+
 
 func test_are_points_clockwise():
 	var shape = RMSS2D_Shape_Base.new()
