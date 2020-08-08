@@ -35,6 +35,7 @@ class EdgeMaterialData:
 
 export (bool) var editor_debug: bool = false setget _set_editor_debug
 export (bool) var flip_edges: bool = false setget set_flip_edges
+export (bool) var render_edges: bool = true setget set_render_edges
 export (float) var collision_size: float = 32 setget set_collision_size
 export (float) var collision_offset: float = 0.0 setget set_collision_offset
 export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
@@ -76,6 +77,11 @@ func set_point_array(a: RMSS2D_Point_Array):
 
 func set_flip_edges(b: bool):
 	flip_edges = b
+	set_as_dirty()
+	property_list_changed_notify()
+
+func set_render_edges(b: bool):
+	render_edges = b
 	set_as_dirty()
 	property_list_changed_notify()
 
@@ -593,8 +599,10 @@ func bake_collision():
 
 
 func cache_edges():
-	if shape_material != null:
+	if shape_material != null and render_edges:
 		_edges = _build_edges(shape_material, false)
+	else:
+		_edges = []
 
 
 func cache_meshes():

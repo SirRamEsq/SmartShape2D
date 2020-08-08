@@ -51,5 +51,6 @@ _edge_meta_materials = [ SubResource( 2 ), SubResource( 5 ) ]
 fill_textures = [ ExtResource( 5 ) ]
 fill_texture_normals = [  ]
 fill_texture_z_index = -100
+fill_mesh_offset = -0.35
 render_offset = 0.0
 weld_edges = true

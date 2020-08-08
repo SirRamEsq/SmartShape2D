@@ -2,13 +2,6 @@ tool
 extends RMSS2D_Shape_Base
 class_name RMSS2D_Shape_Closed, "../closed_shape.png"
 
-export (float) var fill_mesh_offset: float = 0.0 setget set_fill_mesh_offset
-
-
-func set_fill_mesh_offset(f: float):
-	fill_mesh_offset = f
-	set_as_dirty()
-
 
 #########
 # GODOT #
@@ -145,7 +138,7 @@ func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
 	# Points to produce the fill mesh
 	var fill_points: PoolVector2Array = PoolVector2Array()
 	var polygons = Geometry.offset_polygon_2d(
-		PoolVector2Array(points), tex_size.x * fill_mesh_offset
+		PoolVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
 	)
 	points = polygons[0]
 	fill_points.resize(points.size())

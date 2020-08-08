@@ -13,6 +13,8 @@ export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_me
 export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
 export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
 export (int) var fill_texture_z_index: int = -10 setget set_fill_texture_z_index
+export (float) var fill_mesh_offset: float = 0.0 setget set_fill_mesh_offset
+
 
 # How much to offset all edges
 export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0
@@ -20,6 +22,9 @@ export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0
 # If edges should be welded to the edges surrounding it
 export (bool) var weld_edges: bool = true setget set_weld_edges
 
+func set_fill_mesh_offset(f: float):
+	fill_mesh_offset = f
+	emit_signal("changed")
 
 # Get all valid edge materials for this normal
 func get_edge_meta_materials(normal: Vector2) -> Array:
