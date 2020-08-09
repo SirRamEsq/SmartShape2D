@@ -17,17 +17,17 @@ export (Array, Texture) var textures: Array = [] setget _set_textures
 export (Array, Texture) var texture_normals: Array = [] setget _set_texture_normals
 
 # Textures for the final left and right quad of the edge when the angle is steep
-export (Texture) var texture_corner_left: Texture = null setget _set_texture_corner_left
-export (Texture) var texture_normal_corner_left: Texture = null setget _set_texture_normal_corner_left
-export (Texture) var texture_corner_right: Texture = null setget _set_texture_corner_right
-export (Texture) var texture_normal_corner_right: Texture = null setget _set_texture_normal_corner_right
+export (Array, Texture) var textures_corner_outer: Array = [] setget _set_textures_corner_outer
+export (Array, Texture) var textures_corner_inner: Array = [] setget _set_textures_corner_inner
+export (Array, Texture) var texture_normals_corner_outer: Array = [] setget _set_texture_normals_corner_outer
+export (Array, Texture) var texture_normals_corner_inner: Array = [] setget _set_texture_normals_corner_inner
 
 # Textures for the final left and right quad of the edge when the angle is shallow
 # Named as such because the desired look is that the texture "tapers-off"
-export (Texture) var texture_taper_left: Texture = null setget _set_texture_taper_left
-export (Texture) var texture_normal_taper_left: Texture = null setget _set_texture_normal_taper_left
-export (Texture) var texture_taper_right: Texture = null setget _set_texture_taper_right
-export (Texture) var texture_normal_taper_right: Texture = null setget _set_texture_normal_taper_right
+export (Array) var textures_taper_left: Array = [] setget _set_textures_taper_left
+export (Array) var textures_taper_right: Array = [] setget _set_textures_taper_right
+export (Array) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
+export (Array) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
 
 # If each quad WITHIN the edge should be welded to each other
 export (bool) var weld_quads: bool = true setget _set_weld_quads
@@ -35,9 +35,8 @@ export (bool) var weld_quads: bool = true setget _set_weld_quads
 export (bool) var use_corner_texture: bool = true setget _set_use_corner
 # If taper textures should be used
 export (bool) var use_taper_texture: bool = true setget _set_use_taper
-
-# max angle to use taper textures until. After this angle corners are used
-export (float) var taper_angle_max: float = 90.0 setget _set_taper_angle
+# Angle steepness at which to start using corner textures
+export (float) var corner_angle: float = 90.0 setget _set_corner_angle
 
 
 ###########
@@ -53,43 +52,43 @@ func _set_texture_normals(ta: Array):
 	emit_signal("changed")
 
 
-func _set_texture_corner_left(t: Texture):
-	texture_corner_left = t
+func _set_textures_corner_outer(a: Array):
+	textures_corner_outer = a
 	emit_signal("changed")
 
 
-func _set_texture_normal_corner_left(t: Texture):
-	texture_normal_corner_left = t
+func _set_texture_normals_corner_outer(a: Array):
+	texture_normals_corner_outer = a
 	emit_signal("changed")
 
 
-func _set_texture_corner_right(t: Texture):
-	texture_corner_right = t
+func _set_textures_corner_inner(a: Array):
+	textures_corner_inner = a
 	emit_signal("changed")
 
 
-func _set_texture_normal_corner_right(t: Texture):
-	texture_normal_corner_right = t
+func _set_texture_normals_corner_inner(a: Array):
+	texture_normals_corner_inner = a
 	emit_signal("changed")
 
 
-func _set_texture_taper_left(t: Texture):
-	texture_taper_left = t
+func _set_textures_taper_left(a: Array):
+	textures_taper_left = a
 	emit_signal("changed")
 
 
-func _set_texture_normal_taper_left(t: Texture):
-	texture_normal_taper_left = t
+func _set_texture_normals_taper_left(a: Array):
+	texture_normals_taper_left = a
 	emit_signal("changed")
 
 
-func _set_texture_taper_right(t: Texture):
-	texture_taper_right = t
+func _set_textures_taper_right(a: Array):
+	textures_taper_right = a
 	emit_signal("changed")
 
 
-func _set_texture_normal_taper_right(t: Texture):
-	texture_normal_taper_right = t
+func _set_texture_normals_taper_right(a: Array):
+	texture_normals_taper_right = a
 	emit_signal("changed")
 
 
@@ -108,8 +107,8 @@ func _set_use_taper(b: bool):
 	emit_signal("changed")
 
 
-func _set_taper_angle(v: float):
-	taper_angle_max = v
+func _set_corner_angle(v: float):
+	corner_angle = v
 	emit_signal("changed")
 
 

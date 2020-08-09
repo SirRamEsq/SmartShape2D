@@ -535,7 +535,6 @@ func should_flip_edges() -> bool:
 	# XOR operator
 	return not (are_points_clockwise() != flip_edges)
 
-
 func bake_collision():
 	if not has_node(collision_polygon_node_path):
 		return
@@ -756,6 +755,32 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	for tess_idx in range(first_t_idx, last_t_idx, 1):
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var next_vert_idx = vert_idx + 1
+		var generate_corner = RMSS2D_Quad.CORNER.NONE
+		if tess_idx != last_t_idx and tess_idx != first_t_idx:
+			var pt = t_points[tess_idx]
+			var pt_next = t_points[tess_idx+1]
+			var pt_prev = t_points[tess_idx-1]
+			var ab = pt - pt_prev
+			var bc = pt_next - pt
+			var dot_prod = ab.dot(bc)
+			var determinant = (ab.x*bc.y) - (ab.y*bc.x)
+			var angle = atan2(determinant, dot_prod)
+			# This angle has a range of 360 degrees
+			# Is between 180 and - 180
+			var deg = rad2deg(angle)
+			var dir = 0
+			var corner_range = 15.0
+			if deg < edge_material.corner_angle:
+				var inner = false
+				if deg < 0:
+					inner = true
+				if flip_edges:
+					inner = not inner
+				if inner:
+					generate_corner = RMSS2D_Quad.CORNER.INNER
+				else:
+					generate_corner = RMSS2D_Quad.CORNER.OUTER
+
 		var override_tuple = [vert_idx, next_vert_idx]
 		var override = null
 		if has_material_override(override_tuple):

@@ -67,7 +67,7 @@ func _build_meshes(edges: Array) -> Array:
 	return meshes
 
 
-static func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> bool:
+func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> bool:
 	"""
 	Returns true if line segment 'a1a2' and 'b1b2' intersect.
 	Find the four orientations needed for general and special cases

@@ -15,6 +15,9 @@ var flip_texture: bool = false
 var width_factor: float = 1.0
 var control_point_index: int
 
+enum CORNER { NONE=0, OUTER, INNER }
+var corner = 0
+
 func _to_string()->String:
 	return "[Quad] A:%s B:%s C:%s D:%s" % [pt_a, pt_b, pt_c, pt_d]
 
