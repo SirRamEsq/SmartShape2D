@@ -80,6 +80,7 @@ func set_flip_edges(b: bool):
 	set_as_dirty()
 	property_list_changed_notify()
 
+
 func set_render_edges(b: bool):
 	render_edges = b
 	set_as_dirty()
@@ -535,6 +536,7 @@ func should_flip_edges() -> bool:
 	# XOR operator
 	return not (are_points_clockwise() != flip_edges)
 
+
 func bake_collision():
 	if not has_node(collision_polygon_node_path):
 		return
@@ -758,19 +760,19 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		var generate_corner = RMSS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
-			var pt_next = t_points[tess_idx+1]
-			var pt_prev = t_points[tess_idx-1]
+			var pt_next = t_points[tess_idx + 1]
+			var pt_prev = t_points[tess_idx - 1]
 			var ab = pt - pt_prev
 			var bc = pt_next - pt
 			var dot_prod = ab.dot(bc)
-			var determinant = (ab.x*bc.y) - (ab.y*bc.x)
+			var determinant = (ab.x * bc.y) - (ab.y * bc.x)
 			var angle = atan2(determinant, dot_prod)
 			# This angle has a range of 360 degrees
 			# Is between 180 and - 180
 			var deg = rad2deg(angle)
 			var dir = 0
 			var corner_range = 15.0
-			if deg < edge_material.corner_angle:
+			if abs(deg) >= edge_material.corner_angle:
 				var inner = false
 				if deg < 0:
 					inner = true
@@ -792,11 +794,9 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 
 		# If override exists, use it instead of the default
 		var mat = edge_material
-		#if override != null:
-		#if override.edge_material != null:
-		#mat = override.edge_material
-		#if not override.render:
-		#continue
+		if override != null:
+			if override.edge_material != null:
+				mat = override.edge_material
 		if mat.textures.empty():
 			continue
 
@@ -820,12 +820,79 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 			c_offset,
 			c_extends
 		)
+		var corner_quad = null
+		if generate_corner != RMSS2D_Quad.CORNER.NONE and not is_first_point and not is_last_point:
+			var prev_width = _get_width_for_tessellated_point(points, t_points, tess_idx - 1)
+			corner_quad = build_quad_corner(
+				t_points[tess_idx + 1],
+				t_points[tess_idx],
+				t_points[tess_idx - 1],
+				width,
+				prev_width,
+				generate_corner,
+				tex,
+				tex_normal,
+				c_scale,
+				c_offset
+			)
+
 		edge.quads.push_back(quad)
+		if corner_quad != null:
+			edge.quads.push_back(corner_quad)
 
 	if edge_material.weld_quads:
 		_weld_quad_array(edge.quads)
 
 	return edge
+
+
+func build_quad_corner(
+	pt_next: Vector2,
+	pt: Vector2,
+	pt_prev: Vector2,
+	pt_width: float,
+	pt_prev_width: float,
+	corner_status: int,
+	texture: Texture,
+	texture_normal: Texture,
+	custom_scale: float,
+	custom_offset: float
+) -> RMSS2D_Quad:
+	var new_quad = RMSS2D_Quad.new()
+	if texture == null:
+		return new_quad
+
+	var tex_size = texture.get_size()
+	var extents = tex_size / 2.0
+	var delta_12 = pt - pt_prev
+	var delta_23 = pt_next - pt
+	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
+	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
+	var width = (pt_prev_width + pt_width) / 2.0
+	var center = pt + (delta_12.normalized() * extents)
+
+	var offset_12 = normal_12 * custom_scale * pt_width * extents
+	var offset_23 = normal_23 * custom_scale * pt_prev_width * extents
+	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * extents
+	if flip_edges:
+		offset_12 *= -1
+		offset_23 *= -1
+		custom_offset_13 *= -1
+
+	var pt_d = pt + (offset_23) + (offset_12) + custom_offset_13
+	var pt_a = pt - (offset_23) + (offset_12) + custom_offset_13
+	var pt_c = pt + (offset_23) - (offset_12) + custom_offset_13
+	var pt_b = pt - (offset_23) - (offset_12) + custom_offset_13
+	new_quad.pt_a = pt_a
+	new_quad.pt_b = pt_b
+	new_quad.pt_c = pt_c
+	new_quad.pt_d = pt_d
+
+	new_quad.corner = corner_status
+	new_quad.texture = texture
+	new_quad.texture_normal = texture_normal
+
+	return new_quad
 
 
 func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> float:
@@ -838,24 +905,41 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 
 func _weld_quads(a: RMSS2D_Quad, b: RMSS2D_Quad, custom_scale: float = 1.0):
-	var needed_length: float = 0.0
-	if a.texture != null and b.texture != null:
-		needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) / 2.0)
+	if a.corner == RMSS2D_Quad.CORNER.NONE and b.corner == RMSS2D_Quad.CORNER.NONE:
+		var needed_length: float = 0.0
+		if a.texture != null and b.texture != null:
+			needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) / 2.0)
 
-	var pt1 = (a.pt_d + b.pt_a) * 0.5
-	var pt2 = (a.pt_c + b.pt_b) * 0.5
+		var pt1 = (a.pt_d + b.pt_a) * 0.5
+		var pt2 = (a.pt_c + b.pt_b) * 0.5
 
-	var mid_point: Vector2 = (pt1 + pt2) / 2.0
-	var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale / 2.0
+		var mid_point: Vector2 = (pt1 + pt2) / 2.0
+		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale / 2.0
 
-	if half_line != Vector2.ZERO:
-		pt2 = mid_point + half_line
-		pt1 = mid_point - half_line
+		if half_line != Vector2.ZERO:
+			pt2 = mid_point + half_line
+			pt1 = mid_point - half_line
 
-	b.pt_a = pt1
-	b.pt_b = pt2
-	a.pt_d = pt1
-	a.pt_c = pt2
+		b.pt_a = pt1
+		b.pt_b = pt2
+		a.pt_d = pt1
+		a.pt_c = pt2
+	else:
+		if a.corner == RMSS2D_Quad.CORNER.OUTER:
+			b.pt_a = a.pt_c
+			b.pt_b = a.pt_b
+
+		elif a.corner == RMSS2D_Quad.CORNER.INNER:
+			b.pt_a = a.pt_d
+			b.pt_b = a.pt_a
+
+		elif b.corner == RMSS2D_Quad.CORNER.OUTER:
+			a.pt_d = b.pt_a
+			a.pt_c = b.pt_b
+
+		elif b.corner == RMSS2D_Quad.CORNER.INNER:
+			a.pt_d = b.pt_d
+			a.pt_c = b.pt_c
 
 
 func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
