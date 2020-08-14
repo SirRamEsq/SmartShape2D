@@ -820,13 +820,15 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 			c_offset,
 			c_extends
 		)
-		var corner_quad = null
 		if generate_corner != RMSS2D_Quad.CORNER.NONE and not is_first_point and not is_last_point:
 			var prev_width = _get_width_for_tessellated_point(points, t_points, tess_idx - 1)
+			var tess_pt_next = t_points[tess_idx + 1]
+			var tess_pt = t_points[tess_idx]
+			var tess_pt_prev = t_points[tess_idx - 1]
 			corner_quad = build_quad_corner(
-				t_points[tess_idx + 1],
-				t_points[tess_idx],
-				t_points[tess_idx - 1],
+				tess_pt_next,
+				tess_pt,
+				tess_pt_prev,
 				width,
 				prev_width,
 				generate_corner,
@@ -835,10 +837,8 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 				c_scale,
 				c_offset
 			)
-
-		edge.quads.push_back(quad)
-		if corner_quad != null:
 			edge.quads.push_back(corner_quad)
+		edge.quads.push_back(quad)
 
 	if edge_material.weld_quads:
 		_weld_quad_array(edge.quads)
