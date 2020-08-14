@@ -744,6 +744,7 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		return edge
 	edge.z_index = edge_material_meta.z_index
 
+	var texture_idx = 0
 	var t_points = get_tessellated_points()
 	var points = get_vertices()
 	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
@@ -800,11 +801,16 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		if mat.textures.empty():
 			continue
 
-		var tex = mat.textures[0]
+		var use_tex_idx = texture_idx % mat.textures.size()
+		var tex = mat.textures[use_tex_idx]
+		if tex == null:
+			continue
 		var tex_normal = null
-		var tex_size = tex.get_size()
 		if not mat.texture_normals.empty():
-			tex_normal = mat.texture_normals[0]
+			var use_tex_normal_idx = texture_idx % mat.texture_normals.size()
+			tex_normal = mat.texture_normals[use_tex_normal_idx]
+
+		var tex_size = tex.get_size()
 
 		var quad = _build_quad_from_point(
 			t_points,
@@ -825,19 +831,34 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 			var tess_pt_next = t_points[tess_idx + 1]
 			var tess_pt = t_points[tess_idx]
 			var tess_pt_prev = t_points[tess_idx - 1]
-			corner_quad = build_quad_corner(
-				tess_pt_next,
-				tess_pt,
-				tess_pt_prev,
-				width,
-				prev_width,
-				generate_corner,
-				tex,
-				tex_normal,
-				c_scale,
-				c_offset
-			)
-			edge.quads.push_back(corner_quad)
+
+			var texture_array = mat.textures_corner_inner
+			var texture_normal_array = mat.texture_normals_corner_inner
+			if generate_corner == RMSS2D_Quad.CORNER.OUTER:
+				texture_array = mat.textures_corner_outer
+				texture_normal_array = mat.texture_normals_corner_outer
+			if not texture_array.empty():
+				var corner_tex_idx = texture_idx % texture_array.size()
+				var corner_texture = texture_array[corner_tex_idx]
+				if corner_texture != null:
+					var corner_texture_normal = null
+					if not texture_normal_array.empty():
+						var corner_tex_normal_idx = texture_idx % texture_normal_array.size()
+						corner_texture_normal = texture_normal_array[corner_tex_normal_idx]
+
+					var corner_quad = build_quad_corner(
+						tess_pt_next,
+						tess_pt,
+						tess_pt_prev,
+						width,
+						prev_width,
+						generate_corner,
+						corner_texture,
+						corner_texture_normal,
+						c_scale,
+						c_offset
+					)
+					edge.quads.push_back(corner_quad)
 		edge.quads.push_back(quad)
 
 	if edge_material.weld_quads:
@@ -908,7 +929,10 @@ func _weld_quads(a: RMSS2D_Quad, b: RMSS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == RMSS2D_Quad.CORNER.NONE and b.corner == RMSS2D_Quad.CORNER.NONE:
 		var needed_length: float = 0.0
 		if a.texture != null and b.texture != null:
-			needed_length = ((a.texture.get_size().y + (b.texture.get_size().y * b.width_factor)) / 2.0)
+			needed_length = (
+				(a.texture.get_size().y + (b.texture.get_size().y * b.width_factor))
+				/ 2.0
+			)
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5

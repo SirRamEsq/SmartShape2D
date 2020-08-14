@@ -1,4 +1,4 @@
-[gd_resource type="Resource" load_steps=13 format=2]
+[gd_resource type="Resource" load_steps=15 format=2]
 
 [ext_resource path="res://addons/rmsmartshape/materials/shape_material.gd" type="Script" id=1]
 [ext_resource path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" type="Script" id=2]
@@ -7,6 +7,8 @@
 [ext_resource path="res://demo/assets/fill.png" type="Texture" id=5]
 [ext_resource path="res://demo/assets/Spring/rock.png" type="Texture" id=6]
 [ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=7]
+[ext_resource path="res://demo/assets/Spring/rock-corner-outer.png" type="Texture" id=8]
+[ext_resource path="res://demo/assets/Spring/rock-corner-innerr.png" type="Texture" id=9]
 
 [sub_resource type="Resource" id=1]
 script = ExtResource( 3 )
@@ -26,10 +28,18 @@ offset = 0.0
 script = ExtResource( 7 )
 textures = [ ExtResource( 6 ) ]
 texture_normals = [  ]
+textures_corner_outer = [ ExtResource( 8 ) ]
+textures_corner_inner = [ ExtResource( 9 ) ]
+texture_normals_corner_outer = [  ]
+texture_normals_corner_inner = [  ]
+textures_taper_left = [  ]
+textures_taper_right = [  ]
+texture_normals_taper_left = [  ]
+texture_normals_taper_right = [  ]
 weld_quads = true
 use_corner_texture = true
 use_taper_texture = true
-taper_angle_max = 90.0
+corner_angle = 90.0
 
 [sub_resource type="Resource" id=4]
 script = ExtResource( 3 )
