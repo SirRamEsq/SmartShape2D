@@ -285,3 +285,9 @@ func _on_dirty_update():
 		update()
 		_dirty = false
 		emit_signal("on_dirty_update")
+
+func cache_edges():
+	if shape_material != null and render_edges:
+		_edges = _build_edges(shape_material, true)
+	else:
+		_edges = []

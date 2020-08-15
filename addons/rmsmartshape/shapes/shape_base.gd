@@ -27,7 +27,7 @@ class EdgeMaterialData:
 		indicies = i
 
 	func _to_string() -> String:
-		return "%s | %s" % [str(meta_material), indicies]
+		return "[EMD] (%s) | %s" % [str(meta_material), indicies]
 
 	func is_valid() -> bool:
 		return indicies.size() >= 2
@@ -765,19 +765,32 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	var points = get_vertices()
 	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
 	var last_t_idx = get_tessellated_idx_from_point(points, t_points, last_idx)
+	var tess_points_covered:int = 0
+	for i in range(edge_dat.indicies.size()-1):
+		var this_idx = edge_dat.indicies[i]
+		var next_idx = edge_dat.indicies[i+1]
+		if this_idx > next_idx:
+			continue
+		var this_t_idx = get_tessellated_idx_from_point(points, t_points, this_idx)
+		var next_t_idx = get_tessellated_idx_from_point(points, t_points, next_idx)
+		var delta = next_t_idx - this_t_idx
+		tess_points_covered += delta
+
 
 	var c_scale = 1.0
 	var c_offset = 0.0
 	var c_extends = 0.0
 
-	for tess_idx in range(first_t_idx, last_t_idx, 1):
+	#for tess_idx in range(first_t_idx, last_t_idx, 1):
+	for i in range(tess_points_covered+1):
+		var tess_idx = (first_t_idx + i) % t_points.size()
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var next_vert_idx = vert_idx + 1
 		var generate_corner = RMSS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
-			var pt_next = t_points[tess_idx + 1]
-			var pt_prev = t_points[tess_idx - 1]
+			var pt_next = t_points[_get_next_point_index(tess_idx, t_points)]
+			var pt_prev = t_points[_get_previous_point_index(tess_idx, t_points)]
 			var ab = pt - pt_prev
 			var bc = pt_next - pt
 			var dot_prod = ab.dot(bc)
@@ -1056,19 +1069,16 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 
 	for edge_material in get_edge_material_data(s_mat, wrap_around):
 		var new_edge = _build_edge(edge_material)
-		#_taper_edge_sequence(new_edge)
 		edges.push_back(new_edge)
 
-	var empty_edges = []
-	for i in range(edges.size()):
-		var e = edges[i]
-		if e.quads.empty():
-			empty_edges.push_back(i)
-
-	# traverse in reverse
-	for i in range(empty_edges.size(), 0, -1):
-		var idx = empty_edges[i]
-		edges.erase(idx)
+	#var empty_edges = []
+	#for i in range(edges.size()):
+		#var e = edges[i]
+		#if e.quads.empty():
+			#empty_edges.push_back(i)
+	#for i in range(empty_edges.size(), 0, -1):
+		#var idx = empty_edges[i]
+		#edges.erase(idx)
 
 	# Weld each pair of edges with neighboring indicies
 	if s_mat.weld_edges:
@@ -1093,7 +1103,6 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 
 func get_edge_material_data(s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	var points = get_vertices()
-	wrap_around = false
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
 	for idx in range(0, points.size() - 1, 1):
@@ -1141,13 +1150,14 @@ func get_edge_material_data(s_material: RMSS2D_Material_Shape, wrap_around: bool
 
 	# See if edges that contain the final point can be merged with those that contain the first point
 	if wrap_around:
+		# Sort edges into two lists, those that contain the first point and those that contain the last point
 		var first_edges = []
 		var last_edges = []
 		for e in final_edges:
 			var has_first = e.indicies.has(get_first_point_index(points))
 			var has_last = e.indicies.has(get_last_point_index(points))
-			# '^' is the XOR operator
-			if has_first ^ has_last:
+			# XOR operator
+			if (has_first != has_last):
 				if has_first:
 					first_edges.push_back(e)
 				elif has_last:
@@ -1155,27 +1165,30 @@ func get_edge_material_data(s_material: RMSS2D_Material_Shape, wrap_around: bool
 			# Contains all points
 			elif has_first and has_last:
 				pass
+
+		# Create new Edges with Merged points; Add created edges, delete edges used to for merging
 		var edges_to_add = []
 		var edges_to_remove = []
 		for first in first_edges:
 			for last in last_edges:
-				if first.material == last.material:
-					var merged = []
-					for i in last.indicies:
-						merged.push_back(i)
-					for i in first.indicies:
-						merged.push_back(i)
-					var new_edge = EdgeMaterialData.new(merged, first.material)
+				if first.meta_material == last.meta_material:
+					#print ("Orignal: %s | %s" % [first.indicies, last.indicies])
+					var merged = RMSS2D_Common_Functions.merge_arrays([last.indicies, first.indicies])
+					#print ("Merged:  %s" % str(merged))
+					var new_edge = EdgeMaterialData.new(merged, first.meta_material)
 					edges_to_add.push_back(new_edge)
 					if not edges_to_remove.has(first):
 						edges_to_remove.push_back(first)
 					if not edges_to_remove.has(last):
 						edges_to_remove.push_back(last)
+
+		# Update final edges
 		for e in edges_to_remove:
 			var i = final_edges.find(e)
 			final_edges.remove(i)
 		for e in edges_to_add:
 			final_edges.push_back(e)
+		print("Final Edges: %s" % str(final_edges))
 
 	return final_edges
 
