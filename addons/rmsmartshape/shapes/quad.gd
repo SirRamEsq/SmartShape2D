@@ -2,6 +2,8 @@ tool
 extends Reference
 class_name RMSS2D_Quad
 
+enum CORNER { NONE = 0, OUTER, INNER }
+
 var pt_a: Vector2
 var pt_b: Vector2
 var pt_c: Vector2
@@ -15,11 +17,31 @@ var flip_texture: bool = false
 var width_factor: float = 1.0
 var control_point_index: int
 
-enum CORNER { NONE=0, OUTER, INNER }
-var corner = 0
+# Contains value from CORNER enum
+var corner: int = 0
 
-func _to_string()->String:
+
+func _to_string() -> String:
 	return "[Quad] A:%s B:%s C:%s D:%s" % [pt_a, pt_b, pt_c, pt_d]
+
+
+func duplicate() -> RMSS2D_Quad:
+	var q = __new()
+	q.pt_a = pt_a
+	q.pt_b = pt_b
+	q.pt_c = pt_c
+	q.pt_d = pt_d
+
+	q.texture = texture
+	q.texture_normal = texture_normal
+	q.color = color
+
+	q.flip_texture = flip_texture
+	q.width_factor = width_factor
+	q.control_point_index = control_point_index
+
+	q.corner = corner
+	return q
 
 
 func _init(
@@ -60,3 +82,8 @@ func render_points(rad: float, intensity: float, ci: CanvasItem):
 	ci.draw_circle(pt_b, rad, Color(0, 0, intensity))
 	ci.draw_circle(pt_c, rad, Color(0, intensity, 0))
 	ci.draw_circle(pt_d, rad, Color(intensity, 0, intensity))
+
+
+# Workaround (class cannot reference itself)
+func __new():
+	return get_script().new()

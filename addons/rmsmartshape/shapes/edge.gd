@@ -71,8 +71,8 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 		var section_length: float = q.get_length() * change_in_length
 		if section_length == 0:
 			section_length = tex.get_size().x
-		st.add_color(Color.white)
 
+		#st.add_color(Color.white)
 		# A
 		if tex != null:
 			if not q.flip_texture:
@@ -81,6 +81,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 				_add_uv_to_surface_tool(
 					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
 				)
+		st.add_color(q.color)
 		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
@@ -91,6 +92,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 				_add_uv_to_surface_tool(
 					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 1)
 				)
+		st.add_color(q.color)
 		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
@@ -110,6 +112,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 						1
 					)
 				)
+		st.add_color(q.color)
 		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
@@ -120,6 +123,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 				_add_uv_to_surface_tool(
 					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
 				)
+		st.add_color(q.color)
 		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
@@ -139,6 +143,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 						1
 					)
 				)
+		st.add_color(q.color)
 		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
@@ -158,6 +163,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 						0
 					)
 				)
+		st.add_color(q.color)
 		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_d))
 		length += section_length
 

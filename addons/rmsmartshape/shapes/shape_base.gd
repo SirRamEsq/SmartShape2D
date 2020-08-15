@@ -717,12 +717,28 @@ func _build_quad_from_point(
 	if last_point:
 		pt_next -= (delta_normal * tex_size * custom_extends)
 
+	########################################
+	# QUAD POINT ILLUSTRATION #            #
+	########################################
+	#      pt_a -> O--------O <- pt_d      #
+	#              |        |              #
+	#              |   pt   |              #
+	#              |        |              #
+	#      pt_b -> O--------O <- pt_c      #
+	########################################
 	quad.pt_a = pt + final_offset_scale_in + offset
 	quad.pt_b = pt - final_offset_scale_in + offset
 	quad.pt_c = pt_next - final_offset_scale_out + offset
 	quad.pt_d = pt_next + final_offset_scale_out + offset
 
 	return quad
+
+
+func _taper_edge_sequence(edges: Array):
+	"""
+	Will mutate edge by adding a quad to the beginning and end of the edge
+	"""
+	return
 
 
 func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
@@ -754,7 +770,6 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	var c_offset = 0.0
 	var c_extends = 0.0
 
-	#for i in range(0, edge_dat.indicies.size(), 1):
 	for tess_idx in range(first_t_idx, last_t_idx, 1):
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var next_vert_idx = vert_idx + 1
@@ -791,7 +806,9 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
 		var is_first_point = vert_idx == first_idx
-		var is_last_point = vert_idx == last_idx
+		var is_last_point = vert_idx == last_idx - 1
+		var is_first_tess_point = tess_idx == first_t_idx
+		var is_last_tess_point = tess_idx == last_t_idx - 1
 
 		# If override exists, use it instead of the default
 		var mat = edge_material
@@ -812,7 +829,7 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 
 		var tex_size = tex.get_size()
 
-		var quad = _build_quad_from_point(
+		var new_quad = _build_quad_from_point(
 			t_points,
 			tess_idx,
 			tex,
@@ -826,25 +843,32 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 			c_offset,
 			c_extends
 		)
-		if generate_corner != RMSS2D_Quad.CORNER.NONE and not is_first_point and not is_last_point:
+		var new_quads = []
+		new_quads.push_back(new_quad)
+
+		# Corner Quad
+		if (
+			generate_corner != RMSS2D_Quad.CORNER.NONE
+			and not is_first_tess_point
+		):
 			var prev_width = _get_width_for_tessellated_point(points, t_points, tess_idx - 1)
 			var tess_pt_next = t_points[tess_idx + 1]
 			var tess_pt = t_points[tess_idx]
 			var tess_pt_prev = t_points[tess_idx - 1]
 
-			var texture_array = mat.textures_corner_inner
-			var texture_normal_array = mat.texture_normals_corner_inner
+			var corner_texture_array = mat.textures_corner_inner
+			var corner_texture_normal_array = mat.texture_normals_corner_inner
 			if generate_corner == RMSS2D_Quad.CORNER.OUTER:
-				texture_array = mat.textures_corner_outer
-				texture_normal_array = mat.texture_normals_corner_outer
-			if not texture_array.empty():
-				var corner_tex_idx = texture_idx % texture_array.size()
-				var corner_texture = texture_array[corner_tex_idx]
+				corner_texture_array = mat.textures_corner_outer
+				corner_texture_normal_array = mat.texture_normals_corner_outer
+			if not corner_texture_array.empty():
+				var corner_tex_idx = texture_idx % corner_texture_array.size()
+				var corner_texture = corner_texture_array[corner_tex_idx]
 				if corner_texture != null:
 					var corner_texture_normal = null
-					if not texture_normal_array.empty():
-						var corner_tex_normal_idx = texture_idx % texture_normal_array.size()
-						corner_texture_normal = texture_normal_array[corner_tex_normal_idx]
+					if not corner_texture_normal_array.empty():
+						var corner_tex_normal_idx = texture_idx % corner_texture_normal_array.size()
+						corner_texture_normal = corner_texture_normal_array[corner_tex_normal_idx]
 
 					var corner_quad = build_quad_corner(
 						tess_pt_next,
@@ -858,9 +882,61 @@ func _build_edge(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 						c_scale,
 						c_offset
 					)
-					edge.quads.push_back(corner_quad)
-		edge.quads.push_back(quad)
+					new_quads.push_front(corner_quad)
 
+		# Taper Quad
+		if is_first_tess_point or is_last_tess_point:
+			# first point
+			var taper_texture_array = mat.textures_taper_left
+			var taper_texture_normal_array = mat.texture_normals_taper_left
+			if is_last_point:
+				taper_texture_array = mat.textures_taper_right
+				taper_texture_normal_array = mat.texture_normals_taper_right
+
+			if not taper_texture_array.empty():
+				var taper_tex_idx = texture_idx % taper_texture_array.size()
+				var taper_texture = taper_texture_array[taper_tex_idx]
+				if taper_texture != null:
+					var taper_texture_normal = null
+					if not taper_texture_normal_array.empty():
+						var taper_tex_normal_idx = (
+							texture_idx
+							% taper_texture_normal_array.size()
+						)
+						taper_texture_normal = taper_texture_normal_array[taper_tex_normal_idx]
+
+					var taper_size = taper_texture.get_size()
+					var fit = abs(taper_size.x) <= new_quad.get_length()
+					# If taper quad fits
+					if fit:
+						var taper_quad = new_quad.duplicate()
+						taper_quad.corner = 0
+						taper_quad.texture = taper_texture
+						taper_quad.texture_normal = taper_texture_normal
+						var delta_normal = (taper_quad.pt_d - taper_quad.pt_a).normalized()
+						var offset = delta_normal * taper_size
+						#taper_quad.color = Color(1.0, 0.0, 0.0, 1.0)
+						if is_first_tess_point:
+							taper_quad.pt_d = taper_quad.pt_a + offset
+							taper_quad.pt_c = taper_quad.pt_b + offset
+							new_quad.pt_a = taper_quad.pt_d
+							new_quad.pt_b = taper_quad.pt_c
+							new_quads.push_front(taper_quad)
+						else:
+							taper_quad.pt_a = taper_quad.pt_d - offset
+							taper_quad.pt_b = taper_quad.pt_c - offset
+							new_quad.pt_d = taper_quad.pt_a
+							new_quad.pt_c = taper_quad.pt_b
+							new_quads.push_back(taper_quad)
+					# If a new taper quad doesn't fit, re-texture the new_quad
+					else:
+						new_quad.texture = taper_texture
+						new_quad.texture_normal = taper_texture_normal
+						#new_quad.color = Color(1.0, 0.0, 0.0, 1.0)
+
+		# Add new quads to edge
+		for q in new_quads:
+			edge.quads.push_back(q)
 	if edge_material.weld_quads:
 		_weld_quad_array(edge.quads)
 
@@ -979,7 +1055,9 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 		return edges
 
 	for edge_material in get_edge_material_data(s_mat, wrap_around):
-		edges.push_back(_build_edge(edge_material))
+		var new_edge = _build_edge(edge_material)
+		#_taper_edge_sequence(new_edge)
+		edges.push_back(new_edge)
 
 	var empty_edges = []
 	for i in range(edges.size()):

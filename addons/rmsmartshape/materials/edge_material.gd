@@ -24,10 +24,10 @@ export (Array, Texture) var texture_normals_corner_inner: Array = [] setget _set
 
 # Textures for the final left and right quad of the edge when the angle is shallow
 # Named as such because the desired look is that the texture "tapers-off"
-export (Array) var textures_taper_left: Array = [] setget _set_textures_taper_left
-export (Array) var textures_taper_right: Array = [] setget _set_textures_taper_right
-export (Array) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
-export (Array) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
+export (Array, Texture) var textures_taper_left: Array = [] setget _set_textures_taper_left
+export (Array, Texture) var textures_taper_right: Array = [] setget _set_textures_taper_right
+export (Array, Texture) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
+export (Array, Texture) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
 
 # If each quad WITHIN the edge should be welded to each other
 export (bool) var weld_quads: bool = true setget _set_weld_quads
