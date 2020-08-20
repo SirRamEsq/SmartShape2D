@@ -20,19 +20,21 @@ p_lbl_idx = NodePath("Container/Properties/IDX")
 p_btn_material_override = NodePath("Container/Functions/MaterialOverride")
 p_ctr_override = NodePath("Container/Override")
 p_chk_render = NodePath("Container/Override/Render")
+p_chk_weld = NodePath("Container/Override/Weld")
+p_int_index = NodePath("Container/Override/Z_Index/Z_index")
 
 [node name="Panel" type="Panel" parent="."]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 127.0
-margin_bottom = 111.0
+margin_bottom = 167.0
 mouse_filter = 2
 
 [node name="Container" type="VBoxContainer" parent="."]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 127.0
-margin_bottom = 111.0
+margin_bottom = 167.0
 
 [node name="Properties" type="VBoxContainer" parent="Container"]
 margin_right = 124.0
@@ -70,10 +72,9 @@ toggle_mode = true
 text = "Material Override"
 
 [node name="Override" type="VBoxContainer" parent="Container"]
-visible = false
 margin_top = 52.0
 margin_right = 124.0
-margin_bottom = 108.0
+margin_bottom = 164.0
 
 [node name="HSeparator" type="HSeparator" parent="Container/Override"]
 margin_right = 124.0
@@ -86,8 +87,31 @@ margin_bottom = 32.0
 pressed = true
 text = "Render"
 
-[node name="SetMaterial" type="Button" parent="Container/Override"]
+[node name="Weld" type="CheckBox" parent="Container/Override"]
 margin_top = 36.0
 margin_right = 124.0
-margin_bottom = 56.0
+margin_bottom = 60.0
+pressed = true
+text = "Weld"
+
+[node name="Z_Index" type="HBoxContainer" parent="Container/Override"]
+margin_top = 64.0
+margin_right = 124.0
+margin_bottom = 88.0
+
+[node name="lbl" type="Label" parent="Container/Override/Z_Index"]
+margin_right = 20.0
+margin_bottom = 24.0
+text = "Z:"
+
+[node name="Z_index" type="SpinBox" parent="Container/Override/Z_Index"]
+margin_left = 24.0
+margin_right = 98.0
+margin_bottom = 24.0
+min_value = -100.0
+
+[node name="SetMaterial" type="Button" parent="Container/Override"]
+margin_top = 92.0
+margin_right = 124.0
+margin_bottom = 112.0
 text = "Set Material"

@@ -7,7 +7,7 @@ Represents the metadata for an edge material
 Used by Shape Material
 """
 
-export (Resource) var edge_material = RMSS2D_Material_Edge.new() setget set_edge_material
+export (Resource) var edge_material = null setget set_edge_material
 # What range of normals can this edge be used on
 export (Resource) var normal_range = RMSS2D_NormalRange.new(0, 360) setget set_normal_range
 # If edge should be welded to the edges surrounding it

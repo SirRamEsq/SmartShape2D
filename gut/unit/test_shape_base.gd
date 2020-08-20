@@ -18,12 +18,13 @@ func test_z_sort():
 	assert_eq(a[2].z_index, 3)
 	assert_eq(a[3].z_index, 5)
 
+
 func test_on_segment():
-	var p1 = Vector2(0,0)
-	var p2 = Vector2(-100,0)
-	var p3 = Vector2(100,0)
-	var p4 = Vector2(100,10)
-	var p5 = Vector2(100,20)
+	var p1 = Vector2(0, 0)
+	var p2 = Vector2(-100, 0)
+	var p3 = Vector2(100, 0)
+	var p4 = Vector2(100, 10)
+	var p5 = Vector2(100, 20)
 	assert_true(RMSS2D_Shape_Base.on_segment(p2, p1, p3))
 	assert_false(RMSS2D_Shape_Base.on_segment(p2, p3, p1))
 	assert_false(RMSS2D_Shape_Base.on_segment(p1, p2, p3))
@@ -306,6 +307,81 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	assert_eq(quad.pt_b, expected_points[0])
 	assert_eq(quad.pt_c, expected_points[3])
 	assert_eq(quad.pt_d, expected_points[2])
+
+
+func test_get_edge_material_data():
+	var shape_base = RMSS2D_Shape_Base.new()
+	add_child_autofree(shape_base)
+	var points = get_clockwise_points()
+	shape_base.add_points(points)
+
+	# One edge material that applies to all 360 degrees
+	var edge_mat = RMSS2D_Material_Edge.new()
+	edge_mat.textures = [TEST_TEXTURE]
+	var edge_mat_meta = RMSS2D_Material_Edge_Metadata.new()
+	var normal_range = RMSS2D_NormalRange.new(0, 360.0)
+	edge_mat_meta.edge_material = edge_mat
+	edge_mat_meta.normal_range = normal_range
+	assert_not_null(edge_mat_meta.edge_material)
+
+	var s_m = RMSS2D_Material_Shape.new()
+	s_m.set_edge_meta_materials([edge_mat_meta])
+	# Sanity Check
+	for e in s_m.get_edge_meta_materials(Vector2(1, 0)):
+		assert_not_null(e)
+		assert_not_null(e.edge_material)
+		assert_eq(e, edge_mat_meta)
+		assert_eq(e.edge_material, edge_mat)
+
+	var edge_material_data: Array = shape_base.get_edge_material_data(s_m, false)
+	assert_eq(edge_material_data.size(), 1, "1 edge should be produced")
+	edge_material_data = shape_base.get_edge_material_data(s_m, true)
+	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
+
+	# Add Override that shouldn't be rendered
+	var override_mat = RMSS2D_Material_Edge_Metadata.new()
+	override_mat.render = false
+	var keys = [shape_base.get_point_key_at_index(1), shape_base.get_point_key_at_index(2)]
+	shape_base.set_material_override(keys, override_mat)
+
+	edge_material_data = shape_base.get_edge_material_data(s_m, false)
+	assert_eq(edge_material_data.size(), 2, "2 edges should be produced")
+	edge_material_data = shape_base.get_edge_material_data(s_m, true)
+	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
+
+	# Add Override that shouldn't be rendered
+	override_mat = RMSS2D_Material_Edge_Metadata.new()
+	override_mat.render = false
+	keys = [shape_base.get_point_key_at_index(3), shape_base.get_point_key_at_index(4)]
+	shape_base.set_material_override(keys, override_mat)
+
+	# At this point
+	#  - idx 1 and 2 aren't rendered
+	#  - idx 2 and 3 are    rendered
+	#  - idx 3 and 4 aren't rendered
+	# The sequence is
+  #   0, 1 | 2, 3 | 4, 5
+	edge_material_data = shape_base.get_edge_material_data(s_m, false)
+	assert_eq(edge_material_data.size(), 3, "3 edges should be produced")
+	# 0, 1
+	assert_eq(edge_material_data[0].indicies.size(), 2)
+	# 2, 3
+	assert_eq(edge_material_data[1].indicies.size(), 2)
+	#  4, 5
+	assert_eq(edge_material_data[2].indicies.size(), 2)
+
+
+	edge_material_data = shape_base.get_edge_material_data(s_m, true)
+	assert_eq(edge_material_data.size(), 2, "2 merged wrap_around edge should be produced")
+
+	# 2, 3
+	var em_data_small = edge_material_data[0]
+	# 4, 5, 0, 1
+	var em_data_large = edge_material_data[1]
+	gut.p(em_data_small)
+	gut.p(em_data_large)
+	assert_eq(em_data_small.indicies.size(), 2)
+	assert_eq(em_data_large.indicies.size(), 4)
 
 
 func get_clockwise_points() -> Array:

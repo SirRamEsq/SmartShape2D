@@ -219,7 +219,7 @@ func _gui_update_edge_info_panel():
 	gui_edge_info_panel.set_indicies(indicies)
 	if override != null:
 		gui_edge_info_panel.set_material_override(true)
-		gui_edge_info_panel.set_render(override.render)
+		gui_edge_info_panel.load_values_from_meta_material(override)
 	else:
 		gui_edge_info_panel.set_material_override(false)
 
@@ -254,6 +254,8 @@ func _ready():
 	gui_edge_info_panel.visible = false
 	gui_edge_info_panel.connect("set_material_override", self, "_on_set_edge_material_override")
 	gui_edge_info_panel.connect("set_render", self, "_on_set_edge_material_override_render")
+	gui_edge_info_panel.connect("set_weld", self, "_on_set_edge_material_override_weld")
+	gui_edge_info_panel.connect("set_z_index", self, "_on_set_edge_material_override_z_index")
 	add_child(gui_snap_settings)
 
 
@@ -364,14 +366,31 @@ func snap_position(pos: Vector2, snap_offset: Vector2, snap_step: Vector2, force
 ##########
 # PLUGIN #
 ##########
-func _on_set_edge_material_override_render(enabled: bool):
+static func get_material_override_from_indicies(shape: RMSS2D_Shape_Base, indicies: Array):
 	var keys = []
-	for i in gui_edge_info_panel.indicies:
+	for i in indicies:
 		keys.push_back(shape.get_point_key_at_index(i))
 	if not shape.has_material_override(keys):
-		return
-	var override = shape.get_material_override(keys)
-	override.render = enabled
+		return null
+	return shape.get_material_override(keys)
+
+
+func _on_set_edge_material_override_render(enabled: bool):
+	_set_edge_material_override_values()
+
+
+func _on_set_edge_material_override_weld(enabled: bool):
+	_set_edge_material_override_values()
+
+
+func _on_set_edge_material_override_z_index(z: int):
+	_set_edge_material_override_values()
+
+
+func _set_edge_material_override_values():
+	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
+	if override != null:
+		gui_edge_info_panel.save_values_to_meta_material(override)
 
 
 func _on_set_edge_material_override(enabled: bool):
@@ -394,7 +413,7 @@ func _on_set_edge_material_override(enabled: bool):
 			shape.set_material_override(keys, override)
 
 		# Load override data into the info panel
-		gui_edge_info_panel.set_render(override.render)
+		gui_edge_info_panel.load_values_from_meta_material(override)
 	else:
 		if override != null:
 			shape.remove_material_override(keys)
