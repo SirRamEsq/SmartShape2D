@@ -31,6 +31,7 @@
 *** DONE Fix spurious points being created in the poly with 90-degree plus corners
 *** DONE Fix divide-by-0 error when quad is of 0-length
 
+*** TODO Make small vertex movements trigger the undo-redo tree
 *** TODO Make popup windows disappear when addon nodes (shapes) are deslected
 - Currently, edge and point data windows remain open when switching scenes
 * Design

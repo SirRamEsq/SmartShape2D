@@ -543,7 +543,13 @@ func draw_mode_edit_edge(overlay: Control):
 
 	draw_shape_outline(overlay, t, verts, color_normal, 3.0)
 	draw_vert_handles(overlay, t, verts, false)
-	if on_edge:
+
+	if current_action.type == ACTION_VERT.MOVE_VERT:
+		var edge_point_keys = current_action.keys
+		var p1 = shape.get_point_position(edge_point_keys[0])
+		var p2 = shape.get_point_position(edge_point_keys[1])
+		overlay.draw_line(t.xform(p1), t.xform(p2), color_highlight, 5.0)
+	elif on_edge:
 		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
 		var edge_point_keys = _get_edge_point_keys_from_offset(offset, true)
 		var p1 = shape.get_point_position(edge_point_keys[0])
