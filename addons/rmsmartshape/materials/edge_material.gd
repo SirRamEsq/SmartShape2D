@@ -35,8 +35,6 @@ export (bool) var weld_quads: bool = true setget _set_weld_quads
 export (bool) var use_corner_texture: bool = true setget _set_use_corner
 # If taper textures should be used
 export (bool) var use_taper_texture: bool = true setget _set_use_taper
-# Angle steepness at which to start using corner textures
-export (float) var corner_angle: float = 90.0 setget _set_corner_angle
 
 
 ###########
@@ -106,10 +104,6 @@ func _set_use_taper(b: bool):
 	use_taper_texture = b
 	emit_signal("changed")
 
-
-func _set_corner_angle(v: float):
-	corner_angle = v
-	emit_signal("changed")
 
 
 #########

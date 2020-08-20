@@ -22,4 +22,3 @@ texture_normals_taper_right = [  ]
 weld_quads = true
 use_corner_texture = false
 use_taper_texture = false
-corner_angle = 90.0

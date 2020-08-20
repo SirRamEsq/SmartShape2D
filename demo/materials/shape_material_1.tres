@@ -39,7 +39,6 @@ texture_normals_taper_right = [  ]
 weld_quads = true
 use_corner_texture = true
 use_taper_texture = true
-corner_angle = 90.0
 
 [sub_resource type="Resource" id=4]
 script = ExtResource( 3 )
