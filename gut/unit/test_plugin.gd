@@ -1,6 +1,7 @@
 extends "res://addons/gut/test.gd"
 
 var FUNC = load("res://addons/rmsmartshape/plugin-functionality.gd")
+var PLUGIN = load("res://addons/rmsmartshape/plugin.gd")
 
 
 func test_intersect_control_point():
@@ -39,3 +40,32 @@ func test_intersect_control_point():
 		shape.position.x = 1
 		intersect = f.call_func(shape, et, vert_p + o + Vector2(grab + 1, 0), grab)
 		assert_eq(intersect.size(), 1, s)
+
+
+func test_snapping():
+	var shape = RMSS2D_Shape_Closed.new()
+	var identity = Transform2D.IDENTITY
+	var step = Vector2(8, 8)
+	add_child_autofree(shape)
+	var p1 = Vector2(17, 19)
+	assert_eq(
+		PLUGIN.snap_position(p1, Vector2(0, 0), step, shape.get_global_transform()), Vector2(16, 16)
+	)
+
+	shape.global_position = Vector2(1, 2)
+	var expected = (
+		PLUGIN.snap_position(p1 + shape.global_position, Vector2(0, 0), step, identity)
+		- shape.global_position
+	)
+	assert_eq(PLUGIN.snap_position(p1, Vector2(0, 0), step, shape.get_global_transform()), expected)
+
+	var offset = Vector2(3, 3)
+	expected = (
+		PLUGIN.snap_position(p1 + shape.global_position, Vector2(0, 0), step, identity)
+		- shape.global_position
+		+ offset
+	)
+	assert_eq(PLUGIN.snap_position(p1, offset, step, shape.get_global_transform()), expected)
+
+	var p2 = Vector2(23.2, 20)
+	assert_eq(PLUGIN.snap_position(p2, Vector2(0, 0), step, identity), Vector2(24, 24))

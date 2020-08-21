@@ -129,7 +129,9 @@ func gui_display_snap_settings():
 func _snapping_item_selected(id: int):
 	if id == 0:
 		tb_snap_popup.set_item_checked(id, not tb_snap_popup.is_item_checked(id))
-	elif id == 2:
+	if id == 1:
+		tb_snap_popup.set_item_checked(id, not tb_snap_popup.is_item_checked(id))
+	elif id == 3:
 		gui_display_snap_settings()
 
 
@@ -177,6 +179,7 @@ func _gui_build_toolbar():
 	tb_snap_popup = tb_snap.get_popup()
 	tb_snap.icon = ICON_SNAP
 	tb_snap_popup.add_check_item("Snapping Enabled?")
+	tb_snap_popup.add_check_item("Snap to Global Pos?")
 	tb_snap_popup.add_separator()
 	tb_snap_popup.add_item("Configure Snap...")
 	tb_snap_popup.hide_on_checkable_item_selection = false
@@ -337,6 +340,9 @@ func make_visible(visible):
 ############
 # SNAPPING #
 ############
+func use_global_snap() -> bool:
+	return tb_snap_popup.is_item_checked(1)
+
 func use_snap() -> bool:
 	return tb_snap_popup.is_item_checked(0)
 
@@ -349,19 +355,47 @@ func get_snap_step() -> Vector2:
 	return gui_snap_settings.get_snap_step()
 
 
-func snap_position(pos: Vector2, snap_offset: Vector2, snap_step: Vector2, force: bool = false) -> Vector2:
+func snap(v: Vector2, force: bool = true) -> Vector2:
 	if not use_snap() and not force:
-		return pos
-	var x = pos.x
+		return v
+	var step = get_snap_step()
+	var offset = get_snap_offset()
+	var t = Transform2D.IDENTITY
+	if use_global_snap():
+		t = shape.get_global_transform()
+	return snap_position(v, offset, step, t)
+
+
+static func snap_position(pos_local: Vector2, snap_offset: Vector2, snap_step: Vector2, t: Transform2D) -> Vector2:
+	var t_inverse = t.affine_inverse()
+
+	# Move local position to global position to snap in global space
+	var pos_global = t * pos_local
+
+	# Snap in global space
+	var x = pos_global.x
 	if snap_step.x != 0:
-		x = pos.x - fmod(pos.x, snap_step.x)
-
-	var y = pos.y
+		var delta = fmod(pos_global.x, snap_step.x)
+		# Round up
+		if delta >= (snap_step.x / 2.0):
+			x = pos_global.x + (snap_step.x - delta)
+		# Round down
+		else:
+			x = pos_global.x - delta
+	var y = pos_global.y
 	if snap_step.y != 0:
-		y = pos.y - fmod(pos.y, snap_step.y)
+		var delta = fmod(pos_global.y, snap_step.y)
+		# Round up
+		if delta >= (snap_step.y / 2.0):
+			y = pos_global.y + (snap_step.y - delta)
+		# Round down
+		else:
+			y = pos_global.y - delta
 
-	return Vector2(x, y) + snap_offset
-
+	# Transform global position to global position to snap in global space
+	var pos_local_snapped = (t_inverse * Vector2(x, y)) + snap_offset
+	#print ("%s | %s | %s | %s" % [pos_local, pos_global, Vector2(x,y), pos_local_snapped])
+	return pos_local_snapped
 
 ##########
 # PLUGIN #
@@ -694,10 +728,10 @@ func _input_handle_left_click(
 ) -> bool:
 	# Set Pivot?
 	if (current_mode == MODE.SET_PIVOT) or (mb.control and current_mode == MODE.EDIT_VERT):
-		var snapped_pos = snap_position(
-			et.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
-		)
-		FUNC.action_set_pivot(self, "_set_pivot", undo, shape, et, snapped_pos)
+		var local_position = et.affine_inverse().xform(mb.position)
+		if use_snap():
+			local_position = snap(local_position)
+		FUNC.action_set_pivot(self, "_set_pivot", undo, shape, et, local_position)
 		undo_version = undo.get_version()
 		return true
 
@@ -722,10 +756,12 @@ func _input_handle_left_click(
 				return true
 
 			# Create new point
-			var snapped_pos = snap_position(
-				t.affine_inverse().xform(mb.position), get_snap_offset(), get_snap_step()
+			var local_position = t.affine_inverse().xform(mb.position)
+			if use_snap():
+				local_position = snap(local_position)
+			var new_key = FUNC.action_add_point(
+				self, "update_overlays", undo, shape, local_position
 			)
-			var new_key = FUNC.action_add_point(self, "update_overlays", undo, shape, snapped_pos)
 			undo_version = undo.get_version()
 			select_vertices_to_move([new_key], vp_m_pos)
 			return true
@@ -955,15 +991,14 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 			(delta * out_multiplier)
 			+ current_action.starting_positions_control_out[i]
 		)
-		var snapped_position_in = snap_position(new_position_in, get_snap_offset(), get_snap_step())
-		var snapped_position_out = snap_position(
-			new_position_out, get_snap_offset(), get_snap_step()
-		)
+		if use_snap():
+			new_position_in = snap(new_position_in)
+			new_position_out = snap(new_position_out)
 		if _in:
-			shape.set_point_in(key, snapped_position_in)
+			shape.set_point_in(key, new_position_in)
 			rslt = true
 		if _out:
-			shape.set_point_out(key, snapped_position_out)
+			shape.set_point_out(key, new_position_out)
 			rslt = true
 		shape.set_as_dirty()
 		update_overlays()
@@ -975,8 +1010,9 @@ func _input_motion_move_verts(delta: Vector2) -> bool:
 		var key = current_action.keys[i]
 		var from = current_action.starting_positions[i]
 		var new_position = from + delta
-		var snapped_position = snap_position(new_position, get_snap_offset(), get_snap_step())
-		shape.set_point_position(key, snapped_position)
+		if use_snap():
+			new_position = snap(new_position)
+		shape.set_point_position(key, new_position)
 		update_overlays()
 	return true
 
