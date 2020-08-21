@@ -9,7 +9,7 @@
 **** CANCELLED Navigate to the project rms materials dir when selecting a material
 *** Snapping
 **** CANCELLED Use built in snapping
-**** TODO Use snapping on a global basis, not a local one
+**** DONE Use snapping on a global basis, not a local one
 *** DONE Right click context menu when clicking on an edge to select a material for the edge
 **** NEXT Edge Material Selector
 **** NEXT Z_INDEX selector

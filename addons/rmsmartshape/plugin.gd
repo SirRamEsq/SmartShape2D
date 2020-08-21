@@ -366,36 +366,34 @@ func snap(v: Vector2, force: bool = true) -> Vector2:
 	return snap_position(v, offset, step, t)
 
 
-static func snap_position(pos_local: Vector2, snap_offset: Vector2, snap_step: Vector2, t: Transform2D) -> Vector2:
-	var t_inverse = t.affine_inverse()
-
+static func snap_position(pos_global: Vector2, snap_offset: Vector2, snap_step: Vector2, local_t: Transform2D) -> Vector2:
 	# Move local position to global position to snap in global space
-	var pos_global = t * pos_local
+	var pos_local = local_t * pos_global
 
 	# Snap in global space
-	var x = pos_global.x
+	var x = pos_local.x
 	if snap_step.x != 0:
-		var delta = fmod(pos_global.x, snap_step.x)
+		var delta = fmod(pos_local.x, snap_step.x)
 		# Round up
 		if delta >= (snap_step.x / 2.0):
-			x = pos_global.x + (snap_step.x - delta)
+			x = pos_local.x + (snap_step.x - delta)
 		# Round down
 		else:
-			x = pos_global.x - delta
-	var y = pos_global.y
+			x = pos_local.x - delta
+	var y = pos_local.y
 	if snap_step.y != 0:
-		var delta = fmod(pos_global.y, snap_step.y)
+		var delta = fmod(pos_local.y, snap_step.y)
 		# Round up
 		if delta >= (snap_step.y / 2.0):
-			y = pos_global.y + (snap_step.y - delta)
+			y = pos_local.y + (snap_step.y - delta)
 		# Round down
 		else:
-			y = pos_global.y - delta
+			y = pos_local.y - delta
 
 	# Transform global position to global position to snap in global space
-	var pos_local_snapped = (t_inverse * Vector2(x, y)) + snap_offset
-	#print ("%s | %s | %s | %s" % [pos_local, pos_global, Vector2(x,y), pos_local_snapped])
-	return pos_local_snapped
+	var pos_global_snapped = (local_t.affine_inverse() * Vector2(x, y)) + snap_offset
+	#print ("%s | %s | %s | %s" % [pos_global, pos_local, Vector2(x,y), pos_global_snapped])
+	return pos_global_snapped
 
 ##########
 # PLUGIN #
