@@ -343,6 +343,7 @@ func make_visible(visible):
 func use_global_snap() -> bool:
 	return tb_snap_popup.is_item_checked(1)
 
+
 func use_snap() -> bool:
 	return tb_snap_popup.is_item_checked(0)
 
@@ -355,7 +356,7 @@ func get_snap_step() -> Vector2:
 	return gui_snap_settings.get_snap_step()
 
 
-func snap(v: Vector2, force: bool = true) -> Vector2:
+func snap(v: Vector2, force: bool = false) -> Vector2:
 	if not use_snap() and not force:
 		return v
 	var step = get_snap_step()
@@ -366,11 +367,13 @@ func snap(v: Vector2, force: bool = true) -> Vector2:
 	return snap_position(v, offset, step, t)
 
 
-static func snap_position(pos_global: Vector2, snap_offset: Vector2, snap_step: Vector2, local_t: Transform2D) -> Vector2:
-	# Move local position to global position to snap in global space
+static func snap_position(
+	pos_global: Vector2, snap_offset: Vector2, snap_step: Vector2, local_t: Transform2D
+) -> Vector2:
+	# Move global position to local position to snap in local space
 	var pos_local = local_t * pos_global
 
-	# Snap in global space
+	# Snap in local space
 	var x = pos_local.x
 	if snap_step.x != 0:
 		var delta = fmod(pos_local.x, snap_step.x)
@@ -390,7 +393,7 @@ static func snap_position(pos_global: Vector2, snap_offset: Vector2, snap_step: 
 		else:
 			y = pos_local.y - delta
 
-	# Transform global position to global position to snap in global space
+	# Transform local position to global position
 	var pos_global_snapped = (local_t.affine_inverse() * Vector2(x, y)) + snap_offset
 	#print ("%s | %s | %s | %s" % [pos_global, pos_local, Vector2(x,y), pos_global_snapped])
 	return pos_global_snapped
