@@ -259,6 +259,7 @@ func _ready():
 	gui_edge_info_panel.connect("set_render", self, "_on_set_edge_material_override_render")
 	gui_edge_info_panel.connect("set_weld", self, "_on_set_edge_material_override_weld")
 	gui_edge_info_panel.connect("set_z_index", self, "_on_set_edge_material_override_z_index")
+	gui_edge_info_panel.connect("set_edge_material", self, "_on_set_edge_material")
 	add_child(gui_snap_settings)
 
 
@@ -419,6 +420,9 @@ func _on_set_edge_material_override_weld(enabled: bool):
 
 
 func _on_set_edge_material_override_z_index(z: int):
+	_set_edge_material_override_values()
+
+func _on_set_edge_material(m: RMSS2D_Material_Edge):
 	_set_edge_material_override_values()
 
 
