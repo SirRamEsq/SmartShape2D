@@ -803,7 +803,7 @@ properties = SubResource( 112 )
 
 [sub_resource type="Resource" id=114]
 script = ExtResource( 4 )
-texture_idx = 0
+texture_idx = 1
 flip = false
 width = 1.0
 
@@ -816,7 +816,7 @@ properties = SubResource( 114 )
 
 [sub_resource type="Resource" id=116]
 script = ExtResource( 4 )
-texture_idx = 0
+texture_idx = 1
 flip = false
 width = 1.0
 
@@ -894,7 +894,7 @@ properties = SubResource( 126 )
 
 [sub_resource type="Resource" id=128]
 script = ExtResource( 4 )
-texture_idx = 0
+texture_idx = 3
 flip = false
 width = 1.0
 
@@ -907,7 +907,7 @@ properties = SubResource( 128 )
 
 [sub_resource type="Resource" id=130]
 script = ExtResource( 4 )
-texture_idx = 0
+texture_idx = 1
 flip = false
 width = 1.0
 
@@ -920,7 +920,7 @@ properties = SubResource( 130 )
 
 [sub_resource type="Resource" id=132]
 script = ExtResource( 4 )
-texture_idx = 0
+texture_idx = 1
 flip = false
 width = 1.0
 

@@ -26,7 +26,7 @@
 - Split an rms shape node into several
 *** TODO Ability to copy shapes into a new node / StaticBody subtree
 *** TODO Select material on edge-by-edge basis
-
+*** DONE Texture indexes wrap around
 ** Fixes
 *** DONE Fix spurious points being created in the poly with 90-degree plus corners
 *** DONE Fix divide-by-0 error when quad is of 0-length

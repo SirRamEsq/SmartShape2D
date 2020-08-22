@@ -764,7 +764,6 @@ func _build_edge_without_material(
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
-	var texture_idx = 0
 	var t_points = get_tessellated_points()
 	var points = get_vertices()
 	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
@@ -885,7 +884,6 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		return edge
 	edge.z_index = edge_material_meta.z_index
 
-	var texture_idx = 0
 	var t_points = get_tessellated_points()
 	var points = get_vertices()
 	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
@@ -912,6 +910,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		var tess_idx = (first_t_idx + i) % t_points.size()
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var next_vert_idx = vert_idx + 1
+		var texture_idx = get_point_texture_index(get_point_key_at_index(vert_idx))
 		var generate_corner = RMSS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
