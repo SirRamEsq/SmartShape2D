@@ -243,6 +243,15 @@ func _gui_update_info_panels():
 #########
 # GODOT #
 #########
+
+
+# Called when saving
+# https://docs.godotengine.org/en/3.2/classes/class_editorplugin.html?highlight=switch%20scene%20tab
+func apply_changes():
+	gui_point_info_panel.visible = false
+	gui_edge_info_panel.visible = false
+
+
 func _init():
 	pass
 
@@ -268,6 +277,8 @@ func _enter_tree():
 
 
 func _exit_tree():
+	gui_point_info_panel.visible = false
+	gui_edge_info_panel.visible = false
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
 
 
@@ -295,10 +306,12 @@ func forward_canvas_gui_input(event):
 
 
 func _process(delta):
-	if not Engine.editor_hint or not is_shape_valid(shape):
+	if not Engine.editor_hint:
 		return
 
-	if not shape.is_inside_tree():
+	if not is_shape_valid(shape):
+		gui_point_info_panel.visible = false
+		gui_edge_info_panel.visible = false
 		shape = null
 		update_overlays()
 		return
@@ -309,11 +322,13 @@ func _process(delta):
 
 
 func handles(object):
-	if object is Resource:
-		return false
-
 	tb_hb.hide()
 	update_overlays()
+	gui_point_info_panel.visible = false
+	gui_edge_info_panel.visible = false
+
+	if object is Resource:
+		return false
 
 	var rslt: bool = object is RMSS2D_Shape_Closed or object is RMSS2D_Shape_Open
 	return rslt
@@ -466,6 +481,8 @@ static func is_shape_valid(s: RMSS2D_Shape_Base) -> bool:
 		return false
 	if not is_instance_valid(s):
 		return false
+	if not s.is_inside_tree():
+		return false
 	return true
 
 
@@ -554,7 +571,7 @@ func _add_deferred_collision():
 func forward_canvas_draw_over_viewport(overlay: Control):
 	# Something might force a draw which we had no control over,
 	# in this case do some updating to be sure
-	if not is_shape_valid(shape):
+	if not is_shape_valid(shape) or not is_inside_tree():
 		return
 
 	if undo_version != undo.get_version():
@@ -873,19 +890,20 @@ func _input_handle_mouse_button_event(
 		deselect_verts()
 		return rslt
 
-	# PRESSED RIGHT CLICK
-	elif mb.pressed and mb.button_index == BUTTON_RIGHT:
-		return _input_handle_right_click_press(mb.position, grab_threshold)
-
 	#########################################
 	# Mouse Wheel on valid point
 	elif mouse_wheel_spun and current_action.is_single_vert_selected():
 		return _input_handle_mouse_wheel(mb.button_index)
 
 	#########################################
-	# Mouse left click on valid point
+	# Mouse left click
 	elif mb.pressed and mb.button_index == BUTTON_LEFT:
 		return _input_handle_left_click(mb, viewport_mouse_position, t, et, grab_threshold)
+
+	#########################################
+	# Mouse right click
+	elif mb.pressed and mb.button_index == BUTTON_RIGHT:
+		return _input_handle_right_click_press(mb.position, grab_threshold)
 
 	return false
 
