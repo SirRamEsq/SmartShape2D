@@ -21,6 +21,7 @@ const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
 const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
 const ICON_INTERP_LINEAR = preload("assets/InterpLinear.svg")
 const ICON_SNAP = preload("assets/icon_editor_snap.svg")
+const ICON_IMPORT = preload("closed_shape.png")
 const FUNC = preload("plugin-functionality.gd")
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT }
@@ -84,6 +85,8 @@ var shape: RMSS2D_Shape_Base = null
 
 # Toolbar Stuff
 var tb_hb: HBoxContainer = null
+var tb_hb_legacy_import: HBoxContainer = null
+var tb_import: ToolButton = null
 var tb_vert_edit: ToolButton = null
 var tb_edge_edit: ToolButton = null
 var tb_pivot: ToolButton = null
@@ -138,6 +141,15 @@ func _snapping_item_selected(id: int):
 func _gui_build_toolbar():
 	tb_hb = HBoxContainer.new()
 	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
+	tb_hb_legacy_import = HBoxContainer.new()
+	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb_legacy_import)
+	tb_import = ToolButton.new()
+	tb_import.icon = ICON_IMPORT
+	tb_import.toggle_mode = false
+	tb_import.pressed = false
+	#tb_import.connect("pressed", self, "_enter_mode", [MODE.EDIT_EDGE])
+	tb_import.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_IMPORT
+	tb_hb_legacy_import.add_child(tb_import)
 
 	var sep = VSeparator.new()
 	tb_hb.add_child(sep)
@@ -323,6 +335,7 @@ func _process(delta):
 
 func handles(object):
 	tb_hb.hide()
+	tb_hb_legacy_import.hide()
 	update_overlays()
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
@@ -330,23 +343,35 @@ func handles(object):
 	if object is Resource:
 		return false
 
-	var rslt: bool = object is RMSS2D_Shape_Closed or object is RMSS2D_Shape_Open
+	var rslt: bool = (
+		object is RMSS2D_Shape_Closed
+		or object is RMSS2D_Shape_Open
+		or object is RMSmartShape2D
+	)
 	return rslt
 
 
 func edit(object):
-	if tb_hb != null:
-		tb_hb.show()
+	if object is RMSmartShape2D:
+		tb_hb.hide()
+		tb_hb_legacy_import.show()
 
-	on_edge = false
-	deselect_verts()
-	if is_shape_valid(shape):
-		if shape.is_connected("points_modified", self, "_on_shape_point_modified"):
-			shape.disconnect("points_modified", self, "_on_shape_point_modified")
-	shape = object as RMSS2D_Shape_Base
-	if not shape.is_connected("points_modified", self, "_on_shape_point_modified"):
-		shape.connect("points_modified", self, "_on_shape_point_modified")
-	update_overlays()
+		on_edge = false
+		deselect_verts()
+		update_overlays()
+	else:
+		tb_hb.show()
+		tb_hb_legacy_import.hide()
+
+		on_edge = false
+		deselect_verts()
+		if is_shape_valid(shape):
+			if shape.is_connected("points_modified", self, "_on_shape_point_modified"):
+				shape.disconnect("points_modified", self, "_on_shape_point_modified")
+		shape = object as RMSS2D_Shape_Base
+		if not shape.is_connected("points_modified", self, "_on_shape_point_modified"):
+			shape.connect("points_modified", self, "_on_shape_point_modified")
+		update_overlays()
 
 
 func make_visible(visible):

@@ -16,7 +16,7 @@ func _init(pos: Vector2 = Vector2(0, 0)):
 	position = pos
 	point_in = Vector2(0, 0)
 	point_out = Vector2(0, 0)
-	properties = RMS2D_VertexProperties.new()
+	properties = RMSS2D_VertexProperties.new()
 
 
 func equals(other: RMSS2D_Point) -> bool:
@@ -65,7 +65,7 @@ func _set_point_out(v: Vector2):
 	property_list_changed_notify()
 
 
-func _set_properties(other:RMS2D_VertexProperties):
+func _set_properties(other:RMSS2D_VertexProperties):
 	if not properties.equals(other):
 		properties = other.duplicate(true)
 		emit_signal("changed")

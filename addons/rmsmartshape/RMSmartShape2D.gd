@@ -131,8 +131,6 @@ var vertex_properties = RMS2D_VertexPropertiesArray.new(0)
 # For rendering fill and edges
 var meshes: Array = Array()
 var _quads: Array
-# Map a hash value to the point
-var _points: Dictionary = {}
 
 # Reduce clockwise check if points don't change
 var is_clockwise: bool = false setget , are_points_clockwise
@@ -365,8 +363,8 @@ func _set_curve(value: Curve2D):
 ######################
 # SET/GET FOR ARRAYS #
 ######################
-func set_point_width(width: float, idx: int):
-	if vertex_properties.set_width(width, idx):
+func set_point_width(width: float, at_position: int):
+	if vertex_properties.set_width(width, at_position):
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -374,8 +372,8 @@ func set_point_width(width: float, idx: int):
 			property_list_changed_notify()
 
 
-func get_point_width(idx: int) -> float:
-	return vertex_properties.get_width(idx)
+func get_point_width(at_position: int) -> float:
+	return vertex_properties.get_width(at_position)
 
 
 func is_closed_shape() -> bool:
@@ -391,16 +389,16 @@ func set_point_texture_index(point_index: int, tex_index: int):
 			property_list_changed_notify()
 
 
-func get_point_texture_index(idx: int) -> int:
-	return vertex_properties.get_texture_idx(idx)
+func get_point_texture_index(at_position: int) -> int:
+	return vertex_properties.get_texture_idx(at_position)
 
 
-func get_point_texture_flip(idx: int) -> bool:
-	return vertex_properties.get_flip(idx)
+func get_point_texture_flip(at_position: int) -> bool:
+	return vertex_properties.get_flip(at_position)
 
 
-func set_point_texture_flip(flip: bool, idx: int):
-	if vertex_properties.set_flip(flip, idx):
+func set_point_texture_flip(flip: bool, at_position: int):
+	if vertex_properties.set_flip(flip, at_position):
 		set_as_dirty()
 		emit_signal("points_modified")
 
@@ -664,6 +662,8 @@ func _get_direction_three_points(
 
 	var clockwise = are_points_clockwise()
 	var dir = 0
+	var ab_dir = _get_direction_two_points(point_prev, point, top_tilt, bottom_tilt)
+	var bc_dir = _get_direction_two_points(point, point_next, top_tilt, bottom_tilt)
 	var corner_range = 15.0
 	if _in_range(abs(deg), 90.0 - corner_range, 90.0 + corner_range):
 		var ab_normal = ab.tangent().normalized()
@@ -1586,10 +1586,10 @@ func _is_array_index_in_range(a: Array, i: int) -> bool:
 	return false
 
 
-func set_point_position(idx: int, position: Vector2):
+func set_point_position(at_position: int, position: Vector2):
 	if curve != null:
-		if _is_curve_index_in_range(idx):
-			curve.set_point_position(idx, position)
+		if _is_curve_index_in_range(at_position):
+			curve.set_point_position(at_position, position)
 			set_as_dirty()
 			emit_signal("points_modified")
 

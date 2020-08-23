@@ -1,4 +1,4 @@
-[gd_scene load_steps=159 format=2]
+[gd_scene load_steps=163 format=2]
 
 [ext_resource path="res://demo/materials/shape_material_1.tres" type="Resource" id=1]
 [ext_resource path="res://addons/rmsmartshape/shapes/point_array.gd" type="Script" id=2]
@@ -9,6 +9,8 @@
 [ext_resource path="res://addons/rmsmartshape/shapes/shape_open.gd" type="Script" id=7]
 [ext_resource path="res://addons/rmsmartshape/normal_range.gd" type="Script" id=8]
 [ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=9]
+[ext_resource path="res://addons/rmsmartshape/RMSmartShapeMaterial.gd" type="Script" id=10]
+[ext_resource path="res://addons/rmsmartshape/RMSmartShape2D.gd" type="Script" id=11]
 
 [sub_resource type="Resource" id=1]
 script = ExtResource( 4 )
@@ -1073,6 +1075,30 @@ _constraints = {
 }
 _next_key = 5
 
+[sub_resource type="Curve2D" id=150]
+_data = {
+"points": PoolVector2Array(  )
+}
+
+[sub_resource type="Resource" id=151]
+script = ExtResource( 10 )
+top_texture_tilt = 20.0
+bottom_texture_tilt = 20.0
+top_texture = [  ]
+top_texture_normal = [  ]
+left_texture = [  ]
+left_texture_normal = [  ]
+right_texture = [  ]
+right_texture_normal = [  ]
+bottom_texture = [  ]
+bottom_texture_normal = [  ]
+use_corners = true
+weld_edges = false
+render_offset = 0.0
+collision_width = 1.0
+collision_offset = 0.0
+collision_extends = 0.0
+
 [node name="Node2D" type="Node2D"]
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
@@ -1133,3 +1159,18 @@ _points = SubResource( 149 )
 material_overrides = {
 
 }
+
+[node name="RMSmartShape2D" type="Node2D" parent="."]
+script = ExtResource( 11 )
+editor_debug = null
+curve = SubResource( 150 )
+closed_shape = false
+auto_update_collider = false
+tessellation_stages = 5
+tessellation_tolerence = 4
+use_global_space = false
+collision_polygon_node = NodePath("")
+collision_bake_interval = 20
+draw_edges = false
+flip_edges = false
+shape_material = SubResource( 151 )

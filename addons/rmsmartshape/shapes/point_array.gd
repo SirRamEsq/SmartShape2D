@@ -205,15 +205,15 @@ func get_point_position(key: int) -> Vector2:
 	return Vector2(0, 0)
 
 
-func set_point_properties(key: int, value: RMS2D_VertexProperties):
+func set_point_properties(key: int, value: RMSS2D_VertexProperties):
 	if has_point(key):
 		_points[key].properties = value
 
 
-func get_point_properties(key: int) -> RMS2D_VertexProperties:
+func get_point_properties(key: int) -> RMSS2D_VertexProperties:
 	if has_point(key):
 		return _points[key].properties.duplicate(true)
-	var new_props = RMS2D_VertexProperties.new()
+	var new_props = RMSS2D_VertexProperties.new()
 	return new_props
 
 
