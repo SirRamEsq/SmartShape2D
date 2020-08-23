@@ -32,7 +32,7 @@ func set_points(ps: Dictionary):
 	# Called by Godot when loading from a saved scene
 	for k in ps:
 		var p = ps[k]
-		p.connect("changed", self, "_on_point_changed")
+		p.connect("changed", self, "_on_point_changed", [p])
 	_points = ps
 	property_list_changed_notify()
 
@@ -81,7 +81,7 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 	if next_key == -1 or not is_key_valid(next_key):
 		next_key = _generate_key()
 	var new_point = RMSS2D_Point.new(point)
-	new_point.connect("changed", self, "_on_point_changed")
+	new_point.connect("changed", self, "_on_point_changed", [new_point])
 	_points[next_key] = new_point
 	_point_order.push_back(next_key)
 	if idx != -1:

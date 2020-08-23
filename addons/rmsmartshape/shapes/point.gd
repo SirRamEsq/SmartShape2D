@@ -46,28 +46,28 @@ func duplicate(sub_resource: bool = false):
 func _set_position(v: Vector2):
 	if position != v:
 		position = v
-		emit_signal("changed", self)
+		emit_signal("changed")
 	property_list_changed_notify()
 
 
 func _set_point_in(v: Vector2):
 	if point_in != v:
 		point_in = v
-		emit_signal("changed", self)
+		emit_signal("changed")
 	property_list_changed_notify()
 
 
 func _set_point_out(v: Vector2):
 	if point_out != v:
 		point_out = v
-		emit_signal("changed", self)
+		emit_signal("changed")
 	property_list_changed_notify()
 
 
 func _set_properties(other: RMS2D_VertexProperties):
 	if not properties.equals(other):
 		properties = other.duplicate(true)
-		emit_signal("changed", self)
+		emit_signal("changed")
 	property_list_changed_notify()
 
 
