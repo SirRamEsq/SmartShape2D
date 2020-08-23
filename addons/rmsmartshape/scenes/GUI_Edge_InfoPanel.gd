@@ -80,17 +80,19 @@ func set_material_override(enabled: bool):
 	_on_toggle_material_override(enabled)
 
 
-func set_render(enabled: bool):
+func set_render(enabled: bool, emit: bool = true):
 	get_node(p_chk_render).pressed = enabled
-	_on_toggle_render(enabled)
+	if emit:
+		_on_toggle_render(enabled)
 
 
-func set_weld(enabled: bool):
+func set_weld(enabled: bool, emit: bool = true):
 	get_node(p_chk_weld).pressed = enabled
-	_on_toggle_weld(enabled)
+	if emit:
+		_on_toggle_weld(enabled)
 
 
-func set_edge_material(v: RMSS2D_Material_Edge):
+func set_edge_material(v: RMSS2D_Material_Edge, emit: bool = true):
 	edge_material = v
 	if v == null:
 		get_node(p_lbl_edge_material).text = "[No Material]"
@@ -99,12 +101,14 @@ func set_edge_material(v: RMSS2D_Material_Edge):
 		# Call string function 'get_file()' to get the filepath
 		get_node(p_lbl_edge_material).text = "[%s]" % (v.resource_path).get_file()
 		get_node(p_btn_clear_edge_material).visible = true
-	emit_signal("set_edge_material", v)
+	if emit:
+		emit_signal("set_edge_material", v)
 
 
-func set_z_index(v: int):
+func set_z_index(v: int, emit: bool = true):
 	get_node(p_int_index).value = float(v)
-	_on_set_z_index(float(v))
+	if emit:
+		_on_set_z_index(float(v))
 
 
 func get_render() -> bool:

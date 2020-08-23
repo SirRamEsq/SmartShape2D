@@ -412,24 +412,27 @@ static func get_material_override_from_indicies(shape: RMSS2D_Shape_Base, indici
 
 
 func _on_set_edge_material_override_render(enabled: bool):
-	_set_edge_material_override_values()
+	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
+	if override != null:
+		override.render = enabled
 
 
 func _on_set_edge_material_override_weld(enabled: bool):
-	_set_edge_material_override_values()
+	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
+	if override != null:
+		override.weld = enabled
 
 
 func _on_set_edge_material_override_z_index(z: int):
-	_set_edge_material_override_values()
-
-func _on_set_edge_material(m: RMSS2D_Material_Edge):
-	_set_edge_material_override_values()
-
-
-func _set_edge_material_override_values():
 	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
 	if override != null:
-		gui_edge_info_panel.save_values_to_meta_material(override)
+		override.z_index = z
+
+
+func _on_set_edge_material(m: RMSS2D_Material_Edge):
+	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
+	if override != null:
+		override.edge_material = m
 
 
 func _on_set_edge_material_override(enabled: bool):
