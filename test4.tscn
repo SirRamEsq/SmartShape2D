@@ -1,4 +1,4 @@
-[gd_scene load_steps=169 format=2]
+[gd_scene load_steps=159 format=2]
 
 [ext_resource path="res://demo/materials/shape_material_1.tres" type="Resource" id=1]
 [ext_resource path="res://addons/rmsmartshape/shapes/point_array.gd" type="Script" id=2]
@@ -606,29 +606,16 @@ _constraints = {
 }
 _next_key = 19
 
-[sub_resource type="Resource" id=84]
+[sub_resource type="Resource" id=156]
 script = ExtResource( 8 )
 begin = 0.0
 end = 0.0
 
-[sub_resource type="Resource" id=85]
+[sub_resource type="Resource" id=157]
 script = ExtResource( 6 )
-normal_range = SubResource( 84 )
+normal_range = SubResource( 156 )
 weld = true
 render = false
-z_index = 0
-offset = 0.0
-
-[sub_resource type="Resource" id=86]
-script = ExtResource( 8 )
-begin = 0.0
-end = 0.0
-
-[sub_resource type="Resource" id=87]
-script = ExtResource( 6 )
-normal_range = SubResource( 86 )
-weld = true
-render = true
 z_index = 0
 offset = 0.0
 
@@ -1006,57 +993,31 @@ _constraints = {
 }
 _next_key = 67
 
-[sub_resource type="Resource" id=141]
-script = ExtResource( 8 )
-begin = 0.0
-end = 0.0
-
-[sub_resource type="Resource" id=142]
-script = ExtResource( 6 )
-normal_range = SubResource( 141 )
-weld = true
-render = true
-z_index = 0
-offset = 0.0
-
-[sub_resource type="Resource" id=143]
-script = ExtResource( 8 )
-begin = 0.0
-end = 0.0
-
-[sub_resource type="Resource" id=144]
-script = ExtResource( 6 )
-normal_range = SubResource( 143 )
-weld = true
-render = true
-z_index = 0
-offset = 0.0
-
 [sub_resource type="Resource" id=145]
-script = ExtResource( 8 )
-begin = 0.0
-end = 0.0
+script = ExtResource( 4 )
+texture_idx = 0
+flip = false
+width = 1.0
 
 [sub_resource type="Resource" id=146]
-script = ExtResource( 6 )
-normal_range = SubResource( 145 )
-weld = true
-render = true
-z_index = 0
-offset = 0.0
+script = ExtResource( 3 )
+position = Vector2( -87.2582, 189.795 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 145 )
 
 [sub_resource type="Resource" id=147]
-script = ExtResource( 8 )
-begin = 0.0
-end = 0.0
+script = ExtResource( 4 )
+texture_idx = 0
+flip = false
+width = 1.0
 
 [sub_resource type="Resource" id=148]
-script = ExtResource( 6 )
-normal_range = SubResource( 147 )
-weld = true
-render = true
-z_index = 0
-offset = 0.0
+script = ExtResource( 3 )
+position = Vector2( -130.517, 103.571 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 147 )
 
 [sub_resource type="Resource" id=149]
 script = ExtResource( 4 )
@@ -1066,7 +1027,7 @@ width = 1.0
 
 [sub_resource type="Resource" id=150]
 script = ExtResource( 3 )
-position = Vector2( -87.2582, 189.795 )
+position = Vector2( -144.898, 186.79 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 149 )
@@ -1079,7 +1040,7 @@ width = 1.0
 
 [sub_resource type="Resource" id=152]
 script = ExtResource( 3 )
-position = Vector2( -130.517, 103.571 )
+position = Vector2( -87.2582, 189.795 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 151 )
@@ -1092,45 +1053,19 @@ width = 1.0
 
 [sub_resource type="Resource" id=154]
 script = ExtResource( 3 )
-position = Vector2( -144.898, 186.79 )
+position = Vector2( -92.4095, 103.141 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 153 )
 
 [sub_resource type="Resource" id=155]
-script = ExtResource( 4 )
-texture_idx = 0
-flip = false
-width = 1.0
-
-[sub_resource type="Resource" id=156]
-script = ExtResource( 3 )
-position = Vector2( -87.2582, 189.795 )
-point_in = Vector2( 0, 0 )
-point_out = Vector2( 0, 0 )
-properties = SubResource( 155 )
-
-[sub_resource type="Resource" id=157]
-script = ExtResource( 4 )
-texture_idx = 0
-flip = false
-width = 1.0
-
-[sub_resource type="Resource" id=158]
-script = ExtResource( 3 )
-position = Vector2( -92.4095, 103.141 )
-point_in = Vector2( 0, 0 )
-point_out = Vector2( 0, 0 )
-properties = SubResource( 157 )
-
-[sub_resource type="Resource" id=159]
 script = ExtResource( 2 )
 _points = {
-0: SubResource( 150 ),
-1: SubResource( 152 ),
-2: SubResource( 154 ),
-3: SubResource( 156 ),
-4: SubResource( 158 )
+0: SubResource( 146 ),
+1: SubResource( 148 ),
+2: SubResource( 150 ),
+3: SubResource( 152 ),
+4: SubResource( 154 )
 }
 _point_order = [ 3, 2, 1, 4, 0 ]
 _constraints = {
@@ -1164,8 +1099,7 @@ collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 83 )
 material_overrides = {
-[ 2, 8 ]: SubResource( 85 ),
-[ 1, 2 ]: SubResource( 87 )
+[ 2, 8 ]: SubResource( 157 )
 }
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D2"]
@@ -1182,10 +1116,7 @@ collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 140 )
 material_overrides = {
-[ 53, 40 ]: SubResource( 148 ),
-[ 28, 29 ]: SubResource( 146 ),
-[ 4, 6 ]: SubResource( 142 ),
-[ 3, 4 ]: SubResource( 144 )
+
 }
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D3"]
@@ -1198,7 +1129,7 @@ z_index = -1
 script = ExtResource( 5 )
 render_edges = false
 shape_material = ExtResource( 1 )
-_points = SubResource( 159 )
+_points = SubResource( 155 )
 material_overrides = {
 
 }

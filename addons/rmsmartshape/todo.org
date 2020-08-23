@@ -3,17 +3,18 @@
 *** TODO Be able to migrate shapes from RMS2D to either shape_open or shape_closed
 ** UI/UX
 *** MATERIAL
-**** TODO Have only valid shape material types be selectable as a resource instead of all resources
-**** CANCELLED Have project scope directory where rms shape materials are stored
-**** CANCELLED Have project scope directory where rms edge materials are stored
-**** CANCELLED Navigate to the project rms materials dir when selecting a material
+**** Need to wait till next Godot version
+***** CANCELLED Have only valid shape material types be selectable as a resource instead of all resources
+***** CANCELLED Have project scope directory where rms shape materials are stored
+***** CANCELLED Have project scope directory where rms edge materials are stored
+***** CANCELLED Navigate to the project rms materials dir when selecting a material
 *** Snapping
 **** CANCELLED Use built in snapping
 **** DONE Use snapping on a global basis, not a local one
 *** DONE Right click context menu when clicking on an edge to select a material for the edge
-**** NEXT Edge Material Selector
-**** NEXT Z_INDEX selector
-**** NEXT Weld toggle
+**** DONE Edge Material Selector
+**** CANCELLED Z_INDEX selector
+**** CANCELLED Weld toggle
 **** DONE Visiblity toggle
 *** Prefab shapes to choose from
 **** TODO Rectangle
@@ -32,7 +33,7 @@
 *** DONE Fix divide-by-0 error when quad is of 0-length
 
 *** TODO Make small vertex movements trigger the undo-redo tree
-*** TODO Make popup windows disappear when addon nodes (shapes) are deslected
+*** TODO Make popup windows disappear when addon nodes (shapes) are deselected
 - Currently, edge and point data windows remain open when switching scenes
 * Design
 ** Basic

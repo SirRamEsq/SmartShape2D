@@ -845,7 +845,6 @@ func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 func _input_handle_mouse_button_event(
 	event: InputEventMouseButton, et: Transform2D, grab_threshold: float
 ) -> bool:
-	var rslt: bool = false
 	var t: Transform2D = et * shape.get_global_transform()
 	var mb: InputEventMouseButton = event
 	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
@@ -857,20 +856,15 @@ func _input_handle_mouse_button_event(
 	#######################################
 	# Mouse Button released
 	if not mb.pressed and mb.button_index == BUTTON_LEFT:
-		if current_action.type == ACTION_VERT.MOVE_VERT:
-			if (
-				current_action.starting_positions[0].distance_to(
-					shape.get_point_position(current_action.keys[0])
-				)
-				> grab_threshold
-			):
-				FUNC.action_move_verticies(self, "update_overlays", undo, shape, current_action)
-				undo_version = undo.get_version()
-				rslt = true
+		var rslt: bool = false
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
 		var _out = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_OUT
-		if _in or _out:
+		if type == ACTION_VERT.MOVE_VERT:
+			FUNC.action_move_verticies(self, "update_overlays", undo, shape, current_action)
+			undo_version = undo.get_version()
+			rslt = true
+		elif _in or _out:
 			FUNC.action_move_control_points(
 				self, "update_overlays", undo, shape, current_action, _in, _out
 			)

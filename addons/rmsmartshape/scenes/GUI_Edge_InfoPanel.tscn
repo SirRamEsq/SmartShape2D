@@ -77,7 +77,7 @@ text = "Material Override"
 [node name="Override" type="VBoxContainer" parent="Container"]
 margin_top = 52.0
 margin_right = 130.0
-margin_bottom = 216.0
+margin_bottom = 160.0
 
 [node name="HSeparator" type="HSeparator" parent="Container/Override"]
 margin_right = 130.0
@@ -91,6 +91,7 @@ pressed = true
 text = "Render"
 
 [node name="Weld" type="CheckBox" parent="Container/Override"]
+visible = false
 margin_top = 36.0
 margin_right = 130.0
 margin_bottom = 60.0
@@ -98,6 +99,7 @@ pressed = true
 text = "Weld"
 
 [node name="Z_Index" type="HBoxContainer" parent="Container/Override"]
+visible = false
 margin_top = 64.0
 margin_right = 130.0
 margin_bottom = 88.0
@@ -114,19 +116,19 @@ margin_bottom = 24.0
 min_value = -100.0
 
 [node name="SetMaterial" type="Button" parent="Container/Override"]
-margin_top = 92.0
+margin_top = 36.0
 margin_right = 130.0
-margin_bottom = 112.0
+margin_bottom = 56.0
 text = "Set Material"
 
 [node name="ClearMaterial" type="Button" parent="Container/Override"]
-margin_top = 116.0
+margin_top = 60.0
 margin_right = 130.0
-margin_bottom = 136.0
+margin_bottom = 80.0
 text = "Clear Material"
 
 [node name="lblMaterial" type="Label" parent="Container/Override"]
-margin_top = 140.0
+margin_top = 84.0
 margin_right = 130.0
-margin_bottom = 164.0
+margin_bottom = 108.0
 text = "[No Material]"
