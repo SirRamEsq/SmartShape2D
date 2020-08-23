@@ -1,9 +1,10 @@
+tool
 extends Resource
 class_name RMS2D_VertexProperties
 
-export (int) var texture_idx: int = 0 setget set_texture_idx
-export (bool) var flip: bool = false setget set_flip
-export (float) var width: float = 1.0 setget set_width
+export (int) var texture_idx: int # setget set_texture_idx
+export (bool) var flip: bool #setget set_flip
+export (float) var width: float #setget set_width
 
 
 func set_texture_idx(i: int):
@@ -43,7 +44,7 @@ func __new() -> RMS2D_VertexProperties:
 	return get_script().new()
 
 
-func equals(other: RMS2D_VertexProperties):
+func equals(other: RMS2D_VertexProperties) -> bool:
 	if other.flip != flip:
 		return false
 	if other.texture_idx != texture_idx:
