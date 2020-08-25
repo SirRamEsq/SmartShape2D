@@ -1459,3 +1459,7 @@ func __new():
 
 func debug_print_points():
 	_points.debug_print()
+
+# Should be overridden by children
+func import_from_legacy(legacy:RMSmartShape2D):
+	pass

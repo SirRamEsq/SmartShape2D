@@ -21,6 +21,7 @@
 **** TODO Circle
 
 ** Functionality
+*** TODO Update SmartShapeAnchor
 *** TODO Ability to combine shapes
 - Combine two rms shape nodes into one
 *** TODO Ability to subtract shapes

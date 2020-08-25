@@ -146,6 +146,10 @@ signal on_dirty_update
 func _init():
 	pass
 
+func _has_minimum_point_count() -> bool:
+	if closed_shape:
+		return get_point_count() >= 3
+	return get_point_count() >= 2
 
 func _ready():
 	if curve == null:
@@ -185,6 +189,8 @@ Will make sure a shape is closed or open after removing / adding / changing a po
 
 
 func fix_close_shape():
+	if not _has_minimum_point_count():
+		return
 	var point_count = get_point_count()
 	var first_point = curve.get_point_position(0)
 	var final_point = curve.get_point_position(point_count - 1)
@@ -511,6 +517,8 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 
 
 func are_points_clockwise() -> bool:
+	if not _has_minimum_point_count():
+		return true
 	var sum = 0.0
 	var point_count = curve.get_point_count()
 	for i in point_count:
@@ -1011,6 +1019,8 @@ func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index
 func get_tessellated_points() -> PoolVector2Array:
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
+	if not _has_minimum_point_count():
+		return PoolVector2Array()
 	var points = curve.tessellate(tessellation_stages)
 	points[0] = curve.get_point_position(0)
 	points[points.size() - 1] = curve.get_point_position(curve.get_point_count() - 1)
