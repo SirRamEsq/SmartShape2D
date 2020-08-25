@@ -187,13 +187,17 @@ func _close_shape() -> bool:
 		return false
 	if not _has_minimum_point_count():
 		return false
+
 	var key_first = _points.get_point_key_at_index(0)
-	# Manually add final point
-	var key_last = _points.add_point(_points.get_point_position(key_first))
+	var key_last = _points.get_point_key_at_index(get_point_count()-1)
+
+	# If points are not the same pos, add new point
+	if get_point_position(key_first) != get_point_position(key_last):
+		key_last = _points.add_point(_points.get_point_position(key_first))
+
 	_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
 	_add_point_update()
 	return true
-
 
 func is_shape_closed() -> bool:
 	var point_count = _points.get_point_count()
@@ -205,6 +209,8 @@ func is_shape_closed() -> bool:
 
 
 func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
+	for i in range(0,verts.size(),1):
+		print("%s | %s" % [i, verts[i]])
 	return .add_points(verts, adjust_add_point_index(starting_index), key)
 
 
@@ -291,3 +297,29 @@ func cache_edges():
 		_edges = _build_edges(shape_material, true)
 	else:
 		_edges = []
+
+func import_from_legacy(legacy:RMSmartShape2D):
+	# Sanity Check
+	if not legacy.closed_shape:
+		push_error("OPEN LEGACY SHAPE WAS SENT TO RMSS2D_SHAPE_CLOSED; ABORTING;")
+		return
+
+	# Properties
+	editor_debug = legacy.editor_debug
+	flip_edges = legacy.flip_edges
+	render_edges = legacy.draw_edges
+	tessellation_stages = legacy.tessellation_stages
+	tessellation_tolerence = legacy.tessellation_tolerence
+	curve_bake_interval = legacy.collision_bake_interval
+	collision_polygon_node_path = legacy.collision_polygon_node
+
+	# Points
+	_points.clear()
+	add_points(legacy.get_vertices())
+	for i in range(0, legacy.get_point_count(), 1):
+		var key = get_point_key_at_index(i)
+		set_point_in(key, legacy.get_point_in(i))
+		set_point_out(key, legacy.get_point_out(i))
+		set_point_texture_index(key, legacy.get_point_texture_index(i))
+		set_point_texture_flip(key, legacy.get_point_texture_flip(i))
+		set_point_width(key, legacy.get_point_width(i))
