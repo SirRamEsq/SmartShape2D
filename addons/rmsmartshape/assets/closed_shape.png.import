@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/open_shape.png-00c8907a986bd46c4e05c37053e60aa8.stex"
+path="res://.import/closed_shape.png-c1d349f5c2caecc40ec65e52f86a8145.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/rmsmartshape/open_shape.png"
-dest_files=[ "res://.import/open_shape.png-00c8907a986bd46c4e05c37053e60aa8.stex" ]
+source_file="res://addons/rmsmartshape/assets/closed_shape.png"
+dest_files=[ "res://.import/closed_shape.png-c1d349f5c2caecc40ec65e52f86a8145.stex" ]
 
 [params]
 

@@ -1,6 +1,6 @@
 tool
 extends RMSS2D_Shape_Base
-class_name RMSS2D_Shape_Open, "../open_shape.png"
+class_name RMSS2D_Shape_Open, "../assets/open_shape.png"
 
 
 #########

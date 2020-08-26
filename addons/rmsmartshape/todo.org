@@ -1,7 +1,4 @@
-* TODO Tidy up directory
-- Put all assets in appropriate assets dir
-- clearly mark legacy files
-- Delete unnecesary scripts
+* TODO Choose project name
 * Features
 ** Migration
 *** TODO Be able to migrate shapes from RMS2D to either shape_open or shape_closed

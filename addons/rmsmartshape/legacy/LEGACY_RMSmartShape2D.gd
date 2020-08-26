@@ -1,6 +1,6 @@
 tool
 extends Node2D
-class_name RMSmartShape2D, "shape.png"
+class_name RMSmartShape2D, "../assets/LEGACY_shape.png"
 
 """
 - This class assumes that points are in clockwise orientation

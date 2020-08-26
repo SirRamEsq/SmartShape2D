@@ -1,7 +1,7 @@
 tool
 extends Node2D
 
-class_name RMSmartShapeAnchor2D, "shape_anchor.png"
+class_name RMSmartShapeAnchor2D, "../assets/LEGACY_shape_anchor.png"
 
 export (NodePath) var monitored_shape setget _set_monitored_shape
 export (int) var track_control_point setget _set_track_control_point

@@ -12,17 +12,17 @@ _global_script_classes=[ {
 "base": "Resource",
 "class": "RMS2D_Material",
 "language": "GDScript",
-"path": "res://addons/rmsmartshape/RMSmartShapeMaterial.gd"
+"path": "res://addons/rmsmartshape/legacy/LEGACY_RMSmartShapeMaterial.gd"
 }, {
 "base": "Reference",
 "class": "RMS2D_VertexProperties",
 "language": "GDScript",
-"path": "res://addons/rmsmartshape/LEGACY_vertex_properties.gd"
+"path": "res://addons/rmsmartshape/legacy/LEGACY_vertex_properties.gd"
 }, {
 "base": "Reference",
 "class": "RMS2D_VertexPropertiesArray",
 "language": "GDScript",
-"path": "res://addons/rmsmartshape/vertex_properties_array.gd"
+"path": "res://addons/rmsmartshape/legacy/LEGACY_vertex_properties_array.gd"
 }, {
 "base": "Node",
 "class": "RMSS2D_Common_Functions",
@@ -107,12 +107,12 @@ _global_script_classes=[ {
 "base": "Node2D",
 "class": "RMSmartShape2D",
 "language": "GDScript",
-"path": "res://addons/rmsmartshape/RMSmartShape2D.gd"
+"path": "res://addons/rmsmartshape/legacy/LEGACY_RMSmartShape2D.gd"
 }, {
 "base": "Node2D",
 "class": "RMSmartShapeAnchor2D",
 "language": "GDScript",
-"path": "res://addons/rmsmartshape/RMSmartShapeAnchor2D.gd"
+"path": "res://addons/rmsmartshape/legacy/LEGACY_RMSmartShapeAnchor2D.gd"
 } ]
 _global_script_class_icons={
 "RMS2D_Material": "",
@@ -130,12 +130,12 @@ _global_script_class_icons={
 "RMSS2D_Quad": "",
 "RMSS2D_Shape_Anchor": "res://addons/rmsmartshape/assets/Anchor.svg",
 "RMSS2D_Shape_Base": "",
-"RMSS2D_Shape_Closed": "res://addons/rmsmartshape/closed_shape.png",
-"RMSS2D_Shape_Open": "res://addons/rmsmartshape/open_shape.png",
+"RMSS2D_Shape_Closed": "res://addons/rmsmartshape/assets/closed_shape.png",
+"RMSS2D_Shape_Open": "res://addons/rmsmartshape/assets/open_shape.png",
 "RMSS2D_Strings": "",
 "RMSS2D_VertexProperties": "",
-"RMSmartShape2D": "res://addons/rmsmartshape/shape.png",
-"RMSmartShapeAnchor2D": "res://addons/rmsmartshape/shape_anchor.png"
+"RMSmartShape2D": "res://addons/rmsmartshape/assets/LEGACY_shape.png",
+"RMSmartShapeAnchor2D": "res://addons/rmsmartshape/assets/LEGACY_shape_anchor.png"
 }
 
 [application]

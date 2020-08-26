@@ -21,7 +21,7 @@ const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
 const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
 const ICON_INTERP_LINEAR = preload("assets/InterpLinear.svg")
 const ICON_SNAP = preload("assets/icon_editor_snap.svg")
-const ICON_IMPORT = preload("closed_shape.png")
+const ICON_IMPORT = preload("assets/closed_shape.png")
 const FUNC = preload("plugin-functionality.gd")
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT }
