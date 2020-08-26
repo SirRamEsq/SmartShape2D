@@ -31,7 +31,7 @@ func set_point_array(a: RMSS2D_Point_Array):
 	property_list_changed_notify()
 
 
-func _has_minimum_point_count() -> bool:
+func has_minimum_point_count() -> bool:
 	return _points.get_point_count() >= 3
 
 
@@ -185,7 +185,7 @@ func _close_shape() -> bool:
 	"""
 	if is_shape_closed():
 		return false
-	if not _has_minimum_point_count():
+	if not has_minimum_point_count():
 		return false
 
 	var key_first = _points.get_point_key_at_index(0)
@@ -201,7 +201,7 @@ func _close_shape() -> bool:
 
 func is_shape_closed() -> bool:
 	var point_count = _points.get_point_count()
-	if not _has_minimum_point_count():
+	if not has_minimum_point_count():
 		return false
 	var key1 = _points.get_point_key_at_index(0)
 	var key2 = _points.get_point_key_at_index(point_count - 1)
@@ -284,7 +284,7 @@ func _on_dirty_update():
 		clear_cached_data()
 		# Close shape
 		_close_shape()
-		if _has_minimum_point_count():
+		if has_minimum_point_count():
 			bake_collision()
 			cache_edges()
 			cache_meshes()

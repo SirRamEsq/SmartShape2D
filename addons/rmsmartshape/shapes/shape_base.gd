@@ -1354,14 +1354,14 @@ func clear_cached_data():
 	_meshes = []
 
 
-func _has_minimum_point_count() -> bool:
+func has_minimum_point_count() -> bool:
 	return get_point_count() >= 2
 
 
 func _on_dirty_update():
 	if _dirty:
 		clear_cached_data()
-		if _has_minimum_point_count():
+		if has_minimum_point_count():
 			bake_collision()
 			cache_edges()
 			cache_meshes()

@@ -19,7 +19,7 @@ func test_change_propagate():
 
 	assert_signal_emit_count(shape_material, "changed", 0)
 
-	shape_material.set_edge_materials([edge_mat_meta_1, edge_mat_meta_2])
+	shape_material.set_edge_meta_materials([edge_mat_meta_1, edge_mat_meta_2])
 	assert_signal_emit_count(shape_material, "changed", 1)
 
 	edge_mat_meta_1.weld = not edge_mat_meta_1.weld

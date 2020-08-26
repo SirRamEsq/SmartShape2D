@@ -1,4 +1,4 @@
-[gd_scene load_steps=163 format=2]
+[gd_scene load_steps=165 format=2]
 
 [ext_resource path="res://demo/materials/shape_material_1.tres" type="Resource" id=1]
 [ext_resource path="res://addons/rmsmartshape/shapes/point_array.gd" type="Script" id=2]
@@ -11,6 +11,8 @@
 [ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=9]
 [ext_resource path="res://addons/rmsmartshape/RMSmartShapeMaterial.gd" type="Script" id=10]
 [ext_resource path="res://addons/rmsmartshape/RMSmartShape2D.gd" type="Script" id=11]
+[ext_resource path="res://addons/rmsmartshape/shapes/shape_anchor.gd" type="Script" id=12]
+[ext_resource path="res://icon.png" type="Texture" id=13]
 
 [sub_resource type="Resource" id=1]
 script = ExtResource( 4 )
@@ -1101,6 +1103,20 @@ collision_extends = 0.0
 
 [node name="Node2D" type="Node2D"]
 
+[node name="RMSmartShapeAnchor2D" type="Node2D" parent="."]
+position = Vector2( -176, -288 )
+rotation = -1.57239
+script = ExtResource( 12 )
+shape_path = NodePath("../StaticBody2D3/RMSS2D_Shape_Open")
+shape_point_index = 12
+shape_point_offset = 0.5
+debug_draw_line_length = 100.0
+
+[node name="Sprite" type="Sprite" parent="RMSmartShapeAnchor2D"]
+position = Vector2( 8, -8 )
+scale = Vector2( 0.25, 0.25 )
+texture = ExtResource( 13 )
+
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 
 [node name="RMSS2D_Shape_Closed" type="Node2D" parent="StaticBody2D"]
@@ -1164,13 +1180,4 @@ material_overrides = {
 script = ExtResource( 11 )
 editor_debug = null
 curve = SubResource( 150 )
-closed_shape = false
-auto_update_collider = false
-tessellation_stages = 5
-tessellation_tolerence = 4
-use_global_space = false
-collision_polygon_node = NodePath("")
-collision_bake_interval = 20
-draw_edges = false
-flip_edges = false
 shape_material = SubResource( 151 )

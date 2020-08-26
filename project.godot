@@ -75,6 +75,11 @@ _global_script_classes=[ {
 "path": "res://addons/rmsmartshape/shapes/quad.gd"
 }, {
 "base": "Node2D",
+"class": "RMSS2D_Shape_Anchor",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/shapes/shape_anchor.gd"
+}, {
+"base": "Node2D",
 "class": "RMSS2D_Shape_Base",
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_base.gd"
@@ -123,6 +128,7 @@ _global_script_class_icons={
 "RMSS2D_Point": "",
 "RMSS2D_Point_Array": "",
 "RMSS2D_Quad": "",
+"RMSS2D_Shape_Anchor": "res://addons/rmsmartshape/assets/Anchor.svg",
 "RMSS2D_Shape_Base": "",
 "RMSS2D_Shape_Closed": "res://addons/rmsmartshape/closed_shape.png",
 "RMSS2D_Shape_Open": "res://addons/rmsmartshape/open_shape.png",
