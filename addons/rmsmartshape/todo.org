@@ -1,3 +1,5 @@
+* TODO Update Sample subdir
+* TODO Update README
 * DONE Choose project name
 - SmartShape2D is Good
 * Features
