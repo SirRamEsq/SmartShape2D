@@ -1,6 +1,6 @@
 tool
-extends RMSS2D_Shape_Base
-class_name RMSS2D_Shape_Open, "../assets/open_shape.png"
+extends SS2D_Shape_Base
+class_name SS2D_Shape_Open, "../assets/open_shape.png"
 
 
 #########
@@ -34,7 +34,7 @@ func import_from_legacy(legacy:RMSmartShape2D):
 		push_error("LEGACY SHAPE IS NULL; ABORTING;")
 		return
 	if legacy.closed_shape:
-		push_error("CLOSED LEGACY SHAPE WAS SENT TO RMSS2D_SHAPE_OPEN; ABORTING;")
+		push_error("CLOSED LEGACY SHAPE WAS SENT TO SS2D_SHAPE_OPEN; ABORTING;")
 		return
 
 	# Properties

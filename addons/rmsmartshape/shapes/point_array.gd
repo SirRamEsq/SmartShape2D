@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_Point_Array
+class_name SS2D_Point_Array
 
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
@@ -80,7 +80,7 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 	var next_key = use_key
 	if next_key == -1 or not is_key_valid(next_key):
 		next_key = _generate_key()
-	var new_point = RMSS2D_Point.new(point)
+	var new_point = SS2D_Point.new(point)
 	new_point.connect("changed", self, "_on_point_changed", [new_point])
 	_points[next_key] = new_point
 	_point_order.push_back(next_key)
@@ -105,7 +105,7 @@ func get_point(key: int) -> int:
 	return _points[key].duplicate(true)
 
 
-func set_point(key: int, value: RMSS2D_Point):
+func set_point(key: int, value: SS2D_Point):
 	if has_point(key):
 		_points[key] = value.duplicate(true)
 
@@ -205,26 +205,26 @@ func get_point_position(key: int) -> Vector2:
 	return Vector2(0, 0)
 
 
-func set_point_properties(key: int, value: RMSS2D_VertexProperties):
+func set_point_properties(key: int, value: SS2D_VertexProperties):
 	if has_point(key):
 		_points[key].properties = value
 
 
-func get_point_properties(key: int) -> RMSS2D_VertexProperties:
+func get_point_properties(key: int) -> SS2D_VertexProperties:
 	if has_point(key):
 		return _points[key].properties.duplicate(true)
-	var new_props = RMSS2D_VertexProperties.new()
+	var new_props = SS2D_VertexProperties.new()
 	return new_props
 
 
-func get_key_from_point(p: RMSS2D_Point) -> int:
+func get_key_from_point(p: SS2D_Point) -> int:
 	for k in _points:
 		if p == _points[k]:
 			return k
 	return -1
 
 
-func _on_point_changed(p: RMSS2D_Point):
+func _on_point_changed(p: SS2D_Point):
 	var key = get_key_from_point(p)
 	if _updating_constraints:
 		_keys_to_update_constraints.push_back(key)

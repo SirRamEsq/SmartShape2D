@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_Material_Shape
+class_name SS2D_Material_Shape
 
 """
 This material represents the set of edge materials used for a RMSmartShape2D
@@ -8,7 +8,7 @@ Each edge represents a set of textures used to render an edge
 """
 
 # List of materials this shape can use
-# Should be RMSS2D_Material_Edge_Metadata
+# Should be SS2D_Material_Edge_Metadata
 export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_meta_materials
 export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
 export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
@@ -48,7 +48,7 @@ func get_all_edge_materials() -> Array:
 	return materials
 
 
-func add_edge_material(e: RMSS2D_Material_Edge_Metadata):
+func add_edge_material(e: SS2D_Material_Edge_Metadata):
 	var new_array = _edge_meta_materials.duplicate()
 	new_array.push_back(e)
 	set_edge_meta_materials(new_array)

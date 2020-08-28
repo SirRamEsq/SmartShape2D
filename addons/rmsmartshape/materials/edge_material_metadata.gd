@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_Material_Edge_Metadata
+class_name SS2D_Material_Edge_Metadata
 
 """
 Represents the metadata for an edge material
@@ -9,7 +9,7 @@ Used by Shape Material
 
 export (Resource) var edge_material = null setget set_edge_material
 # What range of normals can this edge be used on
-export (Resource) var normal_range = RMSS2D_NormalRange.new(0, 360) setget set_normal_range
+export (Resource) var normal_range = SS2D_NormalRange.new(0, 360) setget set_normal_range
 # If edge should be welded to the edges surrounding it
 export (bool) var weld: bool = true setget set_weld
 # If this edge should be visible
@@ -29,7 +29,7 @@ func set_render(b: bool):
 	emit_signal("changed")
 
 
-func set_edge_material(m: RMSS2D_Material_Edge):
+func set_edge_material(m: SS2D_Material_Edge):
 	if edge_material != null:
 		if edge_material.is_connected("changed", self, "_on_edge_changed"):
 			edge_material.disconnect("changed", self, "_on_edge_changed")
@@ -39,7 +39,7 @@ func set_edge_material(m: RMSS2D_Material_Edge):
 	emit_signal("changed")
 
 
-func set_normal_range(nr: RMSS2D_NormalRange):
+func set_normal_range(nr: SS2D_NormalRange):
 	if nr == null:
 		return
 	if normal_range.is_connected("changed", self, "_on_edge_changed"):

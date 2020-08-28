@@ -4,7 +4,7 @@ var TEST_TEXTURE = load("res://gut/unit/test.png")
 
 
 func test_adjust_point_index():
-	var shape = RMSS2D_Shape_Closed.new()
+	var shape = SS2D_Shape_Closed.new()
 	add_child_autofree(shape)
 	var points = get_clockwise_points()
 	var keys = []
@@ -20,7 +20,7 @@ func test_adjust_point_index():
 
 
 func test_add_points():
-	var shape = RMSS2D_Shape_Closed.new()
+	var shape = SS2D_Shape_Closed.new()
 	add_child_autofree(shape)
 	var points = get_clockwise_points()
 

@@ -13,17 +13,17 @@ et = editor transform (viewport's canvas transform)
 # VERTS #
 #########
 static func get_intersecting_control_point_in(
-	s: RMSS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
+	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
 ) -> Array:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, true)
 
 static func get_intersecting_control_point_out(
-	s: RMSS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
+	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
 ) -> Array:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, false)
 
 static func _get_intersecting_control_point(
-	s: RMSS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float, _in: bool
+	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float, _in: bool
 ) -> Array:
 	var points = []
 	var xform: Transform2D = et * s.get_global_transform()
@@ -51,7 +51,7 @@ static func action_set_pivot(
 	update_node: Node,
 	update_method: String,
 	undo: UndoRedo,
-	s: RMSS2D_Shape_Base,
+	s: SS2D_Shape_Base,
 	et: Transform2D,
 	pos: Vector2
 ):
@@ -64,7 +64,7 @@ static func action_set_pivot(
 	undo.commit_action()
 
 static func action_move_verticies(
-	update_node: Node, update_method: String, undo: UndoRedo, s: RMSS2D_Shape_Base, action
+	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, action
 ):
 	undo.create_action("Move Vertex")
 
@@ -84,7 +84,7 @@ static func action_move_control_points(
 	update_node: Node,
 	update_method: String,
 	undo: UndoRedo,
-	s: RMSS2D_Shape_Base,
+	s: SS2D_Shape_Base,
 	action,
 	_in: bool,
 	_out: bool
@@ -111,7 +111,7 @@ static func action_move_control_points(
 	undo.commit_action()
 
 static func action_delete_point_in(
-	update_node: Node, update_method: String, undo: UndoRedo, s: RMSS2D_Shape_Base, key: int
+	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, key: int
 ):
 	var from_position_in = s.get_point_in(key)
 	undo.create_action("Delete Control Point In")
@@ -126,7 +126,7 @@ static func action_delete_point_in(
 	action_invert_orientation(update_node, update_method, undo, s)
 
 static func action_delete_point_out(
-	update_node: Node, update_method: String, undo: UndoRedo, s: RMSS2D_Shape_Base, key: int
+	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, key: int
 ):
 	var from_position_out = s.get_point_out(key)
 	undo.create_action("Delete Control Point Out")
@@ -140,21 +140,21 @@ static func action_delete_point_out(
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
 
-static func get_constrained_points_to_delete(s: RMSS2D_Shape_Base, k: int, keys = []):
+static func get_constrained_points_to_delete(s: SS2D_Shape_Base, k: int, keys = []):
 	keys.push_back(k)
 	var constraints = s.get_point_constraints(k)
 	for tuple in constraints:
 		var constraint = constraints[tuple]
-		if constraint == RMSS2D_Point_Array.CONSTRAINT.NONE:
+		if constraint == SS2D_Point_Array.CONSTRAINT.NONE:
 			continue
-		var k2 = RMSS2D_Point_Array.get_other_value_from_tuple(tuple, k)
-		if constraint & RMSS2D_Point_Array.CONSTRAINT.ALL:
+		var k2 = SS2D_Point_Array.get_other_value_from_tuple(tuple, k)
+		if constraint & SS2D_Point_Array.CONSTRAINT.ALL:
 			if not keys.has(k2):
 				get_constrained_points_to_delete(s, k2, keys)
 	return keys
 
 static func action_delete_point(
-	update_node: Node, update_method: String, undo: UndoRedo, s: RMSS2D_Shape_Base, first_key: int
+	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, first_key: int
 ):
 	var dupe = s.get_point_array().duplicate(true)
 	var keys = get_constrained_points_to_delete(s, first_key)
@@ -173,7 +173,7 @@ static func action_add_point(
 	update_node: Node,
 	update_method: String,
 	undo: UndoRedo,
-	s: RMSS2D_Shape_Base,
+	s: SS2D_Shape_Base,
 	new_point: Vector2
 ) -> int:
 	"""
@@ -197,7 +197,7 @@ static func action_split_curve(
 	update_node: Node,
 	update_method: String,
 	undo: UndoRedo,
-	s: RMSS2D_Shape_Base,
+	s: SS2D_Shape_Base,
 	idx: int,
 	gpoint: Vector2,
 	xform: Transform2D
@@ -221,15 +221,15 @@ static func action_split_curve(
 	action_invert_orientation(update_node, update_method, undo, s)
 	return key
 
-static func should_invert_orientation(s: RMSS2D_Shape_Base) -> bool:
+static func should_invert_orientation(s: SS2D_Shape_Base) -> bool:
 	if s == null:
 		return false
-	if s is RMSS2D_Shape_Open:
+	if s is SS2D_Shape_Open:
 		return false
 	return not s.are_points_clockwise() and s.get_point_count() >= 3
 
 static func action_invert_orientation(
-	update_node: Node, update_method: String, undo: UndoRedo, s: RMSS2D_Shape_Base
+	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base
 ) -> bool:
 	"""
 	Will reverse the orientation of the shape verticies

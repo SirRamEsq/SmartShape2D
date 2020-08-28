@@ -12,7 +12,7 @@ class z_sort:
 
 func test_z_sort():
 	var a = [z_sort.new(3), z_sort.new(5), z_sort.new(0), z_sort.new(-12)]
-	a = RMSS2D_Shape_Base.sort_by_z_index(a)
+	a = SS2D_Shape_Base.sort_by_z_index(a)
 	assert_eq(a[0].z_index, -12)
 	assert_eq(a[1].z_index, 0)
 	assert_eq(a[2].z_index, 3)
@@ -25,21 +25,21 @@ func test_on_segment():
 	var p3 = Vector2(100, 0)
 	var p4 = Vector2(100, 10)
 	var p5 = Vector2(100, 20)
-	assert_true(RMSS2D_Shape_Base.on_segment(p2, p1, p3))
-	assert_false(RMSS2D_Shape_Base.on_segment(p2, p3, p1))
-	assert_false(RMSS2D_Shape_Base.on_segment(p1, p2, p3))
-	assert_false(RMSS2D_Shape_Base.on_segment(p1, p3, p2))
-	assert_false(RMSS2D_Shape_Base.on_segment(p3, p2, p1))
-	assert_true(RMSS2D_Shape_Base.on_segment(p3, p1, p2))
+	assert_true(SS2D_Shape_Base.on_segment(p2, p1, p3))
+	assert_false(SS2D_Shape_Base.on_segment(p2, p3, p1))
+	assert_false(SS2D_Shape_Base.on_segment(p1, p2, p3))
+	assert_false(SS2D_Shape_Base.on_segment(p1, p3, p2))
+	assert_false(SS2D_Shape_Base.on_segment(p3, p2, p1))
+	assert_true(SS2D_Shape_Base.on_segment(p3, p1, p2))
 
-	assert_true(RMSS2D_Shape_Base.on_segment(p3, p4, p5))
-	assert_false(RMSS2D_Shape_Base.on_segment(p3, p5, p4))
+	assert_true(SS2D_Shape_Base.on_segment(p3, p4, p5))
+	assert_false(SS2D_Shape_Base.on_segment(p3, p5, p4))
 
-	assert_true(RMSS2D_Shape_Base.on_segment(p1, p1, p1))
+	assert_true(SS2D_Shape_Base.on_segment(p1, p1, p1))
 
 
 func test_are_points_clockwise():
-	var shape = RMSS2D_Shape_Base.new()
+	var shape = SS2D_Shape_Base.new()
 	add_child_autofree(shape)
 	var points_clockwise = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
 	var points_c_clockwise = points_clockwise.duplicate()
@@ -54,7 +54,7 @@ func test_are_points_clockwise():
 
 
 func test_curve_duplicate():
-	var shape = RMSS2D_Shape_Base.new()
+	var shape = SS2D_Shape_Base.new()
 	add_child_autofree(shape)
 	shape.add_point(Vector2(-10, -20))
 	var points = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
@@ -73,7 +73,7 @@ func test_curve_duplicate():
 
 
 func test_tess_point_vertex_relationship():
-	var shape_base = RMSS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 
@@ -118,7 +118,7 @@ func test_tess_point_vertex_relationship():
 
 
 func test_invert_point_order():
-	var shape_base = RMSS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 	var size = points.size()
@@ -147,7 +147,7 @@ func test_invert_point_order():
 
 
 #func test_duplicate():
-#var shape_base = RMSS2D_Shape_Base.new()
+#var shape_base = SS2D_Shape_Base.new()
 #add_child_autofree(shape_base)
 #var points = get_clockwise_points()
 #shape_base.add_points(points)
@@ -179,19 +179,19 @@ func test_invert_point_order():
 
 
 func test_get_edge_meta_materials_one():
-	var shape_base = RMSS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
-	var edge_mat = RMSS2D_Material_Edge.new()
+	var edge_mat = SS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
 
-	var edge_mat_meta = RMSS2D_Material_Edge_Metadata.new()
-	var normal_range = RMSS2D_NormalRange.new(0, 360.0)
+	var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
+	var normal_range = SS2D_NormalRange.new(0, 360.0)
 	edge_mat_meta.edge_material = edge_mat
 	edge_mat_meta.normal_range = normal_range
 	assert_not_null(edge_mat_meta.edge_material)
 
-	var s_m = RMSS2D_Material_Shape.new()
+	var s_m = SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials([edge_mat_meta])
 	for e in s_m.get_edge_meta_materials(Vector2(1, 0)):
 		assert_not_null(e)
@@ -212,29 +212,29 @@ func test_get_edge_meta_materials_one():
 
 
 func test_get_edge_meta_materials_many():
-	var shape_base = RMSS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
 	var edge_materials_count = 4
 	var edge_materials = []
 	var edge_materials_meta = []
 	for i in range(0, edge_materials_count, 1):
-		var edge_mat = RMSS2D_Material_Edge.new()
+		var edge_mat = SS2D_Material_Edge.new()
 		edge_materials.push_back(edge_mat)
 		edge_mat.textures = [TEST_TEXTURE]
 
-		var edge_mat_meta = RMSS2D_Material_Edge_Metadata.new()
+		var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
 		edge_materials_meta.push_back(edge_mat_meta)
 		var division = 360.0 / edge_materials_count
 		var offset = -45
-		var normal_range = RMSS2D_NormalRange.new(
+		var normal_range = SS2D_NormalRange.new(
 			(division * i) + offset, (division * (i + 1)) + offset
 		)
 		edge_mat_meta.edge_material = edge_mat
 		edge_mat_meta.normal_range = normal_range
 		assert_not_null(edge_mat_meta.edge_material)
 
-	var s_m = RMSS2D_Material_Shape.new()
+	var s_m = SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials(edge_materials_meta)
 	var n_right = Vector2(1, 0)
 	var n_left = Vector2(-1, 0)
@@ -265,10 +265,10 @@ var scale_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
 
 
 func test_build_quad_from_point(scale = use_parameters(scale_params)):
-	var shape_base = RMSS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 
-	var edge_mat = RMSS2D_Material_Edge.new()
+	var edge_mat = SS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
 
 	var start_point_1 = Vector2(100, 150)
@@ -310,21 +310,21 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 
 
 func test_get_edge_material_data():
-	var shape_base = RMSS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Base.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 	shape_base.add_points(points)
 
 	# One edge material that applies to all 360 degrees
-	var edge_mat = RMSS2D_Material_Edge.new()
+	var edge_mat = SS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
-	var edge_mat_meta = RMSS2D_Material_Edge_Metadata.new()
-	var normal_range = RMSS2D_NormalRange.new(0, 360.0)
+	var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
+	var normal_range = SS2D_NormalRange.new(0, 360.0)
 	edge_mat_meta.edge_material = edge_mat
 	edge_mat_meta.normal_range = normal_range
 	assert_not_null(edge_mat_meta.edge_material)
 
-	var s_m = RMSS2D_Material_Shape.new()
+	var s_m = SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials([edge_mat_meta])
 	# Sanity Check
 	for e in s_m.get_edge_meta_materials(Vector2(1, 0)):
@@ -339,7 +339,7 @@ func test_get_edge_material_data():
 	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
 
 	# Add Override that shouldn't be rendered
-	var override_mat = RMSS2D_Material_Edge_Metadata.new()
+	var override_mat = SS2D_Material_Edge_Metadata.new()
 	override_mat.render = false
 	var keys = [shape_base.get_point_key_at_index(1), shape_base.get_point_key_at_index(2)]
 	shape_base.set_material_override(keys, override_mat)
@@ -350,7 +350,7 @@ func test_get_edge_material_data():
 	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
 
 	# Add Override that shouldn't be rendered
-	override_mat = RMSS2D_Material_Edge_Metadata.new()
+	override_mat = SS2D_Material_Edge_Metadata.new()
 	override_mat.render = false
 	keys = [shape_base.get_point_key_at_index(3), shape_base.get_point_key_at_index(4)]
 	shape_base.set_material_override(keys, override_mat)

@@ -5,7 +5,7 @@ var PLUGIN = load("res://addons/rmsmartshape/plugin.gd")
 
 
 func test_intersect_control_point():
-	var shape = RMSS2D_Shape_Closed.new()
+	var shape = SS2D_Shape_Closed.new()
 	add_child_autofree(shape)
 	var vert_p = Vector2(100, 100)
 	var key = shape.add_point(vert_p)
@@ -43,7 +43,7 @@ func test_intersect_control_point():
 
 
 func test_snapping():
-	var shape = RMSS2D_Shape_Closed.new()
+	var shape = SS2D_Shape_Closed.new()
 	var identity = Transform2D.IDENTITY
 	var step = Vector2(8, 8)
 	add_child_autofree(shape)

@@ -21,7 +21,7 @@ func test_delete_point_async():
 	var shapes = []
 	var shape_count = 10
 	for _i in range(0, shape_count, 1):
-		var shape = RMSS2D_Shape_Closed.new()
+		var shape = SS2D_Shape_Closed.new()
 		add_child_autofree(shape)
 		shapes.push_back(shape)
 
@@ -38,7 +38,7 @@ func test_delete_point_async():
 func undo_update_method():
 	pass
 
-func delete_closed_test(shape: RMSS2D_Shape_Closed, i: int = 0):
+func delete_closed_test(shape: SS2D_Shape_Closed, i: int = 0):
 	var undo = UndoRedo.new()
 	var points = get_clockwise_points()
 	var keys = []

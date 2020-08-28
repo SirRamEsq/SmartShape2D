@@ -3,7 +3,7 @@ extends "res://addons/gut/test.gd"
 
 func test_import_open():
 	var legacy = generate_legacy_shape(false)
-	var new_shape = RMSS2D_Shape_Open.new()
+	var new_shape = SS2D_Shape_Open.new()
 	add_child_autofree(new_shape)
 	new_shape.editor_debug = false
 
@@ -41,7 +41,7 @@ func test_import_open():
 
 func test_import_closed():
 	var legacy = generate_legacy_shape(true)
-	var new_shape = RMSS2D_Shape_Closed.new()
+	var new_shape = SS2D_Shape_Closed.new()
 	add_child_autofree(new_shape)
 	new_shape.editor_debug = false
 

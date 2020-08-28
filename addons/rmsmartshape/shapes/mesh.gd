@@ -1,6 +1,6 @@
 tool
 extends Reference
-class_name RMSS2D_Mesh
+class_name SS2D_Mesh
 
 """
 Used to organize all requested meshes to be rendered by their textures

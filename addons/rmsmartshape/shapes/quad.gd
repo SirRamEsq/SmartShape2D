@@ -1,6 +1,6 @@
 tool
 extends Reference
-class_name RMSS2D_Quad
+class_name SS2D_Quad
 
 enum CORNER { NONE = 0, OUTER, INNER }
 
@@ -25,7 +25,7 @@ func _to_string() -> String:
 	return "[Quad] A:%s B:%s C:%s D:%s" % [pt_a, pt_b, pt_c, pt_d]
 
 
-func duplicate() -> RMSS2D_Quad:
+func duplicate() -> SS2D_Quad:
 	var q = __new()
 	q.pt_a = pt_a
 	q.pt_b = pt_b
@@ -63,7 +63,7 @@ func _init(
 
 
 func get_rotation() -> float:
-	return RMSS2D_NormalRange.get_angle_from_vector(pt_c - pt_a)
+	return SS2D_NormalRange.get_angle_from_vector(pt_c - pt_a)
 
 
 func get_length() -> float:

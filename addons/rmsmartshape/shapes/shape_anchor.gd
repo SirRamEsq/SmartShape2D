@@ -3,7 +3,7 @@ extends Node2D
 
 const DEBUG_DRAW_LINE_LENGTH = 128.0
 
-class_name RMSS2D_Shape_Anchor, "../assets/Anchor.svg"
+class_name SS2D_Shape_Anchor, "../assets/Anchor.svg"
 
 export (NodePath) var shape_path: NodePath setget set_shape_path
 export (int) var shape_point_index: int = 0 setget set_shape_point_index
@@ -37,8 +37,8 @@ func set_shape():
 	shape = null
 	if has_node(shape_path):
 		var new_node = get_node(shape_path)
-		if not new_node is RMSS2D_Shape_Base:
-			push_error("Shape Path isn't a valid subtype of RMSS2D_Shape_Base! Aborting...")
+		if not new_node is SS2D_Shape_Base:
+			push_error("Shape Path isn't a valid subtype of SS2D_Shape_Base! Aborting...")
 			return
 		shape = new_node
 		connect_shape(shape)
@@ -46,7 +46,7 @@ func set_shape():
 
 
 
-func get_shape_index_range(s:RMSS2D_Shape_Base, idx:int)->int:
+func get_shape_index_range(s:SS2D_Shape_Base, idx:int)->int:
 	var point_count = s.get_point_count()
 	# Subtract 2;
 	#   'point_count' is out of bounds; subtract 1
@@ -131,12 +131,12 @@ func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float)
 	return s
 
 
-func disconnect_shape(s: RMSS2D_Shape_Base):
+func disconnect_shape(s: SS2D_Shape_Base):
 	s.disconnect("points_modified", self, "_handle_point_change")
 	s.disconnect("tree_exiting", self, "_monitored_node_leaving")
 
 
-func connect_shape(s: RMSS2D_Shape_Base):
+func connect_shape(s: SS2D_Shape_Base):
 	s.connect("points_modified", self, "_handle_point_change")
 	s.connect("tree_exiting", self, "_monitored_node_leaving")
 

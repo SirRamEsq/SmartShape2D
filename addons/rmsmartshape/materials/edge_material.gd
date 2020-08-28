@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_Material_Edge
+class_name SS2D_Material_Edge
 
 """
 This material represents the set of textures used for a single edge

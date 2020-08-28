@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_NormalRange
+class_name SS2D_NormalRange
 """
 This class will determine if the normal of a vector falls within the specifed angle ranges
 - if begin and end are equal, any angle is considered to be within range

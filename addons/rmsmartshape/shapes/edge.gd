@@ -1,13 +1,13 @@
 tool
 extends Reference
-class_name RMSS2D_Edge
+class_name SS2D_Edge
 
 var quads: Array = []
 var first_point_key:int = -1
 var last_point_key:int = -1
 var z_index: int = 0
 
-static func different_render(q1: RMSS2D_Quad, q2: RMSS2D_Quad) -> bool:
+static func different_render(q1: SS2D_Quad, q2: SS2D_Quad) -> bool:
 	"""
 	Will return true if the 2 quads must be drawn in two calls
 	"""
@@ -82,7 +82,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
 				)
 		st.add_color(q.color)
-		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_a))
+		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
 		if tex != null:
@@ -93,7 +93,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 1)
 				)
 		st.add_color(q.color)
-		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_b))
+		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
 		if tex != null:
@@ -113,7 +113,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 					)
 				)
 		st.add_color(q.color)
-		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_c))
+		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
 		if tex != null:
@@ -124,7 +124,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 					st, Vector2((total_length * change_in_length - length) / tex.get_size().x, 0)
 				)
 		st.add_color(q.color)
-		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_a))
+		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
 		if tex != null:
@@ -144,7 +144,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 					)
 				)
 		st.add_color(q.color)
-		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_c))
+		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
 		if tex != null:
@@ -164,7 +164,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 					)
 				)
 		st.add_color(q.color)
-		st.add_vertex(RMSS2D_Common_Functions.to_vector3(q.pt_d))
+		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
 		length += section_length
 
 	st.index()
@@ -174,7 +174,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 
 func get_meshes() -> Array:
 	"""
-	Returns an array of RMSS2D_Mesh
+	Returns an array of SS2D_Mesh
 	# Get Arrays of consecutive quads with the same mesh data
 	# For each array
 	## Generate Mesh Data from the quad
@@ -191,7 +191,7 @@ func get_meshes() -> Array:
 		var tex_normal: Texture = consecutive_quads[0].texture_normal
 		var flip = consecutive_quads[0].flip_texture
 		var transform = Transform2D()
-		var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+		var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
 		meshes.push_back(mesh_data)
 
 	return meshes

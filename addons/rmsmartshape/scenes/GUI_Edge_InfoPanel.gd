@@ -63,8 +63,8 @@ func _on_set_edge_material_pressed():
 
 func _on_set_edge_material_file_selected(f: String):
 	var rsc = load(f)
-	if not rsc is RMSS2D_Material_Edge:
-		push_error("Selected resource is not an Edge Material! (RMSS2D_Material_Edge)")
+	if not rsc is SS2D_Material_Edge:
+		push_error("Selected resource is not an Edge Material! (SS2D_Material_Edge)")
 		return
 	set_edge_material(rsc)
 
@@ -92,7 +92,7 @@ func set_weld(enabled: bool, emit: bool = true):
 		_on_toggle_weld(enabled)
 
 
-func set_edge_material(v: RMSS2D_Material_Edge, emit: bool = true):
+func set_edge_material(v: SS2D_Material_Edge, emit: bool = true):
 	edge_material = v
 	if v == null:
 		get_node(p_lbl_edge_material).text = "[No Material]"
@@ -141,14 +141,14 @@ func _on_set_z_index(v: float):
 	emit_signal("set_z_index", int(v))
 
 
-func load_values_from_meta_material(meta_mat: RMSS2D_Material_Edge_Metadata):
+func load_values_from_meta_material(meta_mat: SS2D_Material_Edge_Metadata):
 	set_render(meta_mat.render)
 	set_weld(meta_mat.weld)
 	set_z_index(meta_mat.z_index)
 	set_edge_material(meta_mat.edge_material)
 
 
-func save_values_to_meta_material(meta_mat: RMSS2D_Material_Edge_Metadata):
+func save_values_to_meta_material(meta_mat: SS2D_Material_Edge_Metadata):
 	meta_mat.render = get_render()
 	meta_mat.weld = get_weld()
 	meta_mat.z_index = get_z_index()

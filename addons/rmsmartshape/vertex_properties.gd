@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_VertexProperties
+class_name SS2D_VertexProperties
 
 export (int) var texture_idx: int # setget set_texture_idx
 export (bool) var flip: bool #setget set_flip
@@ -40,11 +40,11 @@ func duplicate(sub_resources: bool = false):
 
 
 # Workaround (class cannot reference itself)
-func __new() -> RMSS2D_VertexProperties:
+func __new() -> SS2D_VertexProperties:
 	return get_script().new()
 
 
-func equals(other: RMSS2D_VertexProperties) -> bool:
+func equals(other: SS2D_VertexProperties) -> bool:
 	if other.flip != flip:
 		return false
 	if other.texture_idx != texture_idx:

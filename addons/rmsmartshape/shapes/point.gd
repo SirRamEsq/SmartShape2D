@@ -1,6 +1,6 @@
 tool
 extends Resource
-class_name RMSS2D_Point
+class_name SS2D_Point
 
 export (Vector2) var position: Vector2 setget _set_position
 export (Vector2) var point_in: Vector2 setget _set_point_in
@@ -16,10 +16,10 @@ func _init(pos: Vector2 = Vector2(0, 0)):
 	position = pos
 	point_in = Vector2(0, 0)
 	point_out = Vector2(0, 0)
-	properties = RMSS2D_VertexProperties.new()
+	properties = SS2D_VertexProperties.new()
 
 
-func equals(other: RMSS2D_Point) -> bool:
+func equals(other: SS2D_Point) -> bool:
 	if position != other.position:
 		return false
 	if point_in != other.point_in:
@@ -65,7 +65,7 @@ func _set_point_out(v: Vector2):
 	property_list_changed_notify()
 
 
-func _set_properties(other:RMSS2D_VertexProperties):
+func _set_properties(other:SS2D_VertexProperties):
 	if not properties.equals(other):
 		properties = other.duplicate(true)
 		emit_signal("changed")
@@ -73,5 +73,5 @@ func _set_properties(other:RMSS2D_VertexProperties):
 
 
 # Workaround (class cannot reference itself)
-func __new() -> RMSS2D_Point:
+func __new() -> SS2D_Point:
 	return get_script().new()

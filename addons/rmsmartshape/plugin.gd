@@ -67,7 +67,7 @@ class ActionDataVert:
 			return -1
 		return keys[0]
 
-	func current_point_index(s: RMSS2D_Shape_Base) -> int:
+	func current_point_index(s: SS2D_Shape_Base) -> int:
 		if not is_single_vert_selected():
 			return -1
 		return s.get_point_index(keys[0])
@@ -101,7 +101,7 @@ var tb_snap_popup: PopupMenu = null
 # Edge Stuff
 var on_edge: bool = false
 var edge_point: Vector2
-var edge_data: RMSS2D_Edge = null
+var edge_data: SS2D_Edge = null
 
 # Track our mode of operation
 var current_mode: int = MODE.EDIT_VERT
@@ -150,7 +150,7 @@ func _gui_build_toolbar():
 	tb_import.icon = ICON_IMPORT_CLOSED
 	tb_import.toggle_mode = false
 	tb_import.pressed = false
-	tb_import.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_IMPORT
+	tb_import.hint_tooltip = SS2D_Strings.EN_TOOLTIP_IMPORT
 	tb_import.connect("pressed", self, "_import_legacy")
 	tb_hb_legacy_import.add_child(tb_import)
 
@@ -162,7 +162,7 @@ func _gui_build_toolbar():
 	tb_vert_edit.toggle_mode = true
 	tb_vert_edit.pressed = true
 	tb_vert_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT_VERT])
-	tb_vert_edit.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_EDIT_VERT
+	tb_vert_edit.hint_tooltip = SS2D_Strings.EN_TOOLTIP_EDIT_VERT
 	tb_hb.add_child(tb_vert_edit)
 
 	tb_edge_edit = ToolButton.new()
@@ -170,7 +170,7 @@ func _gui_build_toolbar():
 	tb_edge_edit.toggle_mode = true
 	tb_edge_edit.pressed = false
 	tb_edge_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT_EDGE])
-	tb_edge_edit.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_EDIT_EDGE
+	tb_edge_edit.hint_tooltip = SS2D_Strings.EN_TOOLTIP_EDIT_EDGE
 	tb_hb.add_child(tb_edge_edit)
 
 	tb_pivot = ToolButton.new()
@@ -178,19 +178,19 @@ func _gui_build_toolbar():
 	tb_pivot.toggle_mode = true
 	tb_pivot.pressed = false
 	tb_pivot.connect("pressed", self, "_enter_mode", [MODE.SET_PIVOT])
-	tb_pivot.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_PIVOT
+	tb_pivot.hint_tooltip = SS2D_Strings.EN_TOOLTIP_PIVOT
 	tb_hb.add_child(tb_pivot)
 
 	tb_collision = ToolButton.new()
 	tb_collision.icon = ICON_COLLISION
 	tb_collision.toggle_mode = false
 	tb_collision.pressed = false
-	tb_collision.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_COLLISION
+	tb_collision.hint_tooltip = SS2D_Strings.EN_TOOLTIP_COLLISION
 	tb_collision.connect("pressed", self, "_add_collision")
 	tb_hb.add_child(tb_collision)
 
 	tb_snap = MenuButton.new()
-	tb_snap.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_SNAP
+	tb_snap.hint_tooltip = SS2D_Strings.EN_TOOLTIP_SNAP
 	tb_snap_popup = tb_snap.get_popup()
 	tb_snap.icon = ICON_SNAP
 	tb_snap_popup.add_check_item("Snapping Enabled?")
@@ -347,7 +347,7 @@ func handles(object):
 		return false
 
 	var rslt: bool = (
-		object is RMSS2D_Shape_Base
+		object is SS2D_Shape_Base
 		or object is RMSmartShape2D
 	)
 	return rslt
@@ -470,11 +470,11 @@ func _import_legacy_impl():
 	# Make new shape and set values
 	var new_shape = null
 	if legacy_shape.closed_shape:
-		new_shape = RMSS2D_Shape_Closed.new()
-		new_shape.name = "RMSS2D_Shape_Closed"
+		new_shape = SS2D_Shape_Closed.new()
+		new_shape.name = "SS2D_Shape_Closed"
 	else:
-		new_shape = RMSS2D_Shape_Open.new()
-		new_shape.name = "RMSS2D_Shape_Open"
+		new_shape = SS2D_Shape_Open.new()
+		new_shape.name = "SS2D_Shape_Open"
 	new_shape.import_from_legacy(legacy_shape)
 	new_shape.transform = legacy_shape.transform
 
@@ -514,7 +514,7 @@ func connect_shape(s):
 		if not s.is_connected("on_closed_change", self, "_on_legacy_closed_changed"):
 			s.connect("on_closed_change", self, "_on_legacy_closed_changed")
 
-static func get_material_override_from_indicies(shape: RMSS2D_Shape_Base, indicies: Array):
+static func get_material_override_from_indicies(shape: SS2D_Shape_Base, indicies: Array):
 	var keys = []
 	for i in indicies:
 		keys.push_back(shape.get_point_key_at_index(i))
@@ -541,7 +541,7 @@ func _on_set_edge_material_override_z_index(z: int):
 		override.z_index = z
 
 
-func _on_set_edge_material(m: RMSS2D_Material_Edge):
+func _on_set_edge_material(m: SS2D_Material_Edge):
 	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
 	if override != null:
 		override.edge_material = m
@@ -562,7 +562,7 @@ func _on_set_edge_material_override(enabled: bool):
 
 	if enabled:
 		if override == null:
-			override = RMSS2D_Material_Edge_Metadata.new()
+			override = SS2D_Material_Edge_Metadata.new()
 			override.edge_material = null
 			shape.set_material_override(keys, override)
 
@@ -591,7 +591,7 @@ func get_et() -> Transform2D:
 	return get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 
 
-static func is_key_valid(s: RMSS2D_Shape_Base, key: int) -> bool:
+static func is_key_valid(s: SS2D_Shape_Base, key: int) -> bool:
 	if not is_shape_valid(s):
 		return false
 	return s.has_point(key)

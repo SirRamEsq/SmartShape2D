@@ -5,7 +5,7 @@ func test_setters():
 	var wrong_node = Node2D.new()
 	add_child_autofree(wrong_node)
 	var shapes = [generate_closed_shape(), generate_open_shape()]
-	var anchor = RMSS2D_Shape_Anchor.new()
+	var anchor = SS2D_Shape_Anchor.new()
 	add_child_autofree(anchor)
 
 	# Test bad path
@@ -50,8 +50,8 @@ func test_setters():
 		assert_eq(anchor.shape_point_index, points.size() - 2)
 
 
-func generate_closed_shape() -> RMSS2D_Shape_Closed:
-	var shape = RMSS2D_Shape_Closed.new()
+func generate_closed_shape() -> SS2D_Shape_Closed:
+	var shape = SS2D_Shape_Closed.new()
 	shape.name = "Closed"
 	add_child_autofree(shape)
 	var points = generate_points()
@@ -60,8 +60,8 @@ func generate_closed_shape() -> RMSS2D_Shape_Closed:
 	return shape
 
 
-func generate_open_shape() -> RMSS2D_Shape_Open:
-	var shape = RMSS2D_Shape_Open.new()
+func generate_open_shape() -> SS2D_Shape_Open:
+	var shape = SS2D_Shape_Open.new()
 	shape.name = "Open"
 	add_child_autofree(shape)
 	var points = generate_points()

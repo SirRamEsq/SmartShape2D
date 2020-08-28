@@ -1,6 +1,6 @@
 tool
-extends RMSS2D_Shape_Base
-class_name RMSS2D_Shape_Closed, "../assets/closed_shape.png"
+extends SS2D_Shape_Base
+class_name SS2D_Shape_Closed, "../assets/closed_shape.png"
 
 
 #########
@@ -22,7 +22,7 @@ func remove_point(key: int):
 	emit_signal("points_modified")
 
 
-func set_point_array(a: RMSS2D_Point_Array):
+func set_point_array(a: SS2D_Point_Array):
 	_points = a.duplicate(true)
 	_close_shape()
 	clear_cached_data()
@@ -117,7 +117,7 @@ static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vec
 	return Vector2(a1.x + ua * (a2.x - a1.x), a1.y + ua * (a2.y - a1.y))
 
 
-func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
+func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	var meshes = []
 	if s_mat == null:
 		return meshes
@@ -171,7 +171,7 @@ func _build_fill_mesh(points: Array, s_mat: RMSS2D_Material_Shape) -> Array:
 	var array_mesh = st.commit()
 	var flip = false
 	var transform = Transform2D()
-	var mesh_data = RMSS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+	var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
 	meshes.push_back(mesh_data)
 
 	return meshes
@@ -195,7 +195,7 @@ func _close_shape() -> bool:
 	if get_point_position(key_first) != get_point_position(key_last):
 		key_last = _points.add_point(_points.get_point_position(key_first))
 
-	_points.set_constraint(key_first, key_last, RMSS2D_Point_Array.CONSTRAINT.ALL)
+	_points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
 	_add_point_update()
 	return true
 
@@ -205,7 +205,7 @@ func is_shape_closed() -> bool:
 		return false
 	var key1 = _points.get_point_key_at_index(0)
 	var key2 = _points.get_point_key_at_index(point_count - 1)
-	return get_point_constraint(key1, key2) == RMSS2D_Point_Array.CONSTRAINT.ALL
+	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
 
 
 func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
@@ -304,7 +304,7 @@ func import_from_legacy(legacy:RMSmartShape2D):
 		push_error("LEGACY SHAPE IS NULL; ABORTING;")
 		return
 	if not legacy.closed_shape:
-		push_error("OPEN LEGACY SHAPE WAS SENT TO RMSS2D_SHAPE_CLOSED; ABORTING;")
+		push_error("OPEN LEGACY SHAPE WAS SENT TO SS2D_SHAPE_CLOSED; ABORTING;")
 		return
 
 	# Properties

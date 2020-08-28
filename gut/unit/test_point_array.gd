@@ -2,7 +2,7 @@ extends "res://addons/gut/test.gd"
 
 
 func test_point_order():
-	var p_array = RMSS2D_Point_Array.new()
+	var p_array = SS2D_Point_Array.new()
 	var points = {}
 	for p in generate_points():
 		var new_key = p_array.add_point(p)
@@ -44,7 +44,7 @@ func test_point_order():
 
 
 func test_point_constraints():
-	var p_array = RMSS2D_Point_Array.new()
+	var p_array = SS2D_Point_Array.new()
 	var points = {}
 	for p in generate_points():
 		points[p_array.add_point(p)] = p
@@ -54,11 +54,11 @@ func test_point_constraints():
 	assert_eq(p_array.get_point_position(keys[2]), Vector2(20, 20))
 
 	# CONSTRAIN POINTS
-	p_array.set_constraint(keys[1], keys[2], RMSS2D_Point_Array.CONSTRAINT.ALL)
-	p_array.set_constraint(keys[2], keys[3], RMSS2D_Point_Array.CONSTRAINT.ALL)
-	p_array.set_constraint(keys[3], keys[4], RMSS2D_Point_Array.CONSTRAINT.ALL)
-	p_array.set_constraint(keys[4], keys[5], RMSS2D_Point_Array.CONSTRAINT.AXIS_X)
-	p_array.set_constraint(keys[4], keys[6], RMSS2D_Point_Array.CONSTRAINT.AXIS_Y)
+	p_array.set_constraint(keys[1], keys[2], SS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[2], keys[3], SS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[3], keys[4], SS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[4], keys[5], SS2D_Point_Array.CONSTRAINT.AXIS_X)
+	p_array.set_constraint(keys[4], keys[6], SS2D_Point_Array.CONSTRAINT.AXIS_Y)
 	assert_eq(p_array.get_point_position(keys[1]), Vector2(10, 10))
 	assert_eq(p_array.get_point_position(keys[2]), Vector2(10, 10))
 	assert_eq(p_array.get_point_position(keys[3]), Vector2(10, 10))
@@ -79,7 +79,7 @@ func test_point_constraints():
 	assert_eq(p_array.get_point_constraints(keys[1]).size(), 1)
 	assert_eq(p_array.get_point_constraints(keys[2]).size(), 2)
 	assert_eq(p_array.get_point_constraints(keys[3]).size(), 2)
-	p_array.set_constraint(keys[1], keys[2], RMSS2D_Point_Array.CONSTRAINT.NONE)
+	p_array.set_constraint(keys[1], keys[2], SS2D_Point_Array.CONSTRAINT.NONE)
 	assert_eq(p_array.get_point_constraints(keys[1]).size(), 0)
 	assert_eq(p_array.get_point_constraints(keys[2]).size(), 1)
 	assert_eq(p_array.get_point_constraints(keys[3]).size(), 2)
@@ -115,7 +115,7 @@ func test_point_constraints():
 
 
 func test_duplicate():
-	var p_array = RMSS2D_Point_Array.new()
+	var p_array = SS2D_Point_Array.new()
 	for p in generate_points():
 		p_array.add_point(p)
 

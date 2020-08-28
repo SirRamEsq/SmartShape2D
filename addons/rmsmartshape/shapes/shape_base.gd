@@ -1,6 +1,6 @@
 tool
 extends Node2D
-class_name RMSS2D_Shape_Base
+class_name SS2D_Shape_Base
 
 """
 Represents the base functionality for all smart shapes
@@ -19,10 +19,10 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
 
 class EdgeMaterialData:
-	var meta_material: RMSS2D_Material_Edge_Metadata
+	var meta_material: SS2D_Material_Edge_Metadata
 	var indicies: Array = []
 
-	func _init(i: Array, m: RMSS2D_Material_Edge_Metadata):
+	func _init(i: Array, m: SS2D_Material_Edge_Metadata):
 		meta_material = m
 		indicies = i
 
@@ -41,10 +41,10 @@ export (float) var collision_offset: float = 0.0 setget set_collision_offset
 export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
 export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
-# Dictionary of (Array of 2 points) to (RMSS2D_Material_Edge_Metadata)
+# Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
 export (NodePath) var collision_polygon_node_path: NodePath = ""
-export (Resource) var shape_material = RMSS2D_Material_Shape.new() setget _set_material
-export (Resource) var _points = RMSS2D_Point_Array.new() setget set_point_array, get_point_array
+export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
+export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
 export (Dictionary) var material_overrides: Dictionary = {} setget set_material_overrides
 
 var _dirty: bool = true
@@ -62,12 +62,12 @@ signal on_dirty_update
 #####################
 # SETTERS / GETTERS #
 #####################
-func get_point_array() -> RMSS2D_Point_Array:
+func get_point_array() -> SS2D_Point_Array:
 	# Duplicating this causes Godot Editor to crash
 	return _points  #.duplicate(true)
 
 
-func set_point_array(a: RMSS2D_Point_Array):
+func set_point_array(a: SS2D_Point_Array):
 	_points = a.duplicate(true)
 	clear_cached_data()
 	_update_curve(_points)
@@ -144,7 +144,7 @@ func set_curve_bake_interval(f: float):
 	property_list_changed_notify()
 
 
-func _set_material(value: RMSS2D_Material_Shape):
+func _set_material(value: SS2D_Material_Shape):
 	if (
 		shape_material != null
 		and shape_material.is_connected("changed", self, "_handle_material_change")
@@ -163,14 +163,14 @@ func set_material_overrides(dict: Dictionary):
 		if not k is Array and k.size() == 2:
 			push_error("Material Override Dictionary KEY is not an Array with 2 points!")
 		var v = dict[k]
-		if not v is RMSS2D_Material_Edge_Metadata:
-			push_error("Material Override Dictionary VALUE is not RMSS2D_Material_Edge_Metadata!")
+		if not v is SS2D_Material_Edge_Metadata:
+			push_error("Material Override Dictionary VALUE is not SS2D_Material_Edge_Metadata!")
 	material_overrides = dict
 
 
 func get_material_override_tuple(tuple: Array) -> Array:
 	var keys = material_overrides.keys()
-	var idx = RMSS2D_Point_Array.find_tuple_in_array_of_tuples(keys, tuple)
+	var idx = SS2D_Point_Array.find_tuple_in_array_of_tuples(keys, tuple)
 	if idx != -1:
 		tuple = keys[idx]
 	return tuple
@@ -191,7 +191,7 @@ func remove_material_override(tuple: Array):
 	set_as_dirty()
 
 
-func set_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
+func set_material_override(tuple: Array, mat: SS2D_Material_Edge_Metadata):
 	if has_material_override(tuple):
 		var old = get_material_override(tuple)
 		if old == mat:
@@ -204,7 +204,7 @@ func set_material_override(tuple: Array, mat: RMSS2D_Material_Edge_Metadata):
 	set_as_dirty()
 
 
-func get_material_override(tuple: Array) -> RMSS2D_Material_Edge_Metadata:
+func get_material_override(tuple: Array) -> SS2D_Material_Edge_Metadata:
 	if not has_material_override(tuple):
 		return null
 	return material_overrides[get_material_override_tuple(tuple)]
@@ -215,7 +215,7 @@ func get_material_override(tuple: Array) -> RMSS2D_Material_Edge_Metadata:
 #########
 
 
-func _update_curve(p_array: RMSS2D_Point_Array):
+func _update_curve(p_array: SS2D_Point_Array):
 	_curve.clear_points()
 	for p_key in p_array.get_all_point_keys():
 		var pos = p_array.get_point_position(p_key)
@@ -423,7 +423,7 @@ func set_constraint(key1: int, key2: int, c: int):
 	return _points.set_constraint(key1, key2, c)
 
 
-func set_point(key: int, value: RMSS2D_Point):
+func set_point(key: int, value: SS2D_Point):
 	_points.set_point(key, value)
 	_update_curve(_points)
 	set_as_dirty()
@@ -482,7 +482,7 @@ func _ready():
 	for mat in material_overrides.values():
 		mat.connect("changed", self, "_handle_material_change")
 	if not _is_instantiable:
-		push_error("'%s': RMSS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
+		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
 		queue_free()
 
 
@@ -564,19 +564,19 @@ func bake_collision():
 	if not collision_quads.empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in collision_quads:
-			if quad.corner == RMSS2D_Quad.CORNER.NONE:
+			if quad.corner == SS2D_Quad.CORNER.NONE:
 				points.push_back(
 					polygon.get_global_transform().xform_inv(
 						get_global_transform().xform(quad.pt_a)
 					)
 				)
-			elif quad.corner == RMSS2D_Quad.CORNER.OUTER:
+			elif quad.corner == SS2D_Quad.CORNER.OUTER:
 				points.push_back(
 					polygon.get_global_transform().xform_inv(
 						get_global_transform().xform(quad.pt_d)
 					)
 				)
-			elif quad.corner == RMSS2D_Quad.CORNER.INNER:
+			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
 				#points.push_back(
 				#polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
@@ -592,15 +592,15 @@ func bake_collision():
 		# Bottom Edge (typically point c)
 		for quad_index in collision_quads.size():
 			var quad = collision_quads[collision_quads.size() - 1 - quad_index]
-			if quad.corner == RMSS2D_Quad.CORNER.NONE:
+			if quad.corner == SS2D_Quad.CORNER.NONE:
 				points.push_back(
 					polygon.get_global_transform().xform_inv(
 						get_global_transform().xform(quad.pt_c)
 					)
 				)
-			elif quad.corner == RMSS2D_Quad.CORNER.OUTER:
+			elif quad.corner == SS2D_Quad.CORNER.OUTER:
 				pass
-			elif quad.corner == RMSS2D_Quad.CORNER.INNER:
+			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				points.push_back(
 					polygon.get_global_transform().xform_inv(
 						get_global_transform().xform(quad.pt_b)
@@ -705,8 +705,8 @@ func _build_quad_from_point(
 	custom_scale: float,
 	custom_offset: float,
 	custom_extends: float
-) -> RMSS2D_Quad:
-	var quad = RMSS2D_Quad.new()
+) -> SS2D_Quad:
+	var quad = SS2D_Quad.new()
 	quad.texture = tex
 	quad.texture_normal = tex_normal
 	quad.color = Color(1.0, 1.0, 1.0, 1.0)
@@ -754,8 +754,8 @@ func _build_quad_from_point(
 
 func _build_edge_without_material(
 	edge_dat: EdgeMaterialData, size: Vector2, c_scale: float, c_offset: float, c_extends: float
-) -> RMSS2D_Edge:
-	var edge = RMSS2D_Edge.new()
+) -> SS2D_Edge:
+	var edge = SS2D_Edge.new()
 	if not edge_dat.is_valid():
 		return edge
 
@@ -785,7 +785,7 @@ func _build_edge_without_material(
 		var tess_idx = (first_t_idx + i) % t_points.size()
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var next_vert_idx = vert_idx + 1
-		var generate_corner = RMSS2D_Quad.CORNER.NONE
+		var generate_corner = SS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
 			var pt_next = t_points[_get_next_point_index(tess_idx, t_points)]
@@ -808,9 +808,9 @@ func _build_edge_without_material(
 				if flip_edges:
 					inner = not inner
 				if inner:
-					generate_corner = RMSS2D_Quad.CORNER.INNER
+					generate_corner = SS2D_Quad.CORNER.INNER
 				else:
-					generate_corner = RMSS2D_Quad.CORNER.OUTER
+					generate_corner = SS2D_Quad.CORNER.OUTER
 
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
 		var is_first_point = vert_idx == first_idx
@@ -836,7 +836,7 @@ func _build_edge_without_material(
 		new_quads.push_back(new_quad)
 
 		# Corner Quad
-		if generate_corner != RMSS2D_Quad.CORNER.NONE and not is_first_tess_point:
+		if generate_corner != SS2D_Quad.CORNER.NONE and not is_first_tess_point:
 			var tess_idx_next = _get_next_point_index(tess_idx, t_points)
 			var tess_idx_prev = _get_previous_point_index(tess_idx, t_points)
 			var tess_pt_next = t_points[tess_idx_next]
@@ -865,8 +865,8 @@ func _build_edge_without_material(
 	return edge
 
 
-func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
-	var edge = RMSS2D_Edge.new()
+func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
+	var edge = SS2D_Edge.new()
 	if not edge_dat.is_valid():
 		return edge
 
@@ -875,11 +875,11 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
-	var edge_material_meta: RMSS2D_Material_Edge_Metadata = edge_dat.meta_material
+	var edge_material_meta: SS2D_Material_Edge_Metadata = edge_dat.meta_material
 	if edge_material_meta == null:
 		return edge
 
-	var edge_material: RMSS2D_Material_Edge = edge_material_meta.edge_material
+	var edge_material: SS2D_Material_Edge = edge_material_meta.edge_material
 	if edge_material == null:
 		return edge
 	edge.z_index = edge_material_meta.z_index
@@ -911,7 +911,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var next_vert_idx = vert_idx + 1
 		var texture_idx = get_point_texture_index(get_point_key_at_index(vert_idx))
-		var generate_corner = RMSS2D_Quad.CORNER.NONE
+		var generate_corner = SS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
 			var pt_next = t_points[_get_next_point_index(tess_idx, t_points)]
@@ -934,9 +934,9 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 				if flip_edges:
 					inner = not inner
 				if inner:
-					generate_corner = RMSS2D_Quad.CORNER.INNER
+					generate_corner = SS2D_Quad.CORNER.INNER
 				else:
-					generate_corner = RMSS2D_Quad.CORNER.OUTER
+					generate_corner = SS2D_Quad.CORNER.OUTER
 
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
 		var is_first_point = vert_idx == first_idx
@@ -973,7 +973,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 		new_quads.push_back(new_quad)
 
 		# Corner Quad
-		if generate_corner != RMSS2D_Quad.CORNER.NONE and not is_first_tess_point:
+		if generate_corner != SS2D_Quad.CORNER.NONE and not is_first_tess_point:
 			var tess_idx_next = _get_next_point_index(tess_idx, t_points)
 			var tess_idx_prev = _get_previous_point_index(tess_idx, t_points)
 			var tess_pt_next = t_points[tess_idx_next]
@@ -983,7 +983,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> RMSS2D_Edge:
 
 			var corner_texture_array = edge_material.textures_corner_inner
 			var corner_texture_normal_array = edge_material.texture_normals_corner_inner
-			if generate_corner == RMSS2D_Quad.CORNER.OUTER:
+			if generate_corner == SS2D_Quad.CORNER.OUTER:
 				corner_texture_array = edge_material.textures_corner_outer
 				corner_texture_normal_array = edge_material.texture_normals_corner_outer
 			if not corner_texture_array.empty():
@@ -1099,8 +1099,8 @@ func build_quad_corner(
 	size: Vector2,
 	custom_scale: float,
 	custom_offset: float
-) -> RMSS2D_Quad:
-	var new_quad = RMSS2D_Quad.new()
+) -> SS2D_Quad:
+	var new_quad = SS2D_Quad.new()
 
 	var extents = size / 2.0
 	var delta_12 = pt - pt_prev
@@ -1143,8 +1143,8 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 	return lerp(w1, w2, ratio)
 
 
-func _weld_quads(a: RMSS2D_Quad, b: RMSS2D_Quad, custom_scale: float = 1.0):
-	if a.corner == RMSS2D_Quad.CORNER.NONE and b.corner == RMSS2D_Quad.CORNER.NONE:
+func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
+	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
 		var needed_length: float = 0.0
 		if a.texture != null and b.texture != null:
 			needed_length = (
@@ -1167,31 +1167,31 @@ func _weld_quads(a: RMSS2D_Quad, b: RMSS2D_Quad, custom_scale: float = 1.0):
 		a.pt_d = pt1
 		a.pt_c = pt2
 	else:
-		if a.corner == RMSS2D_Quad.CORNER.OUTER:
+		if a.corner == SS2D_Quad.CORNER.OUTER:
 			b.pt_a = a.pt_c
 			b.pt_b = a.pt_b
 
-		elif a.corner == RMSS2D_Quad.CORNER.INNER:
+		elif a.corner == SS2D_Quad.CORNER.INNER:
 			b.pt_a = a.pt_d
 			b.pt_b = a.pt_a
 
-		elif b.corner == RMSS2D_Quad.CORNER.OUTER:
+		elif b.corner == SS2D_Quad.CORNER.OUTER:
 			a.pt_d = b.pt_a
 			a.pt_c = b.pt_b
 
-		elif b.corner == RMSS2D_Quad.CORNER.INNER:
+		elif b.corner == SS2D_Quad.CORNER.INNER:
 			a.pt_d = b.pt_d
 			a.pt_c = b.pt_c
 
 
 func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
 	for index in range(quads.size() - 1):
-		var this_quad: RMSS2D_Quad = quads[index]
-		var next_quad: RMSS2D_Quad = quads[index + 1]
+		var this_quad: SS2D_Quad = quads[index]
+		var next_quad: SS2D_Quad = quads[index + 1]
 		_weld_quads(this_quad, next_quad, custom_scale)
 
 
-func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	var edges: Array = []
 	if s_mat == null:
 		return edges
@@ -1230,7 +1230,7 @@ func _build_edges(s_mat: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
 	return edges
 
 
-func get_edge_material_data(s_material: RMSS2D_Material_Shape, wrap_around: bool) -> Array:
+func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	var points = get_vertices()
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
@@ -1304,7 +1304,7 @@ func get_edge_material_data(s_material: RMSS2D_Material_Shape, wrap_around: bool
 			for last in last_edges:
 				if first.meta_material == last.meta_material:
 					#print ("Orignal: %s | %s" % [first.indicies, last.indicies])
-					var merged = RMSS2D_Common_Functions.merge_arrays(
+					var merged = SS2D_Common_Functions.merge_arrays(
 						[last.indicies, first.indicies]
 					)
 					#print ("Merged:  %s" % str(merged))
@@ -1345,7 +1345,7 @@ func get_collision_polygon_node() -> Node:
 
 
 static func sort_by_z_index(a: Array) -> Array:
-	a.sort_custom(RMSS2D_Common_Functions, "sort_z")
+	a.sort_custom(SS2D_Common_Functions, "sort_z")
 	return a
 
 
