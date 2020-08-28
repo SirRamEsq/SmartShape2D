@@ -108,7 +108,7 @@ class QuadInfo:
 		return false
 
 
-export (bool) var editor_debug = null setget _set_editor_debug
+export (bool) var editor_debug = false setget _set_editor_debug
 export (Curve2D) var curve: Curve2D = null setget _set_curve
 export (bool) var closed_shape = false setget _set_close_shape
 export (bool) var auto_update_collider = false setget _set_auto_update_collider
@@ -138,6 +138,7 @@ var is_clockwise: bool = false setget , are_points_clockwise
 # Signals
 signal points_modified
 signal on_dirty_update
+signal on_closed_change
 
 
 #########
@@ -345,6 +346,7 @@ func _set_material(value: RMS2D_Material):
 func _set_close_shape(value):
 	closed_shape = value
 	fix_close_shape()
+	emit_signal("on_closed_change")
 	if Engine.editor_hint:
 		property_list_changed_notify()
 

@@ -300,6 +300,9 @@ func cache_edges():
 
 func import_from_legacy(legacy:RMSmartShape2D):
 	# Sanity Check
+	if legacy == null:
+		push_error("LEGACY SHAPE IS NULL; ABORTING;")
+		return
 	if not legacy.closed_shape:
 		push_error("OPEN LEGACY SHAPE WAS SENT TO RMSS2D_SHAPE_CLOSED; ABORTING;")
 		return

@@ -30,6 +30,9 @@ func should_flip_edges() -> bool:
 
 func import_from_legacy(legacy:RMSmartShape2D):
 	# Sanity Check
+	if legacy == null:
+		push_error("LEGACY SHAPE IS NULL; ABORTING;")
+		return
 	if legacy.closed_shape:
 		push_error("CLOSED LEGACY SHAPE WAS SENT TO RMSS2D_SHAPE_OPEN; ABORTING;")
 		return

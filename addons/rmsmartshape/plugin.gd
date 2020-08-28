@@ -21,7 +21,8 @@ const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
 const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
 const ICON_INTERP_LINEAR = preload("assets/InterpLinear.svg")
 const ICON_SNAP = preload("assets/icon_editor_snap.svg")
-const ICON_IMPORT = preload("assets/closed_shape.png")
+const ICON_IMPORT_CLOSED = preload("assets/closed_shape.png")
+const ICON_IMPORT_OPEN = preload("assets/open_shape.png")
 const FUNC = preload("plugin-functionality.gd")
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT }
@@ -81,7 +82,9 @@ var gui_edge_info_panel = GUI_EDGE_INFO_PANEL.instance()
 var gui_snap_settings = GUI_SNAP_POPUP.instance()
 
 # This is the shape node being edited
-var shape: RMSS2D_Shape_Base = null
+var shape = null
+# For when a legacy shape is selected
+var legacy_shape = null
 
 # Toolbar Stuff
 var tb_hb: HBoxContainer = null
@@ -144,11 +147,11 @@ func _gui_build_toolbar():
 	tb_hb_legacy_import = HBoxContainer.new()
 	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb_legacy_import)
 	tb_import = ToolButton.new()
-	tb_import.icon = ICON_IMPORT
+	tb_import.icon = ICON_IMPORT_CLOSED
 	tb_import.toggle_mode = false
 	tb_import.pressed = false
-	#tb_import.connect("pressed", self, "_enter_mode", [MODE.EDIT_EDGE])
 	tb_import.hint_tooltip = RMSS2D_Strings.EN_TOOLTIP_IMPORT
+	tb_import.connect("pressed", self, "_import_legacy")
 	tb_hb_legacy_import.add_child(tb_import)
 
 	var sep = VSeparator.new()
@@ -344,34 +347,41 @@ func handles(object):
 		return false
 
 	var rslt: bool = (
-		object is RMSS2D_Shape_Closed
-		or object is RMSS2D_Shape_Open
+		object is RMSS2D_Shape_Base
 		or object is RMSmartShape2D
 	)
 	return rslt
 
 
 func edit(object):
+	on_edge = false
+	deselect_verts()
+	if is_shape_valid(shape):
+		disconnect_shape(shape)
+	if is_shape_valid(legacy_shape):
+		disconnect_shape(legacy_shape)
+
+	shape = null
+	legacy_shape = null
+
 	if object is RMSmartShape2D:
 		tb_hb.hide()
 		tb_hb_legacy_import.show()
+		if object.closed_shape:
+			tb_import.icon = ICON_IMPORT_CLOSED
+		else:
+			tb_import.icon = ICON_IMPORT_OPEN
 
-		on_edge = false
-		deselect_verts()
-		update_overlays()
+		legacy_shape = object
+		connect_shape(legacy_shape)
 	else:
 		tb_hb.show()
 		tb_hb_legacy_import.hide()
 
-		on_edge = false
-		deselect_verts()
-		if is_shape_valid(shape):
-			if shape.is_connected("points_modified", self, "_on_shape_point_modified"):
-				shape.disconnect("points_modified", self, "_on_shape_point_modified")
-		shape = object as RMSS2D_Shape_Base
-		if not shape.is_connected("points_modified", self, "_on_shape_point_modified"):
-			shape.connect("points_modified", self, "_on_shape_point_modified")
-		update_overlays()
+		shape = object
+		connect_shape(shape)
+
+	update_overlays()
 
 
 func make_visible(visible):
@@ -442,6 +452,68 @@ static func snap_position(
 ##########
 # PLUGIN #
 ##########
+func _import_legacy():
+	call_deferred("_import_legacy_impl")
+
+func _import_legacy_impl():
+	if legacy_shape == null:
+		push_error("LEGACY SHAPE IS NULL")
+		return
+	if not legacy_shape is RMSmartShape2D:
+		push_error("LEGACY SHAPE NOT VALID")
+		return
+	var par = legacy_shape.get_parent()
+	if par == null:
+		push_error("LEGACY SHAPE PARENT IS NULL")
+		return
+
+	# Make new shape and set values
+	var new_shape = null
+	if legacy_shape.closed_shape:
+		new_shape = RMSS2D_Shape_Closed.new()
+		new_shape.name = "Imported Closed Shape"
+	else:
+		new_shape = RMSS2D_Shape_Open.new()
+		new_shape.name = "Imported Open Shape"
+	new_shape.import_from_legacy(legacy_shape)
+	new_shape.transform = legacy_shape.transform
+
+	# Add new to scene tree
+	par.add_child(new_shape)
+	new_shape.owner = get_editor_interface().get_edited_scene_root()
+
+	# Remove Legacy from scene tree
+	disconnect_shape(legacy_shape)
+	par.remove_child(legacy_shape)
+	legacy_shape.queue_free()
+	legacy_shape = null
+
+	# Edit the new shape
+	#edit(new_shape)
+
+func _on_legacy_closed_changed():
+	if is_shape_valid(legacy_shape):
+		if legacy_shape is RMSmartShape2D:
+			if legacy_shape.closed_shape:
+				tb_import.icon = ICON_IMPORT_CLOSED
+			else:
+				tb_import.icon = ICON_IMPORT_OPEN
+
+func disconnect_shape(s):
+	if s.is_connected("points_modified", self, "_on_shape_point_modified"):
+		s.disconnect("points_modified", self, "_on_shape_point_modified")
+	# Legacy
+	if s is RMSmartShape2D:
+		if s.is_connected("on_closed_change", self, "_on_legacy_closed_changed"):
+			s.disconnect("on_closed_change", self, "_on_legacy_closed_changed")
+
+func connect_shape(s):
+	if not s.is_connected("points_modified", self, "_on_shape_point_modified"):
+		s.connect("points_modified", self, "_on_shape_point_modified")
+	if s is RMSmartShape2D:
+		if not s.is_connected("on_closed_change", self, "_on_legacy_closed_changed"):
+			s.connect("on_closed_change", self, "_on_legacy_closed_changed")
+
 static func get_material_override_from_indicies(shape: RMSS2D_Shape_Base, indicies: Array):
 	var keys = []
 	for i in indicies:
@@ -501,7 +573,7 @@ func _on_set_edge_material_override(enabled: bool):
 			shape.remove_material_override(keys)
 
 
-static func is_shape_valid(s: RMSS2D_Shape_Base) -> bool:
+static func is_shape_valid(s) -> bool:
 	if s == null:
 		return false
 	if not is_instance_valid(s):

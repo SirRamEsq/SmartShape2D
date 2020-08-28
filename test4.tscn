@@ -9,8 +9,8 @@
 [ext_resource path="res://addons/rmsmartshape/shapes/shape_open.gd" type="Script" id=7]
 [ext_resource path="res://addons/rmsmartshape/normal_range.gd" type="Script" id=8]
 [ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=9]
-[ext_resource path="res://addons/rmsmartshape/RMSmartShapeMaterial.gd" type="Script" id=10]
-[ext_resource path="res://addons/rmsmartshape/RMSmartShape2D.gd" type="Script" id=11]
+[ext_resource path="res://addons/rmsmartshape/legacy/LEGACY_RMSmartShapeMaterial.gd" type="Script" id=10]
+[ext_resource path="res://addons/rmsmartshape/legacy/LEGACY_RMSmartShape2D.gd" type="Script" id=11]
 [ext_resource path="res://addons/rmsmartshape/shapes/shape_anchor.gd" type="Script" id=12]
 [ext_resource path="res://icon.png" type="Texture" id=13]
 
@@ -1110,7 +1110,6 @@ script = ExtResource( 12 )
 shape_path = NodePath("../StaticBody2D3/RMSS2D_Shape_Open")
 shape_point_index = 12
 shape_point_offset = 0.5
-debug_draw_line_length = 100.0
 
 [node name="Sprite" type="Sprite" parent="RMSmartShapeAnchor2D"]
 position = Vector2( 8, -8 )
@@ -1153,7 +1152,14 @@ polygon = PoolVector2Array( -384, 64, -296, 64, -290.963, 64.3594, -284.953, 65.
 
 [node name="RMSS2D_Shape_Open" type="Node2D" parent="StaticBody2D3"]
 script = ExtResource( 7 )
+editor_debug = false
+flip_edges = false
+render_edges = true
 collision_size = 16.0
+collision_offset = 0.0
+tessellation_stages = 5
+tessellation_tolerence = 4.0
+curve_bake_interval = 20.0
 collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 138 )
@@ -1178,6 +1184,15 @@ material_overrides = {
 
 [node name="RMSmartShape2D" type="Node2D" parent="."]
 script = ExtResource( 11 )
-editor_debug = null
+editor_debug = false
 curve = SubResource( 150 )
+closed_shape = false
+auto_update_collider = false
+tessellation_stages = 5
+tessellation_tolerence = 4
+use_global_space = false
+collision_polygon_node = NodePath("")
+collision_bake_interval = 20
+draw_edges = false
+flip_edges = false
 shape_material = SubResource( 151 )
