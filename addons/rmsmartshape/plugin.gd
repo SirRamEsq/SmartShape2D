@@ -471,10 +471,10 @@ func _import_legacy_impl():
 	var new_shape = null
 	if legacy_shape.closed_shape:
 		new_shape = RMSS2D_Shape_Closed.new()
-		new_shape.name = "Imported Closed Shape"
+		new_shape.name = "RMSS2D_Shape_Closed"
 	else:
 		new_shape = RMSS2D_Shape_Open.new()
-		new_shape.name = "Imported Open Shape"
+		new_shape.name = "RMSS2D_Shape_Open"
 	new_shape.import_from_legacy(legacy_shape)
 	new_shape.transform = legacy_shape.transform
 
