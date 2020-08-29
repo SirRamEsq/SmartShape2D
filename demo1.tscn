@@ -1,0 +1,175 @@
+[gd_scene load_steps=32 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/materials/shape_material.gd" type="Script" id=1]
+[ext_resource path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" type="Script" id=2]
+[ext_resource path="res://addons/rmsmartshape/normal_range.gd" type="Script" id=3]
+[ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=4]
+[ext_resource path="res://addons/rmsmartshape/shapes/point.gd" type="Script" id=5]
+[ext_resource path="res://addons/rmsmartshape/shapes/point_array.gd" type="Script" id=6]
+[ext_resource path="res://addons/rmsmartshape/vertex_properties.gd" type="Script" id=7]
+[ext_resource path="res://addons/rmsmartshape/shapes/shape_closed.gd" type="Script" id=8]
+[ext_resource path="res://demo/assets/Spring/grass-corner-outer.png" type="Texture" id=9]
+[ext_resource path="res://demo/assets/Spring/grass.png" type="Texture" id=10]
+[ext_resource path="res://demo/assets/Spring/rock-corner-outer.png" type="Texture" id=11]
+[ext_resource path="res://demo/assets/fill.png" type="Texture" id=12]
+[ext_resource path="res://demo/assets/Spring/rock.png" type="Texture" id=13]
+
+[sub_resource type="Resource" id=1]
+script = ExtResource( 4 )
+textures = [ ExtResource( 10 ) ]
+texture_normals = [  ]
+textures_corner_outer = [ ExtResource( 9 ) ]
+textures_corner_inner = [  ]
+texture_normals_corner_outer = [  ]
+texture_normals_corner_inner = [  ]
+textures_taper_left = [  ]
+textures_taper_right = [  ]
+texture_normals_taper_left = [  ]
+texture_normals_taper_right = [  ]
+weld_quads = true
+use_corner_texture = true
+use_taper_texture = true
+
+[sub_resource type="Resource" id=2]
+script = ExtResource( 3 )
+begin = 0.0
+end = 180.0
+
+[sub_resource type="Resource" id=3]
+script = ExtResource( 2 )
+edge_material = SubResource( 1 )
+normal_range = SubResource( 2 )
+weld = true
+render = true
+z_index = 0
+offset = 0.0
+
+[sub_resource type="Resource" id=4]
+script = ExtResource( 4 )
+textures = [ ExtResource( 13 ) ]
+texture_normals = [  ]
+textures_corner_outer = [ ExtResource( 11 ) ]
+textures_corner_inner = [  ]
+texture_normals_corner_outer = [  ]
+texture_normals_corner_inner = [  ]
+textures_taper_left = [  ]
+textures_taper_right = [  ]
+texture_normals_taper_left = [  ]
+texture_normals_taper_right = [  ]
+weld_quads = true
+use_corner_texture = true
+use_taper_texture = true
+
+[sub_resource type="Resource" id=5]
+script = ExtResource( 3 )
+begin = 181.0
+end = 359.0
+
+[sub_resource type="Resource" id=6]
+script = ExtResource( 2 )
+edge_material = SubResource( 4 )
+normal_range = SubResource( 5 )
+weld = true
+render = true
+z_index = -2
+offset = -0.8
+
+[sub_resource type="Resource" id=7]
+script = ExtResource( 1 )
+_edge_meta_materials = [ SubResource( 3 ), SubResource( 6 ) ]
+fill_textures = [ ExtResource( 12 ) ]
+fill_texture_normals = [  ]
+fill_texture_z_index = -10
+fill_mesh_offset = 0.0
+render_offset = 0.0
+weld_edges = true
+
+[sub_resource type="Resource" id=8]
+script = ExtResource( 7 )
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id=9]
+script = ExtResource( 5 )
+position = Vector2( -384, -320 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 8 )
+
+[sub_resource type="Resource" id=10]
+script = ExtResource( 7 )
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id=11]
+script = ExtResource( 5 )
+position = Vector2( -256, -320 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 10 )
+
+[sub_resource type="Resource" id=12]
+script = ExtResource( 7 )
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id=13]
+script = ExtResource( 5 )
+position = Vector2( -256, -192 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 12 )
+
+[sub_resource type="Resource" id=14]
+script = ExtResource( 7 )
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id=15]
+script = ExtResource( 5 )
+position = Vector2( -384, -320 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 14 )
+
+[sub_resource type="Resource" id=16]
+script = ExtResource( 7 )
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id=17]
+script = ExtResource( 5 )
+position = Vector2( -384, -192 )
+point_in = Vector2( 0, 0 )
+point_out = Vector2( 0, 0 )
+properties = SubResource( 16 )
+
+[sub_resource type="Resource" id=18]
+script = ExtResource( 6 )
+_points = {
+0: SubResource( 9 ),
+1: SubResource( 11 ),
+2: SubResource( 13 ),
+3: SubResource( 15 ),
+4: SubResource( 17 )
+}
+_point_order = [ 0, 1, 2, 4, 3 ]
+_constraints = {
+[ 0, 3 ]: 15
+}
+_next_key = 8
+
+[node name="Node2D" type="Node2D"]
+
+[node name="SS2D_Shape_Closed" type="Node2D" parent="."]
+script = ExtResource( 8 )
+shape_material = SubResource( 7 )
+_points = SubResource( 18 )
+material_overrides = {
+
+}
