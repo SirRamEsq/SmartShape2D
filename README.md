@@ -23,7 +23,7 @@ The textures used are similar to what you would use if producing your levels wit
 - The following Nodes are legacy nodes and are deprecated:
   - RMSmartShape2D
   - RMSmartShape2DAnchor
-![Nodes](./readme-imgs/EdgeEdit-MaterialOverride.png)
+![Nodes]( ./readme-imgs/NewNode-SS2D_Nodes.png )
 
 ## Editing the Shape
 - After creating the shape node, make sure it's selected and the toolbar appears and is in Point Edit mode
