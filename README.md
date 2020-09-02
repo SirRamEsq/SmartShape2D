@@ -1,14 +1,16 @@
 SmartShape2D
 ---
 ![sample image](addons/rmsmartshape/sample/sample_screen.PNG)
-# Table Of Contents
-- [About](./README.md#About)
 
 # About
 This plugin allows you to create nicely textured 2D polys.
 Simply place a few points then create / assign the shape material and you should have a good looking polygon.
 
-The textures used are similar to what you would use if producing your levels with tilesets.
+The textures used are similar to what you would use if making terrain using TileMaps/TileSets
+
+# Documentation
+- [Quick Start]( ./README-Quickstart.md )
+- [How To Install]( ./README-InstallGuide.gd )
 
 ## Support
 - Supported and Tesetd on Godot 3.2
