@@ -52,6 +52,6 @@ There are two kinds of shapes:
 ## Material Overrides
 - **There is no need to edit this property by hand, but you can if you'd like**
 - When an edge is given a "Material Override" the data for that edge is stored here
-![EdgeData Popup]( ./imgs/EdgeEdit-MaterialOverride.png )
 - This data structure is updated as you manipulate the shape
+![EdgeData Popup]( ./imgs/EdgeEdit-MaterialOverride.png )
 

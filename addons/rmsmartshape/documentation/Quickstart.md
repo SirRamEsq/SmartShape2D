@@ -11,14 +11,16 @@ SmartShape2D - QuickStart
 - The following Nodes are legacy nodes and are deprecated:
   - RMSmartShape2D
   - RMSmartShape2DAnchor
+
 ![Nodes]( ./imgs/NewNode-SS2D_Nodes.png )
 
 # Editing the Shape
 - After creating the shape node, make sure it's selected and the toolbar appears and is in Point Edit mode
-![Toolbar Default State](./imgs/Toolbar-PointEdit.png)
+  - ![Toolbar Default State](./imgs/Toolbar-PointEdit.png)
 - Click on the screen to begin adding points
   - If this is a closed shape, the polygon will close after adding the 3rd point
-- You should now have a shape consisting of a few points and lines
+- You should now have a shape consisting of a few points and lines:
+
 ![Toolbar Default State](./imgs/ShapeClosed-Untextured.png)
 
 # Setting the Fill Texture of the Shape (Closed Shape only)
@@ -30,6 +32,7 @@ SmartShape2D - QuickStart
   - If nothing happens after setting the texture, try to force the shape to update by adjusting one of the points
 - **Note that "Fill Textures" does not affect SS2D_Shape_Open Nodes at all**
 - If you want to add a normal_texture, you would add it using the "Fill Texture Normals" property
+
 ![Fill Texture Set](./imgs/ShapeClosed-FillTextured.png)
 
 # Texturing the Edges
@@ -49,6 +52,7 @@ SmartShape2D - QuickStart
   - If nothing happens after setting the texture, try to force the shape to update by adjusting one of the points
 - If you want to add a normal_texture, you would add it using the "Texture Normals" property
 - Godot should now look something like this:
+
 ![Inspector](./imgs/Inpsector-EdgeMaterial.png)
 
 ## Corners
@@ -60,22 +64,24 @@ SmartShape2D - QuickStart
   - Textures Corner Outer
   - Texture Normals Corner Outer
 - See how the addition of outer corner textures improves the square created earlier
+
 ![Inspector](./imgs/Inpsector-EdgeMaterialCornerOuter.png)
 
 ## Multiple Edge Materials in One Edge
 - You can add as many Edge Meta Materials as you want to a Shape Material, each with their own Edge Material
 - For instance, you can add an additional egde with a rock texture (and its own set of corner textures) and have it render behind the grass
   - To have it render behind the grass, Set the Z index of the meta material
+
 ![Inspector](./imgs/Inpsector-EdgeMaterials2.png)
 
 ## Normal Range
 - Each Meta material has a Normal Range
 - The Normal Range indicates when a texture should be rendered
-- If the normal range is 0 - 360 or 0 - 0, then any angle is considered in range and the edge will always render
-- Angle "0" is Facing directly Right
-- Angle "90" is Facing directly Up
-- Angle "180" is Facing directly Left
-- Angle "270" is Facing directly Down
+  - If the normal range is 0 - 360 or 0 - 0, then any angle is considered in range and the edge will always render
+  - Angle "0" is Facing directly Right
+  - Angle "90" is Facing directly Up
+  - Angle "180" is Facing directly Left
+  - Angle "270" is Facing directly Down
 
 - If you wanted to, for example:
   - Have rocks display on the bottom part of the shape only
@@ -83,6 +89,7 @@ SmartShape2D - QuickStart
 - You could:
   - Set the grass Normal Range to 0 - 180
   - Set the rock Normal Range to 181 - 359
+
 ![Inspector](./imgs/Inpsector-EdgeMaterialsNormalRange.png)
 
 ## Toolbar
