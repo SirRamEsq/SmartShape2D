@@ -1,7 +1,7 @@
 SmartShape2D - Toolbar
 ---
 ![Toolbar Default State](./imgs/Toolbar-PointEdit.png)
-# []( ./../assets/icon_curve_edit.svg ) Point Edit
+# [img]( ./../assets/icon_curve_edit.svg ) Point Edit
 - In this mode, you can add, delete, and move all of the points that make up a shape
 - To **Add** a new point to the shape, do one of the following
   - Left Click anywhere on the viewport to add a point to the shape
@@ -13,7 +13,7 @@ SmartShape2D - Toolbar
 - To set the **Control Points** of a point (for curves), hold **Shift**, Left Click on any point and drag
   - After the Control Points have been set, you can edit them individually by Left Clicking and dragging
   - You can delete control points by right clicking them
-# []( ./../assets/InterpLinear.svg ) Edge Edit
-# []( ./../assets/icon_editor_position.svg ) Origin Set
-# []( ./../assets/icon_collision_polygon_2d.svg ) Generate Collision
-# []( ./../assets/icon_editor_snap.svg ) Snapping
+# [img]( ./../assets/InterpLinear.svg ) Edge Edit
+# [img]( ./../assets/icon_editor_position.svg ) Origin Set
+# [img]( ./../assets/icon_collision_polygon_2d.svg ) Generate Collision
+# [img]( ./../assets/icon_editor_snap.svg ) Snapping
