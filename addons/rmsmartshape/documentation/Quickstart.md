@@ -5,7 +5,8 @@ SmartShape2D - QuickStart
 # Creating a Shape
 - First, instance a node of either:
   - SS2D_Shape_Open
-  - SS2D_Shape_Closed
+  - **SS2D_Shape_Closed**
+	- **We'll use a closed shape for this Quickstart demo**
 - SS2D_Shape_Base cannot be instanced directly
 - SS2D_Shape_Anchor is a node that attaches to a shape
 - The following Nodes are legacy nodes and are deprecated:
@@ -92,9 +93,4 @@ SmartShape2D - QuickStart
 
 ![Inspector](./imgs/Inpsector-EdgeMaterialsNormalRange.png)
 
-## Toolbar
-### Point Edit
-### Edge Edit
-### Origin Set
-### Generate Collision
-### Snapping
+## Material Overrides
