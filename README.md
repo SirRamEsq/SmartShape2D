@@ -1,6 +1,6 @@
 SmartShape2D
 ---
-![sample image](addons/rmsmartshape/rmsmartshape/documentation/imgs/sample.png)
+![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
 
 # About
 This plugin allows you to create nicely textured 2D polys.
