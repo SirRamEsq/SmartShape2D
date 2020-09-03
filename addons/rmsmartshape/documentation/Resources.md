@@ -25,19 +25,19 @@ For all cases, using texture normals is completely optional
 ## Textures / Normals
 - The primary textures used for the edge
 - At least one texture must be defined
-- ![Grass]( ./readme-imgs/grass.png )
+- ![Grass]( ./imgs/grass.png )
 ## Taper Textures / Normals
 These textures will be used as the first or last quad in an edge.
 They're named "Taper Textures" because the purpose is to show the edge "tapering off"
 - Textures_Taper_Left is the first quad in an edge
-  - ![Grass Taper Left]( ./readme-imgs/grass-taper-left.png )
+  - ![Grass Taper Left]( ./imgs/grass-taper-left.png )
 - Textures_Taper_Right is the final quad in an edge
-  - ![Grass Taper Right]( ./readme-imgs/grass-taper-right.png )
+  - ![Grass Taper Right]( ./imgs/grass-taper-right.png )
 ## Corner Textures / Normals
 These textures will be used when the edge forms a sharp corner (80 degrees - 100 degrees)
 These are used because corners can look warped when using only regular textures
 - Texture_Corner_Inner is used when the corner forms an inner corner
-  - ![Grass Corner Inner]( ./readme-imgs/grass-corner-inner.png )
+  - ![Grass Corner Inner]( ./imgs/grass-corner-inner.png )
 - Texture_Corner_Outer is used when the corner forms an outer angle
-  - ![Grass Corner Outer]( ./readme-imgs/grass-corner-outer.png )
+  - ![Grass Corner Outer]( ./imgs/grass-corner-outer.png )
 
