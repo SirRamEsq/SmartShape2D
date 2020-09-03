@@ -1,6 +1,6 @@
 SmartShape2D - QuickStart
 ---
-![Finished Image](./readme-imgs/Inpsector-EdgeMaterialsNormalRange.png)
+![Finished Image]( ./imgs/Inpsector-EdgeMaterialsNormalRange.png )
 
 # Creating a Shape
 - First, instance a node of either:
@@ -11,15 +11,15 @@ SmartShape2D - QuickStart
 - The following Nodes are legacy nodes and are deprecated:
   - RMSmartShape2D
   - RMSmartShape2DAnchor
-![Nodes]( ./readme-imgs/NewNode-SS2D_Nodes.png )
+![Nodes]( ./imgs/NewNode-SS2D_Nodes.png )
 
 # Editing the Shape
 - After creating the shape node, make sure it's selected and the toolbar appears and is in Point Edit mode
-![Toolbar Default State](./readme-imgs/Toolbar-PointEdit.png)
+![Toolbar Default State](./imgs/Toolbar-PointEdit.png)
 - Click on the screen to begin adding points
   - If this is a closed shape, the polygon will close after adding the 3rd point
 - You should now have a shape consisting of a few points and lines
-![Toolbar Default State](./readme-imgs/ShapeClosed-Untextured.png)
+![Toolbar Default State](./imgs/ShapeClosed-Untextured.png)
 
 # Setting the Fill Texture of the Shape (Closed Shape only)
 - To give it some life, we'll want to edit the "Shape Material" in the Inspector
@@ -30,7 +30,7 @@ SmartShape2D - QuickStart
   - If nothing happens after setting the texture, try to force the shape to update by adjusting one of the points
 - **Note that "Fill Textures" does not affect SS2D_Shape_Open Nodes at all**
 - If you want to add a normal_texture, you would add it using the "Fill Texture Normals" property
-![Fill Texture Set](./readme-imgs/ShapeClosed-FillTextured.png)
+![Fill Texture Set](./imgs/ShapeClosed-FillTextured.png)
 
 # Texturing the Edges
 - This where the rubber hits the road, the real meat of the tool
@@ -49,7 +49,7 @@ SmartShape2D - QuickStart
   - If nothing happens after setting the texture, try to force the shape to update by adjusting one of the points
 - If you want to add a normal_texture, you would add it using the "Texture Normals" property
 - Godot should now look something like this:
-![Inspector](./readme-imgs/Inpsector-EdgeMaterial.png)
+![Inspector](./imgs/Inpsector-EdgeMaterial.png)
 
 ## Corners
 - If your shape has sharp 90-degree corners, the texture can look a bit warped in those places
@@ -60,13 +60,13 @@ SmartShape2D - QuickStart
   - Textures Corner Outer
   - Texture Normals Corner Outer
 - See how the addition of outer corner textures improves the square created earlier
-![Inspector](./readme-imgs/Inpsector-EdgeMaterialCornerOuter.png)
+![Inspector](./imgs/Inpsector-EdgeMaterialCornerOuter.png)
 
 ## Multiple Edge Materials in One Edge
 - You can add as many Edge Meta Materials as you want to a Shape Material, each with their own Edge Material
 - For instance, you can add an additional egde with a rock texture (and its own set of corner textures) and have it render behind the grass
   - To have it render behind the grass, Set the Z index of the meta material
-![Inspector](./readme-imgs/Inpsector-EdgeMaterials2.png)
+![Inspector](./imgs/Inpsector-EdgeMaterials2.png)
 
 ## Normal Range
 - Each Meta material has a Normal Range
@@ -83,7 +83,7 @@ SmartShape2D - QuickStart
 - You could:
   - Set the grass Normal Range to 0 - 180
   - Set the rock Normal Range to 181 - 359
-![Inspector](./readme-imgs/Inpsector-EdgeMaterialsNormalRange.png)
+![Inspector](./imgs/Inpsector-EdgeMaterialsNormalRange.png)
 
 ## Toolbar
 ### Point Edit

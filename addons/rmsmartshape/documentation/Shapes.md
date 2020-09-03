@@ -8,10 +8,10 @@ Shapes are configured to use a [Shape Material]( ./Resources.md#ShapeMaterial )
 which determines how the shape is rendered.
 
 There are two kinds of shapes:
-- ![OpenShapeImg]( ./../assets/open_shape.png  )Open
+- ![OpenShapeImg]( ./../assets/open_shape.png  ) **Open**
   - This shape's Final point **DOESN'T** connect to its First point
   - This shape **DOESN'T** make use of the "Fill Textures" parameter in the ShapeMaterial
-- ![ClosedShapeImg]( ./../assets/closed_shape.png  )Closed
+- ![ClosedShapeImg]( ./../assets/closed_shape.png  ) **Closed**
   - This shape's Final point **DOES** connect to its First point
   - This shape **DOES** make use of the "Fill Textures" parameter in the ShapeMaterial
 
@@ -50,8 +50,8 @@ There are two kinds of shapes:
 - Contains all of the points and meta-data for the points contained in this shape
 - This data structure is updated as you manipulate the shape
 ## Material Overrides
-- **There is no need to edit this by hand, but you can if you'd like**
+- **There is no need to edit this property by hand, but you can if you'd like**
 - When an edge is given a "Material Override" the data for that edge is stored here
-![EdgeData Popup](./readme-imgs/EdgeEdit-MaterialOverride.png)
+![EdgeData Popup]( ./imgs/EdgeEdit-MaterialOverride.png )
 - This data structure is updated as you manipulate the shape
 
