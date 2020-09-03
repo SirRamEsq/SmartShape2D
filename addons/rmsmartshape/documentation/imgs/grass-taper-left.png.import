@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/EdgeEdit-MaterialOverride.png-379ceb1637adb998c9b8d4c41ac0404c.stex"
+path="res://.import/grass-taper-left.png-64af7681eb7bf74724d6cf15d35f0acc.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://readme-imgs/EdgeEdit-MaterialOverride.png"
-dest_files=[ "res://.import/EdgeEdit-MaterialOverride.png-379ceb1637adb998c9b8d4c41ac0404c.stex" ]
+source_file="res://addons/rmsmartshape/documentation/imgs/grass-taper-left.png"
+dest_files=[ "res://.import/grass-taper-left.png-64af7681eb7bf74724d6cf15d35f0acc.stex" ]
 
 [params]
 

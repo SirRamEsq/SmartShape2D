@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/Toolbar-PointEdit.png-9451eb6fa336a5b5e6b8baaefe1c09d2.stex"
+path="res://.import/Inpsector-EdgeMaterials2.png-2a3fe3208119be44d124878d1e4fe776.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://readme-imgs/Toolbar-PointEdit.png"
-dest_files=[ "res://.import/Toolbar-PointEdit.png-9451eb6fa336a5b5e6b8baaefe1c09d2.stex" ]
+source_file="res://addons/rmsmartshape/documentation/imgs/Inpsector-EdgeMaterials2.png"
+dest_files=[ "res://.import/Inpsector-EdgeMaterials2.png-2a3fe3208119be44d124878d1e4fe776.stex" ]
 
 [params]
 

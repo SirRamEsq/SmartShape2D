@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/ShapeClosed-Untextured.png-39ea510f63cdef3227fe0e22a57d6ce6.stex"
+path="res://.import/grass-corner-inner.png-b9a5de2b6bdd38ff73b2b583c9b15dea.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://readme-imgs/ShapeClosed-Untextured.png"
-dest_files=[ "res://.import/ShapeClosed-Untextured.png-39ea510f63cdef3227fe0e22a57d6ce6.stex" ]
+source_file="res://addons/rmsmartshape/documentation/imgs/grass-corner-inner.png"
+dest_files=[ "res://.import/grass-corner-inner.png-b9a5de2b6bdd38ff73b2b583c9b15dea.stex" ]
 
 [params]
 

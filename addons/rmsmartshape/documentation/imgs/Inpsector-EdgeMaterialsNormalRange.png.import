@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/NewNode-SS2D_Nodes.png-555712dd6b9b9579b51f3cd26fa848c1.stex"
+path="res://.import/Inpsector-EdgeMaterialsNormalRange.png-04db8b8e19f05b4c1f11ce3a77ced886.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://readme-imgs/NewNode-SS2D_Nodes.png"
-dest_files=[ "res://.import/NewNode-SS2D_Nodes.png-555712dd6b9b9579b51f3cd26fa848c1.stex" ]
+source_file="res://addons/rmsmartshape/documentation/imgs/Inpsector-EdgeMaterialsNormalRange.png"
+dest_files=[ "res://.import/Inpsector-EdgeMaterialsNormalRange.png-04db8b8e19f05b4c1f11ce3a77ced886.stex" ]
 
 [params]
 

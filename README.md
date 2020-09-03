@@ -1,6 +1,6 @@
 SmartShape2D
 ---
-![sample image](addons/rmsmartshape/sample/sample_screen.PNG)
+![sample image](addons/rmsmartshape/rmsmartshape/documentation/imgs/sample.png)
 
 # About
 This plugin allows you to create nicely textured 2D polys.
@@ -8,71 +8,22 @@ Simply place a few points then create / assign the shape material and you should
 
 The textures used are similar to what you would use if making terrain using TileMaps/TileSets
 
-# Documentation
-- [Quick Start]( ./README-Quickstart.md )
-- [How To Install]( ./README-InstallGuide.gd )
-
 ## Support
-- Supported and Tesetd on Godot 3.2
+- Supported and Tested on Godot 3.2
 - Should work with later versions of Godot 3.x
 
-# Using The Plugin (Quickstart)
-- [See here](./README-Quickstart.md)
+# Documentation
+- [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
+- [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )
+- [Shapes]( ./addons/rmsmartshape/documentation/Shapes.md )
+- [Resources]( ./addons/rmsmartshape/documentation/Resources.md )
+- [Controls]( ./addons/rmsmartshape/documentation/Controls.md )
+- [Best Practicies]( ./addons/rmsmartshape/documentation/BestPraticies.md )
 
 # Shapes
-Each shape consists of a set of points.
-There are two kinds of shapes:
-- Closed Shapes
-  - The last point is connected to the first, forming a closed polygon
-- Open Shapes
-  - The last point is NOT connected to the first
-
-There are two basic parts of any shape;
-- The Edges
-- The fill texture (Closed shape only)
-
-Shapes can be configured to have multiple edges, each auto-generating at certain angles.
 
 
 ## Properties
-### Editor Debug
-- Will show the bounding box for each quad in the mesh of edges.
-- Can be helpful to illustrate why a shape doesn't look the way you expect
-### Flip Edges
-- Will flip the edges of the shape (invert y)
-### Render Edges
-- Whether or not the edges of the shape should be rendered
-### Collision Size
-- Size of the collision shape
-### Collision Offset
-- Offset of where the collision shape starts and ends
-### Tessellation Stages
-- Number of stages in the curve tessellation process (Uses Curve2D Internally)
-- First Param in Curve2D.tessellate
-  - See [Curve2D Documentation](https://docs.godotengine.org/en/3.2/classes/class_curve2d.html#class-curve2d-method-tessellate)
-### Tessellation Tolerence
-- Tolerence Degrees in the curve tessellation process (Uses Curve2D Internally)
-- Second Param in Curve2D.tessellate
-  - See [Curve2D Documentation](https://docs.godotengine.org/en/3.2/classes/class_curve2d.html#class-curve2d-method-tessellate)
-### Curve Bake Interval
-- Bake interval value for Curve2D
-- See [Curve2D Documentation](https://docs.godotengine.org/en/3.2/classes/class_curve2d.html#class-curve2d-property-bake-interval)
-### Collision Polygon Node Path
-- The path to the CollisionShape that the SmartShape will use for collision
-- Is Autoset when pressing the generate collision button
-### Shape Material
-- The material that this shape will use to render itself
-### Points
-- All of the points and meta-data for the points contained in this shape
-- This data structure is updated as you manipulate the shape
-- There is no need to edit this by hand, but you can if you'd like
-### Material Overrides
-- When an edge is given a "Material Override" the data for that edge is stored here
-- []() :TODO - Add image of EdgeData window
-![EdgeData Popup](./readme-imgs/EdgeEdit-MaterialOverride.png)
-- This data structure is updated as you manipulate the shape
-- There is no need to edit this by hand, but you can if you'd like
-
 # Shape Materials
 Shape materials provide all the texture and collision information needed by the SmartShape nodes.
 Once a shape material is defined, it can be easily reused by any number of SmartShape2D nodes.

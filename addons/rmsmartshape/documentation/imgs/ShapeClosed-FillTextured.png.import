@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/Inpsector-EdgeMaterial.png-7fd79988cd910420df45889b3fbaf73b.stex"
+path="res://.import/ShapeClosed-FillTextured.png-1a87a66b3a2f9d438257692a884deb5c.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://readme-imgs/Inpsector-EdgeMaterial.png"
-dest_files=[ "res://.import/Inpsector-EdgeMaterial.png-7fd79988cd910420df45889b3fbaf73b.stex" ]
+source_file="res://addons/rmsmartshape/documentation/imgs/ShapeClosed-FillTextured.png"
+dest_files=[ "res://.import/ShapeClosed-FillTextured.png-1a87a66b3a2f9d438257692a884deb5c.stex" ]
 
 [params]
 
