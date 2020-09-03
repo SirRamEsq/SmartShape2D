@@ -933,7 +933,7 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 		if current_action.is_single_vert_selected():
 			if kb.pressed and kb.scancode == KEY_SPACE:
 				var key = current_action.current_point_key()
-				shape.set_point_texture_flip(! shape.get_point_texture_flip(key), key)
+				shape.set_point_texture_flip(key, not shape.get_point_texture_flip(key))
 				shape.set_as_dirty()
 				shape.update()
 				_gui_update_info_panels()

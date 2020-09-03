@@ -105,3 +105,11 @@ SmartShape2D - QuickStart
 
 - You can use material overrrides to also specify a specific material for a single edge
 - For example, Checking Render and choosing the "Rock" Edge Material will cause the edge to render as rocks, even though the NormalRange configuration would otherwise have it render as grass
+
+## Multiple Textures
+- If more than one texture is specified for an Edge Material, you can specify which texture should be used
+- Enter Point Edit mode, mouseover a point, and scroll up or down to change the texture index
+
+# Anchoring Nodes to the Shape
+- To anchor nodes directly to the SmartShape2D node, use SmartSahpeAnchor2D
+- You can then make nodes children to the anchor
