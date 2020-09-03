@@ -1,5 +1,8 @@
 * TODO Update Sample subdir
 * TODO Update README
+* TODO Fix Texture Flipping (SPACE)
+* TODO Fix Tests
+* TODO Fix Render bug in demo
 * DONE Choose project name
 - SmartShape2D is Good
 * Features
