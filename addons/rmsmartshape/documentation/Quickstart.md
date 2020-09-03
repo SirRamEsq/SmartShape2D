@@ -94,3 +94,14 @@ SmartShape2D - QuickStart
 ![Inspector](./imgs/Inpsector-EdgeMaterialsNormalRange.png)
 
 ## Material Overrides
+- Using Material Overrides will allow you to change how specific edges are rendered
+- For Example, to prevent the left edge from rendering, we'll do the following:
+  - Select the edge edit button from the toolbar ![]( ./../assets/InterpLinear.svg )
+  - Right Click the left edge of the shape
+  - Press the "Material Override" Button
+  - Uncheck the "Render" Checkbox
+
+![Edge NoRender]( ./imgs/EdgeEdit-NoRender.png )
+
+- You can use material overrrides to also specify a specific material for a single edge
+- For example, Checking Render and choosing the "Rock" Edge Material will cause the edge to render as rocks, even though the NormalRange configuration would otherwise have it render as grass
