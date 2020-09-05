@@ -38,7 +38,7 @@ export (bool) var use_taper_texture: bool = true setget _set_use_taper
 
 
 ###########
-# Setters #
+# SETTERS #
 ###########
 func _set_textures(ta: Array):
 	textures = ta
@@ -107,7 +107,7 @@ func _set_use_taper(b: bool):
 
 
 #########
-# Usage #
+# USAGE #
 #########
 func get_icon_texture() -> Texture:
 	"""

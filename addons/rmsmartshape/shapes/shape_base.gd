@@ -45,7 +45,7 @@ export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_ba
 export (NodePath) var collision_polygon_node_path: NodePath = ""
 export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
 export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
-export (Dictionary) var material_overrides: Dictionary = {} setget set_material_overrides
+export (Dictionary) var material_overrides = null setget set_material_overrides
 
 var _dirty: bool = true
 var _edges: Array = []
@@ -472,8 +472,12 @@ func set_point_properties(key: int, properties):
 # GODOT #
 #########
 func _init():
-	pass
-
+	# Assigning an empty dict to material_overrides this way
+	# instead of assigning in the declaration appears to bypass
+	# a weird Godot bug where material_overrides of one shape
+	# interfere with another
+	if material_overrides == null:
+		material_overrides = {}
 
 func _ready():
 	if _curve == null:

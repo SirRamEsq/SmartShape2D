@@ -12,7 +12,7 @@ class z_sort:
 
 func test_z_sort():
 	var a = [z_sort.new(3), z_sort.new(5), z_sort.new(0), z_sort.new(-12)]
-	a = SS2D_Shape_Base.sort_by_z_index(a)
+	a = SS2D_Shape_Open.sort_by_z_index(a)
 	assert_eq(a[0].z_index, -12)
 	assert_eq(a[1].z_index, 0)
 	assert_eq(a[2].z_index, 3)
@@ -25,21 +25,21 @@ func test_on_segment():
 	var p3 = Vector2(100, 0)
 	var p4 = Vector2(100, 10)
 	var p5 = Vector2(100, 20)
-	assert_true(SS2D_Shape_Base.on_segment(p2, p1, p3))
-	assert_false(SS2D_Shape_Base.on_segment(p2, p3, p1))
-	assert_false(SS2D_Shape_Base.on_segment(p1, p2, p3))
-	assert_false(SS2D_Shape_Base.on_segment(p1, p3, p2))
-	assert_false(SS2D_Shape_Base.on_segment(p3, p2, p1))
-	assert_true(SS2D_Shape_Base.on_segment(p3, p1, p2))
+	assert_true(SS2D_Shape_Open.on_segment(p2, p1, p3))
+	assert_false(SS2D_Shape_Open.on_segment(p2, p3, p1))
+	assert_false(SS2D_Shape_Open.on_segment(p1, p2, p3))
+	assert_false(SS2D_Shape_Open.on_segment(p1, p3, p2))
+	assert_false(SS2D_Shape_Open.on_segment(p3, p2, p1))
+	assert_true(SS2D_Shape_Open.on_segment(p3, p1, p2))
 
-	assert_true(SS2D_Shape_Base.on_segment(p3, p4, p5))
-	assert_false(SS2D_Shape_Base.on_segment(p3, p5, p4))
+	assert_true(SS2D_Shape_Open.on_segment(p3, p4, p5))
+	assert_false(SS2D_Shape_Open.on_segment(p3, p5, p4))
 
-	assert_true(SS2D_Shape_Base.on_segment(p1, p1, p1))
+	assert_true(SS2D_Shape_Open.on_segment(p1, p1, p1))
 
 
 func test_are_points_clockwise():
-	var shape = SS2D_Shape_Base.new()
+	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
 	var points_clockwise = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
 	var points_c_clockwise = points_clockwise.duplicate()
@@ -54,7 +54,7 @@ func test_are_points_clockwise():
 
 
 func test_curve_duplicate():
-	var shape = SS2D_Shape_Base.new()
+	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
 	shape.add_point(Vector2(-10, -20))
 	var points = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
@@ -73,7 +73,7 @@ func test_curve_duplicate():
 
 
 func test_tess_point_vertex_relationship():
-	var shape_base = SS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Open.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 
@@ -118,7 +118,7 @@ func test_tess_point_vertex_relationship():
 
 
 func test_invert_point_order():
-	var shape_base = SS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Open.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 	var size = points.size()
@@ -147,7 +147,7 @@ func test_invert_point_order():
 
 
 #func test_duplicate():
-#var shape_base = SS2D_Shape_Base.new()
+#var shape_base = SS2D_Shape_Open.new()
 #add_child_autofree(shape_base)
 #var points = get_clockwise_points()
 #shape_base.add_points(points)
@@ -179,8 +179,10 @@ func test_invert_point_order():
 
 
 func test_get_edge_meta_materials_one():
-	var shape_base = SS2D_Shape_Base.new()
-	add_child_autofree(shape_base)
+	var shape = SS2D_Shape_Open.new()
+	assert_eq(shape.material_overrides.size(), 0)
+	add_child_autofree(shape)
+	assert_eq(shape.material_overrides.size(), 0)
 
 	var edge_mat = SS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
@@ -200,8 +202,9 @@ func test_get_edge_meta_materials_one():
 		assert_eq(e.edge_material, edge_mat)
 
 	var points = get_clockwise_points()
-	shape_base.add_points(points)
-	var edge_data = shape_base.get_edge_material_data(s_m, false)
+	shape.add_points(points)
+	assert_eq(shape.material_overrides.size(), 0)
+	var edge_data = shape.get_edge_material_data(s_m, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
 	assert_eq(edge_data.size(), 1, "Should be one EdgeData specified")
@@ -212,8 +215,9 @@ func test_get_edge_meta_materials_one():
 
 
 func test_get_edge_meta_materials_many():
-	var shape_base = SS2D_Shape_Base.new()
-	add_child_autofree(shape_base)
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
+	assert_eq(shape.material_overrides.size(), 0)
 
 	var edge_materials_count = 4
 	var edge_materials = []
@@ -234,6 +238,9 @@ func test_get_edge_meta_materials_many():
 		edge_mat_meta.normal_range = normal_range
 		assert_not_null(edge_mat_meta.edge_material)
 
+	for e in edge_materials_meta:
+		print(e.normal_range)
+
 	var s_m = SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials(edge_materials_meta)
 	var n_right = Vector2(1, 0)
@@ -252,9 +259,12 @@ func test_get_edge_meta_materials_many():
 			assert_eq(e.edge_material, edge_materials[i])
 
 	var points = get_square_points()
-	shape_base.add_points(points)
-	var em_data = shape_base.get_edge_material_data(s_m, false)
-	assert_eq(em_data.size(), 4)
+	shape.add_points(points)
+	assert_eq(shape.material_overrides.size(), 0)
+	assert_eq(shape.get_vertices().size(), 6)
+	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
+	var em_data = shape.get_edge_material_data(s_m, false)
+	assert_eq(em_data.size(), edge_materials_count)
 	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
 	for i in range(0, em_data.size(), 1):
 		var ed = em_data[i]
@@ -265,7 +275,7 @@ var scale_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
 
 
 func test_build_quad_from_point(scale = use_parameters(scale_params)):
-	var shape_base = SS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Open.new()
 	add_child_autofree(shape_base)
 
 	var edge_mat = SS2D_Material_Edge.new()
@@ -310,7 +320,7 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 
 
 func test_get_edge_material_data():
-	var shape_base = SS2D_Shape_Base.new()
+	var shape_base = SS2D_Shape_Open.new()
 	add_child_autofree(shape_base)
 	var points = get_clockwise_points()
 	shape_base.add_points(points)
