@@ -1,4 +1,8 @@
 * TODO Update Sample subdir
+* TODO Fix Render Offset in Shape Material
+* TODO Fix Render Offset in Edge Meta Material
+* TODO Fix Weld Edges in Shape Material
+* TODO Remove Weld Quads in Edge Material
 * TODO Update README
 * TODO Fix Texture Flipping (SPACE)
 * TODO Fix Tests

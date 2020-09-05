@@ -19,7 +19,6 @@ The textures used are similar to what you would use if making terrain using Tile
 - [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
 - [Resources]( ./addons/rmsmartshape/documentation/Resources.md )
 - [Controls]( ./addons/rmsmartshape/documentation/Controls.md )
-- [Best Practicies]( ./addons/rmsmartshape/documentation/BestPraticies.md )
 - [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
 
 # Contibuting
