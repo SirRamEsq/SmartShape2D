@@ -6,7 +6,11 @@
 * TODO Update README
 * TODO Fix Texture Flipping (SPACE)
 * TODO Fix Tests
-* TODO Fix Render bug in demo
+* TODO Fix Render bug
+- Related to closed shapes
+- Last point is same as first point
+- Causes weird rendering issues
+- See shape_base.gd::913
 * DONE Choose project name
 - SmartShape2D is Good
 * Features
