@@ -29,8 +29,6 @@ export (Array, Texture) var textures_taper_right: Array = [] setget _set_texture
 export (Array, Texture) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
 export (Array, Texture) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
 
-# If each quad WITHIN the edge should be welded to each other
-export (bool) var weld_quads: bool = true setget _set_weld_quads
 # If corner textures should be used
 export (bool) var use_corner_texture: bool = true setget _set_use_corner
 # If taper textures should be used
@@ -90,11 +88,6 @@ func _set_texture_normals_taper_right(a: Array):
 	emit_signal("changed")
 
 
-func _set_weld_quads(b: bool):
-	weld_quads = b
-	emit_signal("changed")
-
-
 func _set_use_corner(b: bool):
 	use_corner_texture = b
 	emit_signal("changed")
@@ -103,7 +96,6 @@ func _set_use_corner(b: bool):
 func _set_use_taper(b: bool):
 	use_taper_texture = b
 	emit_signal("changed")
-
 
 
 #########

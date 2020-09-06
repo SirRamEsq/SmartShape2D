@@ -479,6 +479,7 @@ func _init():
 	if material_overrides == null:
 		material_overrides = {}
 
+
 func _ready():
 	if _curve == null:
 		_curve = Curve2D.new()
@@ -894,12 +895,14 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 	var last_t_idx = get_tessellated_idx_from_point(points, t_points, last_idx)
 	var tess_points_covered: int = 0
 
+	var wrap_around:bool = false
 	for i in range(edge_dat.indicies.size() - 1):
 		var this_idx = edge_dat.indicies[i]
 		var next_idx = edge_dat.indicies[i + 1]
 		# If closed shape and we wrap around
 		if this_idx > next_idx:
 			tess_points_covered += 1
+			wrap_around = true
 			continue
 		var this_t_idx = get_tessellated_idx_from_point(points, t_points, this_idx)
 		var next_t_idx = get_tessellated_idx_from_point(points, t_points, next_idx)
@@ -912,14 +915,31 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 
 	for i in range(tess_points_covered):
 		var tess_idx = (first_t_idx + i) % t_points.size()
+		var tess_idx_next = _get_next_point_index(tess_idx, t_points, wrap_around)
+		var tess_idx_prev = _get_previous_point_index(tess_idx, t_points, wrap_around)
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
-		var next_vert_idx = vert_idx + 1
+		var next_vert_idx = _get_next_point_index(vert_idx, points, wrap_around)
+		############################################
+		# DIRTY HACK TO MAKE CLOSED SHAPES WORK!!! #
+		############################################
+		# Since the first and last point are the exact same,
+		# Weird rendering occurs around point idx '0'
+		# This code simply skips the final point when an edge wraps around
+		# from the final idx to the first idx
+		if tess_idx == t_points.size()-1 and wrap_around:
+			continue
+		if tess_idx == 0 and wrap_around:
+			tess_idx_prev -= 1
+		##################
+		# END DIRTY HACK #
+		##################
+
 		var texture_idx = get_point_texture_index(get_point_key_at_index(vert_idx))
 		var generate_corner = SS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
-			var pt_next = t_points[_get_next_point_index(tess_idx, t_points)]
-			var pt_prev = t_points[_get_previous_point_index(tess_idx, t_points)]
+			var pt_next = t_points[tess_idx_next]
+			var pt_prev = t_points[tess_idx_prev]
 			var ab = pt - pt_prev
 			var bc = pt_next - pt
 			var dot_prod = ab.dot(bc)
@@ -978,8 +998,6 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 
 		# Corner Quad
 		if generate_corner != SS2D_Quad.CORNER.NONE and not is_first_tess_point:
-			var tess_idx_next = _get_next_point_index(tess_idx, t_points)
-			var tess_idx_prev = _get_previous_point_index(tess_idx, t_points)
 			var tess_pt_next = t_points[tess_idx_next]
 			var tess_pt_prev = t_points[tess_idx_prev]
 			var tess_pt = t_points[tess_idx]
@@ -1085,7 +1103,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 		# Add new quads to edge
 		for q in new_quads:
 			edge.quads.push_back(q)
-	if edge_material.weld_quads:
+	if edge_material_meta.weld:
 		_weld_quad_array(edge.quads)
 
 	return edge
@@ -1308,9 +1326,7 @@ func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) 
 			for last in last_edges:
 				if first.meta_material == last.meta_material:
 					#print ("Orignal: %s | %s" % [first.indicies, last.indicies])
-					var merged = SS2D_Common_Functions.merge_arrays(
-						[last.indicies, first.indicies]
-					)
+					var merged = SS2D_Common_Functions.merge_arrays([last.indicies, first.indicies])
 					#print ("Merged:  %s" % str(merged))
 					var new_edge = EdgeMaterialData.new(merged, first.meta_material)
 					edges_to_add.push_back(new_edge)
@@ -1382,12 +1398,33 @@ func get_last_point_index(points: Array) -> int:
 	return get_point_count() - 1
 
 
-func _get_next_point_index(idx: int, points: Array) -> int:
+func _get_next_point_index(idx: int, points: Array, wrap_around: bool = false) -> int:
+	if wrap_around:
+		return _get_next_point_index_wrap_around(idx, points)
+	return _get_next_point_index_no_wrap_around(idx, points)
+
+
+func _get_previous_point_index(idx: int, points: Array, wrap_around: bool = false) -> int:
+	if wrap_around:
+		return _get_previous_point_index_wrap_around(idx, points)
+	return _get_previous_point_index_no_wrap_around(idx, points)
+
+
+func _get_next_point_index_no_wrap_around(idx: int, points: Array) -> int:
 	return int(min(idx + 1, points.size() - 1))
 
 
-func _get_previous_point_index(idx: int, points: Array) -> int:
+func _get_previous_point_index_no_wrap_around(idx: int, points: Array) -> int:
 	return int(max(idx - 1, 0))
+
+func _get_next_point_index_wrap_around(idx: int, points: Array) -> int:
+	return (idx + 1) % points.size()
+
+func _get_previous_point_index_wrap_around(idx: int, points: Array) -> int:
+	var temp = idx - 1
+	while temp < 0:
+		temp += points.size()
+	return temp
 
 
 func get_ratio_from_tessellated_point_to_vertex(points: Array, t_points: Array, t_point_idx: int) -> float:
@@ -1464,6 +1501,7 @@ func __new():
 func debug_print_points():
 	_points.debug_print()
 
+
 # Should be overridden by children
-func import_from_legacy(legacy:RMSmartShape2D):
+func import_from_legacy(legacy: RMSmartShape2D):
 	pass
