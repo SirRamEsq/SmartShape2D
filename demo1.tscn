@@ -26,7 +26,6 @@ textures_taper_left = [  ]
 textures_taper_right = [  ]
 texture_normals_taper_left = [  ]
 texture_normals_taper_right = [  ]
-weld_quads = true
 use_corner_texture = true
 use_taper_texture = true
 
@@ -56,7 +55,6 @@ textures_taper_left = [  ]
 textures_taper_right = [  ]
 texture_normals_taper_left = [  ]
 texture_normals_taper_right = [  ]
-weld_quads = true
 use_corner_texture = true
 use_taper_texture = true
 
@@ -72,7 +70,7 @@ normal_range = SubResource( 5 )
 weld = true
 render = true
 z_index = -2
-offset = -0.8
+offset = 0.0
 
 [sub_resource type="Resource" id=7]
 script = ExtResource( 1 )

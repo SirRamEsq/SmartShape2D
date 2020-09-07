@@ -873,7 +873,7 @@ func _build_edge_without_material(
 	return edge
 
 
-func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
+func _build_edge_with_material(edge_dat: EdgeMaterialData, c_offset:float = 0.0) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	if not edge_dat.is_valid():
 		return edge
@@ -913,7 +913,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 		tess_points_covered += delta
 
 	var c_scale = 1.0
-	var c_offset = 0.0
+	c_offset += edge_material_meta.offset
 	var c_extends = 0.0
 
 	for i in range(tess_points_covered):
@@ -1225,7 +1225,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 		return edges
 
 	for edge_material in get_edge_material_data(s_mat, wrap_around):
-		var new_edge = _build_edge_with_material(edge_material)
+		var new_edge = _build_edge_with_material(edge_material, s_mat.render_offset)
 		edges.push_back(new_edge)
 
 	#var empty_edges = []

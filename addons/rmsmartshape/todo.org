@@ -1,6 +1,6 @@
 * TODO Update Sample subdir
-* TODO Fix Render Offset in Shape Material
-* TODO Fix Render Offset in Edge Meta Material
+* DONE Fix Render Offset in Shape Material
+* DONE Fix Render Offset in Edge Meta Material
 * DONE Fix Texture Flipping (SPACE)
 * DONE Fix Weld Edges in Edge Meta Material
 * DONE Remove Weld Quads in Edge Material
