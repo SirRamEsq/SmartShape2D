@@ -21,6 +21,7 @@ There is a demo scene in the addon's directory.
 # Documentation
 - [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
 - [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )
+- [Migrating from 1.x]( ./addons/rmsmartshape/documentation/Migration.md )
 - [Shapes]( ./addons/rmsmartshape/documentation/Shapes.md )
 - [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
 - [Resources]( ./addons/rmsmartshape/documentation/Resources.md )

@@ -12,3 +12,8 @@ SmartShape2D - Install
 - Open your project in Godot to have the addon install
 - After installing the plugin, you may encounter an error, this is normal.
 - Restart Godot
+
+# Activate Plugin
+- After Installing the plugin, activate the plugin by navigating to Project -> Plugins
+
+![Activate Plugin]( ./imgs/PluginActivate.png )
