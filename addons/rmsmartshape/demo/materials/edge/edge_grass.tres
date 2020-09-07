@@ -1,0 +1,28 @@
+[gd_resource type="Resource" load_steps=12 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/grass.png" type="Texture" id=1]
+[ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=2]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/grass-corner-inner.png" type="Texture" id=3]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/grass-corner-outer.png" type="Texture" id=4]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/grass-taper-left.png" type="Texture" id=5]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/grass-taper-right.png" type="Texture" id=6]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/2/grass-taper-right.png" type="Texture" id=7]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/2/grass.png" type="Texture" id=8]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/2/grass-taper-left.png" type="Texture" id=9]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/2/grass-corner-outer.png" type="Texture" id=10]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/2/grass-corner-inner.png" type="Texture" id=11]
+
+[resource]
+script = ExtResource( 2 )
+textures = [ ExtResource( 1 ), ExtResource( 8 ) ]
+texture_normals = [  ]
+textures_corner_outer = [ ExtResource( 4 ), ExtResource( 10 ) ]
+textures_corner_inner = [ ExtResource( 3 ), ExtResource( 11 ) ]
+texture_normals_corner_outer = [  ]
+texture_normals_corner_inner = [  ]
+textures_taper_left = [ ExtResource( 5 ), ExtResource( 9 ) ]
+textures_taper_right = [ ExtResource( 6 ), ExtResource( 7 ) ]
+texture_normals_taper_left = [  ]
+texture_normals_taper_right = [  ]
+use_corner_texture = false
+use_taper_texture = false

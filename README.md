@@ -12,6 +12,12 @@ The textures used are similar to what you would use if making terrain using Tile
 - Supported and Tested on Godot 3.2
 - Should work with later versions of Godot 3.x
 
+# Demo
+There is a demo scene in the addon's directory.
+- <PROJECT_ROOT>/addons/rmsmartshape/demo
+  - <PROJECT_ROOT> is your project's root folder (the folder containing the "project.godot" file)
+- You can open demo.tscn in your project after installing the addon.
+
 # Documentation
 - [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
 - [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )

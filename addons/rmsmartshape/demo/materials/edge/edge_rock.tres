@@ -1,0 +1,22 @@
+[gd_resource type="Resource" load_steps=5 format=2]
+
+[ext_resource path="res://addons/rmsmartshape/materials/edge_material.gd" type="Script" id=1]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/rock-corner-outer.png" type="Texture" id=2]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/rock-corner-innerr.png" type="Texture" id=3]
+[ext_resource path="res://addons/rmsmartshape/demo/assets/Spring/rock.png" type="Texture" id=4]
+
+[resource]
+script = ExtResource( 1 )
+textures = [ ExtResource( 4 ) ]
+texture_normals = [  ]
+textures_corner_outer = [ ExtResource( 2 ) ]
+textures_corner_inner = [ ExtResource( 3 ) ]
+texture_normals_corner_outer = [  ]
+texture_normals_corner_inner = [  ]
+textures_taper_left = [  ]
+textures_taper_right = [  ]
+texture_normals_taper_left = [  ]
+texture_normals_taper_right = [  ]
+weld_quads = true
+use_corner_texture = true
+use_taper_texture = true

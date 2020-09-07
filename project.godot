@@ -140,13 +140,10 @@ _global_script_class_icons={
 
 [application]
 
-config/name="GUT"
+config/name="SmartShape2D Demo Project"
+run/main_scene="res://addons/rmsmartshape/demo/demo.tscn"
 config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "gut", "rmsmartshape" )
-
-[rendering]
-
-environment/default_environment="res://default_env.tres"
+enabled=PoolStringArray(  )

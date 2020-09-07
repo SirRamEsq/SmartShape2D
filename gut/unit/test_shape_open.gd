@@ -1,6 +1,6 @@
 extends "res://addons/gut/test.gd"
 
-var TEST_TEXTURE = preload("res://demo/assets/Spring/grass.png")
+var TEST_TEXTURE = preload("res://gut/unit/test.png")
 
 
 class z_sort:
@@ -292,7 +292,7 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var extents = ((tex_size / 2.0) * scale) * normal
 
 	var quad = shape_base._build_quad_from_point(
-		points, 0, null, null, tex_size, 1.0, false, false, false, scale, 0.0, 0.0
+		points, 0, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
 	)
 	# Top Left (A)
 	# Bottom Left (B)
@@ -311,7 +311,7 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 
 	# Flip edges
 	quad = shape_base._build_quad_from_point(
-		points, 0, null, null, tex_size, 1.0, true, false, false, scale, 0.0, 0.0
+		points, 0, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
 	)
 	assert_eq(quad.pt_a, expected_points[1])
 	assert_eq(quad.pt_b, expected_points[0])
