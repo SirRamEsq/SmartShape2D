@@ -257,6 +257,7 @@ func bake_collision():
 				null,
 				Vector2(collision_size, collision_size),
 				width,
+				false,
 				should_flip_edges(),
 				i == 0,
 				i == t_points.size() - 1,

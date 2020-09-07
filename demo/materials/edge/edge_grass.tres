@@ -24,6 +24,5 @@ textures_taper_left = [ ExtResource( 5 ), ExtResource( 9 ) ]
 textures_taper_right = [ ExtResource( 6 ), ExtResource( 7 ) ]
 texture_normals_taper_left = [  ]
 texture_normals_taper_right = [  ]
-weld_quads = true
 use_corner_texture = false
 use_taper_texture = false

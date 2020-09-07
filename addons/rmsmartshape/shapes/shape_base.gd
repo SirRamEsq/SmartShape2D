@@ -704,7 +704,8 @@ func _build_quad_from_point(
 	tex_normal: Texture,
 	tex_size: Vector2,
 	width: float,
-	flip: bool,
+	flip_x: bool,
+	flip_y: bool,
 	first_point: bool,
 	last_point: bool,
 	custom_scale: float,
@@ -728,7 +729,7 @@ func _build_quad_from_point(
 
 	# This causes weird rendering if the texture isn't a square
 	var vtx: Vector2 = normal * (tex_size * 0.5)
-	if flip:
+	if flip_y:
 		vtx *= -1
 
 	var offset = vtx * custom_offset
@@ -753,6 +754,7 @@ func _build_quad_from_point(
 	quad.pt_b = pt - final_offset_scale_in + offset
 	quad.pt_c = pt_next - final_offset_scale_out + offset
 	quad.pt_d = pt_next + final_offset_scale_out + offset
+	quad.flip_texture = flip_x
 
 	return quad
 
@@ -830,6 +832,7 @@ func _build_edge_without_material(
 			null,
 			size,
 			width,
+			false,
 			should_flip_edges(),
 			is_first_point,
 			is_last_point,
@@ -918,6 +921,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 		var tess_idx_next = _get_next_point_index(tess_idx, t_points, wrap_around)
 		var tess_idx_prev = _get_previous_point_index(tess_idx, t_points, wrap_around)
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
+		var vert_key = get_point_key_at_index(vert_idx)
 		var next_vert_idx = _get_next_point_index(vert_idx, points, wrap_around)
 		############################################
 		# DIRTY HACK TO MAKE CLOSED SHAPES WORK!!! #
@@ -934,7 +938,8 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 		# END DIRTY HACK #
 		##################
 
-		var texture_idx = get_point_texture_index(get_point_key_at_index(vert_idx))
+		var texture_idx = get_point_texture_index(vert_key)
+		var flip_x = get_point_texture_flip(vert_key)
 		var generate_corner = SS2D_Quad.CORNER.NONE
 		if tess_idx != last_t_idx and tess_idx != first_t_idx:
 			var pt = t_points[tess_idx]
@@ -986,6 +991,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData) -> SS2D_Edge:
 			tex_normal,
 			tex_size,
 			width,
+			flip_x,
 			should_flip_edges(),
 			is_first_point,
 			is_last_point,
