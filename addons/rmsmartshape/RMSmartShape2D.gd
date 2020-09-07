@@ -1,6 +1,6 @@
 tool
 extends Node2D
-class_name RMSmartShape2D, "shape.png"
+class_name RMSmartShape2D, "./assets/LEGACY_shape.png"
 
 """
 - This class assumes that points are in clockwise orientation
@@ -108,7 +108,7 @@ class QuadInfo:
 		return false
 
 
-export (bool) var editor_debug = null setget _set_editor_debug
+export (bool) var editor_debug = false setget _set_editor_debug
 export (Curve2D) var curve: Curve2D = null setget _set_curve
 export (bool) var closed_shape = false setget _set_close_shape
 export (bool) var auto_update_collider = false setget _set_auto_update_collider
@@ -138,6 +138,7 @@ var is_clockwise: bool = false setget , are_points_clockwise
 # Signals
 signal points_modified
 signal on_dirty_update
+signal on_closed_change
 
 
 #########
@@ -146,6 +147,10 @@ signal on_dirty_update
 func _init():
 	pass
 
+func _has_minimum_point_count() -> bool:
+	if closed_shape:
+		return get_point_count() >= 3
+	return get_point_count() >= 2
 
 func _ready():
 	if curve == null:
@@ -185,6 +190,8 @@ Will make sure a shape is closed or open after removing / adding / changing a po
 
 
 func fix_close_shape():
+	if not _has_minimum_point_count():
+		return
 	var point_count = get_point_count()
 	var first_point = curve.get_point_position(0)
 	var final_point = curve.get_point_position(point_count - 1)
@@ -339,6 +346,7 @@ func _set_material(value: RMS2D_Material):
 func _set_close_shape(value):
 	closed_shape = value
 	fix_close_shape()
+	emit_signal("on_closed_change")
 	if Engine.editor_hint:
 		property_list_changed_notify()
 
@@ -511,6 +519,8 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 
 
 func are_points_clockwise() -> bool:
+	if not _has_minimum_point_count():
+		return true
 	var sum = 0.0
 	var point_count = curve.get_point_count()
 	for i in point_count:
@@ -1011,6 +1021,8 @@ func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index
 func get_tessellated_points() -> PoolVector2Array:
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
+	if not _has_minimum_point_count():
+		return PoolVector2Array()
 	var points = curve.tessellate(tessellation_stages)
 	points[0] = curve.get_point_position(0)
 	points[points.size() - 1] = curve.get_point_position(curve.get_point_count() - 1)

@@ -1,0 +1,146 @@
+* TODO Update Sample subdir
+* DONE Fix Render Offset in Shape Material
+* DONE Fix Render Offset in Edge Meta Material
+* DONE Fix Texture Flipping (SPACE)
+* DONE Fix Weld Edges in Edge Meta Material
+* DONE Remove Weld Quads in Edge Material
+* DONE Fix Render bug
+- Related to closed shapes
+- Last point is same as first point
+- Causes weird rendering issues
+- See shape_base.gd::913
+* DONE Update README
+* DONE Fix Tests
+* DONE Choose project name
+- SmartShape2D is Good
+* Features
+** Migration
+*** DONE Be able to migrate shapes from RMS2D to either shape_open or shape_closed
+** UI/UX
+*** MATERIAL
+**** Need to wait till next Godot version
+***** CANCELLED Have only valid shape material types be selectable as a resource instead of all resources
+***** CANCELLED Have project scope directory where rms shape materials are stored
+***** CANCELLED Have project scope directory where rms edge materials are stored
+***** CANCELLED Navigate to the project rms materials dir when selecting a material
+*** Snapping
+**** CANCELLED Use built in snapping
+**** DONE Use snapping on a global basis, not a local one
+*** DONE Right click context menu when clicking on an edge to select a material for the edge
+**** DONE Edge Material Selector
+**** CANCELLED Z_INDEX selector
+**** CANCELLED Weld toggle
+**** DONE Visiblity toggle
+*** Prefab shapes to choose from
+**** TODO Rectangle
+**** TODO Circle
+
+** Functionality
+*** DONE Update SmartShapeAnchor
+*** TODO Ability to combine shapes
+- Combine two rms shape nodes into one
+*** TODO Ability to subtract shapes
+- Split an rms shape node into several
+*** TODO Ability to copy shapes into a new node / StaticBody subtree
+*** DONE Select material on edge-by-edge basis
+*** DONE Texture indexes wrap around
+** Fixes
+*** DONE Fix spurious points being created in the poly with 90-degree plus corners
+*** DONE Fix divide-by-0 error when quad is of 0-length
+
+*** DONE Make small vertex movements trigger the undo-redo tree
+*** DONE Make popup windows disappear when addon nodes (shapes) are deselected
+- Currently, edge and point data windows remain open when switching scenes
+* Design
+** Basic
+*** SHAPE
+#+BEGIN_SRC gdscript
+# Edges to render mapped to Edge materials, sorted by Z value
+var _edges = {[:Quads], :EdgeMaterial}
+
+# For when the user wants to override ShapeMaterial defined z_index for an edge
+# Index of edge to z_index mapping
+var _edge_z_index_override:Dictionary = {:int, :int}
+# For when the user wants to override ShapeMaterial defined EdgeMaterial for an edge
+# Index of edge to EdgeMaterialMetaData
+var _edge_material_override:Dictionary = {:int, :EdgeMaterialMetaData}
+# For when the user wants to override ShapeMaterial defined weld for an edge
+# Index of edge to bool
+var _edge_weld_override:Dictionary = {:int, :bool}
+
+# Shape material that this shape will use
+var _shape_material:ShapeMaterial = null
+#+END_SRC gdscript
+
+*** SHAPE Material interface
+- Want to have a consistent shape material interface
+- Possibly multiple subclasses of shape material
+#+BEGIN_SRC gdscript
+
+class NormalRange
+  var _deg_begin = 0
+  var _deg_end = 360
+  func is_in_range(normal:Vector2)->bool
+
+class EdgeMaterialMetaData
+  var edge_material:EdgeMaterial
+  # What range of normals can this edge be used on
+  var normal_range:NormalRange
+  # If edge should be welded to the edges surrounding it
+  var weld:bool
+  # z index for an edge
+  var z_index:int
+  var offset:float
+
+# List of materials this shape can use
+var _edge_materials:Array = [:EdgeMaterialMetaData]
+
+# How much to offset this edge
+export var render_offset:float = 0.0 setget _set_render_offset
+# Get all valid edge materials for this normal
+func get_edge_materials(normal:Vector2)->Array(EdgeMaterialMetaData)
+func get_all_edge_materials()->Array(EdgeMaterialMetaData)
+
+func get_collision_width()->float
+func get_collision_offset()->float
+func get_collision_extends()->float
+#+END_SRC gdscript
+
+*** EDGE Material interface
+#+BEGIN_SRC gdscript
+
+# All variations of the main edge texture
+# _textures[0] is considered the "main" texture for the EdgeMaterial
+#### Will be used to generate an icon representing an edge texture
+export var textures:Array = [] setget _set_textures
+export var texture_normals:Array = [] setget _set_texture_normals
+
+# Textures for the final left and right quad of the edge when the angle is steep
+export var texture_corner_left:Texture = null setget _set_texture_corner_left
+export var texture_corner_right:Texture = null setget _set_texture_corner_right
+export var texture_normal_corner_left:Texture = null setget _set_texture_normal_corner_left
+export var texture_normal_corner_right:Texture = null setget _set_texture_normal_corner_right
+
+# Textures for the final left and right quad of the edge when the angle is shallow
+# Named as such because the desired look is that the texture "tapers-off"
+export var texture_taper_left:Texture = null setget _set_texture_taper_left
+export var texture_taper_right:Texture = null setget _set_texture_taper_right
+export var texture_normal_taper_left:Texture = null setget _set_texture_normal_taper_left
+export var texture_normal_taper_right:Texture = null setget _set_texture_normal_taper_right
+
+#########
+# Usage #
+#########
+func get_icon_texture()->Texture
+
+# If each quad WITHIN the edge should be welded to each other
+export var weld_quads:bool = true setget _set_weld_quads
+# If corner textures should be used
+export var use_corner_tex:bool = true setget _set_use_corner
+# If taper textures should be used
+export var use_taper_tex:bool = true setget _set_use_taper
+
+signal textures_changed
+signal usage_changed
+
+#+END_SRC gdscript
