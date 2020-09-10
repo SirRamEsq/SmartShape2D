@@ -1,6 +1,7 @@
 SmartShape2D
 ---
 ![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
+![Sample Gif]( ./addons/rmsmartshape/documentation/imgs/sample.gif )
 
 # About
 This plugin allows you to create nicely textured 2D polys.
@@ -10,6 +11,8 @@ The textures used are similar to what you would use if making terrain using Tile
 
 **This plugin is under ACTIVE DEVELOPMENT! If you find any issues, by all means let us know.
 Read the section below on Contributing and post an issue if one doesn't already exist**
+
+**If you enjoy this tool and want to support its development, [I'd appreciate a coffee ](https://www.buymeacoffee.com/SirRamESQ) :)**
 
 # Support
 - Supported and Tested on Godot 3.2
