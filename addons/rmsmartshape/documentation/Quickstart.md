@@ -6,7 +6,7 @@ SmartShape2D - QuickStart
 - First, instance a node of either:
   - SS2D_Shape_Open
   - **SS2D_Shape_Closed**
-	- **We'll use a closed shape for this Quickstart demo**
+    - **We'll use a closed shape for this Quickstart demo**
 - SS2D_Shape_Base cannot be instanced directly
 - SS2D_Shape_Anchor is a node that attaches to a shape
 - The following Nodes are legacy nodes and are deprecated:
@@ -18,7 +18,7 @@ SmartShape2D - QuickStart
 # Editing the Shape
 - After creating the shape node, make sure it's selected and the toolbar appears and is in Point Edit mode
   - ![Toolbar Default State](./imgs/Toolbar-PointEdit.png)
-- Click on the screen to begin adding points
+- Hold ALT and Left Click on the viewport to add points
   - If this is a closed shape, the polygon will close after adding the 3rd point
 - You should now have a shape consisting of a few points and lines:
 

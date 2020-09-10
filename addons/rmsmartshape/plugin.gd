@@ -878,15 +878,16 @@ func _input_handle_left_click(
 				return true
 
 			# Create new point
-			var local_position = t.affine_inverse().xform(mb.position)
-			if use_snap():
-				local_position = snap(local_position)
-			var new_key = FUNC.action_add_point(
-				self, "update_overlays", undo, shape, local_position
-			)
-			undo_version = undo.get_version()
-			select_vertices_to_move([new_key], vp_m_pos)
-			return true
+			if Input.is_key_pressed(KEY_ALT):
+				var local_position = t.affine_inverse().xform(mb.position)
+				if use_snap():
+					local_position = snap(local_position)
+				var new_key = FUNC.action_add_point(
+					self, "update_overlays", undo, shape, local_position
+				)
+				undo_version = undo.get_version()
+				select_vertices_to_move([new_key], vp_m_pos)
+				return true
 	elif current_mode == MODE.EDIT_EDGE:
 		if gui_edge_info_panel.visible:
 			gui_edge_info_panel.visible = false
@@ -952,6 +953,8 @@ func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 		KEY_SPACE:
 			return true
 		KEY_SHIFT:
+			return true
+		KEY_ALT:
 			return true
 	return false
 

@@ -2,6 +2,9 @@ SmartShape2D - Controls
 ---
 
 # Controls - Point Edit
+- Add Point
+  - Hold ALT and Left Click Anywhere in the viewport
+
 - Cycle through texture indices of a point
   - Mouseover a point and MOUSEWHEEL up or down to increment / decrement the texture index
 
@@ -13,4 +16,5 @@ SmartShape2D - Controls
 
 - Add Bezier curve
   - Mouseover a point, hold SHIFT, then click and drag to create control points on the point
+
 

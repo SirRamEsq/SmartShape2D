@@ -1146,6 +1146,14 @@ shape = SubResource( 1 )
 
 [node name="SS2D_Shape_Closed" type="Node2D" parent="StaticBody2D"]
 script = ExtResource( 5 )
+editor_debug = false
+flip_edges = false
+render_edges = true
+collision_size = 32.0
+collision_offset = 0.0
+tessellation_stages = 5
+tessellation_tolerence = 4.0
+curve_bake_interval = 20.0
 collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 56 )
@@ -1162,6 +1170,14 @@ polygon = PoolVector2Array( 216, 48, 248, 48, 248, 80, 320, 80, 320, 48, 384, 48
 
 [node name="SS2D_Shape_Closed" type="Node2D" parent="StaticBody2D2"]
 script = ExtResource( 5 )
+editor_debug = false
+flip_edges = false
+render_edges = true
+collision_size = 32.0
+collision_offset = 0.0
+tessellation_stages = 5
+tessellation_tolerence = 4.0
+curve_bake_interval = 20.0
 collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 86 )
@@ -1178,7 +1194,14 @@ polygon = PoolVector2Array( -384, 64, -296, 64, -290.963, 64.3594, -284.953, 65.
 
 [node name="SS2D_Shape_Open" type="Node2D" parent="StaticBody2D3"]
 script = ExtResource( 7 )
+editor_debug = false
+flip_edges = false
+render_edges = true
 collision_size = 16.0
+collision_offset = 0.0
+tessellation_stages = 5
+tessellation_tolerence = 4.0
+curve_bake_interval = 20.0
 collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 141 )
@@ -1194,7 +1217,15 @@ polygon = PoolVector2Array( -384, 32, -384, 0, -383.75, -2.75, -383.156, -5.9062
 [node name="SS2D_Shape_Closed" type="Node2D" parent="."]
 z_index = -1
 script = ExtResource( 5 )
+editor_debug = false
+flip_edges = false
 render_edges = false
+collision_size = 32.0
+collision_offset = 0.0
+tessellation_stages = 5
+tessellation_tolerence = 4.0
+curve_bake_interval = 20.0
+collision_polygon_node_path = NodePath("")
 shape_material = ExtResource( 1 )
 _points = SubResource( 152 )
 material_overrides = {

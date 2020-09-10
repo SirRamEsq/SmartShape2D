@@ -8,6 +8,9 @@ Simply place a few points then create / assign the shape material and you should
 
 The textures used are similar to what you would use if making terrain using TileMaps/TileSets
 
+**This plugin is under ACTIVE DEVELOPMENT! If you find any issues, by all means let us know.
+Read the section below on Contributing and post an issue if one doesn't already exist**
+
 # Support
 - Supported and Tested on Godot 3.2
 - Should work with later versions of Godot 3.x
@@ -31,14 +34,19 @@ There is a demo scene in the addon's directory.
 # Contibuting
 ## Issues
 If you have any suggestions or find any bugs, feel free to add an issue.
+
 Please include the following three bits of information in each issue posted:
 - Bug / Suggestion
 - Godot Version
 - SmartShape2D Version
 
-Try to be as descriptive as possible (Especially if it's an issue!).
-Pictures and screenshots will also be very helpful
+Some Guidelines for Issues:
+- Attaching a sample project where the issue exists is the fastest way for us to see what's going on
+- Try to be as descriptive as possible
+- Pictures and screenshots will also be very helpful
+
+Issues can be added [here](https://github.com/SirRamEsq/SmartShape2D/issues)
 
 ## Development
 We have a set of tests we run against the code (courtesy of [GUT](https://github.com/bitwes/Gut)).
-If making a merge request, please ensure that the tests pass (or have been updated appropriately to pass)
+If making a merge request, please ensure that the tests pass. If the tests have been updated appropriately to pass, please note this in the merge request.
