@@ -291,8 +291,12 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var tex_size = TEST_TEXTURE.get_size()
 	var extents = ((tex_size / 2.0) * scale) * normal
 
+	var pt_prev = points[0]
+	var pt = points[0]
+	var pt_next = points[1]
+
 	var quad = shape_base._build_quad_from_point(
-		points, 0, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
+		pt_prev, pt, pt_next, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
 	)
 	# Top Left (A)
 	# Bottom Left (B)
@@ -311,7 +315,7 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 
 	# Flip edges
 	quad = shape_base._build_quad_from_point(
-		points, 0, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
+		pt_prev, pt, pt_next, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
 	)
 	assert_eq(quad.pt_a, expected_points[1])
 	assert_eq(quad.pt_b, expected_points[0])
@@ -370,7 +374,7 @@ func test_get_edge_material_data():
 	#  - idx 2 and 3 are    rendered
 	#  - idx 3 and 4 aren't rendered
 	# The sequence is
-  #   0, 1 | 2, 3 | 4, 5
+	#   0, 1 | 2, 3 | 4, 5
 	edge_material_data = shape_base.get_edge_material_data(s_m, false)
 	assert_eq(edge_material_data.size(), 3, "3 edges should be produced")
 	# 0, 1
@@ -379,7 +383,6 @@ func test_get_edge_material_data():
 	assert_eq(edge_material_data[1].indicies.size(), 2)
 	#  4, 5
 	assert_eq(edge_material_data[2].indicies.size(), 2)
-
 
 	edge_material_data = shape_base.get_edge_material_data(s_m, true)
 	assert_eq(edge_material_data.size(), 2, "2 merged wrap_around edge should be produced")

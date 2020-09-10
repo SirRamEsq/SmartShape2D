@@ -101,6 +101,7 @@ func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> b
 	# Doesn't fall in any of the above cases
 	return false
 
+
 static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2):
 	var den = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y)
 
@@ -189,7 +190,7 @@ func _close_shape() -> bool:
 		return false
 
 	var key_first = _points.get_point_key_at_index(0)
-	var key_last = _points.get_point_key_at_index(get_point_count()-1)
+	var key_last = _points.get_point_key_at_index(get_point_count() - 1)
 
 	# If points are not the same pos, add new point
 	if get_point_position(key_first) != get_point_position(key_last):
@@ -198,6 +199,7 @@ func _close_shape() -> bool:
 	_points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
 	_add_point_update()
 	return true
+
 
 func is_shape_closed() -> bool:
 	var point_count = _points.get_point_count()
@@ -209,7 +211,7 @@ func is_shape_closed() -> bool:
 
 
 func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
-	for i in range(0,verts.size(),1):
+	for i in range(0, verts.size(), 1):
 		print("%s | %s" % [i, verts[i]])
 	return .add_points(verts, adjust_add_point_index(starting_index), key)
 
@@ -248,11 +250,18 @@ func bake_collision():
 		return
 	var collision_quads = []
 	for i in range(0, t_points.size() - 1, 1):
+		var tess_idx = i
+		var tess_idx_next = _get_next_point_index(i, t_points, true)
+		var tess_idx_prev = _get_previous_point_index(i, t_points, true)
+		var pt = t_points[tess_idx]
+		var pt_next = t_points[tess_idx_next]
+		var pt_prev = t_points[tess_idx_prev]
 		var width = _get_width_for_tessellated_point(verts, t_points, i)
 		collision_quads.push_back(
 			_build_quad_from_point(
-				t_points,
-				i,
+				pt_prev,
+				pt,
+				pt_next,
 				null,
 				null,
 				Vector2(collision_size, collision_size),
@@ -293,13 +302,15 @@ func _on_dirty_update():
 		_dirty = false
 		emit_signal("on_dirty_update")
 
+
 func cache_edges():
 	if shape_material != null and render_edges:
 		_edges = _build_edges(shape_material, true)
 	else:
 		_edges = []
 
-func import_from_legacy(legacy:RMSmartShape2D):
+
+func import_from_legacy(legacy: RMSmartShape2D):
 	# Sanity Check
 	if legacy == null:
 		push_error("LEGACY SHAPE IS NULL; ABORTING;")
