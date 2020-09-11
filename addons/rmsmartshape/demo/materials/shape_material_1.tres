@@ -20,7 +20,7 @@ script = ExtResource( 2 )
 edge_material = ExtResource( 4 )
 normal_range = SubResource( 1 )
 weld = true
-render = true
+render = false
 z_index = 0
 offset = 0.0
 
@@ -36,7 +36,6 @@ textures_taper_left = [  ]
 textures_taper_right = [  ]
 texture_normals_taper_left = [  ]
 texture_normals_taper_right = [  ]
-weld_quads = true
 use_corner_texture = true
 use_taper_texture = true
 

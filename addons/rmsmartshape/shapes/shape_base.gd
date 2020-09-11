@@ -892,6 +892,8 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData, c_offset: float = 0.0
 	var edge_material_meta: SS2D_Material_Edge_Metadata = edge_dat.meta_material
 	if edge_material_meta == null:
 		return edge
+	if not edge_material_meta.render:
+		return edge
 
 	var edge_material: SS2D_Material_Edge = edge_material_meta.edge_material
 	if edge_material == null:
@@ -903,6 +905,12 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData, c_offset: float = 0.0
 	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
 	var last_t_idx = get_tessellated_idx_from_point(points, t_points, last_idx)
 	var tess_points_covered: int = 0
+	var weld_first_and_last = false
+	if edge_dat.indicies.size() == get_point_count():
+		var p1 = get_point_position(edge_dat.indicies[0])
+		var p2 = get_point_position(edge_dat.indicies.back())
+		if p1 == p2:
+			weld_first_and_last = true
 
 	var wrap_around: bool = false
 	for i in range(edge_dat.indicies.size() - 1):
@@ -932,20 +940,15 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData, c_offset: float = 0.0
 		var pt = t_points[tess_idx]
 		var pt_next = t_points[tess_idx_next]
 		var pt_prev = t_points[tess_idx_prev]
-		############################################
-		# DIRTY HACK TO MAKE CLOSED SHAPES WORK!!! #
-		############################################
 		# Since the first and last point are the exact same,
 		# Weird rendering occurs around point idx '0'
 		# This code simply skips the final point when an edge wraps around
 		# from the final idx to the first idx
-		if tess_idx == t_points.size() - 1 and wrap_around:
+		if pt == pt_next:
 			continue
-		if tess_idx == 0 and wrap_around:
-			tess_idx_prev -= 1
-		##################
-		# END DIRTY HACK #
-		##################
+		if pt == pt_prev:
+			tess_idx_prev = _get_previous_point_index(tess_idx_prev, t_points, wrap_around)
+			pt_prev = t_points[tess_idx_prev]
 
 		var texture_idx = get_point_texture_index(vert_key)
 		var flip_x = get_point_texture_flip(vert_key)
@@ -1117,7 +1120,7 @@ func _build_edge_with_material(edge_dat: EdgeMaterialData, c_offset: float = 0.0
 		for q in new_quads:
 			edge.quads.push_back(q)
 	if edge_material_meta.weld:
-		_weld_quad_array(edge.quads)
+		_weld_quad_array(edge.quads, weld_first_and_last)
 
 	return edge
 
@@ -1219,11 +1222,13 @@ func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 			a.pt_c = b.pt_c
 
 
-func _weld_quad_array(quads: Array, custom_scale: float = 1.0):
+func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_last: bool = false):
 	for index in range(quads.size() - 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
 		_weld_quads(this_quad, next_quad, custom_scale)
+	if weld_first_and_last:
+		_weld_quads(quads.back(), quads[0], 1.0)
 
 
 func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
@@ -1244,32 +1249,32 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	#var idx = empty_edges[i]
 	#edges.erase(idx)
 
-	var first_idx = 0
-	var last_idx = get_point_count() - 1
-	# Weld each pair of edges with neighboring indicies
-	if s_mat.weld_edges:
-		if edges.size() > 1:
-			for i in range(0, edges.size() - 1, 1):
-				var edge1 = edges[i]
-				var idx1_first = _points.get_point_index(edge1.first_point_key)
-				var idx1_last = _points.get_point_index(edge1.last_point_key)
-				for j in range(0, edges.size() - 1, 1):
-					if i == j:
-						continue
-					var edge2 = edges[j]
-					var idx2_first = _points.get_point_index(edge2.first_point_key)
-					var idx2_last = _points.get_point_index(edge2.last_point_key)
-					if idx1_last == idx2_first:
-						_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
-					elif idx1_first == idx2_last:
-						_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
-					elif wrap_around:
-						if idx1_last == last_idx and idx2_first == first_idx:
-							_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
-						elif idx2_last == last_idx and idx1_first == first_idx:
-							_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
-		elif edges.size() == 1 and wrap_around:
-			_weld_quads(edges[0].quads.back(), edges[0].quads[0], 1.0)
+	#var first_idx = 0
+	#var last_idx = get_point_count() - 1
+	## Weld each pair of edges with neighboring indicies
+	#if s_mat.weld_edges:
+	#if edges.size() > 1:
+	#for i in range(0, edges.size() - 1, 1):
+	#var edge1 = edges[i]
+	#var idx1_first = _points.get_point_index(edge1.first_point_key)
+	#var idx1_last = _points.get_point_index(edge1.last_point_key)
+	#for j in range(0, edges.size() - 1, 1):
+	#if i == j:
+	#continue
+	#var edge2 = edges[j]
+	#var idx2_first = _points.get_point_index(edge2.first_point_key)
+	#var idx2_last = _points.get_point_index(edge2.last_point_key)
+	#if idx1_last == idx2_first:
+	#_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
+	#elif idx1_first == idx2_last:
+	#_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
+	#elif wrap_around:
+	#if idx1_last == last_idx and idx2_first == first_idx:
+	#_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
+	#elif idx2_last == last_idx and idx1_first == first_idx:
+	#_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
+	#elif edges.size() == 1 and wrap_around:
+	#_weld_quads(edges[0].quads.back(), edges[0].quads[0], 1.0)
 
 	return edges
 
