@@ -346,10 +346,7 @@ func handles(object):
 	if object is Resource:
 		return false
 
-	var rslt: bool = (
-		object is SS2D_Shape_Base
-		or object is RMSmartShape2D
-	)
+	var rslt: bool = object is SS2D_Shape_Base or object is RMSmartShape2D
 	return rslt
 
 
@@ -449,11 +446,13 @@ static func snap_position(
 	#print ("%s | %s | %s | %s" % [pos_global, pos_local, Vector2(x,y), pos_global_snapped])
 	return pos_global_snapped
 
+
 ##########
 # PLUGIN #
 ##########
 func _import_legacy():
 	call_deferred("_import_legacy_impl")
+
 
 func _import_legacy_impl():
 	if legacy_shape == null:
@@ -491,6 +490,7 @@ func _import_legacy_impl():
 	# Edit the new shape
 	#edit(new_shape)
 
+
 func _on_legacy_closed_changed():
 	if is_shape_valid(legacy_shape):
 		if legacy_shape is RMSmartShape2D:
@@ -498,6 +498,7 @@ func _on_legacy_closed_changed():
 				tb_import.icon = ICON_IMPORT_CLOSED
 			else:
 				tb_import.icon = ICON_IMPORT_OPEN
+
 
 func disconnect_shape(s):
 	if s.is_connected("points_modified", self, "_on_shape_point_modified"):
@@ -507,12 +508,14 @@ func disconnect_shape(s):
 		if s.is_connected("on_closed_change", self, "_on_legacy_closed_changed"):
 			s.disconnect("on_closed_change", self, "_on_legacy_closed_changed")
 
+
 func connect_shape(s):
 	if not s.is_connected("points_modified", self, "_on_shape_point_modified"):
 		s.connect("points_modified", self, "_on_shape_point_modified")
 	if s is RMSmartShape2D:
 		if not s.is_connected("on_closed_change", self, "_on_legacy_closed_changed"):
 			s.connect("on_closed_change", self, "_on_legacy_closed_changed")
+
 
 static func get_material_override_from_indicies(shape: SS2D_Shape_Base, indicies: Array):
 	var keys = []
@@ -624,10 +627,12 @@ func _set_pivot(point: Vector2):
 	var ct: Transform2D = shape.get_global_transform()
 	ct.origin = np
 
+	shape.disable_constraints()
 	for i in shape.get_point_count():
 		var key = shape.get_point_key_at_index(i)
 		var pt = shape.get_global_transform().xform(shape.get_point_position(key))
 		shape.set_point_position(key, ct.affine_inverse().xform(pt))
+	shape.enable_constraints()
 
 	shape.position = shape.get_parent().get_global_transform().affine_inverse().xform(np)
 	_enter_mode(current_mode)

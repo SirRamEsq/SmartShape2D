@@ -395,6 +395,14 @@ func get_closest_offset(to_point: Vector2):
 	return null
 
 
+func disable_constraints():
+	_points.disable_constraints()
+
+
+func enable_constraints():
+	_points.enable_constraints()
+
+
 func get_point_count():
 	return _points.get_point_count()
 

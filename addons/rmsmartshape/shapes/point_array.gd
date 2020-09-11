@@ -13,6 +13,8 @@ export var _constraints = {} setget set_constraints
 # Next key value to generate
 export var _next_key = 0 setget set_next_key
 
+var _constraints_enabled: bool = true
+
 signal constraint_removed(key1, key2)
 
 ###################
@@ -36,13 +38,16 @@ func set_points(ps: Dictionary):
 	_points = ps
 	property_list_changed_notify()
 
+
 func set_point_order(po: Array):
 	_point_order = po
 	property_list_changed_notify()
 
+
 func set_constraints(cs: Dictionary):
 	_constraints = cs
 	property_list_changed_notify()
+
 
 func set_next_key(i: int):
 	_next_key = i
@@ -240,7 +245,17 @@ var _updating_constraints = false
 var _keys_to_update_constraints = []
 
 
+func disable_constraints():
+	_constraints_enabled = false
+
+
+func enable_constraints():
+	_constraints_enabled = true
+
+
 func _update_constraints(src: int):
+	if not _constraints_enabled:
+		return
 	var constraints = get_point_constraints(src)
 	for tuple in constraints:
 		var constraint = constraints[tuple]
