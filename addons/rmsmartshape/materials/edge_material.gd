@@ -98,6 +98,49 @@ func _set_use_taper(b: bool):
 	emit_signal("changed")
 
 
+###########
+# GETTERS #
+###########
+func get_texture(idx: int):
+	return _get_element(idx, textures)
+
+
+func get_texture_normal(idx: int):
+	return _get_element(idx, texture_normals)
+
+
+func get_texture_corner_inner(idx: int):
+	return _get_element(idx, textures_corner_inner)
+
+
+func get_texture_normal_corner_inner(idx: int):
+	return _get_element(idx, texture_normals_corner_inner)
+
+
+func get_texture_corner_outer(idx: int):
+	return _get_element(idx, textures_corner_outer)
+
+
+func get_texture_normal_corner_outer(idx: int):
+	return _get_element(idx, texture_normals_corner_outer)
+
+
+func get_texture_taper_left(idx: int):
+	return _get_element(idx, textures_taper_left)
+
+
+func get_texture_normal_taper_left(idx: int):
+	return _get_element(idx, texture_normals_taper_left)
+
+
+func get_texture_taper_right(idx: int):
+	return _get_element(idx, textures_taper_right)
+
+
+func get_texture_normal_taper_right(idx: int):
+	return _get_element(idx, texture_normals_taper_right)
+
+
 #########
 # USAGE #
 #########
@@ -108,3 +151,16 @@ func get_icon_texture() -> Texture:
 	if not textures.empty():
 		return textures[0]
 	return null
+
+
+############
+# INTERNAL #
+############
+func _get_element(idx: int, a: Array):
+	if a.empty():
+		return null
+	return a[_adjust_idx(idx, a)]
+
+
+func _adjust_idx(idx: int, a: Array) -> int:
+	return idx % a.size()
