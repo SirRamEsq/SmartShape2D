@@ -22,7 +22,7 @@ var corner: int = 0
 
 
 func _to_string() -> String:
-	return "[Quad] A:%s B:%s C:%s D:%s" % [pt_a, pt_b, pt_c, pt_d]
+	return "[Quad] A:%s B:%s C:%s D:%s | Corner: %s" % [pt_a, pt_b, pt_c, pt_d, corner]
 
 
 func duplicate() -> SS2D_Quad:

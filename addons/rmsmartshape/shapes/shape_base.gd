@@ -1180,9 +1180,9 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
-		var needed_length: float = 0.0
+		var needed_height: float = 0.0
 		if a.texture != null and b.texture != null:
-			needed_length = (
+			needed_height = (
 				(a.texture.get_size().y + (b.texture.get_size().y * b.width_factor))
 				/ 2.0
 			)
@@ -1191,7 +1191,7 @@ func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
 
 		var mid_point: Vector2 = (pt1 + pt2) / 2.0
-		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_length * custom_scale / 2.0
+		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_height * custom_scale / 2.0
 
 		if half_line != Vector2.ZERO:
 			pt2 = mid_point + half_line
@@ -1244,6 +1244,8 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	#var idx = empty_edges[i]
 	#edges.erase(idx)
 
+	var first_idx = 0
+	var last_idx = get_point_count() - 1
 	# Weld each pair of edges with neighboring indicies
 	if s_mat.weld_edges:
 		if edges.size() > 1:
@@ -1261,6 +1263,13 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 						_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
 					elif idx1_first == idx2_last:
 						_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
+					elif wrap_around:
+						if idx1_last == last_idx and idx2_first == first_idx:
+							_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
+						elif idx2_last == last_idx and idx1_first == first_idx:
+							_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
+		elif edges.size() == 1 and wrap_around:
+			_weld_quads(edges[0].quads.back(), edges[0].quads[0], 1.0)
 
 	return edges
 
