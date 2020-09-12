@@ -93,7 +93,7 @@ _point_order = [ 0, 1, 2, 4, 3 ]
 _constraints = {
 [ 0, 3 ]: 15
 }
-_next_key = 4
+_next_key = 8
 
 [sub_resource type="RectangleShape2D" id=12]
 extents = Vector2( 8, 8 )
@@ -1205,7 +1205,6 @@ radius = 8.0
 
 [node name="SS2D_Shape_Closed2" type="Node2D" parent="."]
 script = ExtResource( 5 )
-editor_debug = true
 shape_material = ExtResource( 1 )
 _points = SubResource( 11 )
 material_overrides = {
