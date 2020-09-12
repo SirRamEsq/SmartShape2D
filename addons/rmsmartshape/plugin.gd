@@ -737,7 +737,7 @@ func draw_mode_edit_vert(overlay: Control):
 		)
 
 
-func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, width = 1.0):
+func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, width = 2.0):
 	# Draw Outline
 	var prev_pt = null
 	if color == null:
@@ -745,7 +745,7 @@ func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, 
 	for i in range(0, points.size(), 1):
 		var pt = points[i]
 		if prev_pt != null:
-			overlay.draw_line(prev_pt, t.xform(pt), color, width)
+			overlay.draw_line(prev_pt, t.xform(pt), color, width, true)
 		prev_pt = t.xform(pt)
 
 
