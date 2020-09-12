@@ -978,42 +978,6 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 		var new_edge = _build_edge_with_material(edge_material, s_mat.render_offset, wrap_around)
 		edges.push_back(new_edge)
 
-	#var empty_edges = []
-	#for i in range(edges.size()):
-	#var e = edges[i]
-	#if e.quads.empty():
-	#empty_edges.push_back(i)
-	#for i in range(empty_edges.size(), 0, -1):
-	#var idx = empty_edges[i]
-	#edges.erase(idx)
-
-	#var first_idx = 0
-	#var last_idx = get_point_count() - 1
-	## Weld each pair of edges with neighboring indicies
-	#if s_mat.weld_edges:
-	#if edges.size() > 1:
-	#for i in range(0, edges.size() - 1, 1):
-	#var edge1 = edges[i]
-	#var idx1_first = _points.get_point_index(edge1.first_point_key)
-	#var idx1_last = _points.get_point_index(edge1.last_point_key)
-	#for j in range(0, edges.size() - 1, 1):
-	#if i == j:
-	#continue
-	#var edge2 = edges[j]
-	#var idx2_first = _points.get_point_index(edge2.first_point_key)
-	#var idx2_last = _points.get_point_index(edge2.last_point_key)
-	#if idx1_last == idx2_first:
-	#_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
-	#elif idx1_first == idx2_last:
-	#_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
-	#elif wrap_around:
-	#if idx1_last == last_idx and idx2_first == first_idx:
-	#_weld_quads(edge1.quads.back(), edge2.quads[0], 1.0)
-	#elif idx2_last == last_idx and idx1_first == first_idx:
-	#_weld_quads(edge2.quads.back(), edge1.quads[0], 1.0)
-	#elif edges.size() == 1 and wrap_around:
-	#_weld_quads(edges[0].quads.back(), edges[0].quads[0], 1.0)
-
 	return edges
 
 
@@ -1082,7 +1046,7 @@ func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) 
 					last_edges.push_back(e)
 			# Contains all points
 			elif has_first and has_last:
-				pass
+				e.first_connected_to_final = true
 
 		# Create new Edges with Merged points; Add created edges, delete edges used to for merging
 		var edges_to_add = []
@@ -1280,6 +1244,7 @@ func import_from_legacy(legacy: RMSmartShape2D):
 class EdgeMaterialData:
 	var meta_material: SS2D_Material_Edge_Metadata
 	var indicies: Array = []
+	var first_connected_to_final: bool = false
 
 	func _init(i: Array, m: SS2D_Material_Edge_Metadata):
 		meta_material = m
@@ -1338,16 +1303,47 @@ func _edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector
 	return generate_corner
 
 
-func _edge_data_should_weld_first_and_last(ed: EdgeMaterialData) -> bool:
-	var weld_first_and_last = false
-	if ed.indicies.size() == get_point_count():
-		var p1 = get_point_position(ed.indicies[0])
-		var p2 = get_point_position(ed.indicies.back())
-		if p1 == p2:
-			weld_first_and_last = true
-	return weld_first_and_last
+func _edge_generate_corner(
+	pt_prev: Vector2,
+	pt: Vector2,
+	pt_next: Vector2,
+	width_prev: float,
+	width: float,
+	edge_material: SS2D_Material_Edge,
+	texture_idx: int,
+	c_scale: float,
+	c_offset: float
+):
+	var generate_corner = _edge_should_generate_corner(pt_prev, pt, pt_next)
+	if generate_corner == SS2D_Quad.CORNER.NONE:
+		return null
+	var corner_texture = null
+	var corner_texture_normal = null
+	if generate_corner == SS2D_Quad.CORNER.OUTER:
+		corner_texture = edge_material.get_texture_corner_outer(texture_idx)
+		corner_texture_normal = edge_material.get_texture_normal_corner_outer(texture_idx)
+	elif generate_corner == SS2D_Quad.CORNER.INNER:
+		corner_texture = edge_material.get_texture_corner_inner(texture_idx)
+		corner_texture_normal = edge_material.get_texture_normal_corner_inner(texture_idx)
+	if corner_texture == null:
+		return null
+	var corner_quad = build_quad_corner(
+		pt_next,
+		pt,
+		pt_prev,
+		width,
+		width_prev,
+		generate_corner,
+		corner_texture,
+		corner_texture_normal,
+		corner_texture.get_size(),
+		c_scale,
+		c_offset
+	)
+	return corner_quad
 
-func _get_next_unique_point_idx(idx:int, pts:Array, wrap_around:bool):
+
+func _get_next_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	var next_idx = _get_next_point_index(idx, pts, wrap_around)
 	if next_idx == idx:
 		return idx
@@ -1357,7 +1353,8 @@ func _get_next_unique_point_idx(idx:int, pts:Array, wrap_around:bool):
 		return _get_next_unique_point_idx(next_idx, pts, wrap_around)
 	return next_idx
 
-func _get_previous_unique_point_idx(idx:int, pts:Array, wrap_around:bool):
+
+func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	var previous_idx = _get_previous_point_index(idx, pts, wrap_around)
 	if previous_idx == idx:
 		return idx
@@ -1366,6 +1363,7 @@ func _get_previous_unique_point_idx(idx:int, pts:Array, wrap_around:bool):
 	if pt1 == pt2:
 		return _get_previous_unique_point_idx(previous_idx, pts, wrap_around)
 	return previous_idx
+
 
 func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
@@ -1417,9 +1415,6 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 
 		var texture_idx = get_point_texture_index(vert_key)
 		var flip_x = get_point_texture_flip(vert_key)
-		var generate_corner = SS2D_Quad.CORNER.NONE
-		if tess_idx != first_t_idx:
-			generate_corner = _edge_should_generate_corner(pt_prev, pt, pt_next)
 
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
 		var is_first_point = vert_idx == first_idx
@@ -1453,31 +1448,21 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		new_quads.push_back(new_quad)
 
 		# Corner Quad
-		if generate_corner != SS2D_Quad.CORNER.NONE:
+		if tess_idx != first_t_idx:
 			var prev_width = _get_width_for_tessellated_point(points, t_points, tess_idx_prev)
-			var corner_texture = null
-			var corner_texture_normal = null
-			if generate_corner == SS2D_Quad.CORNER.OUTER:
-				corner_texture = edge_material.get_texture_corner_outer(texture_idx)
-				corner_texture_normal = edge_material.get_texture_normal_corner_outer(texture_idx)
-			elif generate_corner == SS2D_Quad.CORNER.INNER:
-				corner_texture = edge_material.get_texture_corner_inner(texture_idx)
-				corner_texture_normal = edge_material.get_texture_normal_corner_inner(texture_idx)
-			if corner_texture != null:
-				var corner_quad = build_quad_corner(
-					pt_next,
-					pt,
-					pt_prev,
-					width,
-					prev_width,
-					generate_corner,
-					corner_texture,
-					corner_texture_normal,
-					corner_texture.get_size(),
-					c_scale,
-					c_offset
-				)
-				new_quads.push_front(corner_quad)
+			var q = _edge_generate_corner(
+				pt_prev,
+				pt,
+				pt_next,
+				prev_width,
+				width,
+				edge_material,
+				texture_idx,
+				c_scale,
+				c_offset
+			)
+			if q != null:
+				new_quads.push_front(q)
 
 		# Taper Quad
 		if is_first_tess_point or is_last_tess_point:
@@ -1517,12 +1502,27 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 					new_quad.texture = taper_texture
 					new_quad.texture_normal = taper_texture_normal
 
+		# Final point for closed shapes fix
+		if is_last_point and edge_data.first_connected_to_final:
+			var idx_mid = t_points.size() - 1
+			var idx_next = _get_next_unique_point_idx(idx_mid, t_points, true)
+			var idx_prev = _get_previous_unique_point_idx(idx_mid, t_points, true)
+			var p_p = t_points[idx_prev]
+			var p_m = t_points[idx_mid]
+			var p_n = t_points[idx_next]
+			var w_p = _get_width_for_tessellated_point(points, t_points, idx_prev)
+			var w_m = _get_width_for_tessellated_point(points, t_points, idx_mid)
+			var q = _edge_generate_corner(
+				p_p, p_m, p_n, w_p, w_m, edge_material, texture_idx, c_scale, c_offset
+			)
+			if q != null:
+				new_quads.push_back(q)
+
 		# Add new quads to edge
 		for q in new_quads:
 			edge.quads.push_back(q)
 		i += next_point_delta
 	if edge_material_meta.weld:
-		#_weld_quad_array(edge.quads, _edge_data_should_weld_first_and_last(edge_data))
-		_weld_quad_array(edge.quads, 1.0, false)
+		_weld_quad_array(edge.quads, 1.0, edge_data.first_connected_to_final)
 
 	return edge
