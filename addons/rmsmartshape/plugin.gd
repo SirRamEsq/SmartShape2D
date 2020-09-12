@@ -729,15 +729,11 @@ func draw_mode_edit_vert(overlay: Control):
 
 	# Draw Highlighted Handle
 	if current_action.is_single_vert_selected():
-		overlay.draw_circle(
-			t.xform(verts[current_action.current_point_index(shape)]), 5, Color.white
-		)
-		overlay.draw_circle(
-			t.xform(verts[current_action.current_point_index(shape)]), 3, Color.black
-		)
+		var tex = ICON_HANDLE
+		overlay.draw_texture(tex, t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5, Color(0.5, 1.0, 1.0))
 
 
-func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, width = 1.0):
+func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, width = 2.0):
 	# Draw Outline
 	var prev_pt = null
 	if color == null:
@@ -745,7 +741,7 @@ func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, 
 	for i in range(0, points.size(), 1):
 		var pt = points[i]
 		if prev_pt != null:
-			overlay.draw_line(prev_pt, t.xform(pt), color, width)
+			overlay.draw_line(prev_pt, t.xform(pt), color, width, true)
 		prev_pt = t.xform(pt)
 
 
@@ -773,9 +769,9 @@ func _draw_control_point_line(c: Control, vert: Vector2, cp: Vector2, tex: Textu
 	# Draw the line with a dark and light color to be visible on all backgrounds
 	var color_dark = Color(0, 0, 0, 0.5)
 	var color_light = Color(1, 1, 1, 0.5)
-	var width = 1.0
-	c.draw_line(vert, cp, color_dark, width)
-	c.draw_line(vert, cp, color_light, width)
+	var width = 2.0
+	c.draw_line(vert, cp, color_dark, width, true)
+	c.draw_line(vert, cp, color_light, width, true)
 	c.draw_texture(tex, cp - tex.get_size() * 0.5)
 
 
