@@ -1293,6 +1293,9 @@ class EdgeMaterialData:
 
 
 func _edge_data_get_tess_point_count(ed: EdgeMaterialData) -> int:
+	"""
+	Get Number of TessPoints from the start and end indicies of the ed parameter
+	"""
 	var count: int = 0
 	var points = get_vertices()
 	var t_points = get_tessellated_points()
@@ -1344,6 +1347,25 @@ func _edge_data_should_weld_first_and_last(ed: EdgeMaterialData) -> bool:
 			weld_first_and_last = true
 	return weld_first_and_last
 
+func _get_next_unique_point_idx(idx:int, pts:Array, wrap_around:bool):
+	var next_idx = _get_next_point_index(idx, pts, wrap_around)
+	if next_idx == idx:
+		return idx
+	var pt1 = pts[idx]
+	var pt2 = pts[next_idx]
+	if pt1 == pt2:
+		return _get_next_unique_point_idx(next_idx, pts, wrap_around)
+	return next_idx
+
+func _get_previous_unique_point_idx(idx:int, pts:Array, wrap_around:bool):
+	var previous_idx = _get_previous_point_index(idx, pts, wrap_around)
+	if previous_idx == idx:
+		return idx
+	var pt1 = pts[idx]
+	var pt2 = pts[previous_idx]
+	if pt1 == pt2:
+		return _get_previous_unique_point_idx(previous_idx, pts, wrap_around)
+	return previous_idx
 
 func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
@@ -1375,30 +1397,28 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 	var c_scale = 1.0
 	c_offset += edge_material_meta.offset
 	var c_extends = 0.0
-	for i in range(tess_point_count):
+	var i = 0
+	while i < tess_point_count:
 		var tess_idx = (first_t_idx + i) % t_points.size()
-		var tess_idx_next = _get_next_point_index(tess_idx, t_points, wrap_around)
-		var tess_idx_prev = _get_previous_point_index(tess_idx, t_points, wrap_around)
+		var tess_idx_next = _get_next_unique_point_idx(tess_idx, t_points, wrap_around)
+		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, t_points, wrap_around)
+		var next_point_delta = 0
+		for j in range(t_points.size()):
+			if ((tess_idx + j) % t_points.size()) == tess_idx_next:
+				next_point_delta = j
+				break
+
 		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
 		var vert_key = get_point_key_at_index(vert_idx)
 		var next_vert_idx = _get_next_point_index(vert_idx, points, wrap_around)
 		var pt = t_points[tess_idx]
 		var pt_next = t_points[tess_idx_next]
 		var pt_prev = t_points[tess_idx_prev]
-		# Since the first and last point are the exact same,
-		# Weird rendering occurs around point idx '0'
-		# This code simply skips the final point when an edge wraps around
-		# from the final idx to the first idx
-		if pt == pt_next:
-			continue
-		if pt == pt_prev:
-			tess_idx_prev = _get_previous_point_index(tess_idx_prev, t_points, wrap_around)
-			pt_prev = t_points[tess_idx_prev]
 
 		var texture_idx = get_point_texture_index(vert_key)
 		var flip_x = get_point_texture_flip(vert_key)
 		var generate_corner = SS2D_Quad.CORNER.NONE
-		if tess_idx != last_t_idx and tess_idx != first_t_idx:
+		if tess_idx != first_t_idx:
 			generate_corner = _edge_should_generate_corner(pt_prev, pt, pt_next)
 
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
@@ -1410,6 +1430,7 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		var tex = edge_material.get_texture(texture_idx)
 		var tex_normal = edge_material.get_texture_normal(texture_idx)
 		if tex == null:
+			i += next_point_delta
 			continue
 		var tex_size = tex.get_size()
 		var new_quad = _build_quad_from_point(
@@ -1432,7 +1453,7 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		new_quads.push_back(new_quad)
 
 		# Corner Quad
-		if generate_corner != SS2D_Quad.CORNER.NONE and not is_first_tess_point:
+		if generate_corner != SS2D_Quad.CORNER.NONE:
 			var prev_width = _get_width_for_tessellated_point(points, t_points, tess_idx_prev)
 			var corner_texture = null
 			var corner_texture_normal = null
@@ -1499,6 +1520,7 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		# Add new quads to edge
 		for q in new_quads:
 			edge.quads.push_back(q)
+		i += next_point_delta
 	if edge_material_meta.weld:
 		#_weld_quad_array(edge.quads, _edge_data_should_weld_first_and_last(edge_data))
 		_weld_quad_array(edge.quads, 1.0, false)
