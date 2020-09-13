@@ -24,55 +24,68 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Label" type="Label" parent="VBoxContainer"]
+margin_right = 231.0
+margin_bottom = 14.0
+text = "Configure Snap"
+align = 1
+
 [node name="SnapOffset" type="HBoxContainer" parent="VBoxContainer"]
-margin_right = 234.0
-margin_bottom = 24.0
+margin_top = 18.0
+margin_right = 231.0
+margin_bottom = 42.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Label" type="Label" parent="VBoxContainer/SnapOffset"]
 margin_top = 5.0
-margin_right = 77.0
+margin_right = 74.0
 margin_bottom = 19.0
-text = "Snap Offset:"
+text = "Grid Offset:"
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="x" type="SpinBox" parent="VBoxContainer/SnapOffset"]
-margin_left = 81.0
-margin_right = 155.0
+margin_left = 78.0
+margin_right = 152.0
 margin_bottom = 24.0
+suffix = "px"
 
 [node name="y" type="SpinBox" parent="VBoxContainer/SnapOffset"]
-margin_left = 159.0
-margin_right = 233.0
+margin_left = 156.0
+margin_right = 230.0
 margin_bottom = 24.0
+suffix = "px"
 
 [node name="SnapStep" type="HBoxContainer" parent="VBoxContainer"]
-margin_top = 28.0
-margin_right = 234.0
-margin_bottom = 52.0
+margin_top = 46.0
+margin_right = 231.0
+margin_bottom = 70.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Label" type="Label" parent="VBoxContainer/SnapStep"]
 margin_top = 5.0
-margin_right = 78.0
+margin_right = 75.0
 margin_bottom = 19.0
-text = "Snap Step:   "
+text = "Grid Step:   "
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="x" type="SpinBox" parent="VBoxContainer/SnapStep"]
-margin_left = 82.0
-margin_right = 156.0
+margin_left = 79.0
+margin_right = 153.0
 margin_bottom = 24.0
+value = 8.0
+suffix = "px"
 
 [node name="y" type="SpinBox" parent="VBoxContainer/SnapStep"]
-margin_left = 160.0
-margin_right = 234.0
+margin_left = 157.0
+margin_right = 231.0
 margin_bottom = 24.0
+value = 8.0
+suffix = "px"
