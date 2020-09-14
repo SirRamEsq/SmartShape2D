@@ -259,7 +259,6 @@ func bake_collision():
 		var width = _get_width_for_tessellated_point(verts, t_points, i)
 		collision_quads.push_back(
 			_build_quad_from_point(
-				pt_prev,
 				pt,
 				pt_next,
 				null,

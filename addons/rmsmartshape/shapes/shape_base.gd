@@ -690,7 +690,6 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 
 
 func _build_quad_from_point(
-	pt_prev: Vector2,
 	pt: Vector2,
 	pt_next: Vector2,
 	tex: Texture,
@@ -816,7 +815,6 @@ func _build_edge_without_material(
 		var is_last_tess_point = tess_idx == last_t_idx - 1
 
 		var new_quad = _build_quad_from_point(
-			pt_prev,
 			pt,
 			pt_next,
 			null,
@@ -1428,7 +1426,6 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 			continue
 		var tex_size = tex.get_size()
 		var new_quad = _build_quad_from_point(
-			pt_prev,
 			pt,
 			pt_next,
 			tex,

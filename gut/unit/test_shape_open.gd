@@ -294,7 +294,7 @@ func test_build_quad_from_point_scale(scale = use_parameters(scale_params)):
 	var pt_next = points[1]
 
 	var quad = shape._build_quad_from_point(
-		pt_prev, pt, pt_next, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
+		pt, pt_next, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
 	)
 	# Top Left (A)
 	# Bottom Left (B)
@@ -313,7 +313,7 @@ func test_build_quad_from_point_scale(scale = use_parameters(scale_params)):
 
 	# Flip edges
 	quad = shape._build_quad_from_point(
-		pt_prev, pt, pt_next, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
+		pt, pt_next, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
 	)
 	assert_eq(quad.pt_a, expected_points[1])
 	assert_eq(quad.pt_b, expected_points[0])
@@ -342,7 +342,6 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	var vtx: Vector2 = normal * (tex_size * 0.5)
 
 	var quad = shape._build_quad_from_point(
-		pt_prev,
 		pt,
 		pt_next,
 		TEST_TEXTURE,
