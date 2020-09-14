@@ -2,6 +2,13 @@ tool
 extends SS2D_Shape_Base
 class_name SS2D_Shape_Closed, "../assets/closed_shape.png"
 
+enum FillMode {NORMAL = 0, INVERT = 1, NONE = 2}
+export(FillMode) var fill_mode = 0 setget set_fill_mode
+
+func set_fill_mode(e):
+	fill_mode = e
+	set_as_dirty()
+	property_list_changed_notify()
 
 #########
 # GODOT #
@@ -119,6 +126,8 @@ static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vec
 
 
 func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
+	if fill_mode == FillMode.NONE or fill_mode == FillMode.INVERT:
+		return []
 	var meshes = []
 	if s_mat == null:
 		return meshes
@@ -241,6 +250,9 @@ func _add_point_update():
 func bake_collision():
 	if not has_node(collision_polygon_node_path) or not is_shape_closed():
 		return
+	if fill_mode == FillMode.INVERT:
+		.bake_collision()
+		return
 	var polygon = get_node(collision_polygon_node_path)
 	var collision_width = 1.0
 	var collision_extends = 0.0
@@ -303,7 +315,7 @@ func _on_dirty_update():
 
 
 func cache_edges():
-	if shape_material != null and render_edges:
+	if shape_material != null and edge_mode != EdgeMode.NONE:
 		_edges = _build_edges(shape_material, true)
 	else:
 		_edges = []
@@ -320,8 +332,10 @@ func import_from_legacy(legacy: RMSmartShape2D):
 
 	# Properties
 	editor_debug = legacy.editor_debug
-	flip_edges = legacy.flip_edges
-	render_edges = legacy.draw_edges
+	if not legacy.draw_edges:
+		edge_mode = EdgeMode.NONE
+	elif legacy.flip_edges:
+		edge_mode = EdgeMode.FLIPPED
 	tessellation_stages = legacy.tessellation_stages
 	tessellation_tolerence = legacy.tessellation_tolerence
 	curve_bake_interval = legacy.collision_bake_interval

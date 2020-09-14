@@ -26,7 +26,7 @@ func __new():
 
 
 func should_flip_edges() -> bool:
-	return flip_edges
+	return edge_mode == EdgeMode.FLIPPED
 
 func import_from_legacy(legacy:RMSmartShape2D):
 	# Sanity Check
@@ -39,8 +39,10 @@ func import_from_legacy(legacy:RMSmartShape2D):
 
 	# Properties
 	editor_debug = legacy.editor_debug
-	flip_edges = legacy.flip_edges
-	render_edges = legacy.draw_edges
+	if not legacy.draw_edges:
+		edge_mode = EdgeMode.NONE
+	elif legacy.flip_edges:
+		edge_mode = EdgeMode.FLIPPED
 	tessellation_stages = legacy.tessellation_stages
 	tessellation_tolerence = legacy.tessellation_tolerence
 	curve_bake_interval = legacy.collision_bake_interval

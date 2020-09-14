@@ -18,8 +18,10 @@ To use search to jump between categories, use the regex:
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
 export (bool) var editor_debug: bool = false setget _set_editor_debug
-export (bool) var flip_edges: bool = false setget set_flip_edges
-export (bool) var render_edges: bool = true setget set_render_edges
+
+enum EdgeMode {NORMAL = 0, FLIPPED = 1, NONE = 2}
+export(EdgeMode) var edge_mode = 0 setget set_edgemode
+
 export (float) var collision_size: float = 32 setget set_collision_size
 export (float) var collision_offset: float = 0.0 setget set_collision_offset
 export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
@@ -58,17 +60,21 @@ func set_point_array(a: SS2D_Point_Array):
 	set_as_dirty()
 	property_list_changed_notify()
 
-
-func set_flip_edges(b: bool):
-	flip_edges = b
+func set_edgemode(e):
+	edge_mode = e
 	set_as_dirty()
 	property_list_changed_notify()
 
-
-func set_render_edges(b: bool):
-	render_edges = b
-	set_as_dirty()
-	property_list_changed_notify()
+#func set_flip_edges(b: bool):
+#	flip_edges = b
+#	set_as_dirty()
+#	property_list_changed_notify()
+#
+#
+#func set_render_edges(b: bool):
+#	render_edges = b
+#	set_as_dirty()
+#	property_list_changed_notify()
 
 
 func set_collision_size(s: float):
@@ -533,6 +539,7 @@ func _exit_tree():
 
 func should_flip_edges() -> bool:
 	# XOR operator
+	var flip_edges = edge_mode == EdgeMode.FLIPPED
 	return not (are_points_clockwise() != flip_edges)
 
 
@@ -615,6 +622,7 @@ func bake_collision():
 
 
 func cache_edges():
+	var render_edges = edge_mode != EdgeMode.NONE
 	if shape_material != null and render_edges:
 		_edges = _build_edges(shape_material, false)
 	else:
@@ -801,7 +809,7 @@ func _build_edge_without_material(
 				var inner = false
 				if deg < 0:
 					inner = true
-				if flip_edges:
+				if edge_mode == EdgeMode.FLIPPED:
 					inner = not inner
 				if inner:
 					generate_corner = SS2D_Quad.CORNER.INNER
@@ -886,7 +894,7 @@ func build_quad_corner(
 	var offset_12 = normal_12 * custom_scale * pt_width * extents
 	var offset_23 = normal_23 * custom_scale * pt_prev_width * extents
 	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * extents
-	if flip_edges:
+	if edge_mode == EdgeMode.FLIPPED:
 		offset_12 *= -1
 		offset_23 *= -1
 		custom_offset_13 *= -1
@@ -1286,7 +1294,7 @@ func _edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector
 		var inner = false
 		if deg < 0:
 			inner = true
-		if flip_edges:
+		if edge_mode == EdgeMode.FLIPPED:
 			inner = not inner
 		if inner:
 			generate_corner = SS2D_Quad.CORNER.INNER
