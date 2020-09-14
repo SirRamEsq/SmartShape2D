@@ -690,7 +690,6 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 
 
 func _build_quad_from_point(
-	pt_prev: Vector2,
 	pt: Vector2,
 	pt_next: Vector2,
 	tex: Texture,
@@ -720,8 +719,7 @@ func _build_quad_from_point(
 		vtx *= -1
 
 	var offset = vtx * custom_offset
-	var final_offset_scale_in = vtx * custom_scale * width
-	var final_offset_scale_out = vtx * custom_scale * width
+	var width_scale = vtx * custom_scale * width
 
 	if first_point:
 		pt -= (delta_normal * tex_size * custom_extends)
@@ -737,10 +735,10 @@ func _build_quad_from_point(
 	#              |        |              #
 	#      pt_b -> O--------O <- pt_c      #
 	########################################
-	quad.pt_a = pt + final_offset_scale_in + offset
-	quad.pt_b = pt - final_offset_scale_in + offset
-	quad.pt_c = pt_next - final_offset_scale_out + offset
-	quad.pt_d = pt_next + final_offset_scale_out + offset
+	quad.pt_a = pt + width_scale + offset
+	quad.pt_b = pt - width_scale + offset
+	quad.pt_c = pt_next - width_scale + offset
+	quad.pt_d = pt_next + width_scale + offset
 	quad.flip_texture = flip_x
 
 	return quad
@@ -817,7 +815,6 @@ func _build_edge_without_material(
 		var is_last_tess_point = tess_idx == last_t_idx - 1
 
 		var new_quad = _build_quad_from_point(
-			pt_prev,
 			pt,
 			pt_next,
 			null,
@@ -921,12 +918,7 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
-		var needed_height: float = 0.0
-		if a.texture != null and b.texture != null:
-			needed_height = (
-				(a.texture.get_size().y + (b.texture.get_size().y * b.width_factor))
-				/ 2.0
-			)
+		var needed_height: float = (a.get_height() + b.get_height())/2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
@@ -1429,7 +1421,6 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 			continue
 		var tex_size = tex.get_size()
 		var new_quad = _build_quad_from_point(
-			pt_prev,
 			pt,
 			pt_next,
 			tex,

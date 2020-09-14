@@ -73,108 +73,106 @@ func test_curve_duplicate():
 
 
 func test_tess_point_vertex_relationship():
-	var shape_base = SS2D_Shape_Open.new()
-	add_child_autofree(shape_base)
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
 	var points = get_clockwise_points()
 
-	shape_base.add_points(points)
+	shape.add_points(points)
 
-	var verts = shape_base.get_vertices()
-	var t_verts = shape_base.get_tessellated_points()
+	var verts = shape.get_vertices()
+	var t_verts = shape.get_tessellated_points()
 	assert_eq(points.size(), t_verts.size())
 
 	var control_point_value = Vector2(-16, 0)
 	var control_point_vtx_idx = 4
 
-	shape_base.set_point_in(control_point_vtx_idx, control_point_value)
-	shape_base.set_point_out(control_point_vtx_idx, control_point_value * -1)
+	shape.set_point_in(control_point_vtx_idx, control_point_value)
+	shape.set_point_out(control_point_vtx_idx, control_point_value * -1)
 
-	verts = shape_base.get_vertices()
-	t_verts = shape_base.get_tessellated_points()
+	verts = shape.get_vertices()
+	t_verts = shape.get_tessellated_points()
 	assert_ne(points.size(), t_verts.size())
 
 	var test_idx = 4
-	var test_t_idx = shape_base.get_tessellated_idx_from_point(verts, t_verts, test_idx)
+	var test_t_idx = shape.get_tessellated_idx_from_point(verts, t_verts, test_idx)
 	assert_ne(test_idx, test_t_idx)
 	assert_eq(verts[test_idx], t_verts[test_t_idx])
-	var new_test_idx = shape_base.get_vertex_idx_from_tessellated_point(verts, t_verts, test_t_idx)
+	var new_test_idx = shape.get_vertex_idx_from_tessellated_point(verts, t_verts, test_t_idx)
 	assert_eq(test_idx, new_test_idx)
 
 	var results = [
-		shape_base.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx),
-		shape_base.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 1),
-		shape_base.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 2),
-		shape_base.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 3)
+		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx),
+		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 1),
+		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 2),
+		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 3)
 	]
 	assert_eq(0.0, results[0])
 	var message = "Ratio increasing with distance from prev vector"
 	for i in range(1, results.size(), 1):
 		assert_true(results[i - 1] < results[i], message)
 
-	results[-1] = shape_base.get_ratio_from_tessellated_point_to_vertex(
-		verts, t_verts, test_t_idx - 1
-	)
+	results[-1] = shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx - 1)
 	assert_true(results[-1] > results[0], message)
 
 
 func test_invert_point_order():
-	var shape_base = SS2D_Shape_Open.new()
-	add_child_autofree(shape_base)
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
 	var points = get_clockwise_points()
 	var size = points.size()
 	var last_idx = size - 1
-	var keys = shape_base.add_points(points)
-	shape_base.set_point_width(keys[0], 5.0)
-	assert_eq(points[0], shape_base.get_point_at_index(0).position)
-	assert_eq(points[last_idx], shape_base.get_point_at_index(last_idx).position)
+	var keys = shape.add_points(points)
+	shape.set_point_width(keys[0], 5.0)
+	assert_eq(points[0], shape.get_point_at_index(0).position)
+	assert_eq(points[last_idx], shape.get_point_at_index(last_idx).position)
 
-	assert_eq(1.0, shape_base.get_point_at_index(last_idx).properties.width)
-	assert_eq(5.0, shape_base.get_point_at_index(0).properties.width)
+	assert_eq(1.0, shape.get_point_at_index(last_idx).properties.width)
+	assert_eq(5.0, shape.get_point_at_index(0).properties.width)
 
-	shape_base.invert_point_order()
+	shape.invert_point_order()
 
-	assert_eq(5.0, shape_base.get_point_at_index(last_idx).properties.width)
-	assert_eq(1.0, shape_base.get_point_at_index(0).properties.width)
+	assert_eq(5.0, shape.get_point_at_index(last_idx).properties.width)
+	assert_eq(1.0, shape.get_point_at_index(0).properties.width)
 
-	assert_eq(points[0], shape_base.get_point_at_index(last_idx).position)
-	assert_eq(points[last_idx], shape_base.get_point_at_index(0).position)
+	assert_eq(points[0], shape.get_point_at_index(last_idx).position)
+	assert_eq(points[last_idx], shape.get_point_at_index(0).position)
 
-	assert_eq(points[1], shape_base.get_point_at_index(last_idx - 1).position)
-	assert_eq(points[last_idx - 1], shape_base.get_point_at_index(1).position)
+	assert_eq(points[1], shape.get_point_at_index(last_idx - 1).position)
+	assert_eq(points[last_idx - 1], shape.get_point_at_index(1).position)
 
-	assert_eq(points[2], shape_base.get_point_at_index(last_idx - 2).position)
-	assert_eq(points[last_idx - 2], shape_base.get_point_at_index(2).position)
+	assert_eq(points[2], shape.get_point_at_index(last_idx - 2).position)
+	assert_eq(points[last_idx - 2], shape.get_point_at_index(2).position)
 
 
 #func test_duplicate():
-#var shape_base = SS2D_Shape_Open.new()
-#add_child_autofree(shape_base)
+#var shape = SS2D_Shape_Open.new()
+#add_child_autofree(shape)
 #var points = get_clockwise_points()
-#shape_base.add_points(points)
+#shape.add_points(points)
 #
-#shape_base.set_point_width(0, 5.0)
-#shape_base.set_point_width(2, 3.0)
-#shape_base.set_point_width(5, 4.0)
+#shape.set_point_width(0, 5.0)
+#shape.set_point_width(2, 3.0)
+#shape.set_point_width(5, 4.0)
 #
-#shape_base.set_point_texture_index(0, 1)
-#shape_base.set_point_texture_index(2, 2)
-#shape_base.set_point_texture_index(3, 3)
-#shape_base.set_point_texture_index(5, 5)
+#shape.set_point_texture_index(0, 1)
+#shape.set_point_texture_index(2, 2)
+#shape.set_point_texture_index(3, 3)
+#shape.set_point_texture_index(5, 5)
 #
-#shape_base.set_point_texture_flip(1, true)
-#shape_base.set_point_texture_flip(2, true)
-#shape_base.set_point_texture_flip(4, true)
+#shape.set_point_texture_flip(1, true)
+#shape.set_point_texture_flip(2, true)
+#shape.set_point_texture_flip(4, true)
 #
-#var copy = shape_base.duplicate_self()
+#var copy = shape.duplicate_self()
 #add_child_autofree(copy)
-#assert_ne(shape_base.get_curve(), copy.get_curve())
-#assert_eq(shape_base.get_point_count(), copy.get_point_count())
+#assert_ne(shape.get_curve(), copy.get_curve())
+#assert_eq(shape.get_point_count(), copy.get_point_count())
 #for i in range(-1, points.size(), 1):
 #var s = "Test Point %s: " % i
-#assert_eq(shape_base.get_point_width(i), copy.get_point_width(i), s + "Width")
-#assert_eq(shape_base.get_point_texture_flip(i), copy.get_point_texture_flip(i), s + "Flip")
+#assert_eq(shape.get_point_width(i), copy.get_point_width(i), s + "Width")
+#assert_eq(shape.get_point_texture_flip(i), copy.get_point_texture_flip(i), s + "Flip")
 #assert_eq(
-#shape_base.get_point_texture_index(i), copy.get_point_texture_index(i), s + "Index"
+#shape.get_point_texture_index(i), copy.get_point_texture_index(i), s + "Index"
 #)
 
 
@@ -274,9 +272,9 @@ func test_get_edge_meta_materials_many():
 var scale_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
 
 
-func test_build_quad_from_point(scale = use_parameters(scale_params)):
-	var shape_base = SS2D_Shape_Open.new()
-	add_child_autofree(shape_base)
+func test_build_quad_from_point_scale(scale = use_parameters(scale_params)):
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
 
 	var edge_mat = SS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
@@ -295,8 +293,8 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	var pt = points[0]
 	var pt_next = points[1]
 
-	var quad = shape_base._build_quad_from_point(
-		pt_prev, pt, pt_next, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
+	var quad = shape._build_quad_from_point(
+		pt, pt_next, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
 	)
 	# Top Left (A)
 	# Bottom Left (B)
@@ -314,8 +312,8 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	assert_eq(quad.pt_d, expected_points[3])
 
 	# Flip edges
-	quad = shape_base._build_quad_from_point(
-		pt_prev, pt, pt_next, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
+	quad = shape._build_quad_from_point(
+		pt, pt_next, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
 	)
 	assert_eq(quad.pt_a, expected_points[1])
 	assert_eq(quad.pt_b, expected_points[0])
@@ -323,11 +321,57 @@ func test_build_quad_from_point(scale = use_parameters(scale_params)):
 	assert_eq(quad.pt_d, expected_points[2])
 
 
+var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
+
+
+func test_build_quad_from_point_width(width = use_parameters(width_params)):
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
+
+	var edge_mat = SS2D_Material_Edge.new()
+
+	var pt_prev = Vector2(100, 100)
+	var pt = Vector2(200, 100)
+	var pt_next = Vector2(300, 100)
+	var points = [pt_prev, pt, pt_next]
+
+	var c_scale = 1.0
+	var c_offset = 0.0
+	var c_extends = 0.0
+	var delta = points[1] - points[0]
+	var normal = Vector2(delta.y, -delta.x).normalized()
+	var tex_size = TEST_TEXTURE.get_size()
+	var vtx: Vector2 = normal * (tex_size * 0.5)
+
+	var quad = shape._build_quad_from_point(
+		pt,
+		pt_next,
+		TEST_TEXTURE,
+		null,
+		tex_size,
+		width,
+		false,
+		false,
+		false,
+		false,
+		c_scale,
+		c_offset,
+		c_extends
+	)
+	var expected_points = [
+		pt + (width * vtx), pt - (width * vtx), pt_next - (width * vtx), pt_next + (width * vtx)
+	]
+	assert_eq(quad.pt_a, expected_points[0])
+	assert_eq(quad.pt_b, expected_points[1])
+	assert_eq(quad.pt_c, expected_points[2])
+	assert_eq(quad.pt_d, expected_points[3])
+
+
 func test_get_edge_material_data():
-	var shape_base = SS2D_Shape_Open.new()
-	add_child_autofree(shape_base)
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
 	var points = get_clockwise_points()
-	shape_base.add_points(points)
+	shape.add_points(points)
 
 	# One edge material that applies to all 360 degrees
 	var edge_mat = SS2D_Material_Edge.new()
@@ -347,27 +391,27 @@ func test_get_edge_material_data():
 		assert_eq(e, edge_mat_meta)
 		assert_eq(e.edge_material, edge_mat)
 
-	var edge_material_data: Array = shape_base.get_edge_material_data(s_m, false)
+	var edge_material_data: Array = shape.get_edge_material_data(s_m, false)
 	assert_eq(edge_material_data.size(), 1, "1 edge should be produced")
-	edge_material_data = shape_base.get_edge_material_data(s_m, true)
+	edge_material_data = shape.get_edge_material_data(s_m, true)
 	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
 
 	# Add Override that shouldn't be rendered
 	var override_mat = SS2D_Material_Edge_Metadata.new()
 	override_mat.render = false
-	var keys = [shape_base.get_point_key_at_index(1), shape_base.get_point_key_at_index(2)]
-	shape_base.set_material_override(keys, override_mat)
+	var keys = [shape.get_point_key_at_index(1), shape.get_point_key_at_index(2)]
+	shape.set_material_override(keys, override_mat)
 
-	edge_material_data = shape_base.get_edge_material_data(s_m, false)
+	edge_material_data = shape.get_edge_material_data(s_m, false)
 	assert_eq(edge_material_data.size(), 2, "2 edges should be produced")
-	edge_material_data = shape_base.get_edge_material_data(s_m, true)
+	edge_material_data = shape.get_edge_material_data(s_m, true)
 	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
 
 	# Add Override that shouldn't be rendered
 	override_mat = SS2D_Material_Edge_Metadata.new()
 	override_mat.render = false
-	keys = [shape_base.get_point_key_at_index(3), shape_base.get_point_key_at_index(4)]
-	shape_base.set_material_override(keys, override_mat)
+	keys = [shape.get_point_key_at_index(3), shape.get_point_key_at_index(4)]
+	shape.set_material_override(keys, override_mat)
 
 	# At this point
 	#  - idx 1 and 2 aren't rendered
@@ -375,7 +419,7 @@ func test_get_edge_material_data():
 	#  - idx 3 and 4 aren't rendered
 	# The sequence is
 	#   0, 1 | 2, 3 | 4, 5
-	edge_material_data = shape_base.get_edge_material_data(s_m, false)
+	edge_material_data = shape.get_edge_material_data(s_m, false)
 	assert_eq(edge_material_data.size(), 3, "3 edges should be produced")
 	# 0, 1
 	assert_eq(edge_material_data[0].indicies.size(), 2)
@@ -384,7 +428,7 @@ func test_get_edge_material_data():
 	#  4, 5
 	assert_eq(edge_material_data[2].indicies.size(), 2)
 
-	edge_material_data = shape_base.get_edge_material_data(s_m, true)
+	edge_material_data = shape.get_edge_material_data(s_m, true)
 	assert_eq(edge_material_data.size(), 2, "2 merged wrap_around edge should be produced")
 
 	# 2, 3
@@ -395,6 +439,38 @@ func test_get_edge_material_data():
 	gut.p(em_data_large)
 	assert_eq(em_data_small.indicies.size(), 2)
 	assert_eq(em_data_large.indicies.size(), 4)
+
+func test_get_width_for_tessellated_point():
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
+	var points = get_clockwise_points()
+	shape.add_points(points)
+	var idx1 = 1
+	var idx2 = 2
+	var k1 = shape.get_point_key_at_index(idx1)
+	var k2 = shape.get_point_key_at_index(idx2)
+	var w1 = 5.3
+	var w2 = 3.15
+	var w_average = (w1 + w2)/2.0
+	shape.set_point_width(k1, w1)
+	shape.set_point_width(k2, w2)
+	var point_in = Vector2(-16,0)
+	var point_out = point_in * -1
+	shape.set_point_in(k1, point_in)
+	shape.set_point_out(k1, point_out)
+	shape.set_point_in(k2, point_in)
+	shape.set_point_out(k2, point_out)
+
+	var t_points = shape.get_tessellated_points()
+	points = shape.get_vertices()
+	var t_idx_1 = shape.get_tessellated_idx_from_point(points, t_points, idx1)
+	var t_idx_2 = shape.get_tessellated_idx_from_point(points, t_points, idx2)
+	var test_t_idx = int(floor((t_idx_1 + t_idx_2) / 2.0))
+	assert_ne(t_idx_1, t_idx_2)
+	assert_ne(test_t_idx, t_idx_1)
+	assert_ne(test_t_idx, t_idx_2)
+	var test_width = shape._get_width_for_tessellated_point(points, t_points, test_t_idx)
+	assert_almost_eq(test_width, w_average, 0.1)
 
 
 func get_clockwise_points() -> Array:
