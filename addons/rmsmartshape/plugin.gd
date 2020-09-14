@@ -194,7 +194,7 @@ func _gui_build_toolbar():
 	tb_snap_popup = tb_snap.get_popup()
 	tb_snap.icon = ICON_SNAP
 	tb_snap_popup.add_check_item("Use Grid Snap")
-	tb_snap_popup.add_check_item("Snap to Global Pos")
+	tb_snap_popup.add_check_item("Snap Relative")
 	tb_snap_popup.add_separator()
 	tb_snap_popup.add_item("Configure Snap...")
 	tb_snap_popup.hide_on_checkable_item_selection = false
@@ -389,7 +389,7 @@ func make_visible(visible):
 # SNAPPING #
 ############
 func use_global_snap() -> bool:
-	return tb_snap_popup.is_item_checked(1)
+	return !tb_snap_popup.is_item_checked(1)
 
 
 func use_snap() -> bool:
