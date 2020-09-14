@@ -14,11 +14,13 @@ var texture_normal: Texture = null
 var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 var flip_texture: bool = false
-var width_factor: float = 1.0
 var control_point_index: int
 
 # Contains value from CORNER enum
 var corner: int = 0
+
+# EXISTS FOR LEGACY REASONS, THIS PROPERTY IS DEPRECATED
+var width_factor: float = 1.0
 
 
 func _to_string() -> String:
@@ -87,3 +89,9 @@ func render_points(rad: float, intensity: float, ci: CanvasItem):
 # Workaround (class cannot reference itself)
 func __new():
 	return get_script().new()
+
+
+func get_height() -> float:
+	var ab = (pt_a - pt_b).abs()
+	var dc = (pt_d - pt_c).abs()
+	return ((ab + dc)/2.0).length()
