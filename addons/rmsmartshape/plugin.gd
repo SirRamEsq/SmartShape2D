@@ -746,13 +746,17 @@ func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, 
 
 
 func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: bool):
-	# Draw handles
+	# Draw Vert handles
 	for i in range(0, verts.size(), 1):
 		var key = shape.get_point_key_at_index(i)
 		var hp = t.xform(verts[i])
 		overlay.draw_texture(ICON_HANDLE, hp - ICON_HANDLE.get_size() * 0.5)
 
-		if control_points:
+	# Draw Control point handles
+	if control_points:
+		for i in range(0, verts.size(), 1):
+			var key = shape.get_point_key_at_index(i)
+			var hp = t.xform(verts[i])
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
 			if i < verts.size() - 1:
 				var pointout = t.xform(verts[i] + shape.get_point_out(key))
@@ -860,24 +864,26 @@ func _input_handle_left_click(
 
 	if current_mode == MODE.EDIT_VERT:
 		gui_edge_info_panel.visible = false
-		# Highlighting a vert to move or add control points to
-		if current_action.is_single_vert_selected():
-			if Input.is_key_pressed(KEY_SHIFT):
-				select_control_points_to_move([current_action.current_point_key()], vp_m_pos)
+
+		# Any nearby control points to move?
+		if not Input.is_key_pressed(KEY_ALT):
+			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
 				return true
-			else:
-				select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
-				return true
+
+			# Highlighting a vert to move or add control points to
+			if current_action.is_single_vert_selected():
+				if Input.is_key_pressed(KEY_SHIFT):
+					select_control_points_to_move([current_action.current_point_key()], vp_m_pos)
+					return true
+				else:
+					select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
+					return true
 
 		# Split the Edge?
 		if _input_split_edge(mb, vp_m_pos, t):
 			return true
 
 		if not on_edge:
-			# Any nearby control points to move?
-			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
-				return true
-
 			# Create new point
 			if Input.is_key_pressed(KEY_ALT):
 				var local_position = t.affine_inverse().xform(mb.position)

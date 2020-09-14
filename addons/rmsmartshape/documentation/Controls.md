@@ -17,4 +17,11 @@ SmartShape2D - Controls
 - Add Bezier curve
   - Mouseover a point, hold SHIFT, then click and drag to create control points on the point
 
+## Overlap
+When multiple points and edges overlap, in can be ambiguous what clicking will do.
+SmartShape adheres the following rules:
+- If a control point overlaps a vertex, the control point takes priority
+- If a control point or vertex overlaps an edge:
+  - Clicking will move the control point or vert
+  - Clicking while holding ALT will create new point on the edge
 
