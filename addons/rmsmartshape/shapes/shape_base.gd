@@ -720,8 +720,7 @@ func _build_quad_from_point(
 		vtx *= -1
 
 	var offset = vtx * custom_offset
-	var final_offset_scale_in = vtx * custom_scale * width
-	var final_offset_scale_out = vtx * custom_scale * width
+	var width_scale = vtx * custom_scale * width
 
 	if first_point:
 		pt -= (delta_normal * tex_size * custom_extends)
@@ -737,10 +736,10 @@ func _build_quad_from_point(
 	#              |        |              #
 	#      pt_b -> O--------O <- pt_c      #
 	########################################
-	quad.pt_a = pt + final_offset_scale_in + offset
-	quad.pt_b = pt - final_offset_scale_in + offset
-	quad.pt_c = pt_next - final_offset_scale_out + offset
-	quad.pt_d = pt_next + final_offset_scale_out + offset
+	quad.pt_a = pt + width_scale + offset
+	quad.pt_b = pt - width_scale + offset
+	quad.pt_c = pt_next - width_scale + offset
+	quad.pt_d = pt_next + width_scale + offset
 	quad.flip_texture = flip_x
 
 	return quad
