@@ -322,6 +322,8 @@ func test_build_quad_from_point_scale(scale = use_parameters(scale_params)):
 
 
 var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
+
+
 func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
@@ -357,10 +359,7 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 		c_extends
 	)
 	var expected_points = [
-		pt + (width * vtx),
-		pt - (width * vtx),
-		pt_next - (width * vtx),
-		pt_next + (width * vtx)
+		pt + (width * vtx), pt - (width * vtx), pt_next - (width * vtx), pt_next + (width * vtx)
 	]
 	assert_eq(quad.pt_a, expected_points[0])
 	assert_eq(quad.pt_b, expected_points[1])
@@ -440,6 +439,38 @@ func test_get_edge_material_data():
 	gut.p(em_data_large)
 	assert_eq(em_data_small.indicies.size(), 2)
 	assert_eq(em_data_large.indicies.size(), 4)
+
+func test_get_width_for_tessellated_point():
+	var shape = SS2D_Shape_Open.new()
+	add_child_autofree(shape)
+	var points = get_clockwise_points()
+	shape.add_points(points)
+	var idx1 = 1
+	var idx2 = 2
+	var k1 = shape.get_point_key_at_index(idx1)
+	var k2 = shape.get_point_key_at_index(idx2)
+	var w1 = 5.3
+	var w2 = 3.15
+	var w_average = (w1 + w2)/2.0
+	shape.set_point_width(k1, w1)
+	shape.set_point_width(k2, w2)
+	var point_in = Vector2(-16,0)
+	var point_out = point_in * -1
+	shape.set_point_in(k1, point_in)
+	shape.set_point_out(k1, point_out)
+	shape.set_point_in(k2, point_in)
+	shape.set_point_out(k2, point_out)
+
+	var t_points = shape.get_tessellated_points()
+	points = shape.get_vertices()
+	var t_idx_1 = shape.get_tessellated_idx_from_point(points, t_points, idx1)
+	var t_idx_2 = shape.get_tessellated_idx_from_point(points, t_points, idx2)
+	var test_t_idx = int(floor((t_idx_1 + t_idx_2) / 2.0))
+	assert_ne(t_idx_1, t_idx_2)
+	assert_ne(test_t_idx, t_idx_1)
+	assert_ne(test_t_idx, t_idx_2)
+	var test_width = shape._get_width_for_tessellated_point(points, t_points, test_t_idx)
+	assert_almost_eq(test_width, w_average, 0.1)
 
 
 func get_clockwise_points() -> Array:
