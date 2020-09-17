@@ -87,6 +87,9 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 			uv_b.x = (length_elapsed + delta_bottom_prev) / tex.get_size().x
 			uv_c.x = (length_elapsed + section_length_bottom) / tex.get_size().x
 			uv_d.x = (length_elapsed + section_length_top) / tex.get_size().x
+			if q == _quads.back():
+				uv_c = ceil(uv_c)
+				uv_d = ceil(uv_d)
 		if q.flip_texture:
 			var t = uv_a
 			uv_a = uv_b
