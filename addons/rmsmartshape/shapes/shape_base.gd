@@ -918,7 +918,7 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
-		var needed_height: float = (a.get_height() + b.get_height())/2.0
+		var needed_height: float = (a.get_height_average() + b.get_height_average())/2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
