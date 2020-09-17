@@ -70,77 +70,64 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 	var length_elapsed: float = 0.0
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var delta_top_prev = 0.0
+	var delta_bottom_prev = 0.0
 	for q in _quads:
 		var section_length: float = q.get_length_average() * change_in_length
+		var section_length_top: float = q.get_length_top() * change_in_length
+		var section_length_bottom: float = q.get_length_bottom() * change_in_length
+		var delta_top = section_length_top - section_length
+		var delta_bottom = section_length_bottom - section_length
 		var uv_a = Vector2(0, 0)
-		var uv_b = Vector2(0, 0)
-		var uv_c = Vector2(0, 0)
-		var uv_d = Vector2(0, 0)
+		var uv_b = Vector2(0, 1)
+		var uv_c = Vector2(1, 1)
+		var uv_d = Vector2(1, 0)
 		if tex != null:
-			if q.flip_texture:
-				uv_a = Vector2(
-					(total_length * change_in_length - length_elapsed) / tex.get_size().x, 0
-				)
-				uv_b = Vector2(
-					(total_length * change_in_length - length_elapsed) / tex.get_size().x, 1
-				)
-				uv_c = Vector2(
-					(
-						(total_length * change_in_length - (section_length + length_elapsed))
-						/ tex.get_size().x
-					),
-					1
-				)
-				uv_d = Vector2(
-					(
-						(total_length * change_in_length - (length_elapsed + section_length))
-						/ tex.get_size().x
-					),
-					0
-				)
-			else:
-				uv_a = Vector2(length_elapsed / tex.get_size().x, 0)
-				uv_b = Vector2(length_elapsed / tex.get_size().x, 1)
-				uv_c = Vector2((length_elapsed + section_length) / tex.get_size().x, 1)
-				uv_d = Vector2((length_elapsed + section_length) / tex.get_size().x, 0)
+			uv_a.x = (length_elapsed + delta_top_prev) / tex.get_size().x
+			uv_b.x = (length_elapsed + delta_bottom_prev) / tex.get_size().x
+			uv_c.x = (length_elapsed + section_length_bottom) / tex.get_size().x
+			uv_d.x = (length_elapsed + section_length_top) / tex.get_size().x
+		if q.flip_texture:
+			var t = uv_a
+			uv_a = uv_b
+			uv_b = t
+			t = uv_c
+			uv_c = uv_d
+			uv_d = t
 
-		#st.add_color(Color.white)
 		# A
-		if tex != null:
-			_add_uv_to_surface_tool(st, uv_a)
+		_add_uv_to_surface_tool(st, uv_a)
 		st.add_color(q.color)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
-		if tex != null:
-			_add_uv_to_surface_tool(st, uv_b)
+		_add_uv_to_surface_tool(st, uv_b)
 		st.add_color(q.color)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
-		if tex != null:
-			_add_uv_to_surface_tool(st, uv_c)
+		_add_uv_to_surface_tool(st, uv_c)
 		st.add_color(q.color)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
-		if tex != null:
-			_add_uv_to_surface_tool(st, uv_a)
+		_add_uv_to_surface_tool(st, uv_a)
 		st.add_color(q.color)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
-		if tex != null:
-			_add_uv_to_surface_tool(st, uv_c)
+		_add_uv_to_surface_tool(st, uv_c)
 		st.add_color(q.color)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
-		if tex != null:
-			_add_uv_to_surface_tool(st, uv_d)
+		_add_uv_to_surface_tool(st, uv_d)
 		st.add_color(q.color)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
+
 		length_elapsed += section_length
+		delta_top_prev = delta_top
+		delta_bottom_prev= delta_bottom
 
 	st.index()
 	st.generate_normals()

@@ -953,6 +953,8 @@ func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 
 
 func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_last: bool = false):
+	if quads.empty():
+		return
 	for index in range(quads.size() - 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
