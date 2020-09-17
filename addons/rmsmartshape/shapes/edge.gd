@@ -6,6 +6,8 @@ var quads: Array = []
 var first_point_key: int = -1
 var last_point_key: int = -1
 var z_index: int = 0
+# If final point is connected to first point
+var wrap_around:bool = false
 
 static func different_render(q1: SS2D_Quad, q2: SS2D_Quad) -> bool:
 	"""
@@ -38,7 +40,7 @@ static func get_consecutive_quads_for_mesh(_quads: Array) -> Array:
 	quad_ranges.push_back(quad_range)
 	return quad_ranges
 
-static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
+static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bool) -> ArrayMesh:
 	"""
 	Assumes each quad in the sequence is of the same render type
 	same textures, values, etc...
@@ -66,12 +68,17 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 		var texture_full_length = texture_reps * tex.get_size().x
 		# How much each quad's texture must be offset to make up the difference in full length vs total length
 		change_in_length = (texture_full_length / total_length)
+		print("tex: %s | len: %s | change: %s" % [texture_full_length, total_length, change_in_length])
 
 	var length_elapsed: float = 0.0
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var delta_top_prev = 0.0
 	var delta_bottom_prev = 0.0
+	if wrap_around:
+		var q = _quads.back()
+		delta_top_prev = q.get_length_top() - q.get_length_average()
+		delta_bottom_prev = q.get_length_bottom() - q.get_length_average()
 	for q in _quads:
 		var section_length: float = q.get_length_average() * change_in_length
 		var section_length_top: float = q.get_length_top() * change_in_length
@@ -87,9 +94,6 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 			uv_b.x = (length_elapsed + delta_bottom_prev) / tex.get_size().x
 			uv_c.x = (length_elapsed + section_length_bottom) / tex.get_size().x
 			uv_d.x = (length_elapsed + section_length_top) / tex.get_size().x
-			if q == _quads.back():
-				uv_c = ceil(uv_c)
-				uv_d = ceil(uv_d)
 		if q.flip_texture:
 			var t = uv_a
 			uv_a = uv_b
@@ -131,6 +135,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array) -> ArrayMesh:
 		length_elapsed += section_length
 		delta_top_prev = delta_top
 		delta_bottom_prev= delta_bottom
+		print("elapsed: %s" % length_elapsed)
 
 	st.index()
 	st.generate_normals()
@@ -152,7 +157,7 @@ func get_meshes() -> Array:
 		if consecutive_quads.empty():
 			continue
 		var st: SurfaceTool = SurfaceTool.new()
-		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(consecutive_quads)
+		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(consecutive_quads, wrap_around)
 		var tex: Texture = consecutive_quads[0].texture
 		var tex_normal: Texture = consecutive_quads[0].texture_normal
 		var flip = consecutive_quads[0].flip_texture

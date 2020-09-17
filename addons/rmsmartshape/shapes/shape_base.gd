@@ -1517,5 +1517,6 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		i += next_point_delta
 	if edge_material_meta.weld:
 		_weld_quad_array(edge.quads, 1.0, edge_data.first_connected_to_final)
+		edge.wrap_around = edge_data.first_connected_to_final
 
 	return edge
