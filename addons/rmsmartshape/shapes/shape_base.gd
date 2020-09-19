@@ -918,7 +918,7 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
-		var needed_height: float = (a.get_height() + b.get_height())/2.0
+		var needed_height: float = (a.get_height_average() + b.get_height_average())/2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
@@ -953,6 +953,8 @@ func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 
 
 func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_last: bool = false):
+	if quads.empty():
+		return
 	for index in range(quads.size() - 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
@@ -1467,7 +1469,7 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 				taper_texture_normal = edge_material.get_texture_normal_taper_right(texture_idx)
 			if taper_texture != null:
 				var taper_size = taper_texture.get_size()
-				var fit = abs(taper_size.x) <= new_quad.get_length()
+				var fit = abs(taper_size.x) <= new_quad.get_length_average()
 				if fit:
 					var taper_quad = new_quad.duplicate()
 					taper_quad.corner = 0
@@ -1515,5 +1517,6 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		i += next_point_delta
 	if edge_material_meta.weld:
 		_weld_quad_array(edge.quads, 1.0, edge_data.first_connected_to_final)
+		edge.wrap_around = edge_data.first_connected_to_final
 
 	return edge

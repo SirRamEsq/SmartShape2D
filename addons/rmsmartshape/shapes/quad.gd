@@ -68,8 +68,16 @@ func get_rotation() -> float:
 	return SS2D_NormalRange.get_angle_from_vector(pt_c - pt_a)
 
 
-func get_length() -> float:
-	return (pt_d.distance_to(pt_a) + pt_c.distance_to(pt_b)) / 2.0
+func get_length_average() -> float:
+	return (get_length_top() + get_length_bottom()) / 2.0
+
+
+func get_length_top() -> float:
+	return pt_d.distance_to(pt_a)
+
+
+func get_length_bottom() -> float:
+	return pt_c.distance_to(pt_b)
 
 
 func render_lines(ci: CanvasItem):
@@ -91,7 +99,13 @@ func __new():
 	return get_script().new()
 
 
-func get_height() -> float:
-	var ab = (pt_a - pt_b).abs()
-	var dc = (pt_d - pt_c).abs()
-	return ((ab + dc)/2.0).length()
+func get_height_average() -> float:
+	return (get_height_left() + get_height_right()) / 2.0
+
+
+func get_height_left() -> float:
+	return pt_a.distance_to(pt_b)
+
+
+func get_height_right() -> float:
+	return pt_d.distance_to(pt_c)
