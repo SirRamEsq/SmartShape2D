@@ -688,9 +688,11 @@ func forward_canvas_draw_over_viewport(overlay: Control):
 	match current_mode:
 		MODE.EDIT_VERT:
 			draw_mode_edit_vert(overlay)
+			if Input.is_key_pressed(KEY_ALT) and not on_edge:
+				draw_new_point_preview(overlay)
 		MODE.EDIT_EDGE:
 			draw_mode_edit_edge(overlay)
-
+	
 	shape.update()
 
 
@@ -778,6 +780,23 @@ func _draw_control_point_line(c: Control, vert: Vector2, cp: Vector2, tex: Textu
 	c.draw_line(vert, cp, color_light, width, true)
 	c.draw_texture(tex, cp - tex.get_size() * 0.5)
 
+
+func draw_new_point_preview(overlay: Control):
+	# Draw lines to where a new point will be added
+	var verts = shape.get_vertices()
+	var t: Transform2D = get_et() * shape.get_global_transform()
+	var color = Color(1, 1, 1, .5)
+	var width = 2
+	
+	var a
+	var mouse = overlay.get_local_mouse_position()
+	if shape is SS2D_Shape_Closed:
+		a = t.xform(verts[verts.size() - 2])
+		var b = t.xform(verts[0])
+		overlay.draw_line(mouse, b, color, width, true)
+	else:
+		a = t.xform(verts[verts.size() - 1])
+	overlay.draw_line(mouse, a, color, width, true)
 
 ##########
 # PLUGIN #
@@ -949,6 +968,8 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			# Hide edge_info_panel
 			if gui_edge_info_panel.visible:
 				gui_edge_info_panel.visible = false
+		if kb.scancode == KEY_ALT:
+			update_overlays()
 		return true
 	return false
 
@@ -1181,7 +1202,7 @@ func _input_handle_mouse_motion_event(
 		else:
 			deselect_verts()
 		on_edge = _input_motion_is_on_edge(mm, grab_threshold)
-
+	
 	update_overlays()
 	return false
 
