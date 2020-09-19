@@ -1469,7 +1469,7 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 				taper_texture_normal = edge_material.get_texture_normal_taper_right(texture_idx)
 			if taper_texture != null:
 				var taper_size = taper_texture.get_size()
-				var fit = abs(taper_size.x) <= new_quad.get_length()
+				var fit = abs(taper_size.x) <= new_quad.get_length_average()
 				if fit:
 					var taper_quad = new_quad.duplicate()
 					taper_quad.corner = 0

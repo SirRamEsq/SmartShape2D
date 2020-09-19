@@ -68,32 +68,23 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 		var texture_full_length = texture_reps * tex.get_size().x
 		# How much each quad's texture must be offset to make up the difference in full length vs total length
 		change_in_length = (texture_full_length / total_length)
-		print("tex: %s | len: %s | change: %s" % [texture_full_length, total_length, change_in_length])
 
 	var length_elapsed: float = 0.0
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var delta_top_prev = 0.0
-	var delta_bottom_prev = 0.0
-	if wrap_around:
-		var q = _quads.back()
-		delta_top_prev = q.get_length_top() - q.get_length_average()
-		delta_bottom_prev = q.get_length_bottom() - q.get_length_average()
 	for q in _quads:
 		var section_length: float = q.get_length_average() * change_in_length
 		var section_length_top: float = q.get_length_top() * change_in_length
 		var section_length_bottom: float = q.get_length_bottom() * change_in_length
-		var delta_top = section_length_top - section_length
-		var delta_bottom = section_length_bottom - section_length
 		var uv_a = Vector2(0, 0)
 		var uv_b = Vector2(0, 1)
 		var uv_c = Vector2(1, 1)
 		var uv_d = Vector2(1, 0)
 		if tex != null:
-			uv_a.x = (length_elapsed + delta_top_prev) / tex.get_size().x
-			uv_b.x = (length_elapsed + delta_bottom_prev) / tex.get_size().x
-			uv_c.x = (length_elapsed + section_length_bottom) / tex.get_size().x
-			uv_d.x = (length_elapsed + section_length_top) / tex.get_size().x
+			uv_a.x = (length_elapsed) / tex.get_size().x
+			uv_b.x = (length_elapsed) / tex.get_size().x
+			uv_c.x = (length_elapsed + section_length) / tex.get_size().x
+			uv_d.x = (length_elapsed + section_length) / tex.get_size().x
 		if q.flip_texture:
 			var t = uv_a
 			uv_a = uv_b
@@ -133,9 +124,6 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
 
 		length_elapsed += section_length
-		delta_top_prev = delta_top
-		delta_bottom_prev= delta_bottom
-		print("elapsed: %s" % length_elapsed)
 
 	st.index()
 	st.generate_normals()
