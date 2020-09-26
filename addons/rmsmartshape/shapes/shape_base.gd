@@ -25,6 +25,7 @@ export (float) var collision_offset: float = 0.0 setget set_collision_offset
 export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
 export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
+
 # Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
 export (NodePath) var collision_polygon_node_path: NodePath = ""
 export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
@@ -539,16 +540,14 @@ func should_flip_edges() -> bool:
 	return not (are_points_clockwise() != flip_edges)
 
 
-func bake_collision():
-	if not has_node(collision_polygon_node_path):
-		return
-	var polygon = get_node(collision_polygon_node_path)
+func generate_collision_points() -> PoolVector2Array:
+	var points: PoolVector2Array = PoolVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
 	var t_points = get_tessellated_points()
 	if t_points.size() < 2:
-		return
+		return points
 	var indicies = []
 	for i in range(verts.size()):
 		indicies.push_back(i)
@@ -559,62 +558,48 @@ func bake_collision():
 	var collision_quads = []
 	for q in edge.quads:
 		collision_quads.push_back(q)
+	# TODO, this belogns in _build_edge_without_material
 	_weld_quad_array(collision_quads)
-	var points: PoolVector2Array = PoolVector2Array()
 	if not collision_quads.empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in collision_quads:
 			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_a)
-					)
-				)
+				points.push_back(quad.pt_a)
 			elif quad.corner == SS2D_Quad.CORNER.OUTER:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_d)
-					)
-				)
+				points.push_back(quad.pt_d)
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
-				#points.push_back(
-				#polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
-				#)
 
 		# Right Edge (point d, the first or final quad will never be a corner)
-		points.push_back(
-			polygon.get_global_transform().xform_inv(
-				get_global_transform().xform(collision_quads[collision_quads.size() - 1].pt_d)
-			)
-		)
+		points.push_back(collision_quads[collision_quads.size() - 1].pt_d)
 
 		# Bottom Edge (typically point c)
 		for quad_index in collision_quads.size():
 			var quad = collision_quads[collision_quads.size() - 1 - quad_index]
 			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_c)
-					)
-				)
+				points.push_back(quad.pt_c)
 			elif quad.corner == SS2D_Quad.CORNER.OUTER:
 				pass
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_b)
-					)
-				)
+				points.push_back(quad.pt_b)
 
 		# Left Edge (point b)
-		points.push_back(
-			polygon.get_global_transform().xform_inv(
-				get_global_transform().xform(collision_quads[0].pt_b)
-			)
-		)
+		points.push_back(collision_quads[0].pt_b)
 
-	polygon.polygon = points
+	return points
+
+
+func bake_collision():
+	if not has_node(collision_polygon_node_path):
+		return
+	var polygon = get_node(collision_polygon_node_path)
+	var points = generate_collision_points()
+	var transformed_points = PoolVector2Array()
+	var poly_transform = polygon.get_global_transform()
+	var shape_transform = get_global_transform()
+	for p in points:
+		transformed_points.push_back(poly_transform.xform_inv(shape_transform.xform(p)))
+	polygon.polygon = transformed_points
 
 
 func cache_edges():
@@ -924,7 +909,7 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
-		var needed_height: float = (a.get_height_average() + b.get_height_average())/2.0
+		var needed_height: float = (a.get_height_average() + b.get_height_average()) / 2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
