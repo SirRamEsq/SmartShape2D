@@ -555,14 +555,11 @@ func generate_collision_points() -> PoolVector2Array:
 	var edge = _build_edge_without_material(
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
-	var collision_quads = []
-	for q in edge.quads:
-		collision_quads.push_back(q)
 	# TODO, this belogns in _build_edge_without_material
-	_weld_quad_array(collision_quads)
-	if not collision_quads.empty():
+	_weld_quad_array(edge.quads)
+	if not edge.quads.empty():
 		# Top edge (typically point A unless corner quad)
-		for quad in collision_quads:
+		for quad in edge.quads:
 			if quad.corner == SS2D_Quad.CORNER.NONE:
 				points.push_back(quad.pt_a)
 			elif quad.corner == SS2D_Quad.CORNER.OUTER:
@@ -571,11 +568,11 @@ func generate_collision_points() -> PoolVector2Array:
 				pass
 
 		# Right Edge (point d, the first or final quad will never be a corner)
-		points.push_back(collision_quads[collision_quads.size() - 1].pt_d)
+		points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
 
 		# Bottom Edge (typically point c)
-		for quad_index in collision_quads.size():
-			var quad = collision_quads[collision_quads.size() - 1 - quad_index]
+		for quad_index in edge.quads.size():
+			var quad = edge.quads[edge.quads.size() - 1 - quad_index]
 			if quad.corner == SS2D_Quad.CORNER.NONE:
 				points.push_back(quad.pt_c)
 			elif quad.corner == SS2D_Quad.CORNER.OUTER:
@@ -584,7 +581,7 @@ func generate_collision_points() -> PoolVector2Array:
 				points.push_back(quad.pt_b)
 
 		# Left Edge (point b)
-		points.push_back(collision_quads[0].pt_b)
+		points.push_back(edge.quads[0].pt_b)
 
 	return points
 
