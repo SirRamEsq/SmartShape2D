@@ -12,7 +12,12 @@ et = editor transform (viewport's canvas transform)
 
 # Icons
 const ICON_HANDLE = preload("assets/icon_editor_handle.svg")
+const ICON_HANDLE_BEZIER = preload("assets/icon_editor_handle_bezier.svg")
 const ICON_HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
+const ICON_WIDTH_HANDLE_0 = preload("assets/icon_width_handle0.svg")
+const ICON_WIDTH_HANDLE_1 = preload("assets/icon_width_handle1.svg")
+const ICON_WIDTH_HANDLE_2 = preload("assets/icon_width_handle2.svg")
+const ICON_WIDTH_HANDLE_3 = preload("assets/icon_width_handle3.svg")
 const ICON_ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
 const ICON_CURVE_EDIT = preload("assets/icon_curve_edit.svg")
 const ICON_CURVE_CREATE = preload("assets/icon_curve_create.svg")
@@ -25,6 +30,8 @@ const ICON_IMPORT_CLOSED = preload("assets/closed_shape.png")
 const ICON_IMPORT_OPEN = preload("assets/open_shape.png")
 const FUNC = preload("plugin-functionality.gd")
 
+const WIDTH_HANDLES = [ICON_WIDTH_HANDLE_0, ICON_WIDTH_HANDLE_1, ICON_WIDTH_HANDLE_2, ICON_WIDTH_HANDLE_3]
+
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT }
 
 enum ACTION_VERT {
@@ -32,7 +39,8 @@ enum ACTION_VERT {
 	MOVE_VERT = 1,
 	MOVE_CONTROL = 2,
 	MOVE_CONTROL_IN = 3,
-	MOVE_CONTROL_OUT = 4
+	MOVE_CONTROL_OUT = 4,
+	MOVE_WIDTH_HANDLE = 5
 }
 
 
@@ -42,16 +50,18 @@ class ActionDataVert:
 	var type: int = ACTION_VERT.NONE
 	# The affected Verticies and their initial positions
 	var keys = []
+	var starting_width = []
 	var starting_positions = []
 	var starting_positions_control_in = []
 	var starting_positions_control_out = []
 
-	func _init(_keys: Array, positions: Array, positions_in: Array, positions_out: Array, t: int):
+	func _init(_keys: Array, positions: Array, positions_in: Array, positions_out: Array, width: Array, t: int):
 		type = t
 		keys = _keys
 		starting_positions = positions
 		starting_positions_control_in = positions_in
 		starting_positions_control_out = positions_out
+		starting_width = width
 
 	func to_string() -> String:
 		var s = "%s: %s = %s"
@@ -103,6 +113,10 @@ var on_edge: bool = false
 var edge_point: Vector2
 var edge_data: SS2D_Edge = null
 
+var on_width_handle: bool = false
+const WIDTH_HANDLE_OFFSET: float = 60.0
+var closest_key:int
+
 # Track our mode of operation
 var current_mode: int = MODE.EDIT_VERT
 var previous_mode: int = MODE.EDIT_VERT
@@ -111,7 +125,7 @@ var previous_mode: int = MODE.EDIT_VERT
 var undo: UndoRedo = null
 var undo_version: int = 0
 
-var current_action = ActionDataVert.new([], [], [], [], ACTION_VERT.NONE)
+var current_action = ActionDataVert.new([], [], [], [], [], ACTION_VERT.NONE)
 var cached_shape_global_transform: Transform2D
 
 # Action Move Variables
@@ -728,7 +742,7 @@ func draw_mode_edit_vert(overlay: Control):
 	draw_vert_handles(overlay, t, verts, true)
 	if on_edge:
 		overlay.draw_texture(ICON_ADD_HANDLE, edge_point - ICON_ADD_HANDLE.get_size() * 0.5)
-
+	
 	# Draw Highlighted Handle
 	if current_action.is_single_vert_selected():
 		var tex = ICON_HANDLE
@@ -748,17 +762,34 @@ func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, 
 
 
 func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: bool):
-	# Draw Vert handles
 	for i in range(0, verts.size(), 1):
-		var key = shape.get_point_key_at_index(i)
-		var hp = t.xform(verts[i])
-		overlay.draw_texture(ICON_HANDLE, hp - ICON_HANDLE.get_size() * 0.5)
-
+		# Draw Vert handles
+		var key:int = shape.get_point_key_at_index(i)
+		var hp:Vector2 = t.xform(verts[i])
+		var icon = ICON_HANDLE_BEZIER if Input.is_key_pressed(KEY_SHIFT) else ICON_HANDLE
+		overlay.draw_texture(icon, hp - icon.get_size() * 0.5)
+		
+		# Draw Width handles
+#		var normal = _get_vert_normal(t, verts, i)
+#		var width_handle_icon = WIDTH_HANDLES[int((normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
+#		overlay.draw_texture(width_handle_icon, hp - width_handle_icon.get_size() * 0.5 + normal * WIDTH_HANDLE_OFFSET)
+	
+	# Draw Width handle
+	
+	var width_handle_normal = _get_vert_normal(t, verts, shape.get_point_index(closest_key))
+	var width_handle_icon = WIDTH_HANDLES[int((width_handle_normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
+	var vertex_position:Vector2 = t.xform(shape.get_point_position(closest_key))
+	overlay.draw_texture(width_handle_icon, vertex_position - width_handle_icon.get_size() * 0.5 + width_handle_normal * WIDTH_HANDLE_OFFSET)
+	
+	
+	
 	# Draw Control point handles
 	if control_points:
 		for i in range(0, verts.size(), 1):
+			var normal = _get_vert_normal(t, verts, i)
 			var key = shape.get_point_key_at_index(i)
 			var hp = t.xform(verts[i])
+			
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
 			if i < verts.size() - 1:
 				var pointout = t.xform(verts[i] + shape.get_point_out(key))
@@ -770,14 +801,14 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 				if hp != pointin:
 					_draw_control_point_line(overlay, hp, pointin, ICON_HANDLE_CONTROL)
 
-
 func _draw_control_point_line(c: Control, vert: Vector2, cp: Vector2, tex: Texture):
 	# Draw the line with a dark and light color to be visible on all backgrounds
-	var color_dark = Color(0, 0, 0, 0.5)
-	var color_light = Color(1, 1, 1, 0.5)
+	var color_dark = Color(0, 0, 0, 0.3)
+	var color_light = Color(1, 1, 1, .5)
 	var width = 2.0
-	c.draw_line(vert, cp, color_dark, width, true)
-	c.draw_line(vert, cp, color_light, width, true)
+	var normal = (cp - vert).normalized()
+	c.draw_line(vert + normal * 4 + Vector2.DOWN, cp + Vector2.DOWN, color_dark, width, true)
+	c.draw_line(vert + normal * 4, cp, color_light, width, true)
 	c.draw_texture(tex, cp - tex.get_size() * 0.5)
 
 
@@ -797,26 +828,28 @@ func draw_new_point_preview(overlay: Control):
 	else:
 		a = t.xform(verts[verts.size() - 1])
 	overlay.draw_line(mouse, a, color, width, true)
+	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
 
 ##########
 # PLUGIN #
 ##########
 func deselect_verts():
-	current_action = ActionDataVert.new([], [], [], [], ACTION_VERT.NONE)
+	current_action = ActionDataVert.new([], [], [], [], [], ACTION_VERT.NONE)
 
 
 func select_verticies(keys: Array, action: int) -> ActionDataVert:
 	var from_positions = []
 	var from_positions_c_in = []
 	var from_positions_c_out = []
+	var from_widths = []
 	for key in keys:
 		from_positions.push_back(shape.get_point_position(key))
 		from_positions_c_in.push_back(shape.get_point_in(key))
 		from_positions_c_out.push_back(shape.get_point_out(key))
+		from_widths.push_back(shape.get_point_width(key))
 	return ActionDataVert.new(
-		keys, from_positions, from_positions_c_in, from_positions_c_out, action
+		keys, from_positions, from_positions_c_in, from_positions_c_out, from_widths, action
 	)
-
 
 func select_vertices_to_move(keys: Array, _mouse_starting_pos_viewport: Vector2):
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
@@ -828,6 +861,12 @@ func select_control_points_to_move(
 ):
 	current_action = select_verticies(keys, action)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
+
+func select_width_handle_to_move(
+	keys: Array, _mouse_starting_pos_viewport: Vector2
+):
+	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
+	current_action = select_verticies(keys, ACTION_VERT.MOVE_WIDTH_HANDLE)
 
 
 #########
@@ -891,13 +930,15 @@ func _input_handle_left_click(
 
 			# Highlighting a vert to move or add control points to
 			if current_action.is_single_vert_selected():
-				if Input.is_key_pressed(KEY_SHIFT):
+				if on_width_handle:
+					select_width_handle_to_move([current_action.current_point_key()], vp_m_pos)
+				elif Input.is_key_pressed(KEY_SHIFT):
 					select_control_points_to_move([current_action.current_point_key()], vp_m_pos)
 					return true
 				else:
 					select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
 					return true
-
+		
 		# Split the Edge?
 		if _input_split_edge(mb, vp_m_pos, t):
 			return true
@@ -969,6 +1010,8 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			if gui_edge_info_panel.visible:
 				gui_edge_info_panel.visible = false
 		if kb.scancode == KEY_ALT:
+			update_overlays()
+		if kb.scancode == KEY_SHIFT:
 			update_overlays()
 		return true
 	return false
@@ -1124,6 +1167,16 @@ func get_mouse_over_vert_key(mm: InputEventMouseMotion, grab_threshold: float) -
 			return k
 	return -1
 
+func get_mouse_over_width_handle(mm: InputEventMouseMotion, grab_threshold: float) -> int:
+	var xform: Transform2D = get_et() * shape.get_global_transform()
+	for k in shape.get_all_point_keys():
+		var pp: Vector2 = shape.get_point_position(k)
+		var normal:Vector2 = _get_vert_normal(xform, shape.get_vertices(), shape.get_point_index(k))
+		var p: Vector2 = xform.xform(pp) + normal * WIDTH_HANDLE_OFFSET
+		if p.distance_to(mm.position) <= grab_threshold:
+			return k
+	return -1
+
 
 func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) -> bool:
 	var rslt = false
@@ -1164,6 +1217,16 @@ func _input_motion_move_verts(delta: Vector2) -> bool:
 		update_overlays()
 	return true
 
+func _input_motion_move_width_handle(mouse_position: Vector2, scale:Vector2) -> bool:
+	for i in range(0, current_action.keys.size(), 1):
+		var key = current_action.keys[i]
+		var from_width = current_action.starting_width[i]
+		var from_position = current_action.starting_positions[i]
+		var width_scale = from_position.distance_to(mouse_position) / WIDTH_HANDLE_OFFSET * scale.x
+		shape.set_point_width(key, round(from_width * width_scale * 10) / 10)
+		update_overlays()
+	return true
+
 
 func _input_handle_mouse_motion_event(
 	event: InputEventMouseMotion, et: Transform2D, grab_threshold: float
@@ -1173,7 +1236,15 @@ func _input_handle_mouse_motion_event(
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
 	gui_point_info_panel.rect_position = mm.position + Vector2(256, -24)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
-
+	
+	var verts = shape.get_vertices()
+	var closest_distance:float = 999999
+	for i in verts.size():
+		var distance = verts[i].distance_to(delta_current_pos)
+		if distance < closest_distance:
+			closest_key = shape.get_point_key_at_index(i)
+			closest_distance = distance
+	
 	if current_mode == MODE.EDIT_VERT:
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
@@ -1183,14 +1254,23 @@ func _input_handle_mouse_motion_event(
 			return _input_motion_move_verts(delta)
 		elif _in or _out:
 			return _input_motion_move_control_points(delta, _in, _out)
+		elif type == ACTION_VERT.MOVE_WIDTH_HANDLE:
+			return _input_motion_move_width_handle(et.affine_inverse().xform(mm.position), et.get_scale())
 		var mouse_over_key = get_mouse_over_vert_key(event, grab_threshold)
-
+		var mouse_over_width_handle = get_mouse_over_width_handle(event, grab_threshold)
+		
+		on_width_handle = false
 		if mouse_over_key != -1:
 			on_edge = false
 			current_action = select_verticies([mouse_over_key], ACTION_VERT.NONE)
+		elif mouse_over_width_handle != -1:
+			on_edge = false
+			on_width_handle = true
+			current_action = select_verticies([mouse_over_width_handle], ACTION_VERT.NONE)
 		else:
 			deselect_verts()
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
+		
 
 	elif current_mode == MODE.EDIT_EDGE:
 		# Don't update if edge panel is visible
@@ -1206,6 +1286,11 @@ func _input_handle_mouse_motion_event(
 	update_overlays()
 	return false
 
+func _get_vert_normal(t: Transform2D, verts, i: int):
+	var point:Vector2 = t.xform(verts[i])
+	var prev_point:Vector2 = t.xform(verts[(i - 1) % verts.size()])
+	var next_point:Vector2 = t.xform(verts[(i + 1) % verts.size()])
+	return ( (prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2) ).normalized()
 
 #########
 # DEBUG #
