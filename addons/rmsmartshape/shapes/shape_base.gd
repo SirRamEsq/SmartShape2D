@@ -52,8 +52,11 @@ func get_point_array() -> SS2D_Point_Array:
 	return _points  #.duplicate(true)
 
 
-func set_point_array(a: SS2D_Point_Array):
-	_points = a.duplicate(true)
+func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
+	if make_unique:
+		_points = a.duplicate(true)
+	else:
+		_points = a
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
