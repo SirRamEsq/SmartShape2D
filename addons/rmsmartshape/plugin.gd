@@ -14,10 +14,6 @@ et = editor transform (viewport's canvas transform)
 const ICON_HANDLE = preload("assets/icon_editor_handle.svg")
 const ICON_HANDLE_BEZIER = preload("assets/icon_editor_handle_bezier.svg")
 const ICON_HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
-const ICON_WIDTH_HANDLE_0 = preload("assets/icon_width_handle0.svg")
-const ICON_WIDTH_HANDLE_1 = preload("assets/icon_width_handle1.svg")
-const ICON_WIDTH_HANDLE_2 = preload("assets/icon_width_handle2.svg")
-const ICON_WIDTH_HANDLE_3 = preload("assets/icon_width_handle3.svg")
 const ICON_ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
 const ICON_CURVE_EDIT = preload("assets/icon_curve_edit.svg")
 const ICON_CURVE_CREATE = preload("assets/icon_curve_create.svg")
@@ -29,8 +25,6 @@ const ICON_SNAP = preload("assets/icon_editor_snap.svg")
 const ICON_IMPORT_CLOSED = preload("assets/closed_shape.png")
 const ICON_IMPORT_OPEN = preload("assets/open_shape.png")
 const FUNC = preload("plugin-functionality.gd")
-
-const WIDTH_HANDLES = [ICON_WIDTH_HANDLE_0, ICON_WIDTH_HANDLE_1, ICON_WIDTH_HANDLE_2, ICON_WIDTH_HANDLE_3]
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT }
 
@@ -113,9 +107,11 @@ var on_edge: bool = false
 var edge_point: Vector2
 var edge_data: SS2D_Edge = null
 
+# Width Handle Stuff
 var on_width_handle: bool = false
 const WIDTH_HANDLE_OFFSET: float = 60.0
 var closest_key:int
+var width_scaling:float
 
 # Track our mode of operation
 var current_mode: int = MODE.EDIT_VERT
@@ -775,12 +771,22 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 #		overlay.draw_texture(width_handle_icon, hp - width_handle_icon.get_size() * 0.5 + normal * WIDTH_HANDLE_OFFSET)
 	
 	# Draw Width handle
-	
-	var width_handle_normal = _get_vert_normal(t, verts, shape.get_point_index(closest_key))
-	var width_handle_icon = WIDTH_HANDLES[int((width_handle_normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
-	var vertex_position:Vector2 = t.xform(shape.get_point_position(closest_key))
-	overlay.draw_texture(width_handle_icon, vertex_position - width_handle_icon.get_size() * 0.5 + width_handle_normal * WIDTH_HANDLE_OFFSET)
-	
+	var offset = WIDTH_HANDLE_OFFSET
+	var width_handle_key = closest_key
+	if Input.is_mouse_button_pressed(BUTTON_LEFT) and current_action.type == ACTION_VERT.MOVE_WIDTH_HANDLE:
+		offset *= width_scaling
+		width_handle_key = current_action.keys[0]
+	var width_handle_normal = _get_vert_normal(t, verts, shape.get_point_index(width_handle_key))
+	var vertex_position:Vector2 = t.xform(shape.get_point_position(width_handle_key))
+	var icon_position:Vector2 = vertex_position + width_handle_normal * offset
+	var rect_size:Vector2 = Vector2.ONE * 10.0
+	var width_handle_color = Color("f53351")
+	overlay.draw_line(vertex_position, icon_position, width_handle_color, 1.0, true)
+	overlay.draw_set_transform(icon_position, width_handle_normal.angle(), Vector2.ONE)
+	overlay.draw_rect(Rect2(-rect_size / 2.0, rect_size), width_handle_color, true, 1.0, true)
+	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+#	var width_handle_icon = WIDTH_HANDLES[int((width_handle_normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
+#	overlay.draw_texture(width_handle_icon, icon_position)
 	
 	
 	# Draw Control point handles
@@ -1222,8 +1228,8 @@ func _input_motion_move_width_handle(mouse_position: Vector2, scale:Vector2) -> 
 		var key = current_action.keys[i]
 		var from_width = current_action.starting_width[i]
 		var from_position = current_action.starting_positions[i]
-		var width_scale = from_position.distance_to(mouse_position) / WIDTH_HANDLE_OFFSET * scale.x
-		shape.set_point_width(key, round(from_width * width_scale * 10) / 10)
+		width_scaling = from_position.distance_to(mouse_position) / WIDTH_HANDLE_OFFSET * scale.x
+		shape.set_point_width(key, round(from_width * width_scaling * 10) / 10)
 		update_overlays()
 	return true
 
