@@ -61,4 +61,3 @@ fill_texture_normals = [  ]
 fill_texture_z_index = -100
 fill_mesh_offset = -0.35
 render_offset = 0.0
-weld_edges = true

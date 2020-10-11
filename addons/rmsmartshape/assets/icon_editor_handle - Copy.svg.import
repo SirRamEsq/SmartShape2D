@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/icon_curve_edit.svg-bd7d5e1af7c72f4525dff1d79ad0af94.stex"
+path="res://.import/icon_editor_handle - Copy.svg-42b8a9842967012ee4be966c88f90acc.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/rmsmartshape/assets/icon_curve_edit.svg"
-dest_files=[ "res://.import/icon_curve_edit.svg-bd7d5e1af7c72f4525dff1d79ad0af94.stex" ]
+source_file="res://addons/rmsmartshape/assets/icon_editor_handle - Copy.svg"
+dest_files=[ "res://.import/icon_editor_handle - Copy.svg-42b8a9842967012ee4be966c88f90acc.stex" ]
 
 [params]
 
