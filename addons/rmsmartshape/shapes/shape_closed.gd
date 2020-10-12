@@ -2,6 +2,24 @@ tool
 extends SS2D_Shape_Base
 class_name SS2D_Shape_Closed, "../assets/closed_shape.png"
 
+##########
+# CLOSED #
+##########
+"""
+A Hole is a closed polygon
+Orientation doesn't matter
+Holes should not intersect each other
+"""
+var _holes = []
+
+
+func set_holes(holes: Array):
+	_holes = holes
+
+
+func get_holes() -> Array:
+	return _holes
+
 
 #########
 # GODOT #

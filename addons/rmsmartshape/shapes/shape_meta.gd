@@ -56,6 +56,7 @@ func set_as_dirty():
 # META #
 ########
 func _update_cached_children():
+	# TODO, need to be made aware when cached children's children change!
 	_cached_shape_children = _get_shapes(self)
 
 
