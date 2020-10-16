@@ -115,8 +115,8 @@ var closest_key:int
 var width_scaling:float
 
 # Track our mode of operation
-var current_mode: int = MODE.EDIT_VERT
-var previous_mode: int = MODE.EDIT_VERT
+var current_mode: int = MODE.CREATE_VERT
+var previous_mode: int = MODE.CREATE_VERT
 
 # Undo stuff
 var undo: UndoRedo = null
@@ -1043,6 +1043,9 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			update_overlays()
 		if kb.scancode == KEY_SHIFT:
 			update_overlays()
+		
+		if current_mode == MODE.CREATE_VERT and (kb.scancode == KEY_ENTER or kb.scancode == KEY_ESCAPE):
+			_enter_mode(MODE.EDIT_VERT)
 		return true
 	return false
 
@@ -1050,6 +1053,8 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 	match kb.scancode:
 		KEY_ESCAPE:
+			return true
+		KEY_ENTER:
 			return true
 		KEY_SPACE:
 			return true
