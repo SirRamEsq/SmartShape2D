@@ -965,14 +965,12 @@ func _input_handle_left_click(
 					# Copy shape with a new single point
 					var copy = copy_shape(shape)
 					
-					copy._points = SS2D_Point_Array.new()
+					copy.set_point_array(SS2D_Point_Array.new())
 					var new_key = FUNC.action_add_point(
 						self, "update_overlays", undo, copy, local_position
 					)
 					select_vertices_to_move([new_key], vp_m_pos)
 					
-					shape.get_parent().add_child(copy)
-					copy.set_owner(get_tree().get_edited_scene_root())
 					_enter_mode(MODE.CREATE_VERT)
 					
 					var selection: = get_editor_interface().get_selection()
@@ -1328,11 +1326,14 @@ func _get_vert_normal(t: Transform2D, verts, i: int):
 	return ( (prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2) ).normalized()
 
 func copy_shape(shape):
-	var copy
+	var copy:SS2D_Shape_Base
 	if shape is SS2D_Shape_Closed:
 		copy = SS2D_Shape_Closed.new()
 	else:
 		copy = SS2D_Shape_Open.new()
+	copy.position = shape.position
+	copy.scale = shape.scale
+	copy.modulate = shape.modulate
 	copy.shape_material = shape.shape_material
 	copy.editor_debug = shape.editor_debug
 	copy.flip_edges = shape.flip_edges
@@ -1343,6 +1344,20 @@ func copy_shape(shape):
 	copy.tessellation_tolerence = shape.tessellation_tolerence
 	copy.curve_bake_interval = shape.curve_bake_interval
 	copy.material_overrides = shape.material_overrides
+	
+	shape.get_parent().add_child(copy)
+	copy.set_owner(get_tree().get_edited_scene_root())
+	
+	if shape.collision_polygon_node_path != "" and shape.has_node(shape.collision_polygon_node_path):
+		var collision_polygon_original = shape.get_node(shape.collision_polygon_node_path)
+		var collision_polygon_new = CollisionPolygon2D.new()
+		collision_polygon_new.visible = collision_polygon_original.visible
+		
+		collision_polygon_original.get_parent().add_child(collision_polygon_new)
+		collision_polygon_new.set_owner(get_tree().get_edited_scene_root())
+		
+		copy.collision_polygon_node_path = copy.get_path_to(collision_polygon_new)
+	
 	return copy
 
 #########
