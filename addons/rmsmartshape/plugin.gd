@@ -12,6 +12,7 @@ et = editor transform (viewport's canvas transform)
 
 # Icons
 const ICON_HANDLE = preload("assets/icon_editor_handle.svg")
+const ICON_HANDLE_SELECTED = preload("assets/icon_editor_handle_selected.svg")
 const ICON_HANDLE_BEZIER = preload("assets/icon_editor_handle_bezier.svg")
 const ICON_HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
 const ICON_ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
@@ -753,11 +754,10 @@ func draw_mode_edit_vert(overlay: Control):
 
 	# Draw Highlighted Handle
 	if current_action.is_single_vert_selected():
-		var tex = ICON_HANDLE
+		var tex = ICON_HANDLE_SELECTED
 		overlay.draw_texture(
 			tex,
-			t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5,
-			Color(0.5, 1.0, 1.0)
+			t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5
 		)
 
 
@@ -942,14 +942,7 @@ func _input_handle_left_click(
 	grab_threshold: float
 ) -> bool:
 	# Set Pivot?
-	if (
-		(current_mode == MODE.SET_PIVOT)
-		or (
-			mb.control
-			and (current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT)
-			and not Input.is_key_pressed(KEY_ALT)
-		)
-	):
+	if current_mode == MODE.SET_PIVOT:
 		var local_position = et.affine_inverse().xform(mb.position)
 		if use_snap():
 			local_position = snap(local_position)
@@ -1062,9 +1055,16 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			# Hide edge_info_panel
 			if gui_edge_info_panel.visible:
 				gui_edge_info_panel.visible = false
-		if kb.scancode == KEY_ALT:
+
+		if kb.scancode == KEY_CONTROL and current_mode == MODE.CREATE_VERT or current_mode == MODE.EDIT_VERT:
+			if kb.pressed:
+				if not kb.echo:
+					current_action = select_verticies([closest_key], ACTION_VERT.NONE)
+			else:
+				deselect_verts()
 			update_overlays()
-		if kb.scancode == KEY_SHIFT:
+		
+		if kb.scancode == KEY_ALT or kb.scancode == KEY_SHIFT:
 			update_overlays()
 
 		if (
@@ -1087,6 +1087,8 @@ func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 		KEY_SHIFT:
 			return true
 		KEY_ALT:
+			return true
+		KEY_CONTROL:
 			return true
 	return false
 
@@ -1325,6 +1327,9 @@ func _input_handle_mouse_motion_event(
 			)
 		var mouse_over_key = get_mouse_over_vert_key(event, grab_threshold)
 		var mouse_over_width_handle = get_mouse_over_width_handle(event, grab_threshold)
+
+		if Input.is_key_pressed(KEY_CONTROL) and mouse_over_width_handle == -1 and mouse_over_key == -1:
+			mouse_over_key = closest_key
 
 		on_width_handle = false
 		if mouse_over_key != -1:
