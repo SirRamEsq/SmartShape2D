@@ -931,7 +931,6 @@ func _input_handle_left_click(
 		FUNC.action_set_pivot(self, "_set_pivot", undo, shape, et, local_position)
 		undo_version = undo.get_version()
 		return true
-	
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
 		
