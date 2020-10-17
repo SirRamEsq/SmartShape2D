@@ -49,7 +49,14 @@ class ActionDataVert:
 	var starting_positions_control_in = []
 	var starting_positions_control_out = []
 
-	func _init(_keys: Array, positions: Array, positions_in: Array, positions_out: Array, width: Array, t: int):
+	func _init(
+		_keys: Array,
+		positions: Array,
+		positions_in: Array,
+		positions_out: Array,
+		width: Array,
+		t: int
+	):
 		type = t
 		keys = _keys
 		starting_positions = positions
@@ -111,8 +118,8 @@ var edge_data: SS2D_Edge = null
 # Width Handle Stuff
 var on_width_handle: bool = false
 const WIDTH_HANDLE_OFFSET: float = 60.0
-var closest_key:int
-var width_scaling:float
+var closest_key: int
+var width_scaling: float
 
 # Track our mode of operation
 var current_mode: int = MODE.CREATE_VERT
@@ -171,19 +178,19 @@ func _gui_build_toolbar():
 	tb_vert_create = create_tool_button(ICON_CURVE_CREATE, SS2D_Strings.EN_TOOLTIP_CREATE_VERT)
 	tb_vert_create.connect("pressed", self, "_enter_mode", [MODE.CREATE_VERT])
 	tb_vert_create.pressed = true
-	
+
 	tb_vert_edit = create_tool_button(ICON_CURVE_EDIT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
 	tb_vert_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT_VERT])
-	
+
 	tb_edge_edit = create_tool_button(ICON_INTERP_LINEAR, SS2D_Strings.EN_TOOLTIP_EDIT_EDGE)
 	tb_edge_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT_EDGE])
-	
+
 	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
 	tb_pivot.connect("pressed", self, "_enter_mode", [MODE.SET_PIVOT])
-	
+
 	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION)
 	tb_collision.connect("pressed", self, "_add_collision")
-	
+
 	tb_snap = MenuButton.new()
 	tb_snap.hint_tooltip = SS2D_Strings.EN_TOOLTIP_SNAP
 	tb_snap_popup = tb_snap.get_popup()
@@ -198,6 +205,7 @@ func _gui_build_toolbar():
 
 	tb_hb.hide()
 
+
 func create_tool_button(icon, tooltip):
 	var tb = ToolButton.new()
 	tb.toggle_mode = true
@@ -205,6 +213,7 @@ func create_tool_button(icon, tooltip):
 	tb.hint_tooltip = tooltip
 	tb_hb.add_child(tb)
 	return tb
+
 
 func _gui_update_vert_info_panel():
 	var idx = current_action.current_point_index(shape)
@@ -391,7 +400,7 @@ func make_visible(visible):
 # SNAPPING #
 ############
 func use_global_snap() -> bool:
-	return !tb_snap_popup.is_item_checked(1)
+	return ! tb_snap_popup.is_item_checked(1)
 
 
 func use_snap() -> bool:
@@ -705,7 +714,7 @@ func forward_canvas_draw_over_viewport(overlay: Control):
 					draw_new_point_preview(overlay)
 		MODE.EDIT_EDGE:
 			draw_mode_edit_edge(overlay)
-	
+
 	shape.update()
 
 
@@ -741,11 +750,15 @@ func draw_mode_edit_vert(overlay: Control):
 	draw_vert_handles(overlay, t, verts, true)
 	if on_edge:
 		overlay.draw_texture(ICON_ADD_HANDLE, edge_point - ICON_ADD_HANDLE.get_size() * 0.5)
-	
+
 	# Draw Highlighted Handle
 	if current_action.is_single_vert_selected():
 		var tex = ICON_HANDLE
-		overlay.draw_texture(tex, t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5, Color(0.5, 1.0, 1.0))
+		overlay.draw_texture(
+			tex,
+			t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5,
+			Color(0.5, 1.0, 1.0)
+		)
 
 
 func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, width = 2.0):
@@ -763,40 +776,42 @@ func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, 
 func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: bool):
 	for i in range(0, verts.size(), 1):
 		# Draw Vert handles
-		var key:int = shape.get_point_key_at_index(i)
-		var hp:Vector2 = t.xform(verts[i])
+		var key: int = shape.get_point_key_at_index(i)
+		var hp: Vector2 = t.xform(verts[i])
 		var icon = ICON_HANDLE_BEZIER if Input.is_key_pressed(KEY_SHIFT) else ICON_HANDLE
 		overlay.draw_texture(icon, hp - icon.get_size() * 0.5)
-		
+
 		# Draw Width handles
 #		var normal = _get_vert_normal(t, verts, i)
 #		var width_handle_icon = WIDTH_HANDLES[int((normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
 #		overlay.draw_texture(width_handle_icon, hp - width_handle_icon.get_size() * 0.5 + normal * WIDTH_HANDLE_OFFSET)
-	
+
 	# Draw Width handle
 	var offset = WIDTH_HANDLE_OFFSET
 	var width_handle_key = closest_key
-	if Input.is_mouse_button_pressed(BUTTON_LEFT) and current_action.type == ACTION_VERT.MOVE_WIDTH_HANDLE:
+	if (
+		Input.is_mouse_button_pressed(BUTTON_LEFT)
+		and current_action.type == ACTION_VERT.MOVE_WIDTH_HANDLE
+	):
 		offset *= width_scaling
 		width_handle_key = current_action.keys[0]
 	var width_handle_normal = _get_vert_normal(t, verts, shape.get_point_index(width_handle_key))
-	var vertex_position:Vector2 = t.xform(shape.get_point_position(width_handle_key))
-	var icon_position:Vector2 = vertex_position + width_handle_normal * offset
-	var rect_size:Vector2 = Vector2.ONE * 10.0
+	var vertex_position: Vector2 = t.xform(shape.get_point_position(width_handle_key))
+	var icon_position: Vector2 = vertex_position + width_handle_normal * offset
+	var rect_size: Vector2 = Vector2.ONE * 10.0
 	var width_handle_color = Color("f53351")
 	overlay.draw_line(vertex_position, icon_position, width_handle_color, 1.0, true)
 	overlay.draw_set_transform(icon_position, width_handle_normal.angle(), Vector2.ONE)
 	overlay.draw_rect(Rect2(-rect_size / 2.0, rect_size), width_handle_color, true, 1.0)
 	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-	
-	
+
 	# Draw Control point handles
 	if control_points:
 		for i in range(0, verts.size(), 1):
 			var normal = _get_vert_normal(t, verts, i)
 			var key = shape.get_point_key_at_index(i)
 			var hp = t.xform(verts[i])
-			
+
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
 			if i < verts.size() - 1:
 				var pointout = t.xform(verts[i] + shape.get_point_out(key))
@@ -807,6 +822,7 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 				var pointin = t.xform(verts[i] + shape.get_point_in(key))
 				if hp != pointin:
 					_draw_control_point_line(overlay, hp, pointin, ICON_HANDLE_CONTROL)
+
 
 func _draw_control_point_line(c: Control, vert: Vector2, cp: Vector2, tex: Texture):
 	# Draw the line with a dark and light color to be visible on all backgrounds
@@ -825,7 +841,7 @@ func draw_new_point_preview(overlay: Control):
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var color = Color(1, 1, 1, .5)
 	var width = 2
-	
+
 	var a
 	var mouse = overlay.get_local_mouse_position()
 	if shape is SS2D_Shape_Closed:
@@ -837,10 +853,12 @@ func draw_new_point_preview(overlay: Control):
 	overlay.draw_line(mouse, a, color, width, true)
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
 
+
 func draw_new_shape_preview(overlay: Control):
 	# Draw a plus where a new shape will be added
 	var mouse = overlay.get_local_mouse_position()
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
+
 
 ##########
 # PLUGIN #
@@ -863,6 +881,7 @@ func select_verticies(keys: Array, action: int) -> ActionDataVert:
 		keys, from_positions, from_positions_c_in, from_positions_c_out, from_widths, action
 	)
 
+
 func select_vertices_to_move(keys: Array, _mouse_starting_pos_viewport: Vector2):
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 	current_action = select_verticies(keys, ACTION_VERT.MOVE_VERT)
@@ -874,9 +893,8 @@ func select_control_points_to_move(
 	current_action = select_verticies(keys, action)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
-func select_width_handle_to_move(
-	keys: Array, _mouse_starting_pos_viewport: Vector2
-):
+
+func select_width_handle_to_move(keys: Array, _mouse_starting_pos_viewport: Vector2):
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 	current_action = select_verticies(keys, ACTION_VERT.MOVE_WIDTH_HANDLE)
 
@@ -924,7 +942,14 @@ func _input_handle_left_click(
 	grab_threshold: float
 ) -> bool:
 	# Set Pivot?
-	if (current_mode == MODE.SET_PIVOT) or (mb.control and (current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT) and not Input.is_key_pressed(KEY_ALT)):
+	if (
+		(current_mode == MODE.SET_PIVOT)
+		or (
+			mb.control
+			and (current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT)
+			and not Input.is_key_pressed(KEY_ALT)
+		)
+	):
 		var local_position = et.affine_inverse().xform(mb.position)
 		if use_snap():
 			local_position = snap(local_position)
@@ -933,12 +958,12 @@ func _input_handle_left_click(
 		return true
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
-		
+
 		# Any nearby control points to move?
 		if not Input.is_key_pressed(KEY_ALT):
 			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
 				return true
-			
+
 			# Highlighting a vert to move or add control points to
 			if current_action.is_single_vert_selected():
 				if on_width_handle:
@@ -949,11 +974,11 @@ func _input_handle_left_click(
 				else:
 					select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
 					return true
-		
+
 		# Split the Edge?
 		if _input_split_edge(mb, vp_m_pos, t):
 			return true
-		
+
 		if not on_edge:
 			# Create new point
 			if Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT:
@@ -963,16 +988,17 @@ func _input_handle_left_click(
 				if Input.is_key_pressed(KEY_CONTROL) and Input.is_key_pressed(KEY_ALT):
 					# Copy shape with a new single point
 					var copy = copy_shape(shape)
-					
+
 					copy.set_point_array(SS2D_Point_Array.new())
+					copy.clear_all_material_overrides()
 					var new_key = FUNC.action_add_point(
 						self, "update_overlays", undo, copy, local_position
 					)
 					select_vertices_to_move([new_key], vp_m_pos)
-					
+
 					_enter_mode(MODE.CREATE_VERT)
-					
-					var selection: = get_editor_interface().get_selection()
+
+					var selection := get_editor_interface().get_selection()
 					selection.clear()
 					selection.add_node(copy)
 				else:
@@ -1040,8 +1066,11 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			update_overlays()
 		if kb.scancode == KEY_SHIFT:
 			update_overlays()
-		
-		if current_mode == MODE.CREATE_VERT and (kb.scancode == KEY_ENTER or kb.scancode == KEY_ESCAPE):
+
+		if (
+			current_mode == MODE.CREATE_VERT
+			and (kb.scancode == KEY_ENTER or kb.scancode == KEY_ESCAPE)
+		):
 			_enter_mode(MODE.EDIT_VERT)
 		return true
 	return false
@@ -1199,11 +1228,14 @@ func get_mouse_over_vert_key(mm: InputEventMouseMotion, grab_threshold: float) -
 			return k
 	return -1
 
+
 func get_mouse_over_width_handle(mm: InputEventMouseMotion, grab_threshold: float) -> int:
 	var xform: Transform2D = get_et() * shape.get_global_transform()
 	for k in shape.get_all_point_keys():
 		var pp: Vector2 = shape.get_point_position(k)
-		var normal:Vector2 = _get_vert_normal(xform, shape.get_vertices(), shape.get_point_index(k))
+		var normal: Vector2 = _get_vert_normal(
+			xform, shape.get_vertices(), shape.get_point_index(k)
+		)
 		var p: Vector2 = xform.xform(pp) + normal * WIDTH_HANDLE_OFFSET
 		if p.distance_to(mm.position) <= grab_threshold:
 			return k
@@ -1249,7 +1281,8 @@ func _input_motion_move_verts(delta: Vector2) -> bool:
 		update_overlays()
 	return true
 
-func _input_motion_move_width_handle(mouse_position: Vector2, scale:Vector2) -> bool:
+
+func _input_motion_move_width_handle(mouse_position: Vector2, scale: Vector2) -> bool:
 	for i in range(0, current_action.keys.size(), 1):
 		var key = current_action.keys[i]
 		var from_width = current_action.starting_width[i]
@@ -1268,15 +1301,15 @@ func _input_handle_mouse_motion_event(
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
 	gui_point_info_panel.rect_position = mm.position + Vector2(256, -24)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
-	
+
 	var verts = shape.get_vertices()
-	var closest_distance:float = 999999
+	var closest_distance: float = 999999
 	for i in verts.size():
 		var distance = verts[i].distance_to(delta_current_pos)
 		if distance < closest_distance:
 			closest_key = shape.get_point_key_at_index(i)
 			closest_distance = distance
-	
+
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
@@ -1287,10 +1320,12 @@ func _input_handle_mouse_motion_event(
 		elif _in or _out:
 			return _input_motion_move_control_points(delta, _in, _out)
 		elif type == ACTION_VERT.MOVE_WIDTH_HANDLE:
-			return _input_motion_move_width_handle(et.affine_inverse().xform(mm.position), et.get_scale())
+			return _input_motion_move_width_handle(
+				et.affine_inverse().xform(mm.position), et.get_scale()
+			)
 		var mouse_over_key = get_mouse_over_vert_key(event, grab_threshold)
 		var mouse_over_width_handle = get_mouse_over_width_handle(event, grab_threshold)
-		
+
 		on_width_handle = false
 		if mouse_over_key != -1:
 			on_edge = false
@@ -1302,7 +1337,6 @@ func _input_handle_mouse_motion_event(
 		else:
 			deselect_verts()
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
-		
 
 	elif current_mode == MODE.EDIT_EDGE:
 		# Don't update if edge panel is visible
@@ -1314,18 +1348,20 @@ func _input_handle_mouse_motion_event(
 		else:
 			deselect_verts()
 		on_edge = _input_motion_is_on_edge(mm, grab_threshold)
-	
+
 	update_overlays()
 	return false
 
+
 func _get_vert_normal(t: Transform2D, verts, i: int):
-	var point:Vector2 = t.xform(verts[i])
-	var prev_point:Vector2 = t.xform(verts[(i - 1) % verts.size()])
-	var next_point:Vector2 = t.xform(verts[(i + 1) % verts.size()])
-	return ( (prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2) ).normalized()
+	var point: Vector2 = t.xform(verts[i])
+	var prev_point: Vector2 = t.xform(verts[(i - 1) % verts.size()])
+	var next_point: Vector2 = t.xform(verts[(i + 1) % verts.size()])
+	return ((prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2)).normalized()
+
 
 func copy_shape(shape):
-	var copy:SS2D_Shape_Base
+	var copy: SS2D_Shape_Base
 	if shape is SS2D_Shape_Closed:
 		copy = SS2D_Shape_Closed.new()
 	else:
@@ -1343,21 +1379,25 @@ func copy_shape(shape):
 	copy.tessellation_tolerence = shape.tessellation_tolerence
 	copy.curve_bake_interval = shape.curve_bake_interval
 	copy.material_overrides = shape.material_overrides
-	
+
 	shape.get_parent().add_child(copy)
 	copy.set_owner(get_tree().get_edited_scene_root())
-	
-	if shape.collision_polygon_node_path != "" and shape.has_node(shape.collision_polygon_node_path):
+
+	if (
+		shape.collision_polygon_node_path != ""
+		and shape.has_node(shape.collision_polygon_node_path)
+	):
 		var collision_polygon_original = shape.get_node(shape.collision_polygon_node_path)
 		var collision_polygon_new = CollisionPolygon2D.new()
 		collision_polygon_new.visible = collision_polygon_original.visible
-		
+
 		collision_polygon_original.get_parent().add_child(collision_polygon_new)
 		collision_polygon_new.set_owner(get_tree().get_edited_scene_root())
-		
+
 		copy.collision_polygon_node_path = copy.get_path_to(collision_polygon_new)
-	
+
 	return copy
+
 
 #########
 # DEBUG #

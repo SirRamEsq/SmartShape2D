@@ -193,6 +193,9 @@ func get_material_override(tuple: Array) -> SS2D_Material_Edge_Metadata:
 		return null
 	return material_overrides[get_material_override_tuple(tuple)]
 
+func clear_all_material_overrides():
+	material_overrides = {}
+
 
 #########
 # CURVE #
