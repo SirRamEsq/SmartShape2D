@@ -26,7 +26,7 @@ const ICON_IMPORT_CLOSED = preload("assets/closed_shape.png")
 const ICON_IMPORT_OPEN = preload("assets/open_shape.png")
 const FUNC = preload("plugin-functionality.gd")
 
-enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT }
+enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT }
 
 enum ACTION_VERT {
 	NONE = 0,
@@ -94,6 +94,7 @@ var legacy_shape = null
 var tb_hb: HBoxContainer = null
 var tb_hb_legacy_import: HBoxContainer = null
 var tb_import: ToolButton = null
+var tb_vert_create: ToolButton = null
 var tb_vert_edit: ToolButton = null
 var tb_edge_edit: ToolButton = null
 var tb_pivot: ToolButton = null
@@ -167,38 +168,22 @@ func _gui_build_toolbar():
 	var sep = VSeparator.new()
 	tb_hb.add_child(sep)
 
-	tb_vert_edit = ToolButton.new()
-	tb_vert_edit.icon = ICON_CURVE_EDIT
-	tb_vert_edit.toggle_mode = true
-	tb_vert_edit.pressed = true
+	tb_vert_create = create_tool_button(ICON_CURVE_CREATE, SS2D_Strings.EN_TOOLTIP_CREATE_VERT)
+	tb_vert_create.connect("pressed", self, "_enter_mode", [MODE.CREATE_VERT])
+	tb_vert_create.pressed = true
+	
+	tb_vert_edit = create_tool_button(ICON_CURVE_EDIT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
 	tb_vert_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT_VERT])
-	tb_vert_edit.hint_tooltip = SS2D_Strings.EN_TOOLTIP_EDIT_VERT
-	tb_hb.add_child(tb_vert_edit)
-
-	tb_edge_edit = ToolButton.new()
-	tb_edge_edit.icon = ICON_INTERP_LINEAR
-	tb_edge_edit.toggle_mode = true
-	tb_edge_edit.pressed = false
+	
+	tb_edge_edit = create_tool_button(ICON_INTERP_LINEAR, SS2D_Strings.EN_TOOLTIP_EDIT_EDGE)
 	tb_edge_edit.connect("pressed", self, "_enter_mode", [MODE.EDIT_EDGE])
-	tb_edge_edit.hint_tooltip = SS2D_Strings.EN_TOOLTIP_EDIT_EDGE
-	tb_hb.add_child(tb_edge_edit)
-
-	tb_pivot = ToolButton.new()
-	tb_pivot.icon = ICON_PIVOT_POINT
-	tb_pivot.toggle_mode = true
-	tb_pivot.pressed = false
+	
+	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
 	tb_pivot.connect("pressed", self, "_enter_mode", [MODE.SET_PIVOT])
-	tb_pivot.hint_tooltip = SS2D_Strings.EN_TOOLTIP_PIVOT
-	tb_hb.add_child(tb_pivot)
-
-	tb_collision = ToolButton.new()
-	tb_collision.icon = ICON_COLLISION
-	tb_collision.toggle_mode = false
-	tb_collision.pressed = false
-	tb_collision.hint_tooltip = SS2D_Strings.EN_TOOLTIP_COLLISION
+	
+	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION)
 	tb_collision.connect("pressed", self, "_add_collision")
-	tb_hb.add_child(tb_collision)
-
+	
 	tb_snap = MenuButton.new()
 	tb_snap.hint_tooltip = SS2D_Strings.EN_TOOLTIP_SNAP
 	tb_snap_popup = tb_snap.get_popup()
@@ -213,6 +198,13 @@ func _gui_build_toolbar():
 
 	tb_hb.hide()
 
+func create_tool_button(icon, tooltip):
+	var tb = ToolButton.new()
+	tb.toggle_mode = true
+	tb.icon = icon
+	tb.hint_tooltip = tooltip
+	tb_hb.add_child(tb)
+	return tb
 
 func _gui_update_vert_info_panel():
 	var idx = current_action.current_point_index(shape)
@@ -613,12 +605,14 @@ static func is_key_valid(s: SS2D_Shape_Base, key: int) -> bool:
 func _enter_mode(mode: int):
 	if current_mode == mode:
 		return
-	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot]:
+	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_vert_create]:
 		tb.pressed = false
 
 	previous_mode = current_mode
 	current_mode = mode
 	match mode:
+		MODE.CREATE_VERT:
+			tb_vert_create.pressed = true
 		MODE.EDIT_VERT:
 			tb_vert_edit.pressed = true
 		MODE.EDIT_EDGE:
@@ -696,6 +690,9 @@ func forward_canvas_draw_over_viewport(overlay: Control):
 			undo_version = undo.get_version()
 
 	match current_mode:
+		MODE.CREATE_VERT:
+			draw_mode_edit_vert(overlay)
+			draw_new_point_preview(overlay)
 		MODE.EDIT_VERT:
 			draw_mode_edit_vert(overlay)
 			if Input.is_key_pressed(KEY_ALT) and not on_edge:
@@ -783,7 +780,7 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 	var width_handle_color = Color("f53351")
 	overlay.draw_line(vertex_position, icon_position, width_handle_color, 1.0, true)
 	overlay.draw_set_transform(icon_position, width_handle_normal.angle(), Vector2.ONE)
-	overlay.draw_rect(Rect2(-rect_size / 2.0, rect_size), width_handle_color, true, 1.0, true)
+	overlay.draw_rect(Rect2(-rect_size / 2.0, rect_size), width_handle_color, true, 1.0)
 	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 #	var width_handle_icon = WIDTH_HANDLES[int((width_handle_normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
 #	overlay.draw_texture(width_handle_icon, icon_position)
@@ -879,7 +876,7 @@ func select_width_handle_to_move(
 # INPUT #
 #########
 func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float) -> bool:
-	if current_mode == MODE.EDIT_VERT:
+	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		# Mouse over a single vertex?
 		if current_action.is_single_vert_selected():
 			FUNC.action_delete_point(self, "update_overlays", undo, shape, current_action.keys[0])
@@ -918,7 +915,7 @@ func _input_handle_left_click(
 	grab_threshold: float
 ) -> bool:
 	# Set Pivot?
-	if (current_mode == MODE.SET_PIVOT) or (mb.control and current_mode == MODE.EDIT_VERT):
+	if (current_mode == MODE.SET_PIVOT) or (mb.control and (current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT) ):
 		var local_position = et.affine_inverse().xform(mb.position)
 		if use_snap():
 			local_position = snap(local_position)
@@ -926,7 +923,7 @@ func _input_handle_left_click(
 		undo_version = undo.get_version()
 		return true
 
-	if current_mode == MODE.EDIT_VERT:
+	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
 
 		# Any nearby control points to move?
@@ -951,7 +948,7 @@ func _input_handle_left_click(
 
 		if not on_edge:
 			# Create new point
-			if Input.is_key_pressed(KEY_ALT):
+			if Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT:
 				var local_position = t.affine_inverse().xform(mb.position)
 				if use_snap():
 					local_position = snap(local_position)
@@ -1251,7 +1248,7 @@ func _input_handle_mouse_motion_event(
 			closest_key = shape.get_point_key_at_index(i)
 			closest_distance = distance
 	
-	if current_mode == MODE.EDIT_VERT:
+	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
 		var _out = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_OUT
