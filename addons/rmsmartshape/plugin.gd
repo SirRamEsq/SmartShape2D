@@ -1056,8 +1056,8 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			if gui_edge_info_panel.visible:
 				gui_edge_info_panel.visible = false
 
-		if kb.scancode == KEY_CONTROL and current_mode == MODE.CREATE_VERT or current_mode == MODE.EDIT_VERT:
-			if kb.pressed:
+		if kb.scancode == KEY_CONTROL or kb.scancode == KEY_ALT and (current_mode == MODE.CREATE_VERT or current_mode == MODE.EDIT_VERT):
+			if Input.is_key_pressed(KEY_CONTROL) and not Input.is_key_pressed(KEY_ALT):
 				if not kb.echo:
 					current_action = select_verticies([closest_key], ACTION_VERT.NONE)
 			else:
@@ -1328,7 +1328,7 @@ func _input_handle_mouse_motion_event(
 		var mouse_over_key = get_mouse_over_vert_key(event, grab_threshold)
 		var mouse_over_width_handle = get_mouse_over_width_handle(event, grab_threshold)
 
-		if Input.is_key_pressed(KEY_CONTROL) and mouse_over_width_handle == -1 and mouse_over_key == -1:
+		if Input.is_key_pressed(KEY_CONTROL) and not Input.is_key_pressed(KEY_ALT) and mouse_over_width_handle == -1 and mouse_over_key == -1:
 			mouse_over_key = closest_key
 
 		on_width_handle = false
