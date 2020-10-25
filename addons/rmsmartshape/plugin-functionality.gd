@@ -174,12 +174,12 @@ static func action_add_point(
 	update_method: String,
 	undo: UndoRedo,
 	s: SS2D_Shape_Base,
-	new_point: Vector2
+	new_point: Vector2,
+	idx: int = -1
 ) -> int:
 	"""
 	Will return key of added point
 	"""
-	var idx = -1
 	var new_key = s.get_next_key()
 	undo.create_action("Add Point: %s" % new_point)
 
