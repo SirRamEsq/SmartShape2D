@@ -65,6 +65,9 @@ class ActionDataVert:
 		starting_positions_control_out = positions_out
 		starting_width = width
 
+	func are_verts_selected() -> bool:
+		return keys.size() > 0
+
 	func to_string() -> String:
 		var s = "%s: %s = %s"
 		return s % [type, keys, starting_positions]
@@ -120,7 +123,7 @@ var edge_data: SS2D_Edge = null
 var on_width_handle: bool = false
 const WIDTH_HANDLE_OFFSET: float = 60.0
 var closest_key: int
-var closest_edge_keys:Array = [-1, -1]
+var closest_edge_keys: Array = [-1, -1]
 var width_scaling: float
 
 # Track our mode of operation
@@ -759,8 +762,7 @@ func draw_mode_edit_vert(overlay: Control):
 	if current_action.is_single_vert_selected():
 		var tex = ICON_HANDLE_SELECTED
 		overlay.draw_texture(
-			tex,
-			t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5
+			tex, t.xform(verts[current_action.current_point_index(shape)]) - tex.get_size() * 0.5
 		)
 
 
@@ -855,6 +857,7 @@ func draw_new_point_preview(overlay: Control):
 		a = t.xform(verts[verts.size() - 1])
 	overlay.draw_line(mouse, a, color, width, true)
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
+
 
 func draw_new_point_close_preview(overlay: Control):
 	# Draw lines to where a new point will be added
@@ -975,7 +978,7 @@ func _input_handle_left_click(
 		if not Input.is_key_pressed(KEY_ALT):
 			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
 				return true
-			
+
 			# Highlighting a vert to move or add control points to
 			if current_action.is_single_vert_selected():
 				if on_width_handle:
@@ -986,11 +989,11 @@ func _input_handle_left_click(
 				else:
 					select_vertices_to_move([current_action.current_point_key()], vp_m_pos)
 					return true
-		
+
 		# Split the Edge?
 		if _input_split_edge(mb, vp_m_pos, t):
 			return true
-		
+
 		if not on_edge:
 			# Create new point
 			if Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT:
@@ -1000,22 +1003,27 @@ func _input_handle_left_click(
 				if Input.is_key_pressed(KEY_SHIFT) and Input.is_key_pressed(KEY_ALT):
 					# Copy shape with a new single point
 					var copy = copy_shape(shape)
-					
+
 					copy.set_point_array(SS2D_Point_Array.new())
 					copy.clear_all_material_overrides()
 					var new_key = FUNC.action_add_point(
 						self, "update_overlays", undo, copy, local_position
 					)
 					select_vertices_to_move([new_key], vp_m_pos)
-					
+
 					_enter_mode(MODE.CREATE_VERT)
-					
+
 					var selection := get_editor_interface().get_selection()
 					selection.clear()
 					selection.add_node(copy)
 				elif Input.is_key_pressed(KEY_ALT):
 					var new_key = FUNC.action_add_point(
-						self, "update_overlays", undo, shape, local_position, shape.get_point_index(closest_edge_keys[1])
+						self,
+						"update_overlays",
+						undo,
+						shape,
+						local_position,
+						shape.get_point_index(closest_edge_keys[1])
 					)
 				else:
 					var new_key = FUNC.action_add_point(
@@ -1079,14 +1087,20 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			if gui_edge_info_panel.visible:
 				gui_edge_info_panel.visible = false
 
-		if kb.scancode == KEY_SHIFT or kb.scancode == KEY_ALT and (current_mode == MODE.CREATE_VERT or current_mode == MODE.EDIT_VERT):
+		if (
+			kb.scancode == KEY_SHIFT
+			or (
+				kb.scancode == KEY_ALT
+				and (current_mode == MODE.CREATE_VERT or current_mode == MODE.EDIT_VERT)
+			)
+		):
 			if Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_ALT):
 				if not kb.echo:
 					current_action = select_verticies([closest_key], ACTION_VERT.NONE)
 			else:
 				deselect_verts()
 			update_overlays()
-		
+
 		if kb.scancode == KEY_ALT or kb.scancode == KEY_SHIFT:
 			update_overlays()
 
@@ -1095,6 +1109,15 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			and (kb.scancode == KEY_ENTER or kb.scancode == KEY_ESCAPE)
 		):
 			_enter_mode(MODE.EDIT_VERT)
+
+		if kb.scancode == KEY_CONTROL:
+			if kb.pressed:
+				on_edge = false
+				current_action = select_verticies([closest_key], ACTION_VERT.NONE)
+			else:
+				deselect_verts()
+			update_overlays()
+
 		return true
 	return false
 
@@ -1242,6 +1265,7 @@ func _input_motion_is_on_edge(mm: InputEventMouseMotion, grab_threshold: float) 
 			return true
 	return false
 
+
 func _input_find_closest_edge_keys(mm: InputEventMouseMotion):
 	var xform: Transform2D = get_et() * shape.get_global_transform()
 	if shape.get_point_count() < 2:
@@ -1249,13 +1273,12 @@ func _input_find_closest_edge_keys(mm: InputEventMouseMotion):
 
 	# Find edge
 	var closest_point = null
-	
-	closest_point = shape.get_closest_point_straight_edge(
-		xform.affine_inverse().xform(mm.position)
-	)
+
+	closest_point = shape.get_closest_point_straight_edge(xform.affine_inverse().xform(mm.position))
 	var edge_point = xform.xform(closest_point)
 	var offset = shape.get_closest_offset_straight_edge(xform.affine_inverse().xform(edge_point))
 	closest_edge_keys = _get_edge_point_keys_from_offset(offset, true)
+
 
 func get_mouse_over_vert_key(mm: InputEventMouseMotion, grab_threshold: float) -> int:
 	var xform: Transform2D = get_et() * shape.get_global_transform()
@@ -1332,6 +1355,20 @@ func _input_motion_move_width_handle(mouse_position: Vector2, scale: Vector2) ->
 	return true
 
 
+func get_closest_vert_to_point(verts: Array, p: Vector2) -> int:
+	"""
+	Will Return index of closest vert to point
+	"""
+	var idx = -1
+	var closest_distance = -1
+	for i in verts.size():
+		var distance = verts[i].distance_to(p)
+		if distance < closest_distance or closest_distance == -1:
+			idx = shape.get_point_key_at_index(i)
+			closest_distance = distance
+	return idx
+
+
 func _input_handle_mouse_motion_event(
 	event: InputEventMouseMotion, et: Transform2D, grab_threshold: float
 ) -> bool:
@@ -1342,12 +1379,7 @@ func _input_handle_mouse_motion_event(
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 
 	var verts = shape.get_vertices()
-	var closest_distance: float = 999999
-	for i in verts.size():
-		var distance = verts[i].distance_to(delta_current_pos)
-		if distance < closest_distance:
-			closest_key = shape.get_point_key_at_index(i)
-			closest_distance = distance
+	closest_key = get_closest_vert_to_point(verts, delta_current_pos)
 
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		var type = current_action.type
@@ -1364,9 +1396,14 @@ func _input_handle_mouse_motion_event(
 			)
 		var mouse_over_key = get_mouse_over_vert_key(event, grab_threshold)
 		var mouse_over_width_handle = get_mouse_over_width_handle(event, grab_threshold)
-		
+
 		# Make the closest key grabable while holding down Control
-		if Input.is_key_pressed(KEY_CONTROL) and not Input.is_key_pressed(KEY_ALT) and mouse_over_width_handle == -1 and mouse_over_key == -1:
+		if (
+			Input.is_key_pressed(KEY_CONTROL)
+			and not Input.is_key_pressed(KEY_ALT)
+			and mouse_over_width_handle == -1
+			and mouse_over_key == -1
+		):
 			mouse_over_key = closest_key
 
 		on_width_handle = false
