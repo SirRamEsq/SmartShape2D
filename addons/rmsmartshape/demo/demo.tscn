@@ -241,7 +241,7 @@ point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 33 )
 
-[sub_resource type="Resource" id=177]
+[sub_resource type="Resource" id=35]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -252,9 +252,9 @@ script = ExtResource( 3 )
 position = Vector2( 248, 80 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 177 )
+properties = SubResource( 35 )
 
-[sub_resource type="Resource" id=170]
+[sub_resource type="Resource" id=37]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -265,9 +265,9 @@ script = ExtResource( 3 )
 position = Vector2( 320, 80 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 170 )
+properties = SubResource( 37 )
 
-[sub_resource type="Resource" id=168]
+[sub_resource type="Resource" id=39]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -278,9 +278,9 @@ script = ExtResource( 3 )
 position = Vector2( 320, 48 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 168 )
+properties = SubResource( 39 )
 
-[sub_resource type="Resource" id=171]
+[sub_resource type="Resource" id=41]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -291,9 +291,9 @@ script = ExtResource( 3 )
 position = Vector2( 384, 48 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 171 )
+properties = SubResource( 41 )
 
-[sub_resource type="Resource" id=172]
+[sub_resource type="Resource" id=43]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -304,7 +304,7 @@ script = ExtResource( 3 )
 position = Vector2( 384, 128 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 172 )
+properties = SubResource( 43 )
 
 [sub_resource type="Resource" id=45]
 script = ExtResource( 4 )
@@ -319,7 +319,7 @@ point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 45 )
 
-[sub_resource type="Resource" id=169]
+[sub_resource type="Resource" id=47]
 script = ExtResource( 4 )
 texture_idx = 1
 flip = false
@@ -330,9 +330,9 @@ script = ExtResource( 3 )
 position = Vector2( 248, 192 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 169 )
+properties = SubResource( 47 )
 
-[sub_resource type="Resource" id=174]
+[sub_resource type="Resource" id=49]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -343,7 +343,7 @@ script = ExtResource( 3 )
 position = Vector2( 440, 192 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 174 )
+properties = SubResource( 49 )
 
 [sub_resource type="Resource" id=51]
 script = ExtResource( 4 )
@@ -384,7 +384,7 @@ point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 55 )
 
-[sub_resource type="Resource" id=173]
+[sub_resource type="Resource" id=57]
 script = ExtResource( 4 )
 texture_idx = 1
 flip = false
@@ -395,9 +395,9 @@ script = ExtResource( 3 )
 position = Vector2( 592, 184 )
 point_in = Vector2( -32, 0 )
 point_out = Vector2( 32, 0 )
-properties = SubResource( 173 )
+properties = SubResource( 57 )
 
-[sub_resource type="Resource" id=176]
+[sub_resource type="Resource" id=59]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -408,9 +408,9 @@ script = ExtResource( 3 )
 position = Vector2( 536, 184 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 176 )
+properties = SubResource( 59 )
 
-[sub_resource type="Resource" id=175]
+[sub_resource type="Resource" id=61]
 script = ExtResource( 4 )
 texture_idx = 0
 flip = false
@@ -421,9 +421,9 @@ script = ExtResource( 3 )
 position = Vector2( 472, 184 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 175 )
+properties = SubResource( 61 )
 
-[sub_resource type="Resource" id=178]
+[sub_resource type="Resource" id=63]
 script = ExtResource( 4 )
 texture_idx = 1
 flip = false
@@ -434,7 +434,7 @@ script = ExtResource( 3 )
 position = Vector2( 760, 168 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
-properties = SubResource( 178 )
+properties = SubResource( 63 )
 
 [sub_resource type="Resource" id=65]
 script = ExtResource( 4 )
@@ -1215,12 +1215,8 @@ material_overrides = {
 position = Vector2( -108.338, -17.6757 )
 rotation = 0.484975
 script = ExtResource( 12 )
-shape_path = NodePath("")
 shape_point_index = 6
 shape_point_offset = 0.458
-child_rotation = 3.14
-use_shape_scale = false
-debug_draw = false
 
 [node name="RigidBody2D" type="RigidBody2D" parent="RMSmartShapeAnchor2D"]
 
@@ -1269,7 +1265,14 @@ polygon = PoolVector2Array( -451.314, 60.6863, -296, 63.9899, -290.961, 64.341, 
 
 [node name="SS2D_Shape_Open" type="Node2D" parent="StaticBody2D3"]
 script = ExtResource( 7 )
+editor_debug = false
+flip_edges = false
+render_edges = true
 collision_size = 16.0
+collision_offset = 0.0
+tessellation_stages = 5
+tessellation_tolerence = 4.0
+curve_bake_interval = 20.0
 collision_polygon_node_path = NodePath("../CollisionPolygon2D")
 shape_material = ExtResource( 1 )
 _points = SubResource( 152 )
@@ -1316,7 +1319,7 @@ zoom = Vector2( 0.75, 0.75 )
 
 [node name="RigidBody2D" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( 56, -80 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D"]
 scale = Vector2( 0.25, 0.25 )
@@ -1327,7 +1330,7 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D2" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( 640, 32 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D2"]
 scale = Vector2( 0.25, 0.25 )
@@ -1338,7 +1341,7 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D6" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( -64, -400 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D6"]
 scale = Vector2( 0.25, 0.25 )
@@ -1349,7 +1352,7 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D7" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( -64, -448 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D7"]
 scale = Vector2( 0.25, 0.25 )
@@ -1360,7 +1363,7 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D8" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( 72, -440 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D8"]
 scale = Vector2( 0.25, 0.25 )
@@ -1371,7 +1374,7 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D3" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( 496, 176 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D3"]
 scale = Vector2( 0.25, 0.25 )
@@ -1382,7 +1385,7 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D4" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( 248, 40 )
-gravity_scale = 6.0
+mass = 2.04082
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D4"]
 scale = Vector2( 0.25, 0.25 )
@@ -1393,8 +1396,8 @@ shape = SubResource( 166 )
 
 [node name="RigidBody2D5" type="RigidBody2D" parent="RigidBodies"]
 position = Vector2( -112, 88 )
-gravity_scale = 6.0
-linear_velocity = Vector2( 500, 0 )
+mass = 2.04082
+linear_velocity = Vector2( 400, 0 )
 
 [node name="Sprite" type="Sprite" parent="RigidBodies/RigidBody2D5"]
 scale = Vector2( 0.25, 0.25 )
