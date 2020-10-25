@@ -1082,40 +1082,24 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 				shape.set_as_dirty()
 				shape.update()
 				_gui_update_info_panels()
+
 		if kb.pressed and kb.scancode == KEY_ESCAPE:
 			# Hide edge_info_panel
 			if gui_edge_info_panel.visible:
 				gui_edge_info_panel.visible = false
 
-		if (
-			kb.scancode == KEY_SHIFT
-			or (
-				kb.scancode == KEY_ALT
-				and (current_mode == MODE.CREATE_VERT or current_mode == MODE.EDIT_VERT)
-			)
-		):
-			if Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_ALT):
-				if not kb.echo:
-					current_action = select_verticies([closest_key], ACTION_VERT.NONE)
-			else:
-				deselect_verts()
-			update_overlays()
-
-		if kb.scancode == KEY_ALT or kb.scancode == KEY_SHIFT:
-			update_overlays()
-
-		if (
-			current_mode == MODE.CREATE_VERT
-			and (kb.scancode == KEY_ENTER or kb.scancode == KEY_ESCAPE)
-		):
-			_enter_mode(MODE.EDIT_VERT)
+			if current_mode == MODE.CREATE_VERT:
+				_enter_mode(MODE.EDIT_VERT)
 
 		if kb.scancode == KEY_CONTROL:
-			if kb.pressed:
+			if kb.pressed and not kb.echo:
 				on_edge = false
 				current_action = select_verticies([closest_key], ACTION_VERT.NONE)
 			else:
 				deselect_verts()
+			update_overlays()
+
+		if kb.scancode == KEY_ALT:
 			update_overlays()
 
 		return true
