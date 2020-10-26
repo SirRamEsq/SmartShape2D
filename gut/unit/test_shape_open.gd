@@ -269,58 +269,6 @@ func test_get_edge_meta_materials_many():
 		assert_eq(expected_indicies[i], ed.indicies)
 
 
-var scale_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
-
-
-func test_build_quad_from_point_scale(scale = use_parameters(scale_params)):
-	var shape = SS2D_Shape_Open.new()
-	add_child_autofree(shape)
-
-	var edge_mat = SS2D_Material_Edge.new()
-	edge_mat.textures = [TEST_TEXTURE]
-
-	var start_point_1 = Vector2(100, 150)
-	var start_point_2 = Vector2(200, 100)
-	var points = [start_point_1, start_point_2]
-
-	var delta = points[1] - points[0]
-	var normal = Vector2(delta.y, -delta.x).normalized()
-
-	var tex_size = TEST_TEXTURE.get_size()
-	var extents = ((tex_size / 2.0) * scale) * normal
-
-	var pt_prev = points[0]
-	var pt = points[0]
-	var pt_next = points[1]
-
-	var quad = shape._build_quad_from_point(
-		pt, pt_next, null, null, tex_size, 1.0, false, false, false, false, scale, 0.0, 0.0
-	)
-	# Top Left (A)
-	# Bottom Left (B)
-	# Bottom Right (C)
-	# Top Right (D)
-	var expected_points = [
-		start_point_1 + extents,
-		start_point_1 - extents,
-		start_point_2 - extents,
-		start_point_2 + extents
-	]
-	assert_eq(quad.pt_a, expected_points[0])
-	assert_eq(quad.pt_b, expected_points[1])
-	assert_eq(quad.pt_c, expected_points[2])
-	assert_eq(quad.pt_d, expected_points[3])
-
-	# Flip edges
-	quad = shape._build_quad_from_point(
-		pt, pt_next, null, null, tex_size, 1.0, false, true, false, false, scale, 0.0, 0.0
-	)
-	assert_eq(quad.pt_a, expected_points[1])
-	assert_eq(quad.pt_b, expected_points[0])
-	assert_eq(quad.pt_c, expected_points[3])
-	assert_eq(quad.pt_d, expected_points[2])
-
-
 var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
 
 
@@ -440,6 +388,7 @@ func test_get_edge_material_data():
 	assert_eq(em_data_small.indicies.size(), 2)
 	assert_eq(em_data_large.indicies.size(), 4)
 
+
 func test_get_width_for_tessellated_point():
 	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
@@ -451,10 +400,10 @@ func test_get_width_for_tessellated_point():
 	var k2 = shape.get_point_key_at_index(idx2)
 	var w1 = 5.3
 	var w2 = 3.15
-	var w_average = (w1 + w2)/2.0
+	var w_average = (w1 + w2) / 2.0
 	shape.set_point_width(k1, w1)
 	shape.set_point_width(k2, w2)
-	var point_in = Vector2(-16,0)
+	var point_in = Vector2(-16, 0)
 	var point_out = point_in * -1
 	shape.set_point_in(k1, point_in)
 	shape.set_point_out(k1, point_out)

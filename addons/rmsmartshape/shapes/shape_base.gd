@@ -717,9 +717,8 @@ func _build_quad_from_point(
 	var normal = Vector2(delta.y, -delta.x).normalized()
 	var normal_rotation = (Vector2(0,-1).angle_to(normal))
 
-	# Average the x and y values of the texture size
 	# This will prevent the texture from rendering incorrectly if they differ
-	var vtx_len = (tex_size.x  + tex_size.y)/2.0
+	var vtx_len = tex_size.y
 	var vtx: Vector2 = normal * (vtx_len * 0.5 )
 	if flip_y:
 		vtx *= -1
