@@ -715,13 +715,17 @@ func _build_quad_from_point(
 	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
 	var normal = Vector2(delta.y, -delta.x).normalized()
+	var normal_rotation = (Vector2(0,-1).angle_to(normal))
 
-	# This causes weird rendering if the texture isn't a square
-	var vtx: Vector2 = normal * (tex_size * 0.5)
+	# Average the x and y values of the texture size
+	# This will prevent the texture from rendering incorrectly if they differ
+	var vtx_len = (tex_size.x  + tex_size.y)/2.0
+	var vtx: Vector2 = normal * (vtx_len * 0.5 )
 	if flip_y:
 		vtx *= -1
 
 	var offset = vtx * custom_offset
+	custom_scale = 1
 	var width_scale = vtx * custom_scale * width
 
 	if first_point:
