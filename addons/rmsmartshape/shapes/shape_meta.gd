@@ -6,6 +6,7 @@ class_name SS2D_Shape_Meta, "../assets/meta_shape.png"
 This shape will set the point_array data of all children shapes
 """
 
+export (bool) var press_to_update_cached_children = false setget _on_update_children
 var _cached_shape_children: Array = []
 
 
@@ -27,10 +28,12 @@ func _ready():
 func _draw():
 	pass
 
+
 func remove_child(node: Node):
 	_remove_from_meta(node)
 	call_deferred("_update_cached_children")
 	.remove_child(node)
+
 
 func add_child(node: Node, legible_unique_name: bool = false):
 	_add_to_meta(node)
@@ -55,6 +58,12 @@ func set_as_dirty():
 ########
 # META #
 ########
+func _on_update_children(ignore: bool):
+	print("Updating Cached Children...")
+	_update_cached_children()
+	print("...Updated")
+
+
 func _update_cached_children():
 	# TODO, need to be made aware when cached children's children change!
 	_cached_shape_children = _get_shapes(self)

@@ -15,23 +15,9 @@ To use search to jump between categories, use the regex:
 # .+ #
 """
 
-enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
-
-export (bool) var editor_debug: bool = false setget _set_editor_debug
-export (bool) var flip_edges: bool = false setget set_flip_edges
-export (bool) var render_edges: bool = true setget set_render_edges
-export (float) var collision_size: float = 32 setget set_collision_size
-export (float) var collision_offset: float = 0.0 setget set_collision_offset
-export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
-export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
-export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
-
-# Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
-export (NodePath) var collision_polygon_node_path: NodePath = ""
-export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
-export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
-export (Dictionary) var material_overrides = null setget set_material_overrides
-
+################
+# DECLARATIONS #
+################
 var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
@@ -42,6 +28,130 @@ var _curve_no_control_points: Curve2D = Curve2D.new()
 
 signal points_modified
 signal on_dirty_update
+
+enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
+
+###########
+# EXPORTS #
+###########
+export (bool) var editor_debug: bool = false setget _set_editor_debug
+export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
+
+export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
+# Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
+export (Dictionary) var material_overrides = null setget set_material_overrides
+
+####################
+# DETAILED EXPORTS #
+####################
+export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
+"""
+		{
+			"name": "shape_material",
+			"type": TYPE_OBJECT,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RESOURCE_TYPE,
+			"hint_string": "SS2D_Material_Shape"
+		},
+"""
+
+# COLLISION #
+#export (float)
+var collision_size: float = 32 setget set_collision_size
+#export (float)
+var collision_offset: float = 0.0 setget set_collision_offset
+#export (NodePath)
+var collision_polygon_node_path: NodePath = ""
+
+# EDGES #
+#export (bool)
+var flip_edges: bool = false setget set_flip_edges
+#export (bool)
+var render_edges: bool = true setget set_render_edges
+
+# TESSELLATION #
+#export (int, 1, 8)
+var tessellation_stages: int = 5 setget set_tessellation_stages
+#export (float, 1, 8)
+var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
+
+
+func _get_property_list():
+	return [
+		{
+			"name": "Edges",
+			"type": TYPE_NIL,
+			"hint_string": "edge_",
+			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
+		},
+		{
+			"name": "Tessellation",
+			"type": TYPE_NIL,
+			"hint_string": "tessellation_",
+			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
+		},
+
+		{
+			"name": "tessellation_stages",
+			"type": TYPE_INT,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0,8,1"
+		},
+		{
+			"name": "tessellation_tolerence",
+			"type": TYPE_REAL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0.1,8.0,1,or_greater,or_lesser"
+			},
+		{
+			"name": "flip_edges",
+			"type": TYPE_BOOL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_NONE,
+		},
+		{
+			"name": "render_edges",
+			"type": TYPE_BOOL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_NONE,
+		},
+		{
+			"name": "Collision",
+			"type": TYPE_NIL,
+			"hint_string": "collision_",
+			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
+		},
+		{
+			"name": "collision_size",
+			"type": TYPE_REAL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0,64,1,or_greater"
+		},
+		{
+			"name": "collision_offset",
+			"type": TYPE_REAL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "-64,64,1,or_greater,or_lesser"
+			},
+		{
+			"name": "collision_polygon_node_path",
+			"type": TYPE_NODE_PATH,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_NONE
+		}
+	]
 
 
 #####################
@@ -196,6 +306,7 @@ func get_material_override(tuple: Array) -> SS2D_Material_Edge_Metadata:
 	if not has_material_override(tuple):
 		return null
 	return material_overrides[get_material_override_tuple(tuple)]
+
 
 func clear_all_material_overrides():
 	material_overrides = {}
@@ -700,11 +811,11 @@ func _build_quad_from_point(
 	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
 	var normal = Vector2(delta.y, -delta.x).normalized()
-	var normal_rotation = (Vector2(0,-1).angle_to(normal))
+	var normal_rotation = Vector2(0, -1).angle_to(normal)
 
 	# This will prevent the texture from rendering incorrectly if they differ
 	var vtx_len = tex_size.y
-	var vtx: Vector2 = normal * (vtx_len * 0.5 )
+	var vtx: Vector2 = normal * (vtx_len * 0.5)
 	if flip_y:
 		vtx *= -1
 
