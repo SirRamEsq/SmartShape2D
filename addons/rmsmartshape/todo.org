@@ -1,4 +1,31 @@
 * TODO Update Sample subdir
+* Combinator
+- Takes the collision output of subject and clip polys
+  - Use collision output as the shape points
+  - Use collision output for skinning
+- What to do in the case of multiple polygons returned?
+  - Have multiple child collision nodes
+  - Call render on multiple shapes
+- Collision bodies will need to be:
+  - Static
+    - They can't be dynamic and affected by other physics bodies
+    - The combinator collision shape doesn't really "exist"
+      - It's more like a meta shape
+      - A set of polys we treat as one
+  - Children of the combinator shapes
+    - The combinator shape will need to 'own' the collision shape, not the other way around
+    - Will need more than one shape per static body in most cases
+  - How are holes in closed shapes supported?
+    - https://github.com/goostengine/goost-examples/issues/1
+** UNION
+- Combines all children shapes
+- Will return between 1 and n shapes where n is the number of children shapes
+- Calls Geometry.merge_polygons_2d()
+  - For every pair of smartshapes
+    - shape.generate_collision_points()
+** DIFFERENCE
+** INTERSECTION
+** XOR
 * DONE Fix Render Offset in Shape Material
 * DONE Fix Render Offset in Edge Meta Material
 * DONE Fix Texture Flipping (SPACE)

@@ -2,6 +2,24 @@ tool
 extends SS2D_Shape_Base
 class_name SS2D_Shape_Closed, "../assets/closed_shape.png"
 
+##########
+# CLOSED #
+##########
+"""
+A Hole is a closed polygon
+Orientation doesn't matter
+Holes should not intersect each other
+"""
+var _holes = []
+
+
+func set_holes(holes: Array):
+	_holes = holes
+
+
+func get_holes() -> Array:
+	return _holes
+
 
 #########
 # GODOT #
@@ -22,8 +40,11 @@ func remove_point(key: int):
 	emit_signal("points_modified")
 
 
-func set_point_array(a: SS2D_Point_Array):
-	_points = a.duplicate(true)
+func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
+	if make_unique:
+		_points = a.duplicate(true)
+	else:
+		_points = a
 	_close_shape()
 	clear_cached_data()
 	_update_curve(_points)

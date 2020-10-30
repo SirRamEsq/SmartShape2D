@@ -15,22 +15,9 @@ To use search to jump between categories, use the regex:
 # .+ #
 """
 
-enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
-
-export (bool) var editor_debug: bool = false setget _set_editor_debug
-export (bool) var flip_edges: bool = false setget set_flip_edges
-export (bool) var render_edges: bool = true setget set_render_edges
-export (float) var collision_size: float = 32 setget set_collision_size
-export (float) var collision_offset: float = 0.0 setget set_collision_offset
-export (int, 1, 8) var tessellation_stages: int = 5 setget set_tessellation_stages
-export (float, 1, 8) var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
-export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
-# Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
-export (NodePath) var collision_polygon_node_path: NodePath = ""
-export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
-export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
-export (Dictionary) var material_overrides = null setget set_material_overrides
-
+################
+# DECLARATIONS #
+################
 var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
@@ -38,9 +25,135 @@ var _is_instantiable = false
 var _curve: Curve2D = Curve2D.new()
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
+# Whether or not the plugin should allow editing this shape
+var can_edit = true
 
 signal points_modified
 signal on_dirty_update
+
+enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
+
+###########
+# EXPORTS #
+###########
+export (bool) var editor_debug: bool = false setget _set_editor_debug
+export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
+
+export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
+# Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
+export (Dictionary) var material_overrides = null setget set_material_overrides
+
+####################
+# DETAILED EXPORTS #
+####################
+export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
+"""
+		{
+			"name": "shape_material",
+			"type": TYPE_OBJECT,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RESOURCE_TYPE,
+			"hint_string": "SS2D_Material_Shape"
+		},
+"""
+
+# COLLISION #
+#export (float)
+var collision_size: float = 32 setget set_collision_size
+#export (float)
+var collision_offset: float = 0.0 setget set_collision_offset
+#export (NodePath)
+var collision_polygon_node_path: NodePath = ""
+
+# EDGES #
+#export (bool)
+var flip_edges: bool = false setget set_flip_edges
+#export (bool)
+var render_edges: bool = true setget set_render_edges
+
+# TESSELLATION #
+#export (int, 1, 8)
+var tessellation_stages: int = 5 setget set_tessellation_stages
+#export (float, 1, 8)
+var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
+
+
+func _get_property_list():
+	return [
+		{
+			"name": "Edges",
+			"type": TYPE_NIL,
+			"hint_string": "edge_",
+			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
+		},
+		{
+			"name": "Tessellation",
+			"type": TYPE_NIL,
+			"hint_string": "tessellation_",
+			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
+		},
+
+		{
+			"name": "tessellation_stages",
+			"type": TYPE_INT,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0,8,1"
+		},
+		{
+			"name": "tessellation_tolerence",
+			"type": TYPE_REAL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0.1,8.0,1,or_greater,or_lesser"
+			},
+		{
+			"name": "flip_edges",
+			"type": TYPE_BOOL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_NONE,
+		},
+		{
+			"name": "render_edges",
+			"type": TYPE_BOOL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_NONE,
+		},
+		{
+			"name": "Collision",
+			"type": TYPE_NIL,
+			"hint_string": "collision_",
+			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
+		},
+		{
+			"name": "collision_size",
+			"type": TYPE_REAL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0,64,1,or_greater"
+		},
+		{
+			"name": "collision_offset",
+			"type": TYPE_REAL,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "-64,64,1,or_greater,or_lesser"
+			},
+		{
+			"name": "collision_polygon_node_path",
+			"type": TYPE_NODE_PATH,
+			"usage":
+			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+			"hint": PROPERTY_HINT_NONE
+		}
+	]
 
 
 #####################
@@ -51,8 +164,11 @@ func get_point_array() -> SS2D_Point_Array:
 	return _points  #.duplicate(true)
 
 
-func set_point_array(a: SS2D_Point_Array):
-	_points = a.duplicate(true)
+func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
+	if make_unique:
+		_points = a.duplicate(true)
+	else:
+		_points = a
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
@@ -192,6 +308,7 @@ func get_material_override(tuple: Array) -> SS2D_Material_Edge_Metadata:
 	if not has_material_override(tuple):
 		return null
 	return material_overrides[get_material_override_tuple(tuple)]
+
 
 func clear_all_material_overrides():
 	material_overrides = {}
@@ -539,16 +656,14 @@ func should_flip_edges() -> bool:
 	return not (are_points_clockwise() != flip_edges)
 
 
-func bake_collision():
-	if not has_node(collision_polygon_node_path):
-		return
-	var polygon = get_node(collision_polygon_node_path)
+func generate_collision_points() -> PoolVector2Array:
+	var points: PoolVector2Array = PoolVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
 	var t_points = get_tessellated_points()
 	if t_points.size() < 2:
-		return
+		return points
 	var indicies = []
 	for i in range(verts.size()):
 		indicies.push_back(i)
@@ -556,65 +671,48 @@ func bake_collision():
 	var edge = _build_edge_without_material(
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
-	var collision_quads = []
-	for q in edge.quads:
-		collision_quads.push_back(q)
-	_weld_quad_array(collision_quads)
-	var points: PoolVector2Array = PoolVector2Array()
-	if not collision_quads.empty():
+	# TODO, this belogns in _build_edge_without_material
+	_weld_quad_array(edge.quads)
+	if not edge.quads.empty():
 		# Top edge (typically point A unless corner quad)
-		for quad in collision_quads:
+		for quad in edge.quads:
 			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_a)
-					)
-				)
+				points.push_back(quad.pt_a)
 			elif quad.corner == SS2D_Quad.CORNER.OUTER:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_d)
-					)
-				)
+				points.push_back(quad.pt_d)
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
-				#points.push_back(
-				#polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
-				#)
 
 		# Right Edge (point d, the first or final quad will never be a corner)
-		points.push_back(
-			polygon.get_global_transform().xform_inv(
-				get_global_transform().xform(collision_quads[collision_quads.size() - 1].pt_d)
-			)
-		)
+		points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
 
 		# Bottom Edge (typically point c)
-		for quad_index in collision_quads.size():
-			var quad = collision_quads[collision_quads.size() - 1 - quad_index]
+		for quad_index in edge.quads.size():
+			var quad = edge.quads[edge.quads.size() - 1 - quad_index]
 			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_c)
-					)
-				)
+				points.push_back(quad.pt_c)
 			elif quad.corner == SS2D_Quad.CORNER.OUTER:
 				pass
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
-				points.push_back(
-					polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(quad.pt_b)
-					)
-				)
+				points.push_back(quad.pt_b)
 
 		# Left Edge (point b)
-		points.push_back(
-			polygon.get_global_transform().xform_inv(
-				get_global_transform().xform(collision_quads[0].pt_b)
-			)
-		)
+		points.push_back(edge.quads[0].pt_b)
 
-	polygon.polygon = points
+	return points
+
+
+func bake_collision():
+	if not has_node(collision_polygon_node_path):
+		return
+	var polygon = get_node(collision_polygon_node_path)
+	var points = generate_collision_points()
+	var transformed_points = PoolVector2Array()
+	var poly_transform = polygon.get_global_transform()
+	var shape_transform = get_global_transform()
+	for p in points:
+		transformed_points.push_back(poly_transform.xform_inv(shape_transform.xform(p)))
+	polygon.polygon = transformed_points
 
 
 func cache_edges():
@@ -715,11 +813,11 @@ func _build_quad_from_point(
 	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
 	var normal = Vector2(delta.y, -delta.x).normalized()
-	var normal_rotation = (Vector2(0,-1).angle_to(normal))
+	var normal_rotation = Vector2(0, -1).angle_to(normal)
 
 	# This will prevent the texture from rendering incorrectly if they differ
 	var vtx_len = tex_size.y
-	var vtx: Vector2 = normal * (vtx_len * 0.5 )
+	var vtx: Vector2 = normal * (vtx_len * 0.5)
 	if flip_y:
 		vtx *= -1
 
@@ -924,7 +1022,7 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 
 func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
-		var needed_height: float = (a.get_height_average() + b.get_height_average())/2.0
+		var needed_height: float = (a.get_height_average() + b.get_height_average()) / 2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5

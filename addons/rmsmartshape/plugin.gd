@@ -849,7 +849,7 @@ func draw_new_point_preview(overlay: Control):
 
 	var a
 	var mouse = overlay.get_local_mouse_position()
-	if shape is SS2D_Shape_Closed:
+	if is_shape_closed(shape):
 		a = t.xform(verts[verts.size() - 2])
 		var b = t.xform(verts[0])
 		overlay.draw_line(mouse, b, color, width * .5, true)
@@ -925,6 +925,8 @@ func select_width_handle_to_move(keys: Array, _mouse_starting_pos_viewport: Vect
 # INPUT #
 #########
 func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float) -> bool:
+	if not shape.can_edit:
+		return false
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		# Mouse over a single vertex?
 		if current_action.is_single_vert_selected():
@@ -1048,6 +1050,8 @@ func _input_handle_left_click(
 
 
 func _input_handle_mouse_wheel(btn: int) -> bool:
+	if not shape.can_edit:
+		return false
 	var key = current_action.current_point_key()
 	if Input.is_key_pressed(KEY_SHIFT):
 		var width = shape.get_point_width(key)
@@ -1073,6 +1077,8 @@ func _input_handle_mouse_wheel(btn: int) -> bool:
 
 
 func _input_handle_keyboard_event(event: InputEventKey) -> bool:
+	if not shape.can_edit:
+		return false
 	var kb: InputEventKey = event
 	if _is_valid_keyboard_scancode(kb):
 		if current_action.is_single_vert_selected():
@@ -1126,6 +1132,8 @@ func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 func _input_handle_mouse_button_event(
 	event: InputEventMouseButton, et: Transform2D, grab_threshold: float
 ) -> bool:
+	if not shape.can_edit:
+		return false
 	var t: Transform2D = et * shape.get_global_transform()
 	var mb: InputEventMouseButton = event
 	var viewport_mouse_position = et.affine_inverse().xform(mb.position)
@@ -1430,8 +1438,10 @@ func copy_shape(shape):
 	var copy: SS2D_Shape_Base
 	if shape is SS2D_Shape_Closed:
 		copy = SS2D_Shape_Closed.new()
-	else:
+	if shape is SS2D_Shape_Open:
 		copy = SS2D_Shape_Open.new()
+	if shape is SS2D_Shape_Meta:
+		copy = SS2D_Shape_Meta.new()
 	copy.position = shape.position
 	copy.scale = shape.scale
 	copy.modulate = shape.modulate
@@ -1464,6 +1474,13 @@ func copy_shape(shape):
 
 	return copy
 
+
+func is_shape_closed(shape):
+	if shape is SS2D_Shape_Open:
+		return false
+	if shape is SS2D_Shape_Meta:
+		return shape.treat_as_closed()
+	return true
 
 #########
 # DEBUG #
