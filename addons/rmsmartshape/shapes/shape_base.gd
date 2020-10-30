@@ -25,6 +25,8 @@ var _is_instantiable = false
 var _curve: Curve2D = Curve2D.new()
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
+# Whether or not the plugin should allow editing this shape
+var can_edit = true
 
 signal points_modified
 signal on_dirty_update

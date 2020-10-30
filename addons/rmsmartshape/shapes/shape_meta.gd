@@ -54,7 +54,6 @@ func _on_dirty_update():
 func set_as_dirty():
 	_update_shapes()
 
-
 ########
 # META #
 ########
@@ -67,6 +66,14 @@ func _on_update_children(ignore: bool):
 func _update_cached_children():
 	# TODO, need to be made aware when cached children's children change!
 	_cached_shape_children = _get_shapes(self)
+	if treat_as_closed():
+		can_edit = false
+		if editor_debug:
+			print ("META Shape contains Closed shapes, edit the meta shape using the child closed shape; DO NOT EDIT META DIRECTLY")
+	else:
+		can_edit = true
+		if editor_debug:
+			print ("META Shape contains no Closed shapes, can edit META shape directly")
 
 
 func _get_shapes(n: Node, a: Array = []) -> Array:
@@ -99,3 +106,13 @@ func _remove_from_meta(n: Node):
 	# Make Point Data Unique
 	n.set_point_array(n.get_point_array(), true)
 	n.disconnect("points_modified", self, "_update_shapes")
+
+func treat_as_closed()->bool:
+	var has_closed = false
+	for c in _cached_shape_children:
+		if c is SS2D_Shape_Closed:
+			has_closed = true
+			break
+	if has_closed:
+		return true
+	return false

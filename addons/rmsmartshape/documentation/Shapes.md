@@ -7,13 +7,18 @@ You can directly edit either the points or the edges between the points
 Shapes are configured to use a [Shape Material]( ./Resources.md#ShapeMaterial )
 which determines how the shape is rendered.
 
-There are two kinds of shapes:
+There are three kinds of shapes:
 - ![OpenShapeImg]( ./../assets/open_shape.png  ) **Open**
   - This shape's Final point **DOESN'T** connect to its First point
   - This shape **DOESN'T** make use of the "Fill Textures" parameter in the ShapeMaterial
 - ![ClosedShapeImg]( ./../assets/closed_shape.png  ) **Closed**
   - This shape's Final point **DOES** connect to its First point
   - This shape **DOES** make use of the "Fill Textures" parameter in the ShapeMaterial
+- ![MetaShapeImg]( ./../assets/meta_shape.png  ) **Closed**
+  - This shape sets the points of all children shapes
+  - Changing the points of any children shapes will also change the meta shape along with all the meta shapes children
+  - Can be edited directly if contains only Open shapes
+  - If children include Closed shapes, should only edit the closed shapes
 
 # Properties
 ## Editor Debug
