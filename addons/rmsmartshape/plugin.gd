@@ -1347,16 +1347,19 @@ func _input_motion_move_width_handle(mouse_position: Vector2, scale: Vector2) ->
 	return true
 
 
-func get_closest_vert_to_point(verts: Array, p: Vector2) -> int:
+func get_closest_vert_to_point(s: SS2D_Shape_Base, p: Vector2) -> int:
 	"""
 	Will Return index of closest vert to point
 	"""
+	var gt = shape.get_global_transform()
+	var verts = s.get_vertices()
+	var transformed_point = gt.affine_inverse() * p
 	var idx = -1
 	var closest_distance = -1
 	for i in verts.size():
-		var distance = verts[i].distance_to(p)
+		var distance = verts[i].distance_to(transformed_point)
 		if distance < closest_distance or closest_distance == -1:
-			idx = shape.get_point_key_at_index(i)
+			idx = s.get_point_key_at_index(i)
 			closest_distance = distance
 	return idx
 
@@ -1370,8 +1373,7 @@ func _input_handle_mouse_motion_event(
 	gui_point_info_panel.rect_position = mm.position + Vector2(256, -24)
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 
-	var verts = shape.get_vertices()
-	closest_key = get_closest_vert_to_point(verts, delta_current_pos)
+	closest_key = get_closest_vert_to_point(shape, delta_current_pos)
 
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		var type = current_action.type
@@ -1481,6 +1483,7 @@ func is_shape_closed(shape):
 	if shape is SS2D_Shape_Meta:
 		return shape.treat_as_closed()
 	return true
+
 
 #########
 # DEBUG #
