@@ -68,6 +68,9 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 		var texture_full_length = texture_reps * tex.get_size().x
 		# How much each quad's texture must be offset to make up the difference in full length vs total length
 		change_in_length = (texture_full_length / total_length)
+		
+	if first_quad.fit_texture == SS2D_Material_Edge.FITMODE.CROP:
+		change_in_length = 1.0
 
 	var length_elapsed: float = 0.0
 	var st = SurfaceTool.new()

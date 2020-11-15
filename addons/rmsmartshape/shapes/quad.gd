@@ -15,6 +15,7 @@ var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 var flip_texture: bool = false
 var control_point_index: int
+var fit_texture = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 
 # Contains value from CORNER enum
 var corner: int = 0

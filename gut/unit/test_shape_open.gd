@@ -304,7 +304,8 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 		false,
 		c_scale,
 		c_offset,
-		c_extends
+		c_extends,
+		SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 	)
 	var expected_points = [
 		pt + (width * vtx), pt - (width * vtx), pt_next - (width * vtx), pt_next + (width * vtx)

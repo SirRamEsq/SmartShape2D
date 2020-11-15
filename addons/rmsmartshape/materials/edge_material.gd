@@ -33,6 +33,9 @@ export (Array, Texture) var texture_normals_taper_right: Array = [] setget _set_
 export (bool) var use_corner_texture: bool = true setget _set_use_corner
 # If taper textures should be used
 export (bool) var use_taper_texture: bool = true setget _set_use_taper
+# if set to true, then squishing can occur when texture doesn't fit nicely into total length.
+enum FITMODE {SQUISH_AND_STRETCH, CROP}
+export (FITMODE) var fit_mode = FITMODE.SQUISH_AND_STRETCH setget _set_fit_texture
 
 
 ###########
@@ -95,6 +98,10 @@ func _set_use_corner(b: bool):
 
 func _set_use_taper(b: bool):
 	use_taper_texture = b
+	emit_signal("changed")
+	
+func _set_fit_texture(fitmode):
+	fit_mode = fitmode
 	emit_signal("changed")
 
 
