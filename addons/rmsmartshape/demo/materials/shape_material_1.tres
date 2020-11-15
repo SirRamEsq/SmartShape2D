@@ -38,6 +38,7 @@ texture_normals_taper_left = [  ]
 texture_normals_taper_right = [  ]
 use_corner_texture = true
 use_taper_texture = true
+fit_mode = 1
 
 [sub_resource type="Resource" id=4]
 script = ExtResource( 3 )

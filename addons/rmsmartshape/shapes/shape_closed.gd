@@ -292,7 +292,8 @@ func bake_collision():
 				i == t_points.size() - 1,
 				collision_width,
 				collision_offset - 1.0,
-				collision_extends
+				collision_extends,
+				SS2D_Material_Edge.FITMODE.SQUISH_and_STRETCH
 			)
 		)
 	_weld_quad_array(collision_quads)

@@ -803,7 +803,8 @@ func _build_quad_from_point(
 	last_point: bool,
 	custom_scale: float,
 	custom_offset: float,
-	custom_extends: float
+	custom_extends: float,
+	fit_texture
 ) -> SS2D_Quad:
 	var quad = SS2D_Quad.new()
 	quad.texture = tex
@@ -844,6 +845,7 @@ func _build_quad_from_point(
 	quad.pt_c = pt_next - width_scale + offset
 	quad.pt_d = pt_next + width_scale + offset
 	quad.flip_texture = flip_x
+	quad.fit_texture = fit_texture
 
 	return quad
 
@@ -931,7 +933,8 @@ func _build_edge_without_material(
 			is_last_point,
 			c_scale,
 			c_offset,
-			c_extends
+			c_extends,
+			SS2D_Material_Edge.FITMODE.SQUISH_and_STRETCH
 		)
 		var new_quads = []
 		new_quads.push_back(new_quad)
@@ -1539,7 +1542,8 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 			is_last_point,
 			c_scale,
 			c_offset,
-			c_extends
+			c_extends,
+			edge_material.fit_mode
 		)
 		var new_quads = []
 		new_quads.push_back(new_quad)
