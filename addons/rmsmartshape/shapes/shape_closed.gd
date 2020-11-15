@@ -293,7 +293,7 @@ func bake_collision():
 				collision_width,
 				collision_offset - 1.0,
 				collision_extends,
-				SS2D_Material_Edge.FITMODE.SQUISH_and_STRETCH
+				SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 			)
 		)
 	_weld_quad_array(collision_quads)

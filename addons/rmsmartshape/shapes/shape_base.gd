@@ -804,7 +804,7 @@ func _build_quad_from_point(
 	custom_scale: float,
 	custom_offset: float,
 	custom_extends: float,
-	fit_texture
+	fit_texture: int
 ) -> SS2D_Quad:
 	var quad = SS2D_Quad.new()
 	quad.texture = tex
@@ -934,7 +934,7 @@ func _build_edge_without_material(
 			c_scale,
 			c_offset,
 			c_extends,
-			SS2D_Material_Edge.FITMODE.SQUISH_and_STRETCH
+			SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 		)
 		var new_quads = []
 		new_quads.push_back(new_quad)
