@@ -37,5 +37,6 @@ func debug_print_array_mesh(am:ArrayMesh)->String:
 	return s
 
 func render(ci: CanvasItem):
+	#print("mesh count %s" % meshes.size())
 	for mesh in meshes:
 		ci.draw_mesh(mesh, texture, texture_normal)

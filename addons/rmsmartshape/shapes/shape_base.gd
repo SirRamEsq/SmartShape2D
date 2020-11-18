@@ -93,7 +93,6 @@ func _get_property_list():
 			"hint_string": "tessellation_",
 			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
 		},
-
 		{
 			"name": "tessellation_stages",
 			"type": TYPE_INT,
@@ -109,7 +108,7 @@ func _get_property_list():
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
 			"hint_string": "0.1,8.0,1,or_greater,or_lesser"
-			},
+		},
 		{
 			"name": "flip_edges",
 			"type": TYPE_BOOL,
@@ -145,7 +144,7 @@ func _get_property_list():
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
 			"hint_string": "-64,64,1,or_greater,or_lesser"
-			},
+		},
 		{
 			"name": "collision_polygon_node_path",
 			"type": TYPE_NODE_PATH,
@@ -603,9 +602,63 @@ func _ready():
 		queue_free()
 
 
+func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
+	var render_parent_name = "_SS2D_RENDER"
+	var render_parent = null
+	if not has_node(render_parent_name):
+		render_parent = SS2D_Shape_Render.new()
+		render_parent.name = render_parent_name
+		add_child(render_parent)
+		#render_parent.owner = get_editor_interface().get_edited_scene_root()
+		render_parent.set_owner(get_tree().edited_scene_root)
+	else:
+		render_parent = get_node(render_parent_name)
+	return render_parent
+
+
+"""
+Returns true if the children have changed
+"""
+func _create_rendering_nodes(size: int) -> bool:
+	var render_parent = _get_rendering_nodes_parent()
+	var child_count = render_parent.get_child_count()
+	var delta = size - child_count
+	#print ("%s | %s | %s" % [child_count, size, delta])
+	# Size and child_count match
+	if delta == 0:
+		return false
+
+	# More children than needed
+	elif delta < 0:
+		var children = render_parent.get_children()
+		for i in range(0, abs(delta), 1):
+			var child = children[child_count - 1 - i]
+			render_parent.remove_child(child)
+			child.set_mesh(null)
+			child.queue_free()
+
+
+	# Fewer children than needed
+	elif delta > 0:
+		for i in range(0, delta, 1):
+			var child = SS2D_Shape_Render.new()
+			render_parent.add_child(child)
+			child.set_owner(get_tree().edited_scene_root)
+			#child.owner = get_editor_interface().get_edited_scene_root()
+			#child.owner = render_parent
+	return true
+
+
 func _draw():
-	for m in _meshes:
-		m.render(self)
+	_create_rendering_nodes(_meshes.size())
+	var render_parent = _get_rendering_nodes_parent()
+	var render_nodes = render_parent.get_children()
+	#print ("RENDER | %s" % [render_nodes])
+	#print ("MESHES | %s" % [_meshes])
+	for i in range(0, _meshes.size(), 1):
+		var m = _meshes[i]
+		var render_node = render_nodes[i]
+		render_node.set_mesh(m)
 
 	if editor_debug and Engine.editor_hint:
 		_draw_debug(sort_by_z_index(_edges))
