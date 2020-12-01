@@ -72,4 +72,16 @@ These are used because corners can look warped when using only regular textures
   - Example: ![Grass Corner Inner]( ./imgs/grass-corner-inner.png )
 - Texture_Corner_Outer is used when the corner forms an outer angle
   - Example: ![Grass Corner Outer]( ./imgs/grass-corner-outer.png )
+## Fit Mode
+Most likely, the textures you use will not *perfectly* fit the polygon.
+This setting allows you to determine how SmartShape will rectify this.
+
+Differt options may look better or worse depending on the art-style.
+
+- Sqush and Stretch
+  - Texture will be mutated
+  - Either slightly squished or stretched to fit the polygon
+- Crop
+  - Texture will not be mutated
+  - Texture will simply be cropped when changing from one texture to the next
 

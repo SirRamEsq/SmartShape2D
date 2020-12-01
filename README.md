@@ -13,6 +13,9 @@ The textures used are similar to what you would use if making terrain using Tile
 Read the section below on Contributing and post an issue if one doesn't already exist**
 
 **If you enjoy this tool and want to support its development, [I'd appreciate a coffee ](https://www.buymeacoffee.com/SirRamESQ) :)**
+<a href="https://www.buymeacoffee.com/SirRamESQ">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" align="left" height="48">
+</a>
 
 # Support
 - Supported and Tested on Godot 3.2
@@ -27,11 +30,12 @@ There is a demo scene in the addon's directory.
 # Documentation
 - [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
 - [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )
+- Quick Start Video (In Progress)
 - [Migrating from 1.x]( ./addons/rmsmartshape/documentation/Migration.md )
 - [Shapes]( ./addons/rmsmartshape/documentation/Shapes.md )
 - [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
 - [Resources]( ./addons/rmsmartshape/documentation/Resources.md )
-- [Controls]( ./addons/rmsmartshape/documentation/Controls.md )
+- [Controls and Hotkeys]( ./addons/rmsmartshape/documentation/Controls.md )
 - [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
 
 # Contibuting

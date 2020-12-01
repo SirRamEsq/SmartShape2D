@@ -2,6 +2,8 @@ SmartShape2D - QuickStart
 ---
 ![Finished Image]( ./imgs/Inpsector-EdgeMaterialsNormalRange.png )
 
+If you feel like your workflow with SmartShape2D is a little bit slow, try reading [Controls and Hotkeys](./Controls.md). The hotkeys may help you work with the tool more effectively.
+
 # Creating a Shape
 - First, instance a node of either:
   - SS2D_Shape_Open
