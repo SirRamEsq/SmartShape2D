@@ -609,8 +609,8 @@ func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 		render_parent = SS2D_Shape_Render.new()
 		render_parent.name = render_parent_name
 		add_child(render_parent)
-		#render_parent.owner = get_editor_interface().get_edited_scene_root()
-		render_parent.set_owner(get_tree().edited_scene_root)
+		if editor_debug:
+			render_parent.set_owner(get_tree().edited_scene_root)
 	else:
 		render_parent = get_node(render_parent_name)
 	return render_parent
@@ -643,9 +643,8 @@ func _create_rendering_nodes(size: int) -> bool:
 		for i in range(0, delta, 1):
 			var child = SS2D_Shape_Render.new()
 			render_parent.add_child(child)
-			child.set_owner(get_tree().edited_scene_root)
-			#child.owner = get_editor_interface().get_edited_scene_root()
-			#child.owner = render_parent
+			if editor_debug:
+				child.set_owner(get_tree().edited_scene_root)
 	return true
 
 
