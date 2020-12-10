@@ -231,7 +231,6 @@ Overriding this method to set the light mask of all render children
 
 
 func set_light_mask(value):
-	print("Setting light mask", value)
 	var render_parent = _get_rendering_nodes_parent()
 	for c in render_parent.get_children():
 		c.light_mask = value
@@ -1202,11 +1201,15 @@ func _weld_quad_array(
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		var quad_dir = this_quad.pt_d - this_quad.pt_a
 		var mid_point = _weld_quads(this_quad, next_quad, custom_scale)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
+		#
+		# When welding and using different widths, quads can look a little weird
+		# This is because they are no longer parallelograms
+		# This is a tough problem to solve
+		# See http://reedbeta.com/blog/quadrilateral-interpolation-part-1/
 		if this_quad.self_intersects():
 			quads.remove(index)
 			_weld_quad_array(quads, custom_scale, weld_first_and_last, index - 1)

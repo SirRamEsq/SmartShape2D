@@ -70,17 +70,6 @@ func get_rotation() -> float:
 	return SS2D_NormalRange.get_angle_from_vector(pt_c - pt_a)
 
 
-func get_length_average() -> float:
-	return (get_length_top() + get_length_bottom()) / 2.0
-
-
-func get_length_top() -> float:
-	return pt_d.distance_to(pt_a)
-
-
-func get_length_bottom() -> float:
-	return pt_c.distance_to(pt_b)
-
 
 """
 Given three colinear points p, q, r, the function checks if
@@ -181,3 +170,18 @@ func get_height_left() -> float:
 
 func get_height_right() -> float:
 	return pt_d.distance_to(pt_c)
+
+# Returns the difference in height between the left and right sides
+func get_height_difference() -> float:
+	return get_height_left() - get_height_right()
+
+func get_length_average() -> float:
+	return ((get_length_top() + get_length_bottom()) / 2.0)
+
+
+func get_length_top() -> float:
+	return pt_d.distance_to(pt_a)
+
+
+func get_length_bottom() -> float:
+	return pt_c.distance_to(pt_b)
