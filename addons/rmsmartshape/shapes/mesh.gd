@@ -25,6 +25,20 @@ func _init(
 	texture_normal = tn
 	flip_texture = f
 	meshes = m
+	mesh_transform = xform
+
+func duplicate(sub_resource: bool = false):
+	var _new = __new()
+	_new.texture = texture
+	_new.texture_normal = texture_normal
+	_new.flip_texture = flip_texture
+	_new.mesh_transform = mesh_transform
+	_new.meshes = []
+	if sub_resource:
+		for m in meshes:
+			_new.meshes.push_back(m.duplicate(true))
+	return _new
+
 
 
 func matches(tex: Texture, tex_n: Texture, f: bool, t: Transform2D) -> bool:
@@ -40,3 +54,7 @@ func render(ci: CanvasItem):
 	#print("mesh count %s" % meshes.size())
 	for mesh in meshes:
 		ci.draw_mesh(mesh, texture, texture_normal)
+
+# Workaround (class cannot reference itself)
+func __new() -> SS2D_Point:
+	return get_script().new()

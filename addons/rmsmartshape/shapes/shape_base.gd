@@ -225,7 +225,7 @@ func _set_editor_debug(value: bool):
 	property_list_changed_notify()
 
 
-func set_render_node_owners(v:bool):
+func set_render_node_owners(v: bool):
 	if Engine.editor_hint:
 		# Force scene tree update
 		var render_parent = _get_rendering_nodes_parent()
@@ -675,14 +675,32 @@ func _create_rendering_nodes(size: int) -> bool:
 	return true
 
 
+"""
+Takes an array of SS2D_Meshes and returns a flat array of SS2D_Meshes
+If a SS2D_Mesh has n meshes, will return an array contain n SS2D_Mesh
+The returned array will consist of SS2D_Meshes each with a SS2D_Mesh::meshes array of size 1
+"""
+
+
+func _draw_flatten_meshes_array(meshes: Array) -> Array:
+	var flat_meshes = []
+	for ss2d_mesh in meshes:
+		for godot_mesh in ss2d_mesh.meshes:
+			var new_mesh = ss2d_mesh.duplicate(false)
+			new_mesh.meshes = [godot_mesh]
+			flat_meshes.push_back(new_mesh)
+	return flat_meshes
+
+
 func _draw():
-	_create_rendering_nodes(_meshes.size())
+	var flat_meshes = _draw_flatten_meshes_array(_meshes)
+	_create_rendering_nodes(flat_meshes.size())
 	var render_parent = _get_rendering_nodes_parent()
 	var render_nodes = render_parent.get_children()
 	#print ("RENDER | %s" % [render_nodes])
-	#print ("MESHES | %s" % [_meshes])
-	for i in range(0, _meshes.size(), 1):
-		var m = _meshes[i]
+	#print ("MESHES | %s" % [flat_meshes])
+	for i in range(0, flat_meshes.size(), 1):
+		var m = flat_meshes[i]
 		var render_node = render_nodes[i]
 		render_node.set_mesh(m)
 
@@ -1102,40 +1120,56 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 	return lerp(w1, w2, ratio)
 
 
-func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
+"""
+Mutates two quads to be welded
+returns the midpoint of the weld
+"""
+
+
+func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) -> Vector2:
+	var midpoint = Vector2(0, 0)
+	# If both quads are not a corner
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
 		var needed_height: float = (a.get_height_average() + b.get_height_average()) / 2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
 
-		var mid_point: Vector2 = (pt1 + pt2) / 2.0
-		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_height * custom_scale / 2.0
+		midpoint = Vector2(pt1 + pt2) / 2.0
+		var half_line: Vector2 = (pt2 - midpoint).normalized() * needed_height * custom_scale / 2.0
 
 		if half_line != Vector2.ZERO:
-			pt2 = mid_point + half_line
-			pt1 = mid_point - half_line
+			pt2 = midpoint + half_line
+			pt1 = midpoint - half_line
 
-		b.pt_a = pt1
-		b.pt_b = pt2
 		a.pt_d = pt1
 		a.pt_c = pt2
+		b.pt_a = pt1
+		b.pt_b = pt2
+
+	# If either quad is a corner
 	else:
 		if a.corner == SS2D_Quad.CORNER.OUTER:
 			b.pt_a = a.pt_c
 			b.pt_b = a.pt_b
+			midpoint = (b.pt_a + b.pt_b) / 2.0
 
 		elif a.corner == SS2D_Quad.CORNER.INNER:
 			b.pt_a = a.pt_d
 			b.pt_b = a.pt_a
+			midpoint = (b.pt_a + b.pt_b) / 2.0
 
 		elif b.corner == SS2D_Quad.CORNER.OUTER:
 			a.pt_d = b.pt_a
 			a.pt_c = b.pt_b
+			midpoint = (a.pt_d + a.pt_c) / 2.0
 
 		elif b.corner == SS2D_Quad.CORNER.INNER:
 			a.pt_d = b.pt_d
 			a.pt_c = b.pt_c
+			midpoint = (a.pt_d + a.pt_c) / 2.0
+
+	return midpoint
 
 
 func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_last: bool = false):
@@ -1144,7 +1178,16 @@ func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_la
 	for index in range(quads.size() - 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		_weld_quads(this_quad, next_quad, custom_scale)
+		var quad_dir = this_quad.pt_d - this_quad.pt_a
+		var mid_point = _weld_quads(this_quad, next_quad, custom_scale)
+		# If this quad self_intersects after welding, it's likely very small and can be removed
+		# Usually happens when welding a very large and very small quad together
+		# Generally looks better when simply being removed
+		if this_quad.self_intersects():
+			quads.remove(index)
+			_weld_quad_array(quads, custom_scale, weld_first_and_last)
+			return
+
 	if weld_first_and_last:
 		_weld_quads(quads.back(), quads[0], 1.0)
 
@@ -1154,11 +1197,17 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	for edge_material in get_edge_material_data(s_mat, wrap_around):
-		var new_edge = _build_edge_with_material(edge_material, s_mat.render_offset, wrap_around)
+	var emds = get_edge_material_data(s_mat, wrap_around)
+	for emd in emds:
+		var new_edge = _build_edge_with_material(emd, s_mat.render_offset, wrap_around)
 		edges.push_back(new_edge)
 
 	return edges
+
+
+"""
+Will return an array of EdgeMaterialData from the current set of points
+"""
 
 
 func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:

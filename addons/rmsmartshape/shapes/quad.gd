@@ -2,6 +2,7 @@ tool
 extends Reference
 class_name SS2D_Quad
 
+enum ORIENTATION { COLINEAR = 0, CCW, CW }
 enum CORNER { NONE = 0, OUTER, INNER }
 
 var pt_a: Vector2
@@ -79,6 +80,76 @@ func get_length_top() -> float:
 
 func get_length_bottom() -> float:
 	return pt_c.distance_to(pt_b)
+
+
+"""
+Given three colinear points p, q, r, the function checks if
+point q lies on line segment 'pr'
+"""
+
+
+func on_segment(p: Vector2, q: Vector2, r: Vector2) -> bool:
+	if (
+		(q.x <= max(p.x, r.x))
+		and (q.x >= min(p.x, r.x))
+		and (q.y <= max(p.y, r.y))
+		and (q.y >= min(p.y, r.y))
+	):
+		return true
+	return false
+
+
+"""
+Returns CCW, CW, or colinear
+see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+"""
+
+
+func get_orientation(a: Vector2, b: Vector2, c: Vector2) -> int:
+	var val = (float(b.y - a.y) * (c.x - b.x)) - (float(b.x - a.x) * (c.y - b.y))
+	if val > 0:
+		return ORIENTATION.CW
+	elif val < 0:
+		return ORIENTATION.CCW
+	return ORIENTATION.COLINEAR
+
+
+"""
+Return true if line segments p1q1 and p2q2 intersect
+"""
+
+
+func edges_intersect(p1: Vector2, q1: Vector2, p2: Vector2, q2: Vector2) -> bool:
+	var o1 = get_orientation(p1, q1, p2)
+	var o2 = get_orientation(p1, q1, q2)
+	var o3 = get_orientation(p2, q2, p1)
+	var o4 = get_orientation(p2, q2, q1)
+	# General case
+	if (o1 != o2) and (o3 != o4):
+		return true
+
+	# Special Cases
+	# p1 , q1 and p2 are colinear and p2 lies on segment p1q1
+	if (o1 == 0) and on_segment(p1, p2, q1):
+		return true
+
+	# p1 , q1 and q2 are colinear and q2 lies on segment p1q1
+	if (o2 == 0) and on_segment(p1, q2, q1):
+		return true
+
+	# p2 , q2 and p1 are colinear and p1 lies on segment p2q2
+	if (o3 == 0) and on_segment(p2, p1, q2):
+		return true
+
+	# p2 , q2 and q1 are colinear and q1 lies on segment p2q2
+	if (o4 == 0) and on_segment(p2, q1, q2):
+		return true
+
+	return false
+
+
+func self_intersects() -> bool:
+	return edges_intersect(pt_a, pt_d, pt_b, pt_c) or edges_intersect(pt_a, pt_b, pt_d, pt_c)
 
 
 func render_lines(ci: CanvasItem):
