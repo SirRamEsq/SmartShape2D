@@ -296,7 +296,7 @@ func bake_collision():
 				SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 			)
 		)
-	_weld_quad_array(collision_quads)
+	_weld_quad_array(collision_quads, 1.0, false)
 	var first_quad = collision_quads[0]
 	var last_quad = collision_quads.back()
 	_weld_quads(last_quad, first_quad, 1.0)
@@ -312,7 +312,7 @@ func bake_collision():
 
 func _on_dirty_update():
 	if _dirty:
-		set_render_node_owners(editor_debug)
+		update_render_nodes()
 		clear_cached_data()
 		# Close shape
 		_close_shape()

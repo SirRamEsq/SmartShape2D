@@ -225,6 +225,20 @@ func _set_editor_debug(value: bool):
 	property_list_changed_notify()
 
 
+"""
+Overriding this method to set the light mask of all render children
+"""
+
+
+func set_light_mask(value):
+	print("Setting light mask", value)
+	var render_parent = _get_rendering_nodes_parent()
+	for c in render_parent.get_children():
+		c.light_mask = value
+	render_parent.light_mask = value
+	.set_light_mask(value)
+
+
 func set_render_node_owners(v: bool):
 	if Engine.editor_hint:
 		# Force scene tree update
@@ -249,6 +263,11 @@ func set_render_node_owners(v: bool):
 		dummy.name = dummy_name
 		add_child(dummy)
 		dummy.set_owner(owner)
+
+
+func update_render_nodes():
+	set_render_node_owners(editor_debug)
+	set_light_mask(light_mask)
 
 
 func set_tessellation_stages(value: int):
@@ -634,6 +653,7 @@ func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 	if not has_node(render_parent_name):
 		render_parent = SS2D_Shape_Render.new()
 		render_parent.name = render_parent_name
+		render_parent.light_mask = light_mask
 		add_child(render_parent)
 		if editor_debug and Engine.editor_hint:
 			render_parent.set_owner(get_tree().edited_scene_root)
@@ -669,6 +689,7 @@ func _create_rendering_nodes(size: int) -> bool:
 	elif delta > 0:
 		for i in range(0, delta, 1):
 			var child = SS2D_Shape_Render.new()
+			child.light_mask = light_mask
 			render_parent.add_child(child)
 			if editor_debug and Engine.editor_hint:
 				child.set_owner(get_tree().edited_scene_root)
@@ -769,7 +790,7 @@ func generate_collision_points() -> PoolVector2Array:
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
 	# TODO, this belogns in _build_edge_without_material
-	_weld_quad_array(edge.quads)
+	_weld_quad_array(edge.quads, 1.0, false)
 	if not edge.quads.empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in edge.quads:
@@ -1172,10 +1193,13 @@ func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) -> Vecto
 	return midpoint
 
 
-func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_last: bool = false):
+func _weld_quad_array(
+	quads: Array, custom_scale: float, weld_first_and_last: bool, start_idx: int = 0
+):
 	if quads.empty():
 		return
-	for index in range(quads.size() - 1):
+
+	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
 		var quad_dir = this_quad.pt_d - this_quad.pt_a
@@ -1185,7 +1209,7 @@ func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_la
 		# Generally looks better when simply being removed
 		if this_quad.self_intersects():
 			quads.remove(index)
-			_weld_quad_array(quads, custom_scale, weld_first_and_last)
+			_weld_quad_array(quads, custom_scale, weld_first_and_last, index - 1)
 			return
 
 	if weld_first_and_last:
@@ -1338,7 +1362,7 @@ func has_minimum_point_count() -> bool:
 
 func _on_dirty_update():
 	if _dirty:
-		set_render_node_owners(editor_debug)
+		update_render_nodes()
 		clear_cached_data()
 		if has_minimum_point_count():
 			bake_collision()
