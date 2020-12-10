@@ -225,6 +225,32 @@ func _set_editor_debug(value: bool):
 	property_list_changed_notify()
 
 
+func set_render_node_owners(v:bool):
+	if Engine.editor_hint:
+		# Force scene tree update
+		var render_parent = _get_rendering_nodes_parent()
+		var owner = null
+		if v:
+			owner = get_tree().edited_scene_root
+		render_parent.set_owner(owner)
+
+		# Set owner recurisvely
+		for c in render_parent.get_children():
+			c.set_owner(owner)
+
+		# Force update
+		var dummy_name = "__DUMMY__"
+		if has_node(dummy_name):
+			var n = get_node(dummy_name)
+			remove_child(n)
+			n.queue_free()
+
+		var dummy = Node2D.new()
+		dummy.name = dummy_name
+		add_child(dummy)
+		dummy.set_owner(owner)
+
+
 func set_tessellation_stages(value: int):
 	tessellation_stages = value
 	set_as_dirty()
@@ -609,7 +635,7 @@ func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 		render_parent = SS2D_Shape_Render.new()
 		render_parent.name = render_parent_name
 		add_child(render_parent)
-		if editor_debug:
+		if editor_debug and Engine.editor_hint:
 			render_parent.set_owner(get_tree().edited_scene_root)
 	else:
 		render_parent = get_node(render_parent_name)
@@ -619,6 +645,8 @@ func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 """
 Returns true if the children have changed
 """
+
+
 func _create_rendering_nodes(size: int) -> bool:
 	var render_parent = _get_rendering_nodes_parent()
 	var child_count = render_parent.get_child_count()
@@ -637,13 +665,12 @@ func _create_rendering_nodes(size: int) -> bool:
 			child.set_mesh(null)
 			child.queue_free()
 
-
 	# Fewer children than needed
 	elif delta > 0:
 		for i in range(0, delta, 1):
 			var child = SS2D_Shape_Render.new()
 			render_parent.add_child(child)
-			if editor_debug:
+			if editor_debug and Engine.editor_hint:
 				child.set_owner(get_tree().edited_scene_root)
 	return true
 
@@ -1262,6 +1289,7 @@ func has_minimum_point_count() -> bool:
 
 func _on_dirty_update():
 	if _dirty:
+		set_render_node_owners(editor_debug)
 		clear_cached_data()
 		if has_minimum_point_count():
 			bake_collision()
