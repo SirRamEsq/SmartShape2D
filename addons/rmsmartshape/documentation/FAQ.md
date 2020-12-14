@@ -3,9 +3,11 @@ SmartShape2D - FAQ
 
 # Why aren't my textures repeating?
 If your textures aren't repeating and look something like this:
+
 ![Non-Repeating-Texture-IMG]( ./imgs/faq-texture-repeat.png )
 
 The issue is most likely that you need to set the texture's import options in Godot:
+
 ![Import-Texture-Settings]( ./imgs/faq-texture-repeat-import.png )
 
 # Why isn't my shape updaing when I change the Light Mask?
