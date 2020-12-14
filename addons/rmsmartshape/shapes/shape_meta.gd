@@ -58,9 +58,9 @@ func set_as_dirty():
 # META #
 ########
 func _on_update_children(ignore: bool):
-	print("Updating Cached Children...")
+	#print("Updating Cached Children...")
 	_update_cached_children()
-	print("...Updated")
+	#print("...Updated")
 
 
 func _update_cached_children():

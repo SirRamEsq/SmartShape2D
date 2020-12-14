@@ -93,7 +93,6 @@ func _get_property_list():
 			"hint_string": "tessellation_",
 			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
 		},
-
 		{
 			"name": "tessellation_stages",
 			"type": TYPE_INT,
@@ -109,7 +108,7 @@ func _get_property_list():
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
 			"hint_string": "0.1,8.0,1,or_greater,or_lesser"
-			},
+		},
 		{
 			"name": "flip_edges",
 			"type": TYPE_BOOL,
@@ -145,7 +144,7 @@ func _get_property_list():
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
 			"hint_string": "-64,64,1,or_greater,or_lesser"
-			},
+		},
 		{
 			"name": "collision_polygon_node_path",
 			"type": TYPE_NODE_PATH,
@@ -224,6 +223,50 @@ func _set_editor_debug(value: bool):
 	editor_debug = value
 	set_as_dirty()
 	property_list_changed_notify()
+
+
+"""
+Overriding this method to set the light mask of all render children
+"""
+
+
+func set_light_mask(value):
+	var render_parent = _get_rendering_nodes_parent()
+	for c in render_parent.get_children():
+		c.light_mask = value
+	render_parent.light_mask = value
+	.set_light_mask(value)
+
+
+func set_render_node_owners(v: bool):
+	if Engine.editor_hint:
+		# Force scene tree update
+		var render_parent = _get_rendering_nodes_parent()
+		var owner = null
+		if v:
+			owner = get_tree().edited_scene_root
+		render_parent.set_owner(owner)
+
+		# Set owner recurisvely
+		for c in render_parent.get_children():
+			c.set_owner(owner)
+
+		# Force update
+		var dummy_name = "__DUMMY__"
+		if has_node(dummy_name):
+			var n = get_node(dummy_name)
+			remove_child(n)
+			n.queue_free()
+
+		var dummy = Node2D.new()
+		dummy.name = dummy_name
+		add_child(dummy)
+		dummy.set_owner(owner)
+
+
+func update_render_nodes():
+	set_render_node_owners(editor_debug)
+	set_light_mask(light_mask)
 
 
 func set_tessellation_stages(value: int):
@@ -603,9 +646,83 @@ func _ready():
 		queue_free()
 
 
+func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
+	var render_parent_name = "_SS2D_RENDER"
+	var render_parent = null
+	if not has_node(render_parent_name):
+		render_parent = SS2D_Shape_Render.new()
+		render_parent.name = render_parent_name
+		render_parent.light_mask = light_mask
+		add_child(render_parent)
+		if editor_debug and Engine.editor_hint:
+			render_parent.set_owner(get_tree().edited_scene_root)
+	else:
+		render_parent = get_node(render_parent_name)
+	return render_parent
+
+
+"""
+Returns true if the children have changed
+"""
+
+
+func _create_rendering_nodes(size: int) -> bool:
+	var render_parent = _get_rendering_nodes_parent()
+	var child_count = render_parent.get_child_count()
+	var delta = size - child_count
+	#print ("%s | %s | %s" % [child_count, size, delta])
+	# Size and child_count match
+	if delta == 0:
+		return false
+
+	# More children than needed
+	elif delta < 0:
+		var children = render_parent.get_children()
+		for i in range(0, abs(delta), 1):
+			var child = children[child_count - 1 - i]
+			render_parent.remove_child(child)
+			child.set_mesh(null)
+			child.queue_free()
+
+	# Fewer children than needed
+	elif delta > 0:
+		for i in range(0, delta, 1):
+			var child = SS2D_Shape_Render.new()
+			child.light_mask = light_mask
+			render_parent.add_child(child)
+			if editor_debug and Engine.editor_hint:
+				child.set_owner(get_tree().edited_scene_root)
+	return true
+
+
+"""
+Takes an array of SS2D_Meshes and returns a flat array of SS2D_Meshes
+If a SS2D_Mesh has n meshes, will return an array contain n SS2D_Mesh
+The returned array will consist of SS2D_Meshes each with a SS2D_Mesh::meshes array of size 1
+"""
+
+
+func _draw_flatten_meshes_array(meshes: Array) -> Array:
+	var flat_meshes = []
+	for ss2d_mesh in meshes:
+		for godot_mesh in ss2d_mesh.meshes:
+			var new_mesh = ss2d_mesh.duplicate(false)
+			new_mesh.meshes = [godot_mesh]
+			flat_meshes.push_back(new_mesh)
+	return flat_meshes
+
+
 func _draw():
-	for m in _meshes:
-		m.render(self)
+	var flat_meshes = _draw_flatten_meshes_array(_meshes)
+	_create_rendering_nodes(flat_meshes.size())
+	var render_parent = _get_rendering_nodes_parent()
+	var render_nodes = render_parent.get_children()
+	#print ("RENDER | %s" % [render_nodes])
+	#print ("MESHES | %s" % [flat_meshes])
+	for i in range(0, flat_meshes.size(), 1):
+		var m = flat_meshes[i]
+		var render_node = render_nodes[i]
+		render_node.set_mesh(m)
 
 	if editor_debug and Engine.editor_hint:
 		_draw_debug(sort_by_z_index(_edges))
@@ -672,7 +789,7 @@ func generate_collision_points() -> PoolVector2Array:
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
 	# TODO, this belogns in _build_edge_without_material
-	_weld_quad_array(edge.quads)
+	_weld_quad_array(edge.quads, 1.0, false)
 	if not edge.quads.empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in edge.quads:
@@ -1023,49 +1140,81 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 	return lerp(w1, w2, ratio)
 
 
-func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0):
+"""
+Mutates two quads to be welded
+returns the midpoint of the weld
+"""
+
+
+func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) -> Vector2:
+	var midpoint = Vector2(0, 0)
+	# If both quads are not a corner
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
 		var needed_height: float = (a.get_height_average() + b.get_height_average()) / 2.0
 
 		var pt1 = (a.pt_d + b.pt_a) * 0.5
 		var pt2 = (a.pt_c + b.pt_b) * 0.5
 
-		var mid_point: Vector2 = (pt1 + pt2) / 2.0
-		var half_line: Vector2 = (pt2 - mid_point).normalized() * needed_height * custom_scale / 2.0
+		midpoint = Vector2(pt1 + pt2) / 2.0
+		var half_line: Vector2 = (pt2 - midpoint).normalized() * needed_height * custom_scale / 2.0
 
 		if half_line != Vector2.ZERO:
-			pt2 = mid_point + half_line
-			pt1 = mid_point - half_line
+			pt2 = midpoint + half_line
+			pt1 = midpoint - half_line
 
-		b.pt_a = pt1
-		b.pt_b = pt2
 		a.pt_d = pt1
 		a.pt_c = pt2
+		b.pt_a = pt1
+		b.pt_b = pt2
+
+	# If either quad is a corner
 	else:
 		if a.corner == SS2D_Quad.CORNER.OUTER:
 			b.pt_a = a.pt_c
 			b.pt_b = a.pt_b
+			midpoint = (b.pt_a + b.pt_b) / 2.0
 
 		elif a.corner == SS2D_Quad.CORNER.INNER:
 			b.pt_a = a.pt_d
 			b.pt_b = a.pt_a
+			midpoint = (b.pt_a + b.pt_b) / 2.0
 
 		elif b.corner == SS2D_Quad.CORNER.OUTER:
 			a.pt_d = b.pt_a
 			a.pt_c = b.pt_b
+			midpoint = (a.pt_d + a.pt_c) / 2.0
 
 		elif b.corner == SS2D_Quad.CORNER.INNER:
 			a.pt_d = b.pt_d
 			a.pt_c = b.pt_c
+			midpoint = (a.pt_d + a.pt_c) / 2.0
+
+	return midpoint
 
 
-func _weld_quad_array(quads: Array, custom_scale: float = 1.0, weld_first_and_last: bool = false):
+func _weld_quad_array(
+	quads: Array, custom_scale: float, weld_first_and_last: bool, start_idx: int = 0
+):
 	if quads.empty():
 		return
-	for index in range(quads.size() - 1):
+
+	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		_weld_quads(this_quad, next_quad, custom_scale)
+		var mid_point = _weld_quads(this_quad, next_quad, custom_scale)
+		# If this quad self_intersects after welding, it's likely very small and can be removed
+		# Usually happens when welding a very large and very small quad together
+		# Generally looks better when simply being removed
+		#
+		# When welding and using different widths, quads can look a little weird
+		# This is because they are no longer parallelograms
+		# This is a tough problem to solve
+		# See http://reedbeta.com/blog/quadrilateral-interpolation-part-1/
+		if this_quad.self_intersects():
+			quads.remove(index)
+			_weld_quad_array(quads, custom_scale, weld_first_and_last, index - 1)
+			return
+
 	if weld_first_and_last:
 		_weld_quads(quads.back(), quads[0], 1.0)
 
@@ -1075,11 +1224,17 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	for edge_material in get_edge_material_data(s_mat, wrap_around):
-		var new_edge = _build_edge_with_material(edge_material, s_mat.render_offset, wrap_around)
+	var emds = get_edge_material_data(s_mat, wrap_around)
+	for emd in emds:
+		var new_edge = _build_edge_with_material(emd, s_mat.render_offset, wrap_around)
 		edges.push_back(new_edge)
 
 	return edges
+
+
+"""
+Will return an array of EdgeMaterialData from the current set of points
+"""
 
 
 func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:
@@ -1210,6 +1365,7 @@ func has_minimum_point_count() -> bool:
 
 func _on_dirty_update():
 	if _dirty:
+		update_render_nodes()
 		clear_cached_data()
 		if has_minimum_point_count():
 			bake_collision()

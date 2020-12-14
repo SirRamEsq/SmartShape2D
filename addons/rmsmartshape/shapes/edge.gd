@@ -53,7 +53,6 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 	for q in _quads:
 		total_length += q.get_length_average()
 	if total_length == 0.0:
-		#print("total length is 0? Quads: %s" % _quads)
 		return ArrayMesh.new()
 
 	var first_quad = _quads[0]
@@ -77,17 +76,23 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for q in _quads:
 		var section_length: float = q.get_length_average() * change_in_length
-		var section_length_top: float = q.get_length_top() * change_in_length
-		var section_length_bottom: float = q.get_length_bottom() * change_in_length
+		var highest_value: float = max(q.get_height_left(), q.get_height_right())
+		# When welding and using different widths, quads can look a little weird
+		# This is because they are no longer parallelograms
+		# This is a tough problem to solve
+		# See http://reedbeta.com/blog/quadrilateral-interpolation-part-1/
 		var uv_a = Vector2(0, 0)
 		var uv_b = Vector2(0, 1)
 		var uv_c = Vector2(1, 1)
 		var uv_d = Vector2(1, 0)
-		if tex != null:
-			uv_a.x = (length_elapsed) / tex.get_size().x
-			uv_b.x = (length_elapsed) / tex.get_size().x
-			uv_c.x = (length_elapsed + section_length) / tex.get_size().x
-			uv_d.x = (length_elapsed + section_length) / tex.get_size().x
+		# If we have a valid texture and this quad isn't a corner
+		if tex != null and q.corner == q.CORNER.NONE:
+			var x_left = (length_elapsed) / tex.get_size().x
+			var x_right =  (length_elapsed + section_length) / tex.get_size().x
+			uv_a.x = x_left
+			uv_b.x = x_left
+			uv_c.x = x_right
+			uv_d.x = x_right
 		if q.flip_texture:
 			var t = uv_a
 			uv_a = uv_b
