@@ -3,10 +3,10 @@ SmartShape2D - FAQ
 
 # Why aren't my textures repeating?
 If your textures aren't repeating and look something like this:
-![Non-Repeating-Texture-IMG]( ./faq-texture-repeat.png )
+![Non-Repeating-Texture-IMG]( ./imgs/faq-texture-repeat.png )
 
 The issue is most likely that you need to set the texture's import options in Godot:
-![Import-Texture-Settings]( ./faq-texture-repeat-import.png )
+![Import-Texture-Settings]( ./imgs/faq-texture-repeat-import.png )
 
 # Why isn't my shape updaing when I change the Light Mask?
 Each shape is currently rendered by multiple-subnodes (Children Node2Ds).
@@ -35,8 +35,7 @@ If welding is on, you can still change the width of the quads, but you may need 
 It's best that you change the width gradually in small increments instead of sharply.
 Sharply changing the width will result in odd looking shapes.
 
-Non-perspective rendering to a non-parallelogram is kinda tough
-http://reedbeta.com/blog/quadrilateral-interpolation-part-1/
+[Non-perspective rendering to a non-parallelogram is kinda tough](http://reedbeta.com/blog/quadrilateral-interpolation-part-1/)
 
 If anyone has any insights on this issue, please feel free to open an issue on this subject
 and let us know how we might be able to fix it
