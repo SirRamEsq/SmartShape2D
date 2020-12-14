@@ -2,7 +2,37 @@ Version History
 ---
 
 # 2.x
+## 2.1
+December 14th 2020
+### Significant Changes from 2.0
+- Improved Width handling
+- Improved Welding
+- Rendering is now achieved by having multiple child-nodes each render a piece of the shape
+  + Previously, all the rendering was done by the shape node
+  + Improves performance
+  + Fixes lighting bugs
+- Point Creation mode reimplemented
+  + Mode active by default
+  + Can be exited by pressing ESC
+- Several usability additions
+  + Hotkey for grabbing closest point
+  + Hotkey for creating new shape at point
+  + Width Grabber for closest point
+  + Preview for adding points
+- Several Bug fixes and issues closed
+### New Features
+- Meta Shapes Introduced
+- "Fit mode" added to edge material
+  + Can either squash and stretch the texture or crop it
+### Minor Changes
+- Changes to GUI Theme
+  + More in line with standard Godot
+- Add windows scripts for running unit tests
+- Changed default snap settings to 8x8 pixels
+
+
 ## 2.0
+September 7th 2020
 ### Significant Changes from 1.0
 - Edge Textures are no longer determined by a cardinal direction (UP, DOWN, LEFT, RIGHT)
   - Instead, a starting and ending normal angle is specified for each edge
