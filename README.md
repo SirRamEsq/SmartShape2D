@@ -36,6 +36,7 @@ There is a demo scene in the addon's directory.
 - [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
 - [Resources]( ./addons/rmsmartshape/documentation/Resources.md )
 - [Controls and Hotkeys]( ./addons/rmsmartshape/documentation/Controls.md )
+- [FAQ]( ./addons/rmsmartshape/documentation/FAQ.md )
 - [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
 
 # Contibuting
