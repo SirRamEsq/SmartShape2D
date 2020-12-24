@@ -15,6 +15,7 @@ var texture_normal: Texture = null
 var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 var flip_texture: bool = false
+# Deprecated, should remove control_point_index
 var control_point_index: int
 var fit_texture = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 
@@ -27,6 +28,18 @@ var width_factor: float = 1.0
 
 func _to_string() -> String:
 	return "[Quad] A:%s B:%s C:%s D:%s | Corner: %s" % [pt_a, pt_b, pt_c, pt_d, corner]
+
+
+func matches_quad(q: SS2D_Quad) -> bool:
+	if (
+		texture == q.texture
+		and texture_normal == q.texture_normal
+		and color == q.color
+		and flip_texture == q.flip_texture
+		and fit_texture == q.fit_texture
+	):
+		return true
+	return false
 
 
 func duplicate() -> SS2D_Quad:
@@ -68,7 +81,6 @@ func _init(
 
 func get_rotation() -> float:
 	return SS2D_NormalRange.get_angle_from_vector(pt_c - pt_a)
-
 
 
 """
@@ -171,12 +183,14 @@ func get_height_left() -> float:
 func get_height_right() -> float:
 	return pt_d.distance_to(pt_c)
 
+
 # Returns the difference in height between the left and right sides
 func get_height_difference() -> float:
 	return get_height_left() - get_height_right()
 
+
 func get_length_average() -> float:
-	return ((get_length_top() + get_length_bottom()) / 2.0)
+	return (get_length_top() + get_length_bottom()) / 2.0
 
 
 func get_length_top() -> float:

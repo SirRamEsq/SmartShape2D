@@ -37,6 +37,8 @@ export (bool) var use_taper_texture: bool = true setget _set_use_taper
 enum FITMODE {SQUISH_AND_STRETCH, CROP}
 export (FITMODE) var fit_mode = FITMODE.SQUISH_AND_STRETCH setget _set_fit_texture
 
+export (Material) var material: Material = null setget _set_material
+
 
 ###########
 # SETTERS #
@@ -102,6 +104,10 @@ func _set_use_taper(b: bool):
 	
 func _set_fit_texture(fitmode):
 	fit_mode = fitmode
+	emit_signal("changed")
+
+func _set_material(m:Material):
+	material = m
 	emit_signal("changed")
 
 

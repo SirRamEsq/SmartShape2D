@@ -1624,6 +1624,9 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 
 func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
+	edge.z_index = edge_data.meta_material.z_index
+	edge.z_as_relative = edge_data.meta_material.z_as_relative
+	edge.material = edge_data.meta_material.edge_material.material
 	if not edge_data.is_valid():
 		return edge
 

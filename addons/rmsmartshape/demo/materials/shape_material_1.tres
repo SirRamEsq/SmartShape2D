@@ -21,7 +21,8 @@ edge_material = ExtResource( 4 )
 normal_range = SubResource( 1 )
 weld = true
 render = true
-z_index = 0
+z_index = 100
+z_as_relative = true
 offset = 0.0
 
 [sub_resource type="Resource" id=3]
@@ -52,6 +53,7 @@ normal_range = SubResource( 4 )
 weld = true
 render = true
 z_index = -10
+z_as_relative = true
 offset = 0.0
 
 [resource]

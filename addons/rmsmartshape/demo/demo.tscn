@@ -451,6 +451,7 @@ normal_range = SubResource( 60 )
 weld = true
 render = false
 z_index = 0
+z_as_relative = true
 offset = 0.0
 
 [sub_resource type="Resource" id=62]
@@ -656,6 +657,7 @@ normal_range = SubResource( 89 )
 weld = true
 render = false
 z_index = 0
+z_as_relative = true
 offset = 0.0
 
 [sub_resource type="Resource" id=91]
@@ -1407,6 +1409,7 @@ normal_range = SubResource( 194 )
 weld = true
 render = false
 z_index = 0
+z_as_relative = true
 offset = 0.0
 
 [sub_resource type="Resource" id=196]
@@ -1482,7 +1485,7 @@ width = 1.0
 
 [sub_resource type="Resource" id=207]
 script = ExtResource( 3 )
-position = Vector2( 152, 344 )
+position = Vector2( 152, 343.056 )
 point_in = Vector2( 0, 0 )
 point_out = Vector2( 0, 0 )
 properties = SubResource( 206 )

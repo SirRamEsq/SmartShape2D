@@ -194,6 +194,9 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	var flip = false
 	var transform = Transform2D()
 	var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+	mesh_data.material = s_mat.fill_mesh_material
+	mesh_data.z_index = s_mat.fill_texture_z_index
+	mesh_data.z_as_relative = true
 	meshes.push_back(mesh_data)
 
 	return meshes
@@ -323,6 +326,7 @@ func _on_dirty_update():
 		update()
 		_dirty = false
 		emit_signal("on_dirty_update")
+
 
 func cache_edges():
 	if shape_material != null and render_edges:
