@@ -14,9 +14,15 @@ export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
 export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
 export (int) var fill_texture_z_index: int = -10 setget set_fill_texture_z_index
 export (float) var fill_mesh_offset: float = 0.0 setget set_fill_mesh_offset
+export (Material) var fill_mesh_material: Material = null setget set_fill_mesh_material
 
 # How much to offset all edges
 export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0 setget set_render_offset
+
+
+func set_fill_mesh_material(m: Material):
+	fill_mesh_material = m
+	emit_signal("changed")
 
 
 func set_fill_mesh_offset(f: float):

@@ -26,3 +26,4 @@ texture_normals_taper_left = [  ]
 texture_normals_taper_right = [  ]
 use_corner_texture = false
 use_taper_texture = false
+fit_mode = 0

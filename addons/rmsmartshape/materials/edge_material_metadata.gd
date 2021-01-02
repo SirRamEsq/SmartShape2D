@@ -16,6 +16,8 @@ export (bool) var weld: bool = true setget set_weld
 export (bool) var render: bool = true setget set_render
 # z index for an edge
 export (int) var z_index: int = 0 setget set_z_index
+# z index for an edge
+export (int) var z_as_relative: bool = true setget set_z_as_relative
 # Distance from center
 export (float, -1.5, 1.5, 0.1) var offset: float = 0.0 setget set_offset
 
@@ -58,6 +60,9 @@ func set_z_index(z: int):
 	z_index = z
 	emit_signal("changed")
 
+func set_z_as_relative(b: bool):
+	z_as_relative = b
+	emit_signal("changed")
 
 func set_offset(f: float):
 	offset = f

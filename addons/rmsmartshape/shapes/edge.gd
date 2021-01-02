@@ -6,20 +6,18 @@ var quads: Array = []
 var first_point_key: int = -1
 var last_point_key: int = -1
 var z_index: int = 0
+var z_as_relative: bool = false
 # If final point is connected to first point
-var wrap_around:bool = false
+var wrap_around: bool = false
+var material: Material = null
 
 static func different_render(q1: SS2D_Quad, q2: SS2D_Quad) -> bool:
 	"""
 	Will return true if the 2 quads must be drawn in two calls
 	"""
-	if (
-		q1.texture != q2.texture
-		or q1.flip_texture != q2.flip_texture
-		or q1.texture_normal != q2.texture_normal
-	):
-		return true
-	return false
+	if q1.matches_quad(q2):
+		return false
+	return true
 
 static func get_consecutive_quads_for_mesh(_quads: Array) -> Array:
 	if _quads.empty():
@@ -40,7 +38,7 @@ static func get_consecutive_quads_for_mesh(_quads: Array) -> Array:
 	quad_ranges.push_back(quad_range)
 	return quad_ranges
 
-static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bool) -> ArrayMesh:
+static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: bool) -> ArrayMesh:
 	"""
 	Assumes each quad in the sequence is of the same render type
 	same textures, values, etc...
@@ -67,7 +65,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 		var texture_full_length = texture_reps * tex.get_size().x
 		# How much each quad's texture must be offset to make up the difference in full length vs total length
 		change_in_length = (texture_full_length / total_length)
-		
+
 	if first_quad.fit_texture == SS2D_Material_Edge.FITMODE.CROP:
 		change_in_length = 1.0
 
@@ -88,7 +86,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around:bo
 		# If we have a valid texture and this quad isn't a corner
 		if tex != null and q.corner == q.CORNER.NONE:
 			var x_left = (length_elapsed) / tex.get_size().x
-			var x_right =  (length_elapsed + section_length) / tex.get_size().x
+			var x_right = (length_elapsed + section_length) / tex.get_size().x
 			uv_a.x = x_left
 			uv_b.x = x_left
 			uv_c.x = x_right
@@ -153,12 +151,16 @@ func get_meshes() -> Array:
 		if consecutive_quads.empty():
 			continue
 		var st: SurfaceTool = SurfaceTool.new()
-		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(consecutive_quads, wrap_around)
+		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(
+			consecutive_quads, wrap_around
+		)
 		var tex: Texture = consecutive_quads[0].texture
 		var tex_normal: Texture = consecutive_quads[0].texture_normal
 		var flip = consecutive_quads[0].flip_texture
 		var transform = Transform2D()
-		var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+		var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh], material)
+		mesh_data.z_index = z_index
+		mesh_data.z_as_relative = z_as_relative
 		meshes.push_back(mesh_data)
 
 	return meshes
