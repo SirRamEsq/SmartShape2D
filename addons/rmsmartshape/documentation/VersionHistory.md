@@ -2,6 +2,18 @@ Version History
 ---
 
 # 2.x
+## 2.2
+January 4th 2021
+## Fix
+- Fix for crash that would occur when points were aligned *just* right
+- See issue 66
+  + https://github.com/SirRamEsq/SmartShape2D/issues/66
+## Features
+- Each Edge Material can now have a Material (Shader)
+- Each Edge Material Meta can have a z-index and z-as-relative set
+- See issue 64
+  + https://github.com/SirRamEsq/SmartShape2D/issues/64
+
 ## 2.1
 December 14th 2020
 ### Significant Changes from 2.0
