@@ -1212,8 +1212,10 @@ func _weld_quad_array(
 		# See http://reedbeta.com/blog/quadrilateral-interpolation-part-1/
 		if this_quad.self_intersects():
 			quads.remove(index)
-			_weld_quad_array(quads, custom_scale, weld_first_and_last, index - 1)
-			return
+			if index < quads.size():
+				var new_index = max(index - 1, 0)
+				_weld_quad_array(quads, custom_scale, weld_first_and_last, new_index)
+				return
 
 	if weld_first_and_last:
 		_weld_quads(quads.back(), quads[0], 1.0)
