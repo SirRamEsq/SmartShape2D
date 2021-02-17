@@ -209,6 +209,7 @@ func _gui_build_toolbar():
 	tb_snap_popup.connect("id_pressed", self, "_snapping_item_selected")
 
 	tb_hb.hide()
+	tb_hb_legacy_import.hide()
 
 
 func create_tool_button(icon, tooltip):
@@ -311,6 +312,9 @@ func _exit_tree():
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
+	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb_legacy_import)
+	tb_hb.queue_free()
+	tb_hb_legacy_import.queue_free()
 
 
 func forward_canvas_gui_input(event):
