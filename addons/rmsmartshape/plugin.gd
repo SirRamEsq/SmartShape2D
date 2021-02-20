@@ -140,6 +140,9 @@ var cached_shape_global_transform: Transform2D
 # Action Move Variables
 var _mouse_motion_delta_starting_pos = Vector2(0, 0)
 
+# Track the property plugin
+var plugin
+
 #######
 # GUI #
 #######
@@ -305,17 +308,23 @@ func _ready():
 
 
 func _enter_tree():
+	plugin = preload("res://addons/rmsmartshape/inpsector_plugin.gd").new()
+	if plugin != null:
+		add_inspector_plugin(plugin)
+		
 	pass
 
 
 func _exit_tree():
+	if (plugin != null):
+		remove_inspector_plugin(plugin)
+		
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb_legacy_import)
 	tb_hb.queue_free()
 	tb_hb_legacy_import.queue_free()
-
 
 func forward_canvas_gui_input(event):
 	if not is_shape_valid(shape):
