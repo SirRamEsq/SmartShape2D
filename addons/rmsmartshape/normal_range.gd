@@ -29,6 +29,12 @@ func set_begin(f: float):
 
 func set_end(f: float):
 	end = f
+	# COMPATIBILITY FIX:
+	# This class used to use "begin" and "end" variables to define the range
+	# Now uses Begin + Distance and end is used for the widget
+	# The following line of code maintains compatiblity with older versions of SS2D (2.2 Backward)
+	# TODO This line of code should be removed @ SmartShape Version 3
+	distance = f
 	emit_signal("changed")
 
 
