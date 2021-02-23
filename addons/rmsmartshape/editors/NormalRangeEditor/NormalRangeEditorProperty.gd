@@ -8,16 +8,13 @@ func _init():
 	add_focusable(control)
 
 func _enter_tree():
-	control.connect("valueChanged", self, "_value_changed")
+	control.connect("value_changed", self, "_value_changed")
 	_value_changed()
 
 func _exit_tree():
-	control.disconnect("valueChanged", self, "_value_changed")	
+	control.disconnect("value_changed", self, "_value_changed")
 
 func _value_changed():
 	var obj = get_edited_object()
-
-	control._setend(obj.end)
-	control._setstart(obj.begin)
-	
-	pass
+	control.end = obj.end
+	control.start = obj.begin

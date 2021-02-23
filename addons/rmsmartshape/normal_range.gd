@@ -7,25 +7,26 @@ This class will determine if the normal of a vector falls within the specifed an
 - 360.0 and 0.0 degrees are considered equivilent
 """
 
-#export (float, -360, 360, 1) 
-export (int, 0, 360, 0)  var begin = 0.0 setget set_begin
-#export (float, -360, 360, 1) 
+export (int, 0, 360, 0) var begin = 0.0 setget set_begin
 export (int, 0, 360, 0) var distance = 0.0 setget set_distance
 var end = 0.0 setget set_end
 
 # This is a hack to support the custom editor, needed a property
 # to exist to lock the TextureProgress to.  Makes it flow better
 # in the Inspector.
-export (Vector2) var edgeRendering  
+export (Vector2) var edgeRendering
+
 
 func set_distance(f: float):
 	distance = f
 	set_end(f)
 	emit_signal("changed")
 
+
 func set_begin(f: float):
 	begin = f
 	emit_signal("changed")
+
 
 func set_end(f: float):
 	end = f
@@ -82,10 +83,9 @@ func _init(_begin: float = 0.0, _end: float = 0.0):
 		else:
 			distance = end - begin
 
-	
 	if _begin == 0.0 and _end == 0.0:
 		return
-	
+
 	_begin = _get_positive_angle_deg(_begin)
 	_end = _get_positive_angle_deg(_end)
 
@@ -100,17 +100,15 @@ func _init(_begin: float = 0.0, _end: float = 0.0):
 func is_in_range(vec: Vector2) -> bool:
 	# If these are equal, the entire circle is within range
 	var newEnd = fmod(begin + end, 360)
-	
+
 	if newEnd == begin:
 		return true
 
 	var angle = get_angle_from_vector(vec)
 	if sign(begin) != sign(newEnd):
 		return (angle >= (begin + 360.0)) or (angle <= newEnd)
-	
-	if (newEnd < begin):
+
+	if newEnd < begin:
 		return (angle >= begin) or (angle <= newEnd)
 	else:
 		return (angle >= begin) and (angle <= newEnd)
-
-	
