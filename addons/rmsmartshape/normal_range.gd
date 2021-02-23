@@ -7,8 +7,20 @@ This class will determine if the normal of a vector falls within the specifed an
 - 360.0 and 0.0 degrees are considered equivilent
 """
 
-export (float, 0, 360, 1) var begin = 0.0 setget set_begin
-export (float, 0, 360, 1) var end = 0.0 setget set_end
+export (int, 0, 360, 0) var begin = 0.0 setget set_begin
+export (int, 0, 360, 0) var distance = 0.0 setget set_distance
+var end = 0.0 setget set_end
+
+# This is a hack to support the custom editor, needed a property
+# to exist to lock the TextureProgress to.  Makes it flow better
+# in the Inspector.
+export (Vector2) var edgeRendering
+
+
+func set_distance(f: float):
+	distance = f
+	set_end(f)
+	emit_signal("changed")
 
 
 func set_begin(f: float):
@@ -18,6 +30,12 @@ func set_begin(f: float):
 
 func set_end(f: float):
 	end = f
+	# COMPATIBILITY FIX:
+	# This class used to use "begin" and "end" variables to define the range
+	# Now uses Begin + Distance and end is used for the widget
+	# The following line of code maintains compatiblity with older versions of SS2D (2.2 Backward)
+	# TODO This line of code should be removed @ SmartShape Version 3
+	distance = f
 	emit_signal("changed")
 
 
@@ -57,8 +75,17 @@ static func _get_positive_angle_deg(degrees: float) -> float:
 
 # Saving a scene with this resource requires a parameter-less init method
 func _init(_begin: float = 0.0, _end: float = 0.0):
+	# Distance has been added, which should allow us 
+	# to fixup some of the other numbers now.
+	if distance == 0:
+		if end < begin:
+			distance = (end + 360) - begin
+		else:
+			distance = end - begin
+
 	if _begin == 0.0 and _end == 0.0:
 		return
+
 	_begin = _get_positive_angle_deg(_begin)
 	_end = _get_positive_angle_deg(_end)
 
@@ -72,10 +99,16 @@ func _init(_begin: float = 0.0, _end: float = 0.0):
 
 func is_in_range(vec: Vector2) -> bool:
 	# If these are equal, the entire circle is within range
-	if end == begin:
+	var newEnd = fmod(begin + end, 360)
+
+	if newEnd == begin:
 		return true
 
 	var angle = get_angle_from_vector(vec)
-	if sign(begin) != sign(end):
-		return (angle >= (begin + 360.0)) or (angle <= end)
-	return (angle >= begin) and (angle <= end)
+	if sign(begin) != sign(newEnd):
+		return (angle >= (begin + 360.0)) or (angle <= newEnd)
+
+	if newEnd < begin:
+		return (angle >= begin) or (angle <= newEnd)
+	else:
+		return (angle >= begin) and (angle <= newEnd)
