@@ -43,6 +43,8 @@ The Normal Range indicates when a texture should be rendered.
 Each shape will compare the Surface Normal of an edge to the Normal Range in each Edge Meta Material.
 If the edge's Normal is inside a Meta Material's Normal Range, the Meta Material's Edge Material is rendered.
 
+![NormalRangeVisual]( ./imgs/AngleExplaination.png )
+
 - A Normal Range is specified in Degrees
   - If the normal range is 0 - 360 or 0 - 0, any angle is considered in range and the edge will always render
   - Angle "0" is Facing directly Right

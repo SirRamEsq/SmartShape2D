@@ -3,6 +3,10 @@ SmartShape2D
 ![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
 ![Sample Gif]( ./addons/rmsmartshape/documentation/imgs/sample.gif )
 
+SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
+
+[![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
+
 # About
 This plugin allows you to create nicely textured 2D polys.
 Simply place a few points then create / assign the shape material and you should have a good looking polygon.
