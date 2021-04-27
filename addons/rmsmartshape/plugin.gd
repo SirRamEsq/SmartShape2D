@@ -330,6 +330,11 @@ func forward_canvas_gui_input(event):
 	if not is_shape_valid(shape):
 		return false
 
+	# Force update if global transforma has been changed
+	if cached_shape_global_transform != shape.get_global_transform():
+		shape.set_as_dirty()
+		cached_shape_global_transform = shape.get_global_transform()
+
 	var et = get_et()
 	var grab_threshold = get_editor_interface().get_editor_settings().get(
 		"editors/poly_editor/point_grab_radius"
@@ -347,22 +352,6 @@ func forward_canvas_gui_input(event):
 
 	_gui_update_info_panels()
 	return return_value
-
-
-func _process(delta):
-	if not Engine.editor_hint:
-		return
-
-	if not is_shape_valid(shape):
-		gui_point_info_panel.visible = false
-		gui_edge_info_panel.visible = false
-		shape = null
-		update_overlays()
-		return
-	# Force update if global transforma has been changed
-	if cached_shape_global_transform != shape.get_global_transform():
-		shape.set_as_dirty()
-		cached_shape_global_transform = shape.get_global_transform()
 
 
 func handles(object):
@@ -406,6 +395,11 @@ func edit(object):
 
 		shape = object
 		connect_shape(shape)
+
+	if not is_shape_valid(shape):
+		gui_point_info_panel.visible = false
+		gui_edge_info_panel.visible = false
+		shape = null
 
 	update_overlays()
 
