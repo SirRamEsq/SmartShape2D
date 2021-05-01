@@ -21,11 +21,15 @@ export (Vector2) var edgeRendering
 
 func set_distance(f: float):
 	distance = f
+	# Deprecated
+	end = begin + distance
 	emit_signal("changed")
 
 
 func set_begin(f: float):
 	begin = f
+	# Deprecated
+	end = begin + distance
 	emit_signal("changed")
 
 
