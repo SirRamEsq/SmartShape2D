@@ -9,6 +9,8 @@ This class will determine if the normal of a vector falls within the specifed an
 
 export (int, 0, 360, 0) var begin = 0.0 setget set_begin
 export (int, 0, 360, 0) var distance = 0.0 setget set_distance
+
+# Deprecated variable
 var end = 0.0 setget set_end
 
 # This is a hack to support the custom editor, needed a property
@@ -19,7 +21,6 @@ export (Vector2) var edgeRendering
 
 func set_distance(f: float):
 	distance = f
-	set_end(f)
 	emit_signal("changed")
 
 
@@ -34,8 +35,8 @@ func set_end(f: float):
 	# This class used to use "begin" and "end" variables to define the range
 	# Now uses Begin + Distance and end is used for the widget
 	# The following line of code maintains compatiblity with older versions of SS2D (2.2 Backward)
-	# TODO This line of code should be removed @ SmartShape Version 3
-	distance = f
+	# TODO This function
+	distance = begin - end
 	emit_signal("changed")
 
 
@@ -72,43 +73,45 @@ static func _get_positive_angle_deg(degrees: float) -> float:
 		degrees += 360
 	return fmod(degrees, 360.0)
 
+static func _get_signed_angle_deg(degrees: float) -> float:
+	"""
+	Get in range between -360.0 and 360.0
+	"""
+	var new_degrees = degrees
+	while abs(new_degrees) > 360:
+		new_degrees += (360 * sign(degrees) * -1)
+	return new_degrees
+
 
 # Saving a scene with this resource requires a parameter-less init method
-func _init(_begin: float = 0.0, _end: float = 0.0):
-	# Distance has been added, which should allow us 
-	# to fixup some of the other numbers now.
-	if distance == 0:
-		if end < begin:
-			distance = (end + 360) - begin
-		else:
-			distance = end - begin
-
-	if _begin == 0.0 and _end == 0.0:
-		return
-
-	_begin = _get_positive_angle_deg(_begin)
-	_end = _get_positive_angle_deg(_end)
-
-	# make _begin negative if greater than _end
-	if _begin > _end:
-		_begin -= 360.0
+func _init(_begin: float = 0.0, _distance: float = 0.0):
+	_begin = _get_signed_angle_deg(_begin)
+	_distance = _get_signed_angle_deg(_distance)
 
 	begin = _begin
-	end = _end
+	distance = _distance
+	end = begin + distance
 
 
 func is_in_range(vec: Vector2) -> bool:
-	# If these are equal, the entire circle is within range
-	var newEnd = fmod(begin + end, 360)
-
-	if newEnd == begin:
+	# A Distance of 0 or 360 is the entire circle
+	if distance == 0 or _get_positive_angle_deg(distance) == 360:
 		return true
 
+	var begin_positive = _get_positive_angle_deg(begin)
+	var end_positive = _get_positive_angle_deg(begin + distance)
+	# If positive, counter clockwise direction
+	# If negative, clockwise direction
+	var direction = sign(distance)
 	var angle = get_angle_from_vector(vec)
-	if sign(begin) != sign(newEnd):
-		return (angle >= (begin + 360.0)) or (angle <= newEnd)
 
-	if newEnd < begin:
-		return (angle >= begin) or (angle <= newEnd)
+	# Swap begin and end if direction is negative
+	if direction == -1:
+		var t = begin_positive
+		begin_positive = end_positive
+		end_positive = t
+
+	if begin_positive < end_positive:
+		return ((angle >= begin_positive) and (angle <= end_positive))
 	else:
-		return (angle >= begin) and (angle <= newEnd)
+		return ((angle >= begin_positive) or (angle <= end_positive))

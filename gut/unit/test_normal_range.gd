@@ -25,10 +25,11 @@ func test_range_all_inclusive():
 		assert_true(nr.is_in_range(v), "[%s] Not In Range: %s" % [i, v])
 
 
-func test_range():
-	var nr = SS2D_NormalRange.new(-90.0, 90.0)
+func test_range_negative_distance():
+	# Begin at Up vector, end at Bottom; Clock Wise direction; Should allow for Right facing vectors
+	var nr = SS2D_NormalRange.new(90.0, -180.0)
 	var acceptable_vectors = [
-		Vector2(10, 0), Vector2(10, 10), Vector2(10, -10), Vector2(0, 1), Vector2(0, -1)
+		Vector2(10, 0), Vector2(10, 10), Vector2(10, 10), Vector2(0, 1), Vector2(1, 0), Vector2(0, -1)
 	]
 	var unacceptable_vectors = [
 		Vector2(-10, 0),
@@ -36,6 +37,29 @@ func test_range():
 		Vector2(-10, -10),
 		Vector2(-0.1, 1000),
 		Vector2(-0.1, -1000)
+	]
+
+	for i in range(0, acceptable_vectors.size(), 1):
+		var v = acceptable_vectors[i]
+		assert_true(nr.is_in_range(v), "[%s] Not In Range: %s" % [i, v])
+
+	nr = SS2D_NormalRange.new(0.0, 0.0)
+	for i in range(0, unacceptable_vectors.size(), 1):
+		var v = unacceptable_vectors[i]
+		assert_true(nr.is_in_range(v), "[%s] Is In Range: %s" % [i, v])
+
+func test_range_positive_distance():
+	# Begin at Up vector, end at Bottom; Counter Clock Wise direction; Should allow for Left facing vectors
+	var nr = SS2D_NormalRange.new(90.0, 180.0)
+	var acceptable_vectors = [
+		Vector2(-10, 0), Vector2(-10, -10), Vector2(-10, -10), Vector2(0, -1), Vector2(-1, 0), Vector2(0, 1)
+	]
+	var unacceptable_vectors = [
+		Vector2(10, 0),
+		Vector2(10, 10),
+		Vector2(10, 10),
+		Vector2(0.1, 1000),
+		Vector2(0.1, 1000)
 	]
 
 	for i in range(0, acceptable_vectors.size(), 1):
