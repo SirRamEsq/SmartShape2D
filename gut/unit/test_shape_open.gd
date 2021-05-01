@@ -229,9 +229,7 @@ func test_get_edge_meta_materials_many():
 		edge_materials_meta.push_back(edge_mat_meta)
 		var division = 360.0 / edge_materials_count
 		var offset = -45
-		var normal_range = SS2D_NormalRange.new(
-			(division * i) + offset, (division * (i + 1)) + offset
-		)
+		var normal_range = SS2D_NormalRange.new((division * i) + offset, division)
 		edge_mat_meta.edge_material = edge_mat
 		edge_mat_meta.normal_range = normal_range
 		assert_not_null(edge_mat_meta.edge_material)
@@ -262,11 +260,11 @@ func test_get_edge_meta_materials_many():
 	assert_eq(shape.get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
 	var em_data = shape.get_edge_material_data(s_m, false)
-	assert_eq(em_data.size(), edge_materials_count)
+	assert_eq(em_data.size(), edge_materials_count, "Expecting %s materials" % edge_materials_count)
 	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
 	for i in range(0, em_data.size(), 1):
 		var ed = em_data[i]
-		assert_eq(expected_indicies[i], ed.indicies)
+		assert_eq(expected_indicies[i], ed.indicies, "Actual indicies match expected?")
 
 
 var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
