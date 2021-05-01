@@ -36,7 +36,7 @@ func set_end(f: float):
 	# Now uses Begin + Distance and end is used for the widget
 	# The following line of code maintains compatiblity with older versions of SS2D (2.2 Backward)
 	# TODO This function
-	distance = begin - end
+	distance = end - begin
 	emit_signal("changed")
 
 
