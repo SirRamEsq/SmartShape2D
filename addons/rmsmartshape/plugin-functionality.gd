@@ -2,12 +2,15 @@ tool
 extends Reference
 
 """
-- This script defines the much of the functionality of the plugin
-- It is kept separate from the main plugin to ease testing
+- Everything in this script should be static
+- There is one reason to have code in this script
+	1. To separate out code from the main plugin script to ease testing
 
 Common Abbreviations
 et = editor transform (viewport's canvas transform)
 """
+
+const TUP = preload("lib/tuple.gd")
 
 #########
 # VERTS #
@@ -147,7 +150,7 @@ static func get_constrained_points_to_delete(s: SS2D_Shape_Base, k: int, keys = 
 		var constraint = constraints[tuple]
 		if constraint == SS2D_Point_Array.CONSTRAINT.NONE:
 			continue
-		var k2 = SS2D_Point_Array.get_other_value_from_tuple(tuple, k)
+		var k2 = TUP.get_other_value_from_tuple(tuple, k)
 		if constraint & SS2D_Point_Array.CONSTRAINT.ALL:
 			if not keys.has(k2):
 				get_constrained_points_to_delete(s, k2, keys)

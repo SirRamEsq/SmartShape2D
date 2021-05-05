@@ -2,6 +2,8 @@ tool
 extends Resource
 class_name SS2D_Point_Array
 
+const TUP = preload("../lib/tuple.gd")
+
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
 # Maps a key to each point
@@ -261,7 +263,7 @@ func _update_constraints(src: int):
 		var constraint = constraints[tuple]
 		if constraint == CONSTRAINT.NONE:
 			continue
-		var dst = get_other_value_from_tuple(tuple, src)
+		var dst = TUP.get_other_value_from_tuple(tuple, src)
 		if constraint & CONSTRAINT.AXIS_X:
 			set_point_position(dst, Vector2(get_point_position(src).x, get_point_position(dst).y))
 		if constraint & CONSTRAINT.AXIS_Y:
@@ -310,9 +312,9 @@ func get_point_constraint(key1: int, key2: int) -> int:
 	"""
 	Will Return the constraint for a pair of keys
 	"""
-	var t = create_tuple(key1, key2)
+	var t = TUP.create_tuple(key1, key2)
 	var keys = _constraints.keys()
-	var t_index = find_tuple_in_array_of_tuples(keys, t)
+	var t_index = TUP.find_tuple_in_array_of_tuples(keys, t)
 	if t_index == -1:
 		return CONSTRAINT.NONE
 	var t_key = keys[t_index]
@@ -320,9 +322,9 @@ func get_point_constraint(key1: int, key2: int) -> int:
 
 
 func set_constraint(key1: int, key2: int, constraint: int):
-	var t = create_tuple(key1, key2)
+	var t = TUP.create_tuple(key1, key2)
 	var existing_tuples = _constraints.keys()
-	var existing_t_index = find_tuple_in_array_of_tuples(existing_tuples, t)
+	var existing_t_index = TUP.find_tuple_in_array_of_tuples(existing_tuples, t)
 	if existing_t_index != -1:
 		t = existing_tuples[existing_t_index]
 	_constraints[t] = constraint
@@ -337,7 +339,7 @@ func remove_constraints(key1: int):
 	var constraints = get_point_constraints(key1)
 	for tuple in constraints:
 		var constraint = constraints[tuple]
-		var key2 = get_other_value_from_tuple(tuple, key1)
+		var key2 = TUP.get_other_value_from_tuple(tuple, key1)
 		set_constraint(key1, key2, CONSTRAINT.NONE)
 
 
@@ -390,26 +392,3 @@ func __new():
 	return get_script().new()
 
 
-#########
-# TUPLE #
-#########
-
-static func create_tuple(a: int, b: int) -> Array:
-	return [a, b]
-
-static func get_other_value_from_tuple(t: Array, value: int) -> int:
-	if t[0] == value:
-		return t[1]
-	elif t[1] == value:
-		return t[0]
-	return -1
-
-static func tuples_are_equal(t1: Array, t2: Array) -> bool:
-	return (t1[0] == t2[0] and t1[1] == t2[1]) or (t1[0] == t2[1] and t1[1] == t2[0])
-
-static func find_tuple_in_array_of_tuples(tuple_array: Array, t: Array) -> int:
-	for i in range(tuple_array.size()):
-		var other = tuple_array[i]
-		if tuples_are_equal(t, other):
-			return i
-	return -1

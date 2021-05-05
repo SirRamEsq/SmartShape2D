@@ -15,6 +15,8 @@ To use search to jump between categories, use the regex:
 # .+ #
 """
 
+const TUP = preload("../lib/tuple.gd")
+
 ################
 # DECLARATIONS #
 ################
@@ -40,7 +42,7 @@ export (bool) var editor_debug: bool = false setget _set_editor_debug
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
 
 export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
-# Dictionary of (Array of 2 points) to (SS2D_Material_Edge_Metadata)
+# Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
 export (Dictionary) var material_overrides = null setget set_material_overrides
 
 ####################
@@ -311,9 +313,11 @@ func set_material_overrides(dict: Dictionary):
 	material_overrides = dict
 
 
+# TODO Move Tuple stuff to helper library
+# TODO Move Overrides into points class?
 func get_material_override_tuple(tuple: Array) -> Array:
 	var keys = material_overrides.keys()
-	var idx = SS2D_Point_Array.find_tuple_in_array_of_tuples(keys, tuple)
+	var idx = TUP.find_tuple_in_array_of_tuples(keys, tuple)
 	if idx != -1:
 		tuple = keys[idx]
 	return tuple
@@ -784,7 +788,7 @@ func generate_collision_points() -> PoolVector2Array:
 	var indicies = []
 	for i in range(verts.size()):
 		indicies.push_back(i)
-	var edge_data = EdgeMaterialData.new(indicies, null)
+	var edge_data = MetaMatToIdxs.new(indicies, null)
 	var edge = _build_edge_without_material(
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
@@ -968,7 +972,7 @@ func _build_quad_from_point(
 
 
 func _build_edge_without_material(
-	edge_dat: EdgeMaterialData, size: Vector2, c_scale: float, c_offset: float, c_extends: float
+	edge_dat: MetaMatToIdxs, size: Vector2, c_scale: float, c_offset: float, c_extends: float
 ) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	if not edge_dat.is_valid():
@@ -1226,27 +1230,51 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	var emds = get_edge_material_data(s_mat, wrap_around)
+	var emds = get_meta_material_to_indicies(s_mat, wrap_around)
 	for emd in emds:
 		var new_edge = _build_edge_with_material(emd, s_mat.render_offset, wrap_around)
 		edges.push_back(new_edge)
 
 	return edges
 
+"""
+class returned by get_meta_material_to_indicies
+Maps a set of indicies to a meta_material
+"""
+class MetaMatToIdxs:
+	var meta_material: SS2D_Material_Edge_Metadata
+	var indicies: Array = []
+	var first_connected_to_final: bool = false
+
+	func _init(i: Array, m: SS2D_Material_Edge_Metadata):
+		meta_material = m
+		indicies = i
+
+	func _to_string() -> String:
+		return "[M_2_IDX] (%s) | %s" % [str(meta_material), indicies]
+
+	func is_valid() -> bool:
+		return indicies.size() >= 2
+
+
+
+
 
 """
-Will return an array of EdgeMaterialData from the current set of points
+Will return an array of MetaMatToIdxs from the current set of points
+TODO Write Test this
+TODO Try to break this function out and make it static / have no dependencies
 """
 
 
-func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:
-	var points = get_vertices()
+func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:
+	var verts = get_vertices()
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
-	for idx in range(0, points.size() - 1, 1):
-		var idx_next = _get_next_point_index(idx, points)
-		var pt = points[idx]
-		var pt_next = points[idx_next]
+	for idx in range(0, verts.size() - 1, 1):
+		var idx_next = _get_next_point_index(idx, verts)
+		var pt = verts[idx]
+		var pt_next = verts[idx_next]
 		var delta = pt_next - pt
 		var delta_normal = delta.normalized()
 		var normal = Vector2(delta.y, -delta.x).normalized()
@@ -1276,7 +1304,7 @@ func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) 
 			if edge_building.has(e):
 				edge_building[e].indicies.push_back(idx_next)
 			else:
-				edge_building[e] = EdgeMaterialData.new([idx, idx_next], e)
+				edge_building[e] = MetaMatToIdxs.new([idx, idx_next], e)
 
 		# Closeout and stop building edges that are no longer viable
 		for e in edge_building.keys():
@@ -1294,19 +1322,19 @@ func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) 
 		var first_edges = []
 		var last_edges = []
 		for e in final_edges:
-			var has_first = e.indicies.has(get_first_point_index(points))
-			var has_last = e.indicies.has(get_last_point_index(points))
+			var has_first = e.indicies.has(get_first_point_index(verts))
+			var has_last = e.indicies.has(get_last_point_index(verts))
 			# XOR operator
 			if has_first != has_last:
 				if has_first:
 					first_edges.push_back(e)
 				elif has_last:
 					last_edges.push_back(e)
-			# Contains all points
+			# Contains all verts
 			elif has_first and has_last:
 				e.first_connected_to_final = true
 
-		# Create new Edges with Merged points; Add created edges, delete edges used to for merging
+		# Create new Edges with Merged verts; Add created edges, delete edges used to for merging
 		var edges_to_add = []
 		var edges_to_remove = []
 		for first in first_edges:
@@ -1315,7 +1343,7 @@ func get_edge_material_data(s_material: SS2D_Material_Shape, wrap_around: bool) 
 					#print ("Orignal: %s | %s" % [first.indicies, last.indicies])
 					var merged = SS2D_Common_Functions.merge_arrays([last.indicies, first.indicies])
 					#print ("Merged:  %s" % str(merged))
-					var new_edge = EdgeMaterialData.new(merged, first.meta_material)
+					var new_edge = MetaMatToIdxs.new(merged, first.meta_material)
 					edges_to_add.push_back(new_edge)
 					if not edges_to_remove.has(first):
 						edges_to_remove.push_back(first)
@@ -1377,6 +1405,7 @@ func _on_dirty_update():
 		_dirty = false
 		emit_signal("on_dirty_update")
 
+# TODO, Migrate these 'point index' functions to a helper library and make static?
 
 func get_first_point_index(points: Array) -> int:
 	return 0
@@ -1500,23 +1529,7 @@ func import_from_legacy(legacy: RMSmartShape2D):
 ###################
 # EDGE GENERATION #
 ###################
-class EdgeMaterialData:
-	var meta_material: SS2D_Material_Edge_Metadata
-	var indicies: Array = []
-	var first_connected_to_final: bool = false
-
-	func _init(i: Array, m: SS2D_Material_Edge_Metadata):
-		meta_material = m
-		indicies = i
-
-	func _to_string() -> String:
-		return "[EMD] (%s) | %s" % [str(meta_material), indicies]
-
-	func is_valid() -> bool:
-		return indicies.size() >= 2
-
-
-func _edge_data_get_tess_point_count(ed: EdgeMaterialData) -> int:
+func _edge_data_get_tess_point_count(ed: MetaMatToIdxs) -> int:
 	"""
 	Get Number of TessPoints from the start and end indicies of the ed parameter
 	"""
@@ -1624,7 +1637,7 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	return previous_idx
 
 
-func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wrap_around: bool) -> SS2D_Edge:
+func _build_edge_with_material(edge_data: MetaMatToIdxs, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	edge.z_index = edge_data.meta_material.z_index
 	edge.z_as_relative = edge_data.meta_material.z_as_relative

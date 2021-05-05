@@ -202,7 +202,7 @@ func test_get_edge_meta_materials_one():
 	var points = get_clockwise_points()
 	shape.add_points(points)
 	assert_eq(shape.material_overrides.size(), 0)
-	var edge_data = shape.get_edge_material_data(s_m, false)
+	var edge_data = shape.get_meta_material_to_indicies(s_m, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
 	assert_eq(edge_data.size(), 1, "Should be one EdgeData specified")
@@ -259,7 +259,7 @@ func test_get_edge_meta_materials_many():
 	assert_eq(shape.material_overrides.size(), 0)
 	assert_eq(shape.get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
-	var em_data = shape.get_edge_material_data(s_m, false)
+	var em_data = shape.get_meta_material_to_indicies(s_m, false)
 	assert_eq(em_data.size(), edge_materials_count, "Expecting %s materials" % edge_materials_count)
 	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
 	for i in range(0, em_data.size(), 1):
@@ -338,9 +338,9 @@ func test_get_edge_material_data():
 		assert_eq(e, edge_mat_meta)
 		assert_eq(e.edge_material, edge_mat)
 
-	var edge_material_data: Array = shape.get_edge_material_data(s_m, false)
+	var edge_material_data: Array = shape.get_meta_material_to_indicies(s_m, false)
 	assert_eq(edge_material_data.size(), 1, "1 edge should be produced")
-	edge_material_data = shape.get_edge_material_data(s_m, true)
+	edge_material_data = shape.get_meta_material_to_indicies(s_m, true)
 	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
 
 	# Add Override that shouldn't be rendered
@@ -349,9 +349,9 @@ func test_get_edge_material_data():
 	var keys = [shape.get_point_key_at_index(1), shape.get_point_key_at_index(2)]
 	shape.set_material_override(keys, override_mat)
 
-	edge_material_data = shape.get_edge_material_data(s_m, false)
+	edge_material_data = shape.get_meta_material_to_indicies(s_m, false)
 	assert_eq(edge_material_data.size(), 2, "2 edges should be produced")
-	edge_material_data = shape.get_edge_material_data(s_m, true)
+	edge_material_data = shape.get_meta_material_to_indicies(s_m, true)
 	assert_eq(edge_material_data.size(), 1, "1 merged wrap_around edge should be produced")
 
 	# Add Override that shouldn't be rendered
@@ -366,7 +366,7 @@ func test_get_edge_material_data():
 	#  - idx 3 and 4 aren't rendered
 	# The sequence is
 	#   0, 1 | 2, 3 | 4, 5
-	edge_material_data = shape.get_edge_material_data(s_m, false)
+	edge_material_data = shape.get_meta_material_to_indicies(s_m, false)
 	assert_eq(edge_material_data.size(), 3, "3 edges should be produced")
 	# 0, 1
 	assert_eq(edge_material_data[0].indicies.size(), 2)
@@ -375,7 +375,7 @@ func test_get_edge_material_data():
 	#  4, 5
 	assert_eq(edge_material_data[2].indicies.size(), 2)
 
-	edge_material_data = shape.get_edge_material_data(s_m, true)
+	edge_material_data = shape.get_meta_material_to_indicies(s_m, true)
 	assert_eq(edge_material_data.size(), 2, "2 merged wrap_around edge should be produced")
 
 	# 2, 3
