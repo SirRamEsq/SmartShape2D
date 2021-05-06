@@ -165,6 +165,52 @@ func test_duplicate():
 		assert_eq(p1.properties.flip, p2.properties.flip, "flip Same Values")
 		assert_eq(p1.properties.width, p2.properties.width, "width Same Values")
 
+func test_material_override_add_delete():
+	var mmat1 = SS2D_Material_Edge_Metadata.new()
+	var mmat2 = SS2D_Material_Edge_Metadata.new()
+	var pa = SS2D_Point_Array.new()
+
+	# Add
+	assert_eq(0, pa.get_material_overrides().size())
+	pa.set_material_override([0,1], mmat1)
+	assert_eq(1, pa.get_material_overrides().size())
+	pa.set_material_override([1,0], mmat1)
+	assert_eq(1, pa.get_material_overrides().size())
+	pa.set_material_override([2,1], mmat2)
+	assert_eq(2, pa.get_material_overrides().size())
+
+	assert_true(mmat1.is_connected("changed", pa, "_on_material_override_changed"))
+	assert_true(mmat2.is_connected("changed", pa, "_on_material_override_changed"))
+
+
+	# Get
+	assert_eq(null, pa.get_material_override([5,1]))
+	assert_eq(mmat1, pa.get_material_override([0,1]))
+	assert_eq(mmat2, pa.get_material_override([2,1]))
+
+
+	# Has
+	assert_false(pa.has_material_override([5,1]))
+	assert_true(pa.has_material_override([0,1]))
+	assert_true(pa.has_material_override([2,1]))
+
+
+	# Overwrite
+	pa.set_material_override([1,0], mmat2)
+	assert_eq(mmat2, pa.get_material_override([0,1]))
+
+	assert_false(mmat1.is_connected("changed", pa, "_on_material_override_changed"))
+	assert_true(mmat2.is_connected("changed", pa, "_on_material_override_changed"))
+
+
+	# Delete
+	pa.remove_material_override([1,2])
+	assert_eq(1, pa.get_material_overrides().size())
+	pa.remove_material_override([0,1])
+	assert_eq(0, pa.get_material_overrides().size())
+
+	assert_false(mmat1.is_connected("changed", pa, "_on_material_override_changed"))
+	assert_false(mmat2.is_connected("changed", pa, "_on_material_override_changed"))
 
 func generate_points() -> Array:
 	return [

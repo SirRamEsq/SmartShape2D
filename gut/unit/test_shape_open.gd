@@ -178,9 +178,9 @@ func test_invert_point_order():
 
 func test_get_edge_meta_materials_one():
 	var shape = SS2D_Shape_Open.new()
-	assert_eq(shape.material_overrides.size(), 0)
+	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	add_child_autofree(shape)
-	assert_eq(shape.material_overrides.size(), 0)
+	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 
 	var edge_mat = SS2D_Material_Edge.new()
 	edge_mat.textures = [TEST_TEXTURE]
@@ -201,7 +201,7 @@ func test_get_edge_meta_materials_one():
 
 	var points = get_clockwise_points()
 	shape.add_points(points)
-	assert_eq(shape.material_overrides.size(), 0)
+	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	var edge_data = shape.get_meta_material_to_indicies(s_m, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
@@ -215,7 +215,7 @@ func test_get_edge_meta_materials_one():
 func test_get_edge_meta_materials_many():
 	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
-	assert_eq(shape.material_overrides.size(), 0)
+	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 
 	var edge_materials_count = 4
 	var edge_materials = []
@@ -256,7 +256,7 @@ func test_get_edge_meta_materials_many():
 
 	var points = get_square_points()
 	shape.add_points(points)
-	assert_eq(shape.material_overrides.size(), 0)
+	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	assert_eq(shape.get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
 	var em_data = shape.get_meta_material_to_indicies(s_m, false)
@@ -314,6 +314,7 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	assert_eq(quad.pt_d, expected_points[3])
 
 
+# TODO Is Integration test(?), needs moved
 func test_get_edge_material_data():
 	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
@@ -347,7 +348,7 @@ func test_get_edge_material_data():
 	var override_mat = SS2D_Material_Edge_Metadata.new()
 	override_mat.render = false
 	var keys = [shape.get_point_key_at_index(1), shape.get_point_key_at_index(2)]
-	shape.set_material_override(keys, override_mat)
+	shape.get_point_array().set_material_override(keys, override_mat)
 
 	edge_material_data = shape.get_meta_material_to_indicies(s_m, false)
 	assert_eq(edge_material_data.size(), 2, "2 edges should be produced")
@@ -358,7 +359,7 @@ func test_get_edge_material_data():
 	override_mat = SS2D_Material_Edge_Metadata.new()
 	override_mat.render = false
 	keys = [shape.get_point_key_at_index(3), shape.get_point_key_at_index(4)]
-	shape.set_material_override(keys, override_mat)
+	shape.get_point_array().set_material_override(keys, override_mat)
 
 	# At this point
 	#  - idx 1 and 2 aren't rendered

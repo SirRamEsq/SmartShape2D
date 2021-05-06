@@ -14,10 +14,13 @@ export var _point_order: Array = [] setget set_point_order
 export var _constraints = {} setget set_constraints
 # Next key value to generate
 export var _next_key = 0 setget set_next_key
+# Dictionary of specific materials to use for specific tuples of points
+export (Dictionary) var _material_overrides = null setget set_material_overrides
 
 var _constraints_enabled: bool = true
 
 signal constraint_removed(key1, key2)
+signal material_override_changed(tuple)
 
 ###################
 # HANDLING POINTS #
@@ -30,6 +33,17 @@ func _init():
 	_point_order = []
 	_constraints = {}
 	_next_key = 0
+	# Assigning an empty dict to _material_overrides this way
+	# instead of assigning in the declaration appears to bypass
+	# a weird Godot bug where _material_overrides of one shape
+	# interfere with another
+	if _material_overrides == null:
+		_material_overrides = {}
+
+func _ready():
+	for tuple in _material_overrides:
+		var mat = _material_overrides[tuple]
+		mat.connect("changed", self, "_on_material_override_changed", [tuple])
 
 
 func set_points(ps: Dictionary):
@@ -380,10 +394,15 @@ func duplicate(sub_resource: bool = false):
 		_new._constraints = {}
 		for tuple in _constraints:
 			_new._constraints[tuple] = _constraints[tuple]
+
+		_new._material_overrides = {}
+		for tuple in _material_overrides:
+			_new._material_overrides[tuple] = _material_overrides[tuple]
 	else:
 		_new._points = _points
 		_new._point_order = _point_order
 		_new._constraints = _constraints
+		_new._material_overrides = _material_overrides
 	return _new
 
 
@@ -392,3 +411,75 @@ func __new():
 	return get_script().new()
 
 
+######################
+# MATERIAL OVERRIDES #
+######################
+func set_material_overrides(dict:Dictionary):
+	for k in dict:
+		if not TUP.is_tuple(k):
+			push_error("Material Override Dictionary KEY is not an Array with 2 points!")
+		var v = dict[k]
+		if not v is SS2D_Material_Edge_Metadata:
+			push_error("Material Override Dictionary VALUE is not SS2D_Material_Edge_Metadata!")
+
+	if _material_overrides != null:
+		for old in _material_overrides.values():
+			if old.is_connected("changed", self, "_on_material_override_changed"):
+				old.disconnect("changed", self, "_on_material_override_changed")
+
+	_material_overrides = dict
+	for tuple in _material_overrides:
+		var m = _material_overrides[tuple]
+		m.connect("changed", self, "_on_material_override_changed", [tuple])
+
+func get_material_override_tuple(tuple: Array) -> Array:
+	var keys = _material_overrides.keys()
+	var idx = TUP.find_tuple_in_array_of_tuples(keys, tuple)
+	if idx != -1:
+		tuple = keys[idx]
+	return tuple
+
+
+func has_material_override(tuple: Array) -> bool:
+	tuple = get_material_override_tuple(tuple)
+	return _material_overrides.has(tuple)
+
+
+func remove_material_override(tuple: Array):
+	if not has_material_override(tuple):
+		return
+	var old = get_material_override(tuple)
+	if old.is_connected("changed", self, "_on_material_override_changed"):
+		old.disconnect("changed", self, "_on_material_override_changed")
+	_material_overrides.erase(get_material_override_tuple(tuple))
+	_on_material_override_changed(tuple)
+
+
+func set_material_override(tuple: Array, mat: SS2D_Material_Edge_Metadata):
+	if has_material_override(tuple):
+		var old = get_material_override(tuple)
+		if old == mat:
+			return
+		else:
+			if old.is_connected("changed", self, "_on_material_override_changed"):
+				old.disconnect("changed", self, "_on_material_override_changed")
+	mat.connect("changed", self, "_on_material_override_changed", [tuple])
+	_material_overrides[get_material_override_tuple(tuple)] = mat
+	_on_material_override_changed(tuple)
+
+
+func get_material_override(tuple: Array) -> SS2D_Material_Edge_Metadata:
+	if not has_material_override(tuple):
+		return null
+	return _material_overrides[get_material_override_tuple(tuple)]
+
+func get_material_overrides():
+	return _material_overrides
+
+
+func clear_all_material_overrides():
+	_material_overrides = {}
+
+func _on_material_override_changed(tuple):
+	print("_override_changed")
+	emit_signal("material_override_changed", tuple)

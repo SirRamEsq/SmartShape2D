@@ -43,6 +43,7 @@ export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_ba
 
 export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
 # Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
+# Deprecated, exists for Support of older versions
 export (Dictionary) var material_overrides = null setget set_material_overrides
 
 ####################
@@ -161,15 +162,18 @@ func _get_property_list():
 # SETTERS / GETTERS #
 #####################
 func get_point_array() -> SS2D_Point_Array:
-	# Duplicating this causes Godot Editor to crash
-	return _points  #.duplicate(true)
+	return _points
 
 
 func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
+	if _points != null:
+		if _points.is_connected("material_override_changed", self, "_handle_material_override_change"):
+			_points.disconnect("material_override_changed", self, "_handle_material_override_change")
 	if make_unique:
 		_points = a.duplicate(true)
 	else:
 		_points = a
+	_points.connect("material_override_changed", self, "_handle_material_override_change")
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
@@ -303,62 +307,12 @@ func _set_material(value: SS2D_Material_Shape):
 	property_list_changed_notify()
 
 
-func set_material_overrides(dict: Dictionary):
-	for k in dict:
-		if not k is Array and k.size() == 2:
-			push_error("Material Override Dictionary KEY is not an Array with 2 points!")
-		var v = dict[k]
-		if not v is SS2D_Material_Edge_Metadata:
-			push_error("Material Override Dictionary VALUE is not SS2D_Material_Edge_Metadata!")
-	material_overrides = dict
-
-
-# TODO Move Tuple stuff to helper library
-# TODO Move Overrides into points class?
-func get_material_override_tuple(tuple: Array) -> Array:
-	var keys = material_overrides.keys()
-	var idx = TUP.find_tuple_in_array_of_tuples(keys, tuple)
-	if idx != -1:
-		tuple = keys[idx]
-	return tuple
-
-
-func has_material_override(tuple: Array) -> bool:
-	tuple = get_material_override_tuple(tuple)
-	return material_overrides.has(tuple)
-
-
-func remove_material_override(tuple: Array):
-	if not has_material_override(tuple):
+func set_material_overrides(dict):
+	material_overrides = null
+	if dict == null:
 		return
-	var old = get_material_override(tuple)
-	if old.is_connected("changed", self, "_handle_material_change"):
-		old.disconnect("changed", self, "_handle_material_change")
-	material_overrides.erase(get_material_override_tuple(tuple))
-	set_as_dirty()
+	_points.set_material_overrides(dict)
 
-
-func set_material_override(tuple: Array, mat: SS2D_Material_Edge_Metadata):
-	if has_material_override(tuple):
-		var old = get_material_override(tuple)
-		if old == mat:
-			return
-		else:
-			if old.is_connected("changed", self, "_handle_material_change"):
-				old.disconnect("changed", self, "_handle_material_change")
-	mat.connect("changed", self, "_handle_material_change")
-	material_overrides[get_material_override_tuple(tuple)] = mat
-	set_as_dirty()
-
-
-func get_material_override(tuple: Array) -> SS2D_Material_Edge_Metadata:
-	if not has_material_override(tuple):
-		return null
-	return material_overrides[get_material_override_tuple(tuple)]
-
-
-func clear_all_material_overrides():
-	material_overrides = {}
 
 
 #########
@@ -631,20 +585,13 @@ func set_point_properties(key: int, properties):
 # GODOT #
 #########
 func _init():
-	# Assigning an empty dict to material_overrides this way
-	# instead of assigning in the declaration appears to bypass
-	# a weird Godot bug where material_overrides of one shape
-	# interfere with another
-	if material_overrides == null:
-		material_overrides = {}
-
+	pass
 
 func _ready():
+	_points.connect("material_override_changed", self, "_handle_material_override_change")
 	if _curve == null:
 		_curve = Curve2D.new()
 	_update_curve(_points)
-	for mat in material_overrides.values():
-		mat.connect("changed", self, "_handle_material_change")
 	if not _is_instantiable:
 		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
 		queue_free()
@@ -1286,8 +1233,8 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 		var keys = [get_point_key_at_index(idx), get_point_key_at_index(idx_next)]
 		var override_tuple = keys
 		var override = null
-		if has_material_override(override_tuple):
-			override = get_material_override(override_tuple)
+		if _points.has_material_override(override_tuple):
+			override = _points.get_material_override(override_tuple)
 		if override != null:
 			if not override.render:
 				# Closeout all edge building
@@ -1364,6 +1311,10 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 # MISC #
 ########
 func _handle_material_change():
+	set_as_dirty()
+
+func _handle_material_override_change(tuple):
+	print("print _handle_material_override_change")
 	set_as_dirty()
 
 
