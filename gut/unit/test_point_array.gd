@@ -114,6 +114,7 @@ func test_point_constraints():
 	assert_eq(p_array.get_point_properties(keys[1]).flip, false)
 
 
+# TODO Test that material overrides are correctly handled when duplicating
 func test_duplicate():
 	var p_array = SS2D_Point_Array.new()
 	for p in generate_points():

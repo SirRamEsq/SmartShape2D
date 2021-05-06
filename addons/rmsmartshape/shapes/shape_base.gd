@@ -588,7 +588,8 @@ func _init():
 	pass
 
 func _ready():
-	_points.connect("material_override_changed", self, "_handle_material_override_change")
+	if not _points.is_connected("material_override_changed", self, "_handle_material_override_change"):
+		_points.connect("material_override_changed", self, "_handle_material_override_change")
 	if _curve == null:
 		_curve = Curve2D.new()
 	_update_curve(_points)

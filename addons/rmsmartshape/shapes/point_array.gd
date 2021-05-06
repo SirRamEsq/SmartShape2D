@@ -43,7 +43,8 @@ func _init():
 func _ready():
 	for tuple in _material_overrides:
 		var mat = _material_overrides[tuple]
-		mat.connect("changed", self, "_on_material_override_changed", [tuple])
+		if not mat.is_connected("changed", self, "_on_material_override_changed"):
+			mat.connect("changed", self, "_on_material_override_changed", [tuple])
 
 
 func set_points(ps: Dictionary):
@@ -463,7 +464,8 @@ func set_material_override(tuple: Array, mat: SS2D_Material_Edge_Metadata):
 		else:
 			if old.is_connected("changed", self, "_on_material_override_changed"):
 				old.disconnect("changed", self, "_on_material_override_changed")
-	mat.connect("changed", self, "_on_material_override_changed", [tuple])
+	if not mat.is_connected("changed", self, "_on_material_override_changed"):
+		mat.connect("changed", self, "_on_material_override_changed", [tuple])
 	_material_overrides[get_material_override_tuple(tuple)] = mat
 	_on_material_override_changed(tuple)
 
@@ -481,5 +483,4 @@ func clear_all_material_overrides():
 	_material_overrides = {}
 
 func _on_material_override_changed(tuple):
-	print("_override_changed")
 	emit_signal("material_override_changed", tuple)
