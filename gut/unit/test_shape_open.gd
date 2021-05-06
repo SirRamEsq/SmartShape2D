@@ -144,6 +144,7 @@ func test_invert_point_order():
 	assert_eq(points[last_idx - 2], shape.get_point_at_index(2).position)
 
 
+# TODO Fix this test and flesh it out
 #func test_duplicate():
 #var shape = SS2D_Shape_Open.new()
 #add_child_autofree(shape)

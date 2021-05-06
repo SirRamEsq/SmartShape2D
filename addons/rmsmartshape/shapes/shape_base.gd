@@ -167,8 +167,12 @@ func get_point_array() -> SS2D_Point_Array:
 
 func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
 	if _points != null:
-		if _points.is_connected("material_override_changed", self, "_handle_material_override_change"):
-			_points.disconnect("material_override_changed", self, "_handle_material_override_change")
+		if _points.is_connected(
+			"material_override_changed", self, "_handle_material_override_change"
+		):
+			_points.disconnect(
+				"material_override_changed", self, "_handle_material_override_change"
+			)
 	if make_unique:
 		_points = a.duplicate(true)
 	else:
@@ -312,7 +316,6 @@ func set_material_overrides(dict):
 	if dict == null:
 		return
 	_points.set_material_overrides(dict)
-
 
 
 #########
@@ -587,8 +590,11 @@ func set_point_properties(key: int, properties):
 func _init():
 	pass
 
+
 func _ready():
-	if not _points.is_connected("material_override_changed", self, "_handle_material_override_change"):
+	if not _points.is_connected(
+		"material_override_changed", self, "_handle_material_override_change"
+	):
 		_points.connect("material_override_changed", self, "_handle_material_override_change")
 	if _curve == null:
 		_curve = Curve2D.new()
@@ -1185,10 +1191,13 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 
 	return edges
 
+
 """
 class returned by get_meta_material_to_indicies
 Maps a set of indicies to a meta_material
 """
+
+
 class MetaMatToIdxs:
 	var meta_material: SS2D_Material_Edge_Metadata
 	var indicies: Array = []
@@ -1204,15 +1213,87 @@ class MetaMatToIdxs:
 	func is_valid() -> bool:
 		return indicies.size() >= 2
 
+	# Does each index increment by 1 without any breaks
+	func is_contiguous() -> bool:
+		return find_break() == -1
+
+	# Find a break in the indexes where they aren't contiguous
+	# Will return -1 if there's no break
+	func find_break() -> int:
+		for i in range(0,indicies.size()-2, 1):
+			# If the next idx isn't the current idx + 1
+			if (indicies[i]+1) != (indicies[i+1]):
+				return i
+		return -1
+
+	func has_index(idx:int) -> bool:
+		return indicies.has(idx)
+
+	func lowest_index(idx:int) -> int:
+		return indicies.min()
+
+	func highest_index(idx:int) -> int:
+		return indicies.max()
+
+# Will merge two arrays of MetaMatToIdxs; a on top of b; returning a new array of MetaMatToIDxs
+static func MetaMatToIdxs_merge_array_a_into_array_b(a: Array, b: Array) -> Array:
+	var ret = []
+	# Make equal to b; b serves as the baseline
+	for bm in b:
+		var m = MetaMatToIdxs.new(bm.indicies, bm.meta_material)
+		m.first_connected_to_final = bm.first_connected_to_final
+		ret.push_back(m)
+	# Merge a on top of b
+	for am in b:
+		var m = MetaMatToIdxs.new(am.indicies, am.meta_material)
+		m.first_connected_to_final = am.first_connected_to_final
+		# Check to see if any of the a indicies exist in the mm array already
+		var to_remove = []
+		var to_add = []
+		for mm in ret:
+			for idx in am.indicies:
+				if mm.has_index(idx):
+					var pos = mm.indicies.find(idx)
+					# If first or last point removed, first and last should no longer be connected
+					if pos == 0 or pos == mm.indicies.size()-1:
+						mm.first_connected_to_final = false
+					# Remove point
+					mm.indicies.erase(idx)
+					# Remove Mapping entirely if no longer valid
+					if not mm.is_valid():
+						to_remove.push_back(mm)
+					# Split into two if mapping has been bisected
+					if not mm.is_contiguous():
+						var break_idx = mm.find_break()
+						var new_mm = MetaMatToIdxs.new(mm.indicies.slice(break_idx+1, mm.indicies.size()-1), mm.meta_material)
+						new_mm.first_connected_to_final = mm.first_connected_to_final
+						mm.indicies.resize(break_idx)
+						to_add.push_back(new_mm)
+		ret.push_back(m)
+		for add in to_add:
+			ret.push_back(add)
+		for remove in to_remove:
+			ret.erase(remove)
 
 
+	return ret
 
 
 """
 Will return an array of MetaMatToIdxs from the current set of points
-TODO Write Test this
+TODO Write Tests for this
 TODO Try to break this function out and make it static / have no dependencies
+TODO Move Material override logic out of here
+	- Have a method to create the meta_material mappings (this one)
+	- Have a method to create the _material override mappings (a new one)
+	- Have a method to merge mm2idx classes
 """
+
+
+func get_meta_material_to_indicies_for_overrides(
+	s_material: SS2D_Material_Shape, overrides: Array, wrap_around: bool
+) -> Array:
+	return []
 
 
 func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:
@@ -1314,6 +1395,7 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 func _handle_material_change():
 	set_as_dirty()
 
+
 func _handle_material_override_change(tuple):
 	print("print _handle_material_override_change")
 	set_as_dirty()
@@ -1357,7 +1439,9 @@ func _on_dirty_update():
 		_dirty = false
 		emit_signal("on_dirty_update")
 
+
 # TODO, Migrate these 'point index' functions to a helper library and make static?
+
 
 func get_first_point_index(points: Array) -> int:
 	return 0
