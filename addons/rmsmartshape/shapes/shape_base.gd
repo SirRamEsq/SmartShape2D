@@ -742,7 +742,7 @@ func generate_collision_points() -> PoolVector2Array:
 	var indicies = []
 	for i in range(verts.size()):
 		indicies.push_back(i)
-	var edge_data = MetaMatToIdxs.new(indicies, null)
+	var edge_data = SS2D_Meta_Mat_2_Idxs.new(indicies, null)
 	var edge = _build_edge_without_material(
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
@@ -926,7 +926,7 @@ func _build_quad_from_point(
 
 
 func _build_edge_without_material(
-	edge_dat: MetaMatToIdxs, size: Vector2, c_scale: float, c_offset: float, c_extends: float
+	edge_dat: SS2D_Meta_Mat_2_Idxs, size: Vector2, c_scale: float, c_offset: float, c_extends: float
 ) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	if not edge_dat.is_valid():
@@ -1191,96 +1191,8 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 
 	return edges
 
-
 """
-class returned by get_meta_material_to_indicies
-Maps a set of indicies to a meta_material
-"""
-
-
-class MetaMatToIdxs:
-	var meta_material: SS2D_Material_Edge_Metadata
-	var indicies: Array = []
-	var first_connected_to_final: bool = false
-
-	func _init(i: Array, m: SS2D_Material_Edge_Metadata):
-		meta_material = m
-		indicies = i
-
-	func _to_string() -> String:
-		return "[M_2_IDX] (%s) | %s" % [str(meta_material), indicies]
-
-	func is_valid() -> bool:
-		return indicies.size() >= 2
-
-	# Does each index increment by 1 without any breaks
-	func is_contiguous() -> bool:
-		return find_break() == -1
-
-	# Find a break in the indexes where they aren't contiguous
-	# Will return -1 if there's no break
-	func find_break() -> int:
-		for i in range(0,indicies.size()-2, 1):
-			# If the next idx isn't the current idx + 1
-			if (indicies[i]+1) != (indicies[i+1]):
-				return i
-		return -1
-
-	func has_index(idx:int) -> bool:
-		return indicies.has(idx)
-
-	func lowest_index(idx:int) -> int:
-		return indicies.min()
-
-	func highest_index(idx:int) -> int:
-		return indicies.max()
-
-# Will merge two arrays of MetaMatToIdxs; a on top of b; returning a new array of MetaMatToIDxs
-static func MetaMatToIdxs_merge_array_a_into_array_b(a: Array, b: Array) -> Array:
-	var ret = []
-	# Make equal to b; b serves as the baseline
-	for bm in b:
-		var m = MetaMatToIdxs.new(bm.indicies, bm.meta_material)
-		m.first_connected_to_final = bm.first_connected_to_final
-		ret.push_back(m)
-	# Merge a on top of b
-	for am in b:
-		var m = MetaMatToIdxs.new(am.indicies, am.meta_material)
-		m.first_connected_to_final = am.first_connected_to_final
-		# Check to see if any of the a indicies exist in the mm array already
-		var to_remove = []
-		var to_add = []
-		for mm in ret:
-			for idx in am.indicies:
-				if mm.has_index(idx):
-					var pos = mm.indicies.find(idx)
-					# If first or last point removed, first and last should no longer be connected
-					if pos == 0 or pos == mm.indicies.size()-1:
-						mm.first_connected_to_final = false
-					# Remove point
-					mm.indicies.erase(idx)
-					# Remove Mapping entirely if no longer valid
-					if not mm.is_valid():
-						to_remove.push_back(mm)
-					# Split into two if mapping has been bisected
-					if not mm.is_contiguous():
-						var break_idx = mm.find_break()
-						var new_mm = MetaMatToIdxs.new(mm.indicies.slice(break_idx+1, mm.indicies.size()-1), mm.meta_material)
-						new_mm.first_connected_to_final = mm.first_connected_to_final
-						mm.indicies.resize(break_idx)
-						to_add.push_back(new_mm)
-		ret.push_back(m)
-		for add in to_add:
-			ret.push_back(add)
-		for remove in to_remove:
-			ret.erase(remove)
-
-
-	return ret
-
-
-"""
-Will return an array of MetaMatToIdxs from the current set of points
+Will return an array of SS2D_Meta_Mat_2_Idxs from the current set of points
 TODO Write Tests for this
 TODO Try to break this function out and make it static / have no dependencies
 TODO Move Material override logic out of here
@@ -1333,7 +1245,7 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 			if edge_building.has(e):
 				edge_building[e].indicies.push_back(idx_next)
 			else:
-				edge_building[e] = MetaMatToIdxs.new([idx, idx_next], e)
+				edge_building[e] = SS2D_Meta_Mat_2_Idxs.new([idx, idx_next], e)
 
 		# Closeout and stop building edges that are no longer viable
 		for e in edge_building.keys():
@@ -1372,7 +1284,7 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 					#print ("Orignal: %s | %s" % [first.indicies, last.indicies])
 					var merged = SS2D_Common_Functions.merge_arrays([last.indicies, first.indicies])
 					#print ("Merged:  %s" % str(merged))
-					var new_edge = MetaMatToIdxs.new(merged, first.meta_material)
+					var new_edge = SS2D_Meta_Mat_2_Idxs.new(merged, first.meta_material)
 					edges_to_add.push_back(new_edge)
 					if not edges_to_remove.has(first):
 						edges_to_remove.push_back(first)
@@ -1565,7 +1477,7 @@ func import_from_legacy(legacy: RMSmartShape2D):
 ###################
 # EDGE GENERATION #
 ###################
-func _edge_data_get_tess_point_count(ed: MetaMatToIdxs) -> int:
+func _edge_data_get_tess_point_count(ed: SS2D_Meta_Mat_2_Idxs) -> int:
 	"""
 	Get Number of TessPoints from the start and end indicies of the ed parameter
 	"""
@@ -1673,7 +1585,7 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	return previous_idx
 
 
-func _build_edge_with_material(edge_data: MetaMatToIdxs, c_offset: float, wrap_around: bool) -> SS2D_Edge:
+func _build_edge_with_material(edge_data: SS2D_Meta_Mat_2_Idxs, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	edge.z_index = edge_data.meta_material.z_index
 	edge.z_as_relative = edge_data.meta_material.z_as_relative
