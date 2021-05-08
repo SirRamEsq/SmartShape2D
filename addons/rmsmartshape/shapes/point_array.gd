@@ -15,6 +15,8 @@ export var _constraints = {} setget set_constraints
 # Next key value to generate
 export var _next_key = 0 setget set_next_key
 # Dictionary of specific materials to use for specific tuples of points
+# Key is tuple of two point keys
+# Value is material
 export (Dictionary) var _material_overrides = null setget set_material_overrides
 
 var _constraints_enabled: bool = true

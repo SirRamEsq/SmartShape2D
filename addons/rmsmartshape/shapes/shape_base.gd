@@ -1205,7 +1205,18 @@ TODO Move Material override logic out of here
 func get_meta_material_to_indicies_for_overrides(
 	s_material: SS2D_Material_Shape, overrides: Array, wrap_around: bool
 ) -> Array:
-	return []
+	var mappings = {}
+	var unique_meta_materials = []
+	for meta_material in overrides.values():
+		if not unique_meta_materials.has(meta_material):
+			unique_meta_materials.push_back(meta_material)
+	for mm in unique_meta_materials:
+		var mapping = SS2D_Meta_Mat_2_Idxs.new([], mm)
+		mappings[mm] = mapping
+	for indicies in overrides:
+		var mat = overrides[indicies]
+		mappings[mm].indicies.merge_arrays(indicies)
+	return mappings.values()
 
 
 func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:

@@ -32,6 +32,9 @@ static func find_tuple_in_array_of_tuples(tuple_array: Array, t: Array) -> int:
 			return i
 	return -1
 
+static func is_tuple_in_array_of_tuples(tuple_array: Array, t: Array) -> bool:
+	return find_tuple_in_array_of_tuples(tuple_array, t) != -1
+
 static func is_tuple(thing) -> bool:
 	if thing is Array:
 		if thing.size() == 2:
