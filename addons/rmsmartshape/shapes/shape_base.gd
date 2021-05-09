@@ -1184,7 +1184,8 @@ func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
 	if s_mat == null:
 		return edges
 
-	var emds = get_meta_material_to_indicies(s_mat, wrap_around)
+	var verts = get_vertices()
+	var emds = get_meta_material_to_indicies(s_mat, verts)
 	for emd in emds:
 		var new_edge = _build_edge_with_material(emd, s_mat.render_offset, wrap_around)
 		edges.push_back(new_edge)
@@ -1207,20 +1208,22 @@ func get_meta_material_to_indicies_for_overrides(
 ) -> Array:
 	var mappings = {}
 	var unique_meta_materials = []
-	for meta_material in overrides.values():
-		if not unique_meta_materials.has(meta_material):
-			unique_meta_materials.push_back(meta_material)
-	for mm in unique_meta_materials:
-		var mapping = SS2D_Meta_Mat_2_Idxs.new([], mm)
-		mappings[mm] = mapping
-	for indicies in overrides:
-		var mat = overrides[indicies]
-		mappings[mm].indicies.merge_arrays(indicies)
+	# Get unique meta materials
+	#for meta_material in overrides.values():
+		#if not unique_meta_materials.has(meta_material):
+			#unique_meta_materials.push_back(meta_material)
+	## Create a mapping for each unique meta material
+	#for mm in unique_meta_materials:
+		#var mapping = SS2D_Meta_Mat_2_Idxs.new([], mm)
+		#mappings[mm] = mapping
+	## Add index array(s) to each mapping
+	#for indicies in overrides:
+		#var mat = overrides[indicies]
+		#mappings[mm].indicies.merge_arrays(indicies)
 	return mappings.values()
 
 
-func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around: bool) -> Array:
-	var verts = get_vertices()
+static func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, verts: Array) -> Array:
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
 	for idx in range(0, verts.size() - 1, 1):
@@ -1234,27 +1237,12 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 		# Get all valid edge_meta_materials for this normal value
 		var edge_meta_materials: Array = s_material.get_edge_meta_materials(normal)
 
-		# Override the material for this point?
-		var keys = [get_point_key_at_index(idx), get_point_key_at_index(idx_next)]
-		var override_tuple = keys
-		var override = null
-		if _points.has_material_override(override_tuple):
-			override = _points.get_material_override(override_tuple)
-		if override != null:
-			if not override.render:
-				# Closeout all edge building
-				for e in edge_building.keys():
-					final_edges.push_back(edge_building[e])
-					edge_building.erase(e)
-				continue
-			# If a material is specified to be used, use it
-			if override.edge_material != null:
-				edge_meta_materials = [override]
-
 		# Append to existing edges being built. Add new ones if needed
 		for e in edge_meta_materials:
+			# Is exsiting, append
 			if edge_building.has(e):
 				edge_building[e].indicies.push_back(idx_next)
+			# Isn't existing, make a new mapping
 			else:
 				edge_building[e] = SS2D_Meta_Mat_2_Idxs.new([idx, idx_next], e)
 
@@ -1268,49 +1256,29 @@ func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, wrap_around:
 	for e in edge_building.keys():
 		final_edges.push_back(edge_building[e])
 
-	# See if edges that contain the final point can be merged with those that contain the first point
-	if wrap_around:
-		# Sort edges into two lists, those that contain the first point and those that contain the last point
-		var first_edges = []
-		var last_edges = []
-		for e in final_edges:
-			var has_first = e.indicies.has(get_first_point_index(verts))
-			var has_last = e.indicies.has(get_last_point_index(verts))
-			# XOR operator
-			if has_first != has_last:
-				if has_first:
-					first_edges.push_back(e)
-				elif has_last:
-					last_edges.push_back(e)
-			# Contains all verts
-			elif has_first and has_last:
-				e.first_connected_to_final = true
-
-		# Create new Edges with Merged verts; Add created edges, delete edges used to for merging
-		var edges_to_add = []
-		var edges_to_remove = []
-		for first in first_edges:
-			for last in last_edges:
-				if first.meta_material == last.meta_material:
-					#print ("Orignal: %s | %s" % [first.indicies, last.indicies])
-					var merged = SS2D_Common_Functions.merge_arrays([last.indicies, first.indicies])
-					#print ("Merged:  %s" % str(merged))
-					var new_edge = SS2D_Meta_Mat_2_Idxs.new(merged, first.meta_material)
-					edges_to_add.push_back(new_edge)
-					if not edges_to_remove.has(first):
-						edges_to_remove.push_back(first)
-					if not edges_to_remove.has(last):
-						edges_to_remove.push_back(last)
-
-		# Update final edges
-		for e in edges_to_remove:
-			var i = final_edges.find(e)
-			final_edges.remove(i)
-		for e in edges_to_add:
-			final_edges.push_back(e)
-
 	return final_edges
 
+static func get_meta_material_to_indicies2(s_material: SS2D_Material_Shape, verts: Array) -> Array:
+	var final_edges: Array = []
+	var edge_building: Dictionary = {}
+
+	for idx in range(0, verts.size() - 1, 1):
+		var idx_next = _get_next_point_index(idx, verts)
+		var pt = verts[idx]
+		var pt_next = verts[idx_next]
+		var delta = pt_next - pt
+		var delta_normal = delta.normalized()
+		var normal = Vector2(delta.y, -delta.x).normalized()
+		var edge_meta_materials: Array = s_material.get_edge_meta_materials(normal)
+		for e in edge_meta_materials:
+			# Is exsiting, append
+			if final_segments.has(e):
+				final_segments[e].indicies.push_back(idx_next)
+			# Isn't existing, make a new mapping
+			else:
+				final_segments[e] = SS2D_Meta_Mat_2_Idxs.new([idx, idx_next], e)
+
+	return final_edges
 
 ########
 # MISC #
@@ -1366,39 +1334,39 @@ func _on_dirty_update():
 # TODO, Migrate these 'point index' functions to a helper library and make static?
 
 
-func get_first_point_index(points: Array) -> int:
+static func get_first_point_index(points: Array) -> int:
 	return 0
 
 
-func get_last_point_index(points: Array) -> int:
-	return get_point_count() - 1
+static func get_last_point_index(points: Array) -> int:
+	return points.size() - 1
 
 
-func _get_next_point_index(idx: int, points: Array, wrap_around: bool = false) -> int:
+static func _get_next_point_index(idx: int, points: Array, wrap_around: bool = false) -> int:
 	if wrap_around:
 		return _get_next_point_index_wrap_around(idx, points)
 	return _get_next_point_index_no_wrap_around(idx, points)
 
 
-func _get_previous_point_index(idx: int, points: Array, wrap_around: bool = false) -> int:
+static func _get_previous_point_index(idx: int, points: Array, wrap_around: bool = false) -> int:
 	if wrap_around:
 		return _get_previous_point_index_wrap_around(idx, points)
 	return _get_previous_point_index_no_wrap_around(idx, points)
 
 
-func _get_next_point_index_no_wrap_around(idx: int, points: Array) -> int:
+static func _get_next_point_index_no_wrap_around(idx: int, points: Array) -> int:
 	return int(min(idx + 1, points.size() - 1))
 
 
-func _get_previous_point_index_no_wrap_around(idx: int, points: Array) -> int:
+static func _get_previous_point_index_no_wrap_around(idx: int, points: Array) -> int:
 	return int(max(idx - 1, 0))
 
 
-func _get_next_point_index_wrap_around(idx: int, points: Array) -> int:
+static func _get_next_point_index_wrap_around(idx: int, points: Array) -> int:
 	return (idx + 1) % points.size()
 
 
-func _get_previous_point_index_wrap_around(idx: int, points: Array) -> int:
+static func _get_previous_point_index_wrap_around(idx: int, points: Array) -> int:
 	var temp = idx - 1
 	while temp < 0:
 		temp += points.size()

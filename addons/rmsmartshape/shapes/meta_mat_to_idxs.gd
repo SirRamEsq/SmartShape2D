@@ -39,7 +39,6 @@ func _to_string() -> String:
 func is_valid() -> bool:
 	return indicies.size() >= 2
 
-# Break the indicies into contiguous segments
 func get_contiguous_segments() -> Array:
 	if is_contiguous():
 		return [indicies.duplicate()]
@@ -57,8 +56,8 @@ func get_contiguous_segments() -> Array:
 		segments.push_back(remainder)
 	return segments
 
-# Will join together segments that are consecutive
-# ex, [1,2] and [3,4]
+# Will join together segments that share the same idx
+# ex. [1,2], [4,5], and [2,3,4] become [1,2,3,4,5]
 # Most likely will take input from the get_contiguous_segments function
 func join_segments(segments:Array) -> Array:
 	var final_segments = segments.duplicate()
@@ -73,53 +72,27 @@ func join_segments(segments:Array) -> Array:
 				var b = final_segments[ii]
 				var ab = [a.back(),b[0]]
 				var ba = [b.back(),a[0]]
-				if _is_contiguous(ab):
-					var lowest = min(a.back(), b[0])
-					if lowest == a.back():
-						to_join_tuple = TUP.create_tuple(i,ii)
-					else:
-						to_join_tuple = TUP.create_tuple(ii,i)
-				if _is_contiguous(ba):
-					var lowest = min(b.back(), a[0])
-					if lowest == b.back():
-						to_join_tuple = TUP.create_tuple(ii,i)
-					else:
-						to_join_tuple = TUP.create_tuple(i,ii)
+				if a.back() == b[0]:
+					to_join_tuple = TUP.create_tuple(i,ii)
+				if b.back() == a[0]:
+					to_join_tuple = TUP.create_tuple(ii,i)
 				if to_join_tuple != null:
 					break
 		if to_join_tuple != null:
-			var idx_left = to_join_tuple[0]
-			var idx_right = to_join_tuple[1]
-			var left = final_segments[idx_left]
-			var right = final_segments[idx_right]
-			final_segments.erase(left)
-			final_segments.erase(right)
+			var idx_lowest = to_join_tuple[0]
+			var idx_highest = to_join_tuple[1]
+			var lowest = final_segments[idx_lowest]
+			var highest = final_segments[idx_highest]
+			final_segments.erase(lowest)
+			final_segments.erase(highest)
+			# pop the shared idx from lowest
+			lowest.pop_back()
 			var new_segment = []
-			new_segment.append_array(left)
-			new_segment.append_array(right)
+			new_segment.append_array(lowest)
+			new_segment.append_array(highest)
 			final_segments.push_back(new_segment)
 
 	return final_segments
-
-
-# Will wrap around 2 segments that contain 0 and the highest_idx
-# ex. [0,1,2] and [11,12,13] where 13 is the highest_idx
-# Used for closed_shape functionality
-# Most likely will take input from the get_contiguous_segments function
-func wrap_around_contiguous_segments(segments:Array, highest_idx:int) -> Array:
-	var new_segments = segments.duplicate()
-	var zero_at_first_idx = null
-	var high_at_last_idx = null
-	for segment in new_segments:
-		if segment.back() == highest_idx:
-			high_at_last_idx = segment
-		elif segment[0] == 0:
-			zero_at_first_idx = segment
-	if zero_at_first_idx != null and high_at_last_idx != null:
-		high_at_last_idx.append_array(zero_at_first_idx)
-		new_segments.erase(zero_at_first_idx)
-	return new_segments
-
 
 
 

@@ -16,23 +16,35 @@ func test_contiguous_segments():
 	assert_eq(segments[1], [4,5])
 	assert_eq(segments[2], [7,8])
 	assert_eq(segments[3], [10])
-	segments = mm2i.wrap_around_contiguous_segments(segments, 10)
-	assert_eq(segments.size(), 3)
-	assert_eq(segments[0], [4,5])
-	assert_eq(segments[1], [7,8])
-	assert_eq(segments[2], [10, 0, 1, 2])
 
 func test_join_segments():
-	var mm2i = new_meta_mat_2_idxs([0, 1, 2,   4, 5,   7, 8,   10, 6, 3, 9, 0, 11])
-	var segments = mm2i.get_contiguous_segments()
+	var mm2i = new_meta_mat_2_idxs([])
 
-	gut.p(segments)
+	# Test contains some points, but not all
+	var segments = [[0, 1, 2,3],  [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11]]
 	segments = mm2i.join_segments(segments)
 	gut.p(segments)
 	assert_eq(segments.size(), 2)
-	assert_eq(segments[0], [0])
-	assert_eq(segments[1], [0,1,2,3,4,5,6,7,8,9,10,11])
-	segments = mm2i.wrap_around_contiguous_segments(segments,11)
+	assert_eq(segments[0], [0,1,2,3])
+	assert_eq(segments[1], [4,5,6,7,8,9,10,11])
+
+	segments = [[0, 1], [1,2], [2,3], [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11]]
+	segments = mm2i.join_segments(segments)
+	gut.p(segments)
+	assert_eq(segments.size(), 2)
+	assert_eq(segments[0], [0,1,2,3])
+	assert_eq(segments[1], [4,5,6,7,8,9,10,11])
+
+	# Test wrap around
+	segments = [[0, 1, 2,3],  [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11, 0]]
+	segments = mm2i.join_segments(segments)
+	gut.p(segments)
+	assert_eq(segments.size(), 1)
+	assert_eq(segments[0], [4,5,6,7,8,9,10,11,0,1,2,3])
+
+	# Test contains all point pairs
+	segments = [[0, 1, 2,3,4],  [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11, 0]]
+	segments = mm2i.join_segments(segments)
 	gut.p(segments)
 	assert_eq(segments.size(), 1)
 	assert_eq(segments[0], [0,1,2,3,4,5,6,7,8,9,10,11,0])
