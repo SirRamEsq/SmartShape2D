@@ -1675,7 +1675,11 @@ func _build_edge_with_material(edge_data: EdgeMaterialData, c_offset: float, wra
 		var pt_next = t_points[tess_idx_next]
 		var pt_prev = t_points[tess_idx_prev]
 
-		var texture_idx = get_point_texture_index(vert_key)
+		var texture_idx = 0
+		if edge_material.randomize_texture:
+			texture_idx = randi() % edge_material.textures.size()
+		else :
+			get_point_texture_index(vert_key)
 		var flip_x = get_point_texture_flip(vert_key)
 
 		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
