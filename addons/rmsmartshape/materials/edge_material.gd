@@ -29,6 +29,8 @@ export (Array, Texture) var textures_taper_right: Array = [] setget _set_texture
 export (Array, Texture) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
 export (Array, Texture) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
 
+# If the texture choice should be randomized instead of the choice by point setup
+export (bool) var randomize_texture: bool = false setget _set_randomize_texture
 # If corner textures should be used
 export (bool) var use_corner_texture: bool = true setget _set_use_corner
 # If taper textures should be used
@@ -90,6 +92,11 @@ func _set_textures_taper_right(a: Array):
 
 func _set_texture_normals_taper_right(a: Array):
 	texture_normals_taper_right = a
+	emit_signal("changed")
+
+
+func _set_randomize_texture(b: bool):
+	randomize_texture = b
 	emit_signal("changed")
 
 
