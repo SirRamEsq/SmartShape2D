@@ -1459,16 +1459,16 @@ func import_from_legacy(legacy: RMSmartShape2D):
 ###################
 # EDGE GENERATION #
 ###################
-func _edge_data_get_tess_point_count(ed: SS2D_IndexMap) -> int:
+func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 	"""
-	Get Number of TessPoints from the start and end indicies of the ed parameter
+	Get Number of TessPoints from the start and end indicies of the index_map parameter
 	"""
 	var count: int = 0
 	var points = get_vertices()
 	var t_points = get_tessellated_points()
-	for i in range(ed.indicies.size() - 1):
-		var this_idx = ed.indicies[i]
-		var next_idx = ed.indicies[i + 1]
+	for i in range(index_map.indicies.size() - 1):
+		var this_idx = index_map.indicies[i]
+		var next_idx = index_map.indicies[i + 1]
 		if this_idx > next_idx:
 			count += 1
 			continue
@@ -1567,56 +1567,64 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	return previous_idx
 
 
-func _build_edge_with_material(edge_data: SS2D_IndexMap, c_offset: float, wrap_around: bool) -> SS2D_Edge:
+"""
+Will constructe an SS2D_Edge from the passed parameters
+index_map must be a SS2D_IndexMap with a SS2D_Material_Edge_Metadata for an object
+the indicies used by index_map should match up with the get_verticies() indicies
+
+TODO support null material
+TODO remove wrap_around param
+TODO Add params from _build_edge_without_material
+"""
+func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
-	edge.z_index = edge_data.meta_material.z_index
-	edge.z_as_relative = edge_data.meta_material.z_as_relative
-	edge.material = edge_data.meta_material.edge_material.material
-	if not edge_data.is_valid():
+	if not index_map.is_valid():
 		return edge
-
-	var t_points = get_tessellated_points()
-	var points = get_vertices()
-	var first_idx = edge_data.indicies[0]
-	var last_idx = edge_data.indicies.back()
-	edge.first_point_key = _points.get_point_key_at_index(first_idx)
-	edge.last_point_key = _points.get_point_key_at_index(last_idx)
-	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
-	var last_t_idx = get_tessellated_idx_from_point(points, t_points, last_idx)
-
-	var edge_material_meta: SS2D_Material_Edge_Metadata = edge_data.meta_material
+	var edge_material_meta: SS2D_Material_Edge_Metadata = index_map.object
 	if edge_material_meta == null:
 		return edge
 	if not edge_material_meta.render:
 		return edge
-	edge.z_index = edge_material_meta.z_index
-
 	var edge_material: SS2D_Material_Edge = edge_material_meta.edge_material
 	if edge_material == null:
 		return edge
 
-	var tess_point_count: int = _edge_data_get_tess_point_count(edge_data)
+	edge.z_index = edge_meta_material.z_index
+	edge.z_as_relative = edge_meta_material.z_as_relative
+	edge.material = edge_meta_material.edge_material.material
+
+	var verts_t = get_tessellated_points()
+	var verts = get_vertices()
+	var first_idx = index_map.indicies[0]
+	var last_idx = index_map.indicies.back()
+	edge.first_point_key = _points.get_point_key_at_index(first_idx)
+	edge.last_point_key = _points.get_point_key_at_index(last_idx)
+	var first_t_idx = get_tessellated_idx_from_point(verts, verts_t, first_idx)
+	var last_t_idx = get_tessellated_idx_from_point(verts, verts_t, last_idx)
+
+	# How many tessellated points are contained within this index map?
+	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
 
 	var c_scale = 1.0
 	c_offset += edge_material_meta.offset
 	var c_extends = 0.0
 	var i = 0
 	while i < tess_point_count:
-		var tess_idx = (first_t_idx + i) % t_points.size()
-		var tess_idx_next = _get_next_unique_point_idx(tess_idx, t_points, wrap_around)
-		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, t_points, wrap_around)
+		var tess_idx = (first_t_idx + i) % verts_t.size()
+		var tess_idx_next = _get_next_unique_point_idx(tess_idx, verts_t, wrap_around)
+		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, verts_t, wrap_around)
 		var next_point_delta = 0
-		for j in range(t_points.size()):
-			if ((tess_idx + j) % t_points.size()) == tess_idx_next:
+		for j in range(verts_t.size()):
+			if ((tess_idx + j) % verts_t.size()) == tess_idx_next:
 				next_point_delta = j
 				break
 
-		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
+		var vert_idx = get_vertex_idx_from_tessellated_point(verts, verts_t, tess_idx)
 		var vert_key = get_point_key_at_index(vert_idx)
-		var next_vert_idx = _get_next_point_index(vert_idx, points, wrap_around)
-		var pt = t_points[tess_idx]
-		var pt_next = t_points[tess_idx_next]
-		var pt_prev = t_points[tess_idx_prev]
+		var next_vert_idx = _get_next_point_index(vert_idx, verts, wrap_around)
+		var pt = verts_t[tess_idx]
+		var pt_next = verts_t[tess_idx_next]
+		var pt_prev = verts_t[tess_idx_prev]
 
 		var texture_idx = 0
 		if edge_material.randomize_texture:
@@ -1625,7 +1633,7 @@ func _build_edge_with_material(edge_data: SS2D_IndexMap, c_offset: float, wrap_a
 			texture_idx = get_point_texture_index(vert_key)
 		var flip_x = get_point_texture_flip(vert_key)
 
-		var width = _get_width_for_tessellated_point(points, t_points, tess_idx)
+		var width = _get_width_for_tessellated_point(verts, verts_t, tess_idx)
 		var is_first_point = vert_idx == first_idx
 		var is_last_point = vert_idx == last_idx - 1
 		var is_first_tess_point = tess_idx == first_t_idx
@@ -1658,7 +1666,7 @@ func _build_edge_with_material(edge_data: SS2D_IndexMap, c_offset: float, wrap_a
 
 		# Corner Quad
 		if tess_idx != first_t_idx:
-			var prev_width = _get_width_for_tessellated_point(points, t_points, tess_idx_prev)
+			var prev_width = _get_width_for_tessellated_point(verts, verts_t, tess_idx_prev)
 			var q = _edge_generate_corner(
 				pt_prev,
 				pt,
@@ -1712,15 +1720,15 @@ func _build_edge_with_material(edge_data: SS2D_IndexMap, c_offset: float, wrap_a
 					new_quad.texture_normal = taper_texture_normal
 
 		# Final point for closed shapes fix
-		if is_last_point and edge_data.first_connected_to_final:
-			var idx_mid = t_points.size() - 1
-			var idx_next = _get_next_unique_point_idx(idx_mid, t_points, true)
-			var idx_prev = _get_previous_unique_point_idx(idx_mid, t_points, true)
-			var p_p = t_points[idx_prev]
-			var p_m = t_points[idx_mid]
-			var p_n = t_points[idx_next]
-			var w_p = _get_width_for_tessellated_point(points, t_points, idx_prev)
-			var w_m = _get_width_for_tessellated_point(points, t_points, idx_mid)
+		if is_last_point and index_map.first_connected_to_final:
+			var idx_mid = verts_t.size() - 1
+			var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
+			var idx_prev = _get_previous_unique_point_idx(idx_mid, verts_t, true)
+			var p_p = verts_t[idx_prev]
+			var p_m = verts_t[idx_mid]
+			var p_n = verts_t[idx_next]
+			var w_p = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
+			var w_m = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
 			var q = _edge_generate_corner(
 				p_p, p_m, p_n, w_p, w_m, edge_material, texture_idx, c_scale, c_offset
 			)
@@ -1732,7 +1740,7 @@ func _build_edge_with_material(edge_data: SS2D_IndexMap, c_offset: float, wrap_a
 			edge.quads.push_back(q)
 		i += next_point_delta
 	if edge_material_meta.weld:
-		_weld_quad_array(edge.quads, 1.0, edge_data.first_connected_to_final)
-		edge.wrap_around = edge_data.first_connected_to_final
+		_weld_quad_array(edge.quads, 1.0, index_map.first_connected_to_final)
+		edge.wrap_around = index_map.first_connected_to_final
 
 	return edge
