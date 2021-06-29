@@ -1185,6 +1185,8 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 		return edges
 
 	var index_maps = get_meta_material_index_mapping(s_mat, verts)
+	# Might be able to introduce threading here
+	# One thread per index_map? with max of 8/16?
 	for index_map in index_maps:
 		var new_edge = _build_edge_with_material(index_map, s_mat.render_offset, false)
 		edges.push_back(new_edge)
@@ -1589,9 +1591,9 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 	if edge_material == null:
 		return edge
 
-	edge.z_index = edge_meta_material.z_index
-	edge.z_as_relative = edge_meta_material.z_as_relative
-	edge.material = edge_meta_material.edge_material.material
+	edge.z_index = edge_material_meta.z_index
+	edge.z_as_relative = edge_material_meta.z_as_relative
+	edge.material = edge_material_meta.edge_material.material
 
 	var verts_t = get_tessellated_points()
 	var verts = get_vertices()
@@ -1720,27 +1722,31 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 					new_quad.texture_normal = taper_texture_normal
 
 		# Final point for closed shapes fix
-		if is_last_point and index_map.first_connected_to_final:
-			var idx_mid = verts_t.size() - 1
-			var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
-			var idx_prev = _get_previous_unique_point_idx(idx_mid, verts_t, true)
-			var p_p = verts_t[idx_prev]
-			var p_m = verts_t[idx_mid]
-			var p_n = verts_t[idx_next]
-			var w_p = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
-			var w_m = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
-			var q = _edge_generate_corner(
-				p_p, p_m, p_n, w_p, w_m, edge_material, texture_idx, c_scale, c_offset
-			)
-			if q != null:
-				new_quads.push_back(q)
+		# TODO, Figure out if this is needed
+		#if is_last_point and index_map.first_connected_to_final:
+			#var idx_mid = verts_t.size() - 1
+			#var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
+			#var idx_prev = _get_previous_unique_point_idx(idx_mid, verts_t, true)
+			#var p_p = verts_t[idx_prev]
+			#var p_m = verts_t[idx_mid]
+			#var p_n = verts_t[idx_next]
+			#var w_p = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
+			#var w_m = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
+			#var q = _edge_generate_corner(
+				#p_p, p_m, p_n, w_p, w_m, edge_material, texture_idx, c_scale, c_offset
+			#)
+			#if q != null:
+				#new_quads.push_back(q)
 
 		# Add new quads to edge
 		for q in new_quads:
 			edge.quads.push_back(q)
 		i += next_point_delta
 	if edge_material_meta.weld:
-		_weld_quad_array(edge.quads, 1.0, index_map.first_connected_to_final)
-		edge.wrap_around = index_map.first_connected_to_final
+		# TODO, Figure out how to set wrap_around or if needed at all
+		#_weld_quad_array(edge.quads, 1.0, index_map.first_connected_to_final)
+		#edge.wrap_around = index_map.first_connected_to_final
+		_weld_quad_array(edge.quads, 1.0, false)
+		edge.wrap_around = false
 
 	return edge
