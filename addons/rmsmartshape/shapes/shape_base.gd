@@ -742,7 +742,7 @@ func generate_collision_points() -> PoolVector2Array:
 	var indicies = []
 	for i in range(verts.size()):
 		indicies.push_back(i)
-	var edge_data = SS2D_Meta_Mat_2_Idxs.new(indicies, null)
+	var edge_data = SS2D_IndexMap.new(indicies, null)
 	var edge = _build_edge_without_material(
 		edge_data, Vector2(collision_size, collision_size), 1.0, collision_offset - 1.0, 0.0
 	)
@@ -792,7 +792,7 @@ func bake_collision():
 
 func cache_edges():
 	if shape_material != null and render_edges:
-		_edges = _build_edges(shape_material, false)
+		_edges = _build_edges(shape_material, get_vertices())
 	else:
 		_edges = []
 
@@ -926,7 +926,7 @@ func _build_quad_from_point(
 
 
 func _build_edge_without_material(
-	edge_dat: SS2D_Meta_Mat_2_Idxs, size: Vector2, c_scale: float, c_offset: float, c_extends: float
+	edge_dat: SS2D_IndexMap, size: Vector2, c_scale: float, c_offset: float, c_extends: float
 ) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	if not edge_dat.is_valid():
@@ -1179,21 +1179,20 @@ func _weld_quad_array(
 		_weld_quads(quads.back(), quads[0], 1.0)
 
 
-func _build_edges(s_mat: SS2D_Material_Shape, wrap_around: bool) -> Array:
+func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 	var edges: Array = []
 	if s_mat == null:
 		return edges
 
-	var verts = get_vertices()
-	var emds = get_meta_material_to_indicies(s_mat, verts)
-	for emd in emds:
-		var new_edge = _build_edge_with_material(emd, s_mat.render_offset, wrap_around)
+	var index_maps = get_meta_material_index_mapping(s_mat, verts)
+	for index_map in index_maps:
+		var new_edge = _build_edge_with_material(index_map, s_mat.render_offset, false)
 		edges.push_back(new_edge)
 
 	return edges
 
 """
-Will return an array of SS2D_Meta_Mat_2_Idxs from the current set of points
+Will return an array of SS2D_IndexMap from the current set of points
 TODO Write Tests for this
 TODO Try to break this function out and make it static / have no dependencies
 TODO Move Material override logic out of here
@@ -1214,7 +1213,7 @@ func get_meta_material_to_indicies_for_overrides(
 			#unique_meta_materials.push_back(meta_material)
 	## Create a mapping for each unique meta material
 	#for mm in unique_meta_materials:
-		#var mapping = SS2D_Meta_Mat_2_Idxs.new([], mm)
+		#var mapping = SS2D_IndexMap.new([], mm)
 		#mappings[mm] = mapping
 	## Add index array(s) to each mapping
 	#for indicies in overrides:
@@ -1223,7 +1222,11 @@ func get_meta_material_to_indicies_for_overrides(
 	return mappings.values()
 
 
-static func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, verts: Array) -> Array:
+"""
+Will return a dictionary containing array of SS2D_IndexMap
+Each element in the array is a contiguous sequence of indicies that fit inside the meta_material's normalrange
+"""
+static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
 	for idx in range(0, verts.size() - 1, 1):
@@ -1244,7 +1247,7 @@ static func get_meta_material_to_indicies(s_material: SS2D_Material_Shape, verts
 				edge_building[e].indicies.push_back(idx_next)
 			# Isn't existing, make a new mapping
 			else:
-				edge_building[e] = SS2D_Meta_Mat_2_Idxs.new([idx, idx_next], e)
+				edge_building[e] = SS2D_IndexMap.new([idx, idx_next], e)
 
 		# Closeout and stop building edges that are no longer viable
 		for e in edge_building.keys():
@@ -1272,11 +1275,11 @@ static func get_meta_material_to_indicies2(s_material: SS2D_Material_Shape, vert
 		var edge_meta_materials: Array = s_material.get_edge_meta_materials(normal)
 		for e in edge_meta_materials:
 			# Is exsiting, append
-			if final_segments.has(e):
-				final_segments[e].indicies.push_back(idx_next)
+			if final_edges.has(e):
+				final_edges[e].indicies.push_back(idx_next)
 			# Isn't existing, make a new mapping
 			else:
-				final_segments[e] = SS2D_Meta_Mat_2_Idxs.new([idx, idx_next], e)
+				final_edges[e] = SS2D_IndexMap.new([idx, idx_next], e)
 
 	return final_edges
 
@@ -1456,7 +1459,7 @@ func import_from_legacy(legacy: RMSmartShape2D):
 ###################
 # EDGE GENERATION #
 ###################
-func _edge_data_get_tess_point_count(ed: SS2D_Meta_Mat_2_Idxs) -> int:
+func _edge_data_get_tess_point_count(ed: SS2D_IndexMap) -> int:
 	"""
 	Get Number of TessPoints from the start and end indicies of the ed parameter
 	"""
@@ -1564,7 +1567,7 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	return previous_idx
 
 
-func _build_edge_with_material(edge_data: SS2D_Meta_Mat_2_Idxs, c_offset: float, wrap_around: bool) -> SS2D_Edge:
+func _build_edge_with_material(edge_data: SS2D_IndexMap, c_offset: float, wrap_around: bool) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
 	edge.z_index = edge_data.meta_material.z_index
 	edge.z_as_relative = edge_data.meta_material.z_as_relative

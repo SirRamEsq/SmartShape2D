@@ -5,7 +5,7 @@ extends Reference
 Everything in this script should be static
 This script contains code that may referenced in multiple locations in the plugin
 
-This is a simple script to work with arrays of SS2D_Meta_Mat_2_Idxs
+This is a simple script to work with arrays of SS2D_IndexMap
 Some notes:
 """
 

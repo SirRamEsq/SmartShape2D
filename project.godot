@@ -44,6 +44,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/shapes/edge.gd"
 }, {
+"base": "Reference",
+"class": "SS2D_IndexMap",
+"language": "GDScript",
+"path": "res://addons/rmsmartshape/shapes/meta_mat_to_idxs.gd"
+}, {
 "base": "Resource",
 "class": "SS2D_Material_Edge",
 "language": "GDScript",
@@ -63,11 +68,6 @@ _global_script_classes=[ {
 "class": "SS2D_Mesh",
 "language": "GDScript",
 "path": "res://addons/rmsmartshape/shapes/mesh.gd"
-}, {
-"base": "Reference",
-"class": "SS2D_Meta_Mat_2_Idxs",
-"language": "GDScript",
-"path": "res://addons/rmsmartshape/shapes/meta_mat_to_idxs.gd"
 }, {
 "base": "Resource",
 "class": "SS2D_NormalRange",
@@ -152,11 +152,11 @@ _global_script_class_icons={
 "RMSmartShapeAnchor2D": "res://addons/rmsmartshape/assets/LEGACY_shape_anchor.png",
 "SS2D_Common_Functions": "",
 "SS2D_Edge": "",
+"SS2D_IndexMap": "",
 "SS2D_Material_Edge": "",
 "SS2D_Material_Edge_Metadata": "",
 "SS2D_Material_Shape": "",
 "SS2D_Mesh": "",
-"SS2D_Meta_Mat_2_Idxs": "",
 "SS2D_NormalRange": "",
 "SS2D_NormalRangeEditor": "",
 "SS2D_NormalRangeEditorProperty": "",

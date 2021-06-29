@@ -1,29 +1,29 @@
 tool
 extends Reference
-class_name SS2D_Meta_Mat_2_Idxs
+class_name SS2D_IndexMap
 
 const TUP = preload("res://addons/rmsmartshape/lib/tuple.gd")
 
 """
-Maps a set of indicies to a meta_material
+Maps a set of indicies to an object
 """
 
-var meta_material: SS2D_Material_Edge_Metadata
+var object = null
 var indicies: Array = [] setget set_indicies
 
 
 # Workaround (class cannot reference itself)
-func __new(i:Array, m: SS2D_Material_Edge_Metadata) -> SS2D_Meta_Mat_2_Idxs:
-	return get_script().new(i, m)
+func __new(i:Array, o) -> SS2D_IndexMap:
+	return get_script().new(i, o)
 
 # Sub resource has no effect, no sub resources to duplicate
 func duplicate(sub_resource: bool = false):
-	var _new = __new(indicies, meta_material)
+	var _new = __new(indicies, object)
 	return _new
 
 
-func _init(i: Array, m: SS2D_Material_Edge_Metadata):
-	meta_material = m
+func _init(i: Array, o):
+	object = o
 	set_indicies(i)
 
 
@@ -33,7 +33,7 @@ func set_indicies(a: Array):
 
 
 func _to_string() -> String:
-	return "[M_2_IDX] (%s) | %s" % [str(meta_material), indicies]
+	return "[M_2_IDX] (%s) | %s" % [str(object), indicies]
 
 
 func is_valid() -> bool:

@@ -330,7 +330,7 @@ func _on_dirty_update():
 
 func cache_edges():
 	if shape_material != null and render_edges:
-		_edges = _build_edges(shape_material, true)
+		_edges = _build_edges(shape_material, get_vertices())
 	else:
 		_edges = []
 
