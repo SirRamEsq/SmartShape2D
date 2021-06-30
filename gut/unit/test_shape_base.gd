@@ -116,8 +116,71 @@ func test_build_edge_with_material_basic_square():
 		assert_eq(edge.first_point_key, point_array.get_point_key_at_index(i))
 		assert_eq(edge.last_point_key, point_array.get_point_key_at_index(i+1))
 		i += 1
-	# Not going any deeper, the purpose of this test isn't to confirm that quad_building is correct
-	# TODO build a _build_quad_from_point test
+
+##############################################
+# QUAD POINT ILLUSTRATION #                  #
+##############################################
+#                WIDTH                       #
+#           <-------------->                 #
+#      pt_a -> O--------O <- pt_d  ▲         #
+#              |        |          |         #
+#              |   pt   |          | HEIGHT  #
+#              |        |          |         #
+#      pt_b -> O--------O <- pt_c  ▼         #
+##############################################
+var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
+func test_build_quad_no_texture(width = use_parameters(width_params)):
+	var pt: Vector2 = Vector2(0,0)
+	var pt_next: Vector2 = Vector2(16,0)
+	var tex: Texture = null
+	var tex_normal: Texture = null
+	var size: Vector2 = Vector2(8,8)
+	var flip_x: bool = false
+	var flip_y: bool = false
+	var first_point: bool = false
+	var last_point: bool = false
+	var custom_offset: float = 0.0
+	var custom_extends: float = 0.0
+	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
+	var q = SS2D_Shape_Base.build_quad_from_two_points(
+		pt, pt_next,
+		tex, tex_normal,
+		width,
+		flip_x, flip_y,
+		first_point, last_point,
+		custom_offset, custom_extends,
+		fit_texture
+	)
+	assert_not_null(q)
+	var variance = Vector2(0.0, 0.0)
+	# There is no texture, should have a width of 'width'
+	assert_eq(abs(q.pt_a.y - q.pt_b.y), abs(width))
+	assert_almost_eq((q.pt_a - q.pt_b).length(), abs(width), 0.01)
+	var half_width = width/2.0
+	var half_width_n = half_width * -1
+	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),Vector2(16,half_width_n),Vector2(16,half_width),variance)
+
+	# Run again, move 2nd point up 16 pixels
+	#q = SS2D_Shape_Base.build_quad_from_two_points(
+		#pt, pt_next + Vector2(0, -16),
+		#tex, tex_normal,
+		#width,
+		#flip_x, flip_y,
+		#first_point, last_point,
+		#custom_offset, custom_extends,
+		#fit_texture
+	#)
+	#variance = Vector2(0.5, 0.5)
+	## There is no texture, should have a width of about 'width'
+	#assert_almost_eq((q.pt_a - q.pt_b).length(), width, 0.01)
+	#assert_quad_point_eq(gut,q,Vector2(-2.8,-2.8),Vector2(2.8,2.8),Vector2(13.1,-18.8),Vector2(18.8,-13.1),variance)
+
+
+func assert_quad_point_eq(gut,q,a,b,d,c,variance):
+	assert_almost_eq(q.pt_a, a, variance, "Test Pt A")
+	assert_almost_eq(q.pt_b, b, variance, "Test Pt B")
+	assert_almost_eq(q.pt_d, d, variance, "Test Pt D")
+	assert_almost_eq(q.pt_c, c, variance, "Test Pt C")
 
 func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4)->SS2D_Material_Shape:
 	var edge_materials = []

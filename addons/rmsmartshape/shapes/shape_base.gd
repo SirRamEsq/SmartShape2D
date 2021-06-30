@@ -865,18 +865,16 @@ func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
 	surface_tool.add_uv2(uv)
 
 
-func _build_quad_from_point(
+static func build_quad_from_two_points(
 	pt: Vector2,
 	pt_next: Vector2,
 	tex: Texture,
 	tex_normal: Texture,
-	tex_size: Vector2,
-	width: float,
+	width_multiplier: float,
 	flip_x: bool,
 	flip_y: bool,
 	first_point: bool,
 	last_point: bool,
-	custom_scale: float,
 	custom_offset: float,
 	custom_extends: float,
 	fit_texture: int
@@ -888,33 +886,41 @@ func _build_quad_from_point(
 
 	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
-	var normal = Vector2(delta.y, -delta.x).normalized()
-	var normal_rotation = Vector2(0, -1).angle_to(normal)
-
-	# This will prevent the texture from rendering incorrectly if they differ
-	var vtx_len = tex_size.y
-	var vtx: Vector2 = normal * (vtx_len * 0.5)
+	var normal_direction = Vector2(delta.y, -delta.x).normalized()
+	var normal_rotation = Vector2(0, -1).angle_to(normal_direction)
+	var texture_size = Vector2(1,1)
+	if tex != null:
+		texture_size = tex.get_size()
+	# Use texture_size.y instead of texture_size.x
+	# This will prevent the texture from rendering incorrectly if the texture_size dimensions differ
+	var normal_length = texture_size.y
+	var normal: Vector2 = normal_direction * (normal_length * 0.5)
 	if flip_y:
-		vtx *= -1
-
-	var offset = vtx * custom_offset
-	custom_scale = 1
-	var width_scale = vtx * custom_scale * width
+		normal *= -1
 
 	if first_point:
-		pt -= (delta_normal * tex_size * custom_extends)
+		#pt -= (delta_normal * texture_size * custom_extends)
+		pt -= (delta_normal * custom_extends)
 	if last_point:
-		pt_next -= (delta_normal * tex_size * custom_extends)
+		#pt_next -= (delta_normal * texture_size * custom_extends)
+		pt_next -= (delta_normal * custom_extends)
 
-	########################################
-	# QUAD POINT ILLUSTRATION #            #
-	########################################
-	#      pt_a -> O--------O <- pt_d      #
-	#              |        |              #
-	#              |   pt   |              #
-	#              |        |              #
-	#      pt_b -> O--------O <- pt_c      #
-	########################################
+	##############################################
+	# QUAD POINT ILLUSTRATION #                  #
+	##############################################
+	#                LENGTH                      #
+	#           <-------------->                 #
+	#      pt_a -> O--------O <- pt_d  ▲         #
+	#              |        |          |         #
+	#              |   pt   |          | WIDTH   #
+	#              |        |          |         #
+	#      pt_b -> O--------O <- pt_c  ▼         #
+	##############################################
+	##############################################
+
+	var offset = normal * custom_offset
+	var width_scale = normal * width_multiplier
+
 	quad.pt_a = pt + width_scale + offset
 	quad.pt_b = pt - width_scale + offset
 	quad.pt_c = pt_next - width_scale + offset
@@ -995,18 +1001,18 @@ func _build_edge_without_material(
 		var is_first_tess_point = tess_idx == first_t_idx
 		var is_last_tess_point = tess_idx == last_t_idx - 1
 
-		var new_quad = _build_quad_from_point(
+		var new_quad = build_quad_from_two_points(
 			pt,
 			pt_next,
 			null,
 			null,
-			size,
+			#size,
 			width,
 			false,
 			should_flip_edges(),
 			is_first_point,
 			is_last_point,
-			c_scale,
+			#c_scale,
 			c_offset,
 			c_extends,
 			SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
@@ -1647,18 +1653,18 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 			i += next_point_delta
 			continue
 		var tex_size = tex.get_size()
-		var new_quad = _build_quad_from_point(
+		var new_quad = build_quad_from_two_points(
 			pt,
 			pt_next,
 			tex,
 			tex_normal,
-			tex_size,
+			#tex_size,
 			width,
 			flip_x,
 			should_flip_edges(),
 			is_first_point,
 			is_last_point,
-			c_scale,
+			#c_scale,
 			c_offset,
 			c_extends,
 			edge_material.fit_mode
