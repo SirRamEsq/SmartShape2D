@@ -879,33 +879,37 @@ static func build_quad_from_two_points(
 	custom_extends: float,
 	fit_texture: int
 ) -> SS2D_Quad:
+	# Create new quad
 	var quad = SS2D_Quad.new()
 	quad.texture = tex
 	quad.texture_normal = tex_normal
 	quad.color = Color(1.0, 1.0, 1.0, 1.0)
+	quad.flip_texture = flip_x
+	quad.fit_texture = fit_texture
 
+	# Calculate the normal
 	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
 	var normal_direction = Vector2(delta.y, -delta.x).normalized()
 	var normal_rotation = Vector2(0, -1).angle_to(normal_direction)
-	var texture_size = Vector2(1,1)
+
+	# Get the texture size, if relevant
+	var texture_height = 1.0
 	if tex != null:
-		texture_size = tex.get_size()
-	# Use texture_size.y instead of texture_size.x
-	# This will prevent the texture from rendering incorrectly if the texture_size dimensions differ
-	var normal_length = texture_size.y
+		texture_height = tex.get_size().y
+
+	var normal_length = texture_height
 	var normal: Vector2 = normal_direction * (normal_length * 0.5)
 	if flip_y:
 		normal *= -1
+	var offset = normal * custom_offset
+	var width_scale = normal * width_multiplier
 
+	# If is first or last point, extend past the normal boundary by 'custom_extends' pixels
 	if first_point:
-		pass
-		#pt -= (delta_normal * texture_size * custom_extends)
-		#pt -= (delta_normal * custom_extends)
+		pt -= (delta_normal * custom_extends)
 	if last_point:
-		pass
-		#pt_next -= (delta_normal * texture_size * custom_extends)
-		#pt_next -= (delta_normal * custom_extends)
+		pt_next += (delta_normal * custom_extends)
 
 	##############################################
 	# QUAD POINT ILLUSTRATION #                  #
@@ -920,15 +924,10 @@ static func build_quad_from_two_points(
 	##############################################
 	##############################################
 
-	var offset = normal * custom_offset
-	var width_scale = normal * width_multiplier
-
 	quad.pt_a = pt + width_scale + offset
 	quad.pt_b = pt - width_scale + offset
 	quad.pt_c = pt_next - width_scale + offset
 	quad.pt_d = pt_next + width_scale + offset
-	quad.flip_texture = flip_x
-	quad.fit_texture = fit_texture
 
 	return quad
 
