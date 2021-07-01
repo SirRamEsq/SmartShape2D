@@ -282,18 +282,18 @@ func bake_collision():
 		var pt_prev = t_points[tess_idx_prev]
 		var width = _get_width_for_tessellated_point(verts, t_points, i)
 		collision_quads.push_back(
-			_build_quad_from_point(
+			build_quad_from_two_points(
 				pt,
 				pt_next,
 				null,
 				null,
-				Vector2(collision_size, collision_size),
+				#Vector2(collision_size, collision_size),
 				width,
 				false,
 				should_flip_edges(),
 				i == 0,
 				i == t_points.size() - 1,
-				collision_width,
+				#collision_width,
 				collision_offset - 1.0,
 				collision_extends,
 				SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH

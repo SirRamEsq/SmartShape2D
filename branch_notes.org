@@ -34,3 +34,4 @@
 - Make one function instead of two
 - Allow passing null for the material
 - Remove wrap_around parameter
+*** build_quad_from_two_points

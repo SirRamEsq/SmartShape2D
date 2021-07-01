@@ -899,11 +899,13 @@ static func build_quad_from_two_points(
 		normal *= -1
 
 	if first_point:
+		pass
 		#pt -= (delta_normal * texture_size * custom_extends)
-		pt -= (delta_normal * custom_extends)
+		#pt -= (delta_normal * custom_extends)
 	if last_point:
+		pass
 		#pt_next -= (delta_normal * texture_size * custom_extends)
-		pt_next -= (delta_normal * custom_extends)
+		#pt_next -= (delta_normal * custom_extends)
 
 	##############################################
 	# QUAD POINT ILLUSTRATION #                  #
