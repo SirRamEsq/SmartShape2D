@@ -1490,6 +1490,12 @@ func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 	return count
 
 
+"""
+This function determines if a corner quad should be generated
+if so, OUTER or INNER?
+	The conditions deg < 0 and flip_edges are used to determine this
+	These conditions works correctly so long as the points are in Clockwise order
+"""
 static func edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector2, flip_edges:bool) -> bool:
 	var generate_corner = SS2D_Quad.CORNER.NONE
 	var ab = pt - pt_prev

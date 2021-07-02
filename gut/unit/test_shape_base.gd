@@ -193,6 +193,25 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var half_width_n = half_width * -1
 	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),Vector2(16,half_width_n),Vector2(16,half_width),variance)
 
+func test_should_edge_generate_corner():
+	# L Shape
+	var pt_prev: Vector2 = Vector2(-16, 00)
+	var pt: Vector2 =      Vector2(000, 00)
+	var pt_next: Vector2 = Vector2(000, 16)
+	var corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, false)
+	assert_eq(corner, SS2D_Quad.CORNER.OUTER)
+	corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, true)
+	assert_eq(corner, SS2D_Quad.CORNER.INNER)
+
+	# V Shape
+	pt_prev = Vector2(-8, -8)
+	pt =      Vector2(00, 00)
+	pt_next = Vector2(-8, 08)
+	corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, false)
+	assert_eq(corner, SS2D_Quad.CORNER.OUTER)
+	corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, true)
+	assert_eq(corner, SS2D_Quad.CORNER.INNER)
+
 func test_build_corner_quad():
 	var pt_prev: Vector2 = Vector2(-16, 00)
 	var pt: Vector2 =      Vector2(000, 00)
