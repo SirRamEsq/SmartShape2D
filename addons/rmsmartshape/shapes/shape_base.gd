@@ -1033,6 +1033,7 @@ func _build_edge_without_material(
 				tess_pt_prev,
 				width,
 				prev_width,
+				flip_edges,
 				generate_corner,
 				null,
 				null,
@@ -1049,12 +1050,13 @@ func _build_edge_without_material(
 	return edge
 
 
-func build_quad_corner(
+static func build_quad_corner(
 	pt_next: Vector2,
 	pt: Vector2,
 	pt_prev: Vector2,
 	pt_width: float,
 	pt_prev_width: float,
+	flip_edges: bool,
 	corner_status: int,
 	texture: Texture,
 	texture_normal: Texture,
@@ -1488,7 +1490,7 @@ func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 	return count
 
 
-func _edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector2) -> bool:
+static func edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector2, flip_edges:bool) -> bool:
 	var generate_corner = SS2D_Quad.CORNER.NONE
 	var ab = pt - pt_prev
 	var bc = pt_next - pt
@@ -1525,7 +1527,7 @@ func _edge_generate_corner(
 	c_scale: float,
 	c_offset: float
 ):
-	var generate_corner = _edge_should_generate_corner(pt_prev, pt, pt_next)
+	var generate_corner = edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
 	if generate_corner == SS2D_Quad.CORNER.NONE:
 		return null
 	var corner_texture = null
@@ -1544,6 +1546,7 @@ func _edge_generate_corner(
 		pt_prev,
 		width,
 		width_prev,
+		flip_edges,
 		generate_corner,
 		corner_texture,
 		corner_texture_normal,

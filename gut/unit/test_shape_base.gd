@@ -83,8 +83,8 @@ func test_get_meta_material_index_mapping_complex_shape():
 	assert_eq(mappings[6].indicies, [6,7,8,9,10,11])
 
 func test_build_edge_with_material_basic_square():
+	# Basic square
 	var verts = [
-		# Basic square
 		Vector2(-10, -10), # 0
 		Vector2(10, -10), # 1
 		Vector2(10, 10), # 2
@@ -192,6 +192,33 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var half_width = width/2.0
 	var half_width_n = half_width * -1
 	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),Vector2(16,half_width_n),Vector2(16,half_width),variance)
+
+func test_build_corner_quad():
+	var pt_prev: Vector2 = Vector2(-16, 00)
+	var pt: Vector2 =      Vector2(000, 00)
+	var pt_next: Vector2 = Vector2(000, 16)
+	var tex: Texture = TEST_TEXTURE
+	var tex_height = tex.get_size().y
+	var tex_normal: Texture = null
+	var width  = 1.0
+	var width_prev  = 1.0
+	var size: Vector2 = Vector2(8,8)
+	var flip_edges: bool = false
+	var custom_scale: float = 0.0
+	var custom_offset: float = 0.0
+	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
+
+	var corner_status = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
+	var q = SS2D_Shape_Base.build_quad_corner(
+		pt_next, pt, pt_prev,
+		width, width_prev,
+		flip_edges,
+		corner_status,
+		tex, tex_normal,
+		size,
+		custom_scale, custom_offset
+	)
+	assert_not_null(q)
 
 func assert_quad_point_eq(gut,q,a,b,d,c,variance):
 	assert_almost_eq(q.pt_a, a, variance, "Test Pt A")
