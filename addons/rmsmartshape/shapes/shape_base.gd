@@ -1118,7 +1118,7 @@ returns the midpoint of the weld
 """
 
 
-func _weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) -> Vector2:
+static func weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) -> Vector2:
 	var midpoint = Vector2(0, 0)
 	# If both quads are not a corner
 	if a.corner == SS2D_Quad.CORNER.NONE and b.corner == SS2D_Quad.CORNER.NONE:
@@ -1173,7 +1173,7 @@ func _weld_quad_array(
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		var mid_point = _weld_quads(this_quad, next_quad, custom_scale)
+		var mid_point = weld_quads(this_quad, next_quad, custom_scale)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
@@ -1190,7 +1190,7 @@ func _weld_quad_array(
 				return
 
 	if weld_first_and_last:
-		_weld_quads(quads.back(), quads[0], 1.0)
+		weld_quads(quads.back(), quads[0], 1.0)
 
 
 func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:

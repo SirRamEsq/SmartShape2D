@@ -158,7 +158,8 @@ func test_build_quad_no_texture(width = use_parameters(width_params)):
 	assert_almost_eq((q.pt_a - q.pt_b).length(), abs(width), 0.01)
 	var half_width = width/2.0
 	var half_width_n = half_width * -1
-	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),Vector2(16,half_width_n),Vector2(16,half_width),variance)
+	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),
+						Vector2(16,half_width),Vector2(16,half_width_n),variance)
 
 func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var pt: Vector2 = Vector2(0,0)
@@ -191,7 +192,7 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	assert_almost_eq((q.pt_a - q.pt_b).length(), abs(width), 0.01)
 	var half_width = width/2.0
 	var half_width_n = half_width * -1
-	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),Vector2(16,half_width_n),Vector2(16,half_width),variance)
+	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),Vector2(16,half_width),Vector2(16,half_width_n),variance)
 
 func test_should_edge_generate_corner():
 	# L Shape
@@ -238,7 +239,7 @@ func test_build_corner_quad():
 		custom_scale, custom_offset
 	)
 	gut.p("Test custom_scale")
-	assert_quad_point_eq(gut,q, Vector2(-4,-4),Vector2(-4,4),Vector2(4,-4),Vector2(4,4),Vector2(0,0))
+	assert_quad_point_eq(gut,q, Vector2(-4,-4),Vector2(-4,4),Vector2(4,4),Vector2(4,-4),Vector2(0,0))
 	q = SS2D_Shape_Base.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width, width_prev,
@@ -248,7 +249,7 @@ func test_build_corner_quad():
 		size,
 		custom_scale*2, custom_offset
 	)
-	assert_quad_point_eq(gut,q, Vector2(-8,-8),Vector2(-8,8),Vector2(8,-8),Vector2(8,8),Vector2(0,0))
+	assert_quad_point_eq(gut,q, Vector2(-8,-8),Vector2(-8,8),Vector2(8,8),Vector2(8,-8),Vector2(0,0))
 
 	gut.p("Test width")
 	q = SS2D_Shape_Base.build_quad_corner(
@@ -260,7 +261,7 @@ func test_build_corner_quad():
 		size,
 		custom_scale, custom_offset
 	)
-	assert_quad_point_eq(gut,q, Vector2(-8,-4),Vector2(-8,4),Vector2(8,-4),Vector2(8,4),Vector2(0,0))
+	assert_quad_point_eq(gut,q, Vector2(-8,-4),Vector2(-8,4),Vector2(8,4),Vector2(8,-4),Vector2(0,0))
 
 	gut.p("Test width + custom_scale")
 	q = SS2D_Shape_Base.build_quad_corner(
@@ -272,7 +273,7 @@ func test_build_corner_quad():
 		size,
 		custom_scale*2, custom_offset
 	)
-	assert_quad_point_eq(gut,q, Vector2(-16,-16),Vector2(-16,16),Vector2(16,-16),Vector2(16,16),Vector2(0,0))
+	assert_quad_point_eq(gut,q, Vector2(-16,-16),Vector2(-16,16),Vector2(16,16),Vector2(16,-16),Vector2(0,0))
 	gut.p("Test width_prev")
 	q = SS2D_Shape_Base.build_quad_corner(
 		pt_next, pt, pt_prev,
@@ -283,7 +284,7 @@ func test_build_corner_quad():
 		size,
 		custom_scale, custom_offset
 	)
-	assert_quad_point_eq(gut,q, Vector2(-4,-8),Vector2(-4,8),Vector2(4,-8),Vector2(4,8),Vector2(0,0))
+	assert_quad_point_eq(gut,q, Vector2(-4,-8),Vector2(-4,8),Vector2(4,8),Vector2(4,-8),Vector2(0,0))
 
 	gut.p("Test custom_offset")
 	gut.p("For this shape, shoud offset up and to the right (postivie x, negative y)")
@@ -300,14 +301,24 @@ func test_build_corner_quad():
 	var extents = size / 2.0
 	var offset = custom_offset * extents * (Vector2(1,0).normalized() + Vector2(0,-1).normalized())
 	assert_quad_point_eq(gut,q, Vector2(-4,-4)+offset,Vector2(-4,4)+offset,
-								Vector2(4,-4)+offset,Vector2(4,4)+offset,
+								Vector2(4,4)+offset,Vector2(4,-4)+offset,
 								Vector2(0,0))
 
-func assert_quad_point_eq(gut,q,a,b,d,c,variance):
+func assert_quad_point_eq(gut,q,a,b,c,d,variance=Vector2(0,0)):
 	assert_almost_eq(q.pt_a, a, variance, "Test Pt A")
 	assert_almost_eq(q.pt_b, b, variance, "Test Pt B")
-	assert_almost_eq(q.pt_d, d, variance, "Test Pt D")
 	assert_almost_eq(q.pt_c, c, variance, "Test Pt C")
+	assert_almost_eq(q.pt_d, d, variance, "Test Pt D")
+
+func test_weld_quads():
+	var left = SS2D_Quad.new(Vector2(-4,-4),Vector2(-4,4),Vector2(4,4),Vector2(4,-4), null, null, false)
+	var right = SS2D_Quad.new(Vector2(-8,-8),Vector2(-8,8),Vector2(8,8),Vector2(8,-8), null, null, false)
+	var custom_scale:float=1.0
+	SS2D_Shape_Base.weld_quads(left, right, custom_scale)
+	var pt_top = (left.pt_d + right.pt_a)/2.0
+	var pt_bottom = (left.pt_c + right.pt_b)/2.0
+	assert_quad_point_eq(gut,left, left.pt_a, left.pt_b, pt_bottom, pt_top)
+	assert_quad_point_eq(gut,right, pt_top, pt_bottom, right.pt_c, right.pt_d)
 
 func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4)->SS2D_Material_Shape:
 	var edge_materials = []

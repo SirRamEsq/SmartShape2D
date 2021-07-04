@@ -302,7 +302,7 @@ func bake_collision():
 	_weld_quad_array(collision_quads, 1.0, false)
 	var first_quad = collision_quads[0]
 	var last_quad = collision_quads.back()
-	_weld_quads(last_quad, first_quad, 1.0)
+	weld_quads(last_quad, first_quad, 1.0)
 	var points: PoolVector2Array = PoolVector2Array()
 	# PT A
 	for quad in collision_quads:
