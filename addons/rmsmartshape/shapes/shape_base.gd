@@ -1049,7 +1049,13 @@ func _build_edge_without_material(
 
 	return edge
 
-
+"""
+Will build a corner quad
+pt is the center of this corner quad
+width will scale the quad in line with the next point (one dimension)
+prev_width will scale the quad in line with the prev point (hte other dimension)
+custom_scale will scale the quad in both dimensions
+"""
 static func build_quad_corner(
 	pt_next: Vector2,
 	pt: Vector2,
@@ -1072,10 +1078,9 @@ static func build_quad_corner(
 	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
 	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
 	var width = (pt_prev_width + pt_width) / 2.0
-	var center = pt + (delta_12.normalized() * extents)
 
-	var offset_12 = normal_12 * custom_scale * pt_width * extents
-	var offset_23 = normal_23 * custom_scale * pt_prev_width * extents
+	var offset_12 = normal_12 * custom_scale * pt_prev_width * extents
+	var offset_23 = normal_23 * custom_scale * pt_width * extents
 	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * extents
 	if flip_edges:
 		offset_12 *= -1

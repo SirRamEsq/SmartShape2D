@@ -223,7 +223,7 @@ func test_build_corner_quad():
 	var width_prev  = 1.0
 	var size: Vector2 = Vector2(8,8)
 	var flip_edges: bool = false
-	var custom_scale: float = 0.0
+	var custom_scale: float = 1.0
 	var custom_offset: float = 0.0
 	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 
@@ -237,7 +237,71 @@ func test_build_corner_quad():
 		size,
 		custom_scale, custom_offset
 	)
-	assert_not_null(q)
+	gut.p("Test custom_scale")
+	assert_quad_point_eq(gut,q, Vector2(-4,-4),Vector2(-4,4),Vector2(4,-4),Vector2(4,4),Vector2(0,0))
+	q = SS2D_Shape_Base.build_quad_corner(
+		pt_next, pt, pt_prev,
+		width, width_prev,
+		flip_edges,
+		corner_status,
+		tex, tex_normal,
+		size,
+		custom_scale*2, custom_offset
+	)
+	assert_quad_point_eq(gut,q, Vector2(-8,-8),Vector2(-8,8),Vector2(8,-8),Vector2(8,8),Vector2(0,0))
+
+	gut.p("Test width")
+	q = SS2D_Shape_Base.build_quad_corner(
+		pt_next, pt, pt_prev,
+		width*2, width_prev,
+		flip_edges,
+		corner_status,
+		tex, tex_normal,
+		size,
+		custom_scale, custom_offset
+	)
+	assert_quad_point_eq(gut,q, Vector2(-8,-4),Vector2(-8,4),Vector2(8,-4),Vector2(8,4),Vector2(0,0))
+
+	gut.p("Test width + custom_scale")
+	q = SS2D_Shape_Base.build_quad_corner(
+		pt_next, pt, pt_prev,
+		width*2, width_prev*2,
+		flip_edges,
+		corner_status,
+		tex, tex_normal,
+		size,
+		custom_scale*2, custom_offset
+	)
+	assert_quad_point_eq(gut,q, Vector2(-16,-16),Vector2(-16,16),Vector2(16,-16),Vector2(16,16),Vector2(0,0))
+	gut.p("Test width_prev")
+	q = SS2D_Shape_Base.build_quad_corner(
+		pt_next, pt, pt_prev,
+		width, width_prev*2,
+		flip_edges,
+		corner_status,
+		tex, tex_normal,
+		size,
+		custom_scale, custom_offset
+	)
+	assert_quad_point_eq(gut,q, Vector2(-4,-8),Vector2(-4,8),Vector2(4,-8),Vector2(4,8),Vector2(0,0))
+
+	gut.p("Test custom_offset")
+	gut.p("For this shape, shoud offset up and to the right (postivie x, negative y)")
+	custom_offset = 1.0
+	q = SS2D_Shape_Base.build_quad_corner(
+		pt_next, pt, pt_prev,
+		width, width_prev,
+		flip_edges,
+		corner_status,
+		tex, tex_normal,
+		size,
+		custom_scale, custom_offset
+	)
+	var extents = size / 2.0
+	var offset = custom_offset * extents * (Vector2(1,0).normalized() + Vector2(0,-1).normalized())
+	assert_quad_point_eq(gut,q, Vector2(-4,-4)+offset,Vector2(-4,4)+offset,
+								Vector2(4,-4)+offset,Vector2(4,4)+offset,
+								Vector2(0,0))
 
 func assert_quad_point_eq(gut,q,a,b,d,c,variance):
 	assert_almost_eq(q.pt_a, a, variance, "Test Pt A")
