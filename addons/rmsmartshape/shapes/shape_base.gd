@@ -1609,7 +1609,7 @@ Will constructe an SS2D_Edge from the passed parameters
 index_map must be a SS2D_IndexMap with a SS2D_Material_Edge_Metadata for an object
 the indicies used by index_map should match up with the get_verticies() indicies
 
-TODO support null material
+TODO support null indexMap.object (meta mat)
 TODO remove wrap_around param
 TODO Add params from _build_edge_without_material
 """
@@ -1617,14 +1617,21 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 	var edge = SS2D_Edge.new()
 	if not index_map.is_valid():
 		return edge
-	var edge_material_meta: SS2D_Material_Edge_Metadata = index_map.object
-	if edge_material_meta == null:
-		return edge
-	if not edge_material_meta.render:
-		return edge
-	var edge_material: SS2D_Material_Edge = edge_material_meta.edge_material
-	if edge_material == null:
-		return edge
+	var c_scale = 1.0
+	var c_extends = 0.0
+
+	var edge_material_meta: SS2D_Material_Edge_Metadata = null
+	var edge_material: SS2D_Material_Edge = null
+	if index_map.object != null:
+		edge_material_meta = index_map.object
+		if edge_material_meta == null:
+			return edge
+		if not edge_material_meta.render:
+			return edge
+		edge_material = edge_material_meta.edge_material
+		if edge_material == null:
+			return edge
+		c_offset += edge_material_meta.offset
 
 	edge.z_index = edge_material_meta.z_index
 	edge.z_as_relative = edge_material_meta.z_as_relative
@@ -1642,9 +1649,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
 
-	var c_scale = 1.0
-	c_offset += edge_material_meta.offset
-	var c_extends = 0.0
 	var i = 0
 	while i < tess_point_count:
 		var tess_idx = (first_idx_t + i) % verts_t.size()
@@ -1683,10 +1687,11 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 
 		var tex = null
 		var tex_normal = null
-
-		if index_map != null:
+		var fitmode = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
+		if edge_material != null:
 			tex = edge_material.get_texture(texture_idx)
 			tex_normal = edge_material.get_texture_normal(texture_idx)
+			fitmode = edge_material.fit_mode
 			# Exit if we have an edge material defined but no texture to render
 			if tex == null:
 				i += next_point_delta
@@ -1705,7 +1710,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 			is_last_point,
 			c_offset,
 			c_extends,
-			edge_material.fit_mode
+			fitmode
 		)
 		var new_quads = []
 		new_quads.push_back(new_quad)
@@ -1779,6 +1784,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 
 		# Final point for closed shapes fix
 		# TODO, Figure out if this is needed
+		# Corner quads aren't always correctly when the corner is between final and first pt
 		#if is_last_point and index_map.first_connected_to_final:
 			#var idx_mid = verts_t.size() - 1
 			#var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
