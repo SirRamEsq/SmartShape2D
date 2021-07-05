@@ -345,6 +345,7 @@ func get_tessellated_points() -> PoolVector2Array:
 		return PoolVector2Array()
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
+	# TODO cache this result
 	var points = _curve.tessellate(tessellation_stages, tessellation_tolerence)
 	points[0] = _curve.get_point_position(0)
 	points[points.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
@@ -1428,9 +1429,13 @@ func get_ratio_from_tessellated_point_to_vertex(points: Array, t_points: Array, 
 	return result
 
 
-func get_vertex_idx_from_tessellated_point(points: Array, t_points: Array, t_point_idx: int) -> int:
-	if t_point_idx == 0:
+static func get_vertex_idx_from_tessellated_point(points: Array, t_points: Array, t_point_idx: int) -> int:
+	# if idx is 0 or negative
+	if t_point_idx < 1:
 		return 0
+	if t_point_idx >= t_points.size():
+		push_error("get_vertex_idx_from_tessellated_point:: Out of Bounds point_idx; size is %s; idx is %s" % [t_points.size(), t_point_idx])
+		return points.size() - 1
 
 	var vertex_idx = -1
 	for i in range(0, t_point_idx + 1, 1):
@@ -1441,9 +1446,13 @@ func get_vertex_idx_from_tessellated_point(points: Array, t_points: Array, t_poi
 	return vertex_idx
 
 
-func get_tessellated_idx_from_point(points: Array, t_points: Array, point_idx: int) -> int:
-	if point_idx == 0:
+static func get_tessellated_idx_from_point(points: Array, t_points: Array, point_idx: int) -> int:
+	# if idx is 0 or negative
+	if point_idx < 1:
 		return 0
+	if point_idx >= points.size():
+		push_error("get_tessellated_idx_from_point:: Out of Bounds point_idx; size is %s; idx is %s" % [points.size(), point_idx])
+		return t_points.size() - 1
 
 	var vertex_idx = -1
 	var tess_idx = 0
@@ -1475,10 +1484,11 @@ func import_from_legacy(legacy: RMSmartShape2D):
 ###################
 # EDGE GENERATION #
 ###################
+"""
+Get Number of TessPoints from the start and end indicies of the index_map parameter
+TODO Test this function
+"""
 func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
-	"""
-	Get Number of TessPoints from the start and end indicies of the index_map parameter
-	"""
 	var count: int = 0
 	var points = get_vertices()
 	var t_points = get_tessellated_points()
@@ -1568,6 +1578,10 @@ func _edge_generate_corner(
 	return corner_quad
 
 
+"""
+Get the next point that doesn't share the same position with the current point
+In other words, get the next point in the array with a unique position
+"""
 func _get_next_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	var next_idx = _get_next_point_index(idx, pts, wrap_around)
 	if next_idx == idx:
@@ -1620,10 +1634,10 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 	var verts = get_vertices()
 	var first_idx = index_map.indicies[0]
 	var last_idx = index_map.indicies.back()
+	var first_idx_t = get_tessellated_idx_from_point(verts, verts_t, first_idx)
+	var last_idx_t = get_tessellated_idx_from_point(verts, verts_t, last_idx)
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
-	var first_t_idx = get_tessellated_idx_from_point(verts, verts_t, first_idx)
-	var last_t_idx = get_tessellated_idx_from_point(verts, verts_t, last_idx)
 
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
@@ -1633,9 +1647,14 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 	var c_extends = 0.0
 	var i = 0
 	while i < tess_point_count:
-		var tess_idx = (first_t_idx + i) % verts_t.size()
+		var tess_idx = (first_idx_t + i) % verts_t.size()
 		var tess_idx_next = _get_next_unique_point_idx(tess_idx, verts_t, wrap_around)
 		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, verts_t, wrap_around)
+
+		# set next_point_delta
+		# next_point_delta is the number of tess_pts from
+		# the current tess_pt to the next unique tess_pt
+		# unique meaning it has a different position from the current tess_pt
 		var next_point_delta = 0
 		for j in range(verts_t.size()):
 			if ((tess_idx + j) % verts_t.size()) == tess_idx_next:
@@ -1659,27 +1678,31 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 		var width = _get_width_for_tessellated_point(verts, verts_t, tess_idx)
 		var is_first_point = vert_idx == first_idx
 		var is_last_point = vert_idx == last_idx - 1
-		var is_first_tess_point = tess_idx == first_t_idx
-		var is_last_tess_point = tess_idx == last_t_idx - 1
+		var is_first_tess_point = tess_idx == first_idx_t
+		var is_last_tess_point = tess_idx == last_idx_t - 1
 
-		var tex = edge_material.get_texture(texture_idx)
-		var tex_normal = edge_material.get_texture_normal(texture_idx)
-		if tex == null:
-			i += next_point_delta
-			continue
+		var tex = null
+		var tex_normal = null
+
+		if index_map != null:
+			tex = edge_material.get_texture(texture_idx)
+			tex_normal = edge_material.get_texture_normal(texture_idx)
+			# Exit if we have an edge material defined but no texture to render
+			if tex == null:
+				i += next_point_delta
+				continue
+
 		var tex_size = tex.get_size()
 		var new_quad = build_quad_from_two_points(
 			pt,
 			pt_next,
 			tex,
 			tex_normal,
-			#tex_size,
-			width,
+			width * c_scale,
 			flip_x,
 			should_flip_edges(),
 			is_first_point,
 			is_last_point,
-			#c_scale,
 			c_offset,
 			c_extends,
 			edge_material.fit_mode
@@ -1688,7 +1711,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 		new_quads.push_back(new_quad)
 
 		# Corner Quad
-		if tess_idx != first_t_idx:
+		if tess_idx != first_idx_t:
 			var prev_width = _get_width_for_tessellated_point(verts, verts_t, tess_idx_prev)
 			var q = _edge_generate_corner(
 				pt_prev,
@@ -1705,15 +1728,12 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 				new_quads.push_front(q)
 
 		# Taper Quad
-		if is_first_tess_point or is_last_tess_point:
-			var taper_texture = null
-			var taper_texture_normal = null
-			if is_first_tess_point:
-				taper_texture = edge_material.get_texture_taper_left(texture_idx)
-				taper_texture_normal = edge_material.get_texture_normal_taper_left(texture_idx)
-			elif is_last_tess_point:
-				taper_texture = edge_material.get_texture_taper_right(texture_idx)
-				taper_texture_normal = edge_material.get_texture_normal_taper_right(texture_idx)
+		# Bear in mind, a point can be both first AND last
+		# Consider an edge that consists of two points (one edge)
+		# This first point is used to generate the quad; it is both first and last
+		if is_first_tess_point:
+			var taper_texture = edge_material.get_texture_taper_left(texture_idx)
+			var taper_texture_normal = edge_material.get_texture_normal_taper_left(texture_idx)
 			if taper_texture != null:
 				var taper_size = taper_texture.get_size()
 				var fit = abs(taper_size.x) <= new_quad.get_length_average()
@@ -1725,18 +1745,33 @@ func _build_edge_with_material(index_map: SS2D_IndexMap, c_offset: float, wrap_a
 					var delta_normal = (taper_quad.pt_d - taper_quad.pt_a).normalized()
 					var offset = delta_normal * taper_size
 
-					if is_first_tess_point:
-						taper_quad.pt_d = taper_quad.pt_a + offset
-						taper_quad.pt_c = taper_quad.pt_b + offset
-						new_quad.pt_a = taper_quad.pt_d
-						new_quad.pt_b = taper_quad.pt_c
-						new_quads.push_front(taper_quad)
-					elif is_last_tess_point:
-						taper_quad.pt_a = taper_quad.pt_d - offset
-						taper_quad.pt_b = taper_quad.pt_c - offset
-						new_quad.pt_d = taper_quad.pt_a
-						new_quad.pt_c = taper_quad.pt_b
-						new_quads.push_back(taper_quad)
+					taper_quad.pt_d = taper_quad.pt_a + offset
+					taper_quad.pt_c = taper_quad.pt_b + offset
+					new_quad.pt_a = taper_quad.pt_d
+					new_quad.pt_b = taper_quad.pt_c
+					new_quads.push_front(taper_quad)
+				# If a new taper quad doesn't fit, re-texture the new_quad
+				else:
+					new_quad.texture = taper_texture
+					new_quad.texture_normal = taper_texture_normal
+		if is_last_tess_point:
+			var taper_texture = edge_material.get_texture_taper_right(texture_idx)
+			var taper_texture_normal = edge_material.get_texture_normal_taper_right(texture_idx)
+			if taper_texture != null:
+				var taper_size = taper_texture.get_size()
+				var fit = abs(taper_size.x) <= new_quad.get_length_average()
+				if fit:
+					var taper_quad = new_quad.duplicate()
+					taper_quad.corner = 0
+					taper_quad.texture = taper_texture
+					taper_quad.texture_normal = taper_texture_normal
+					var delta_normal = (taper_quad.pt_d - taper_quad.pt_a).normalized()
+					var offset = delta_normal * taper_size
+					taper_quad.pt_a = taper_quad.pt_d - offset
+					taper_quad.pt_b = taper_quad.pt_c - offset
+					new_quad.pt_d = taper_quad.pt_a
+					new_quad.pt_c = taper_quad.pt_b
+					new_quads.push_back(taper_quad)
 				# If a new taper quad doesn't fit, re-texture the new_quad
 				else:
 					new_quad.texture = taper_texture

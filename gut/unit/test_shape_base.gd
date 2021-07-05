@@ -5,6 +5,40 @@ var n_left = Vector2(-1, 0)
 var n_down = Vector2(0, 1)
 var n_up = Vector2(0, -1)
 
+func test_tessellated_idx_and_point_idx():
+	var verts = [
+		Vector2(-10, -10), # 0
+		Vector2(10, -10), # 1
+		Vector2(10, 10), # 2
+		Vector2(-10, 10) # 3
+	]
+	var t_verts = [
+		Vector2(-10, -10), # 0 (0)
+		Vector2(0, -11), # 1 (0)
+		Vector2(10, -10), # 2 (1)
+		Vector2(12, 0), # 3 (1)
+		Vector2(10, 10), # 4 (2)
+		Vector2(0, 12), # 5 (2)
+		Vector2(-10, 10) # 6 (3)
+	]
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 0), 0)
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 1), 2)
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 2), 4)
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 3), 6)
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 400), 6)
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, -1), 0)
+	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, -100), 0)
+
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 0), 0)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 1), 0)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 2), 1)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 3), 1)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 4), 2)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 5), 2)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 6), 3)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 600), 3)
+	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, -600), 0)
+
 func test_get_meta_material_index_mapping_simple_squareish_shape():
 	var verts = [
 		Vector2(-10, -10), # 0
