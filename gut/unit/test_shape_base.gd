@@ -5,6 +5,18 @@ var n_left = Vector2(-1, 0)
 var n_down = Vector2(0, 1)
 var n_up = Vector2(0, -1)
 
+##############################################
+# QUAD POINT ILLUSTRATION #                  #
+##############################################
+#                WIDTH                       #
+#           <-------------->                 #
+#      pt_a -> O--------O <- pt_d  ▲         #
+#              |        |          |         #
+#              |   pt   |          | HEIGHT  #
+#              |        |          |         #
+#      pt_b -> O--------O <- pt_c  ▼         #
+##############################################
+
 func test_tessellated_idx_and_point_idx():
 	var verts = [
 		Vector2(-10, -10), # 0
@@ -116,7 +128,8 @@ func test_get_meta_material_index_mapping_complex_shape():
 	assert_eq(mappings[5].indicies, [5,6])
 	assert_eq(mappings[6].indicies, [6,7,8,9,10,11])
 
-func test_build_edge_with_material_basic_square():
+var offset_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
+func test_build_edge_with_material_basic_square(offset = use_parameters(offset_params)):
 	# Basic square
 	var verts = [
 		Vector2(-10, -10), # 0
@@ -127,7 +140,9 @@ func test_build_edge_with_material_basic_square():
 	var point_array = SS2D_Point_Array.new()
 	for v in verts:
 		point_array.add_point(v)
-	var shape_material = create_shape_material_with_equal_normal_ranges(4)
+	var tex = TEST_TEXTURE
+	var tex_size = tex.get_size()
+	var shape_material = create_shape_material_with_equal_normal_ranges(4, tex)
 	var shape = SS2D_Shape_Base.new()
 	add_child_autofree(shape)
 	shape._is_instantiable = true
@@ -136,7 +151,6 @@ func test_build_edge_with_material_basic_square():
 
 	var index_maps = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts)
 	var edges = []
-	var offset = 1.0
 
 	assert_eq(index_maps.size(), 3)
 	for index_map in index_maps:
@@ -144,24 +158,20 @@ func test_build_edge_with_material_basic_square():
 		assert_true(index_map.is_valid())
 
 	assert_eq(edges.size(), 3)
+	assert_eq(edges[0].quads[0].pt_a.y, verts[0].y - tex_size.y/2.0 - (offset*tex_size.y)/2.0, "Ensure quad has correct offset")
+	assert_eq(edges[1].quads[0].pt_a.x, verts[1].x + tex_size.x/2.0 + (offset*tex_size.x)/2.0, "Ensure quad has correct offset")
+	assert_eq(edges[2].quads[0].pt_a.y, verts[2].y + tex_size.y/2.0 + (offset*tex_size.y)/2.0, "Ensure quad has correct offset")
+	assert_eq(abs(edges[0].quads[0].pt_a.y - edges[0].quads[0].pt_b.y), tex_size.y, "Ensure quad has correct width")
+	assert_eq(abs(edges[1].quads[0].pt_a.x - edges[1].quads[0].pt_b.x), tex_size.y, "Ensure quad has correct width")
+	assert_eq(abs(edges[2].quads[0].pt_a.y - edges[2].quads[0].pt_b.y), tex_size.y, "Ensure quad has correct width")
 	var i = 0
 	for edge in edges:
 		assert_eq(edge.quads.size(), 1)
 		assert_eq(edge.first_point_key, point_array.get_point_key_at_index(i))
 		assert_eq(edge.last_point_key, point_array.get_point_key_at_index(i+1))
+		gut.p(edge.quads)
 		i += 1
 
-##############################################
-# QUAD POINT ILLUSTRATION #                  #
-##############################################
-#                WIDTH                       #
-#           <-------------->                 #
-#      pt_a -> O--------O <- pt_d  ▲         #
-#              |        |          |         #
-#              |   pt   |          | HEIGHT  #
-#              |        |          |         #
-#      pt_b -> O--------O <- pt_c  ▼         #
-##############################################
 var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
 func test_build_quad_no_texture(width = use_parameters(width_params)):
 	var pt: Vector2 = Vector2(0,0)
@@ -354,13 +364,13 @@ func test_weld_quads():
 	assert_quad_point_eq(gut,left, left.pt_a, left.pt_b, pt_bottom, pt_top)
 	assert_quad_point_eq(gut,right, pt_top, pt_bottom, right.pt_c, right.pt_d)
 
-func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4)->SS2D_Material_Shape:
+func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, tex:Texture=TEST_TEXTURE)->SS2D_Material_Shape:
 	var edge_materials = []
 	var edge_materials_meta = []
 	for i in range(0, edge_materials_count, 1):
 		var edge_mat = SS2D_Material_Edge.new()
 		edge_materials.push_back(edge_mat)
-		edge_mat.textures = [TEST_TEXTURE]
+		edge_mat.textures = [tex]
 
 		var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
 		edge_materials_meta.push_back(edge_mat_meta)
