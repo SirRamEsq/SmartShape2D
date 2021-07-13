@@ -154,7 +154,7 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 
 	assert_eq(index_maps.size(), 3)
 	for index_map in index_maps:
-		edges.push_back(shape._build_edge_with_material(index_map, offset, false))
+		edges.push_back(shape._build_edge_with_material(index_map, offset, false, 0))
 		assert_true(index_map.is_valid())
 
 	assert_eq(edges.size(), 3)
@@ -222,7 +222,7 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var q = SS2D_Shape_Base.build_quad_from_two_points(
 		pt, pt_next,
 		tex, tex_normal,
-		width_scale,
+		width_scale * tex_height,
 		flip_x, flip_y,
 		first_point, last_point,
 		custom_offset, custom_extends,

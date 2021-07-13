@@ -262,56 +262,35 @@ func _add_point_update():
 	._add_point_update()
 
 
-func bake_collision():
-	if not has_node(collision_polygon_node_path) or not is_shape_closed():
-		return
-	var polygon = get_node(collision_polygon_node_path)
+func generate_collision_points():
+	var points: PoolVector2Array = PoolVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
 	var t_points = get_tessellated_points()
 	if t_points.size() < 2:
-		return
-	var collision_quads = []
-	for i in range(0, t_points.size() - 1, 1):
-		var tess_idx = i
-		var tess_idx_next = _get_next_point_index(i, t_points, true)
-		var tess_idx_prev = _get_previous_point_index(i, t_points, true)
-		var pt = t_points[tess_idx]
-		var pt_next = t_points[tess_idx_next]
-		var pt_prev = t_points[tess_idx_prev]
-		var width = _get_width_for_tessellated_point(verts, t_points, i)
-		collision_quads.push_back(
-			build_quad_from_two_points(
-				pt,
-				pt_next,
-				null,
-				null,
-				#Vector2(collision_size, collision_size),
-				width,
-				false,
-				should_flip_edges(),
-				i == 0,
-				i == t_points.size() - 1,
-				#collision_width,
-				collision_offset - 1.0,
-				collision_extends,
-				SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
-			)
-		)
-	_weld_quad_array(collision_quads, 1.0, false)
-	var first_quad = collision_quads[0]
-	var last_quad = collision_quads.back()
+		return points
+	var indicies = []
+	for i in range(verts.size()):
+		indicies.push_back(i)
+	var edge_data = SS2D_IndexMap.new(indicies, null)
+	var edge = _build_edge_with_material(
+		# size of 0, has no use in a closed shape
+		edge_data, collision_offset - 1.0, false, 1
+	)
+	_weld_quad_array(edge.quads, 1.0, false)
+	var first_quad = edge.quads[0]
+	var last_quad = edge.quads.back()
 	weld_quads(last_quad, first_quad, 1.0)
-	var points: PoolVector2Array = PoolVector2Array()
-	# PT A
-	for quad in collision_quads:
-		points.push_back(
-			polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
-		)
-
-	polygon.polygon = points
-
+	if not edge.quads.empty():
+		for quad in edge.quads:
+			if quad.corner == SS2D_Quad.CORNER.NONE:
+				points.push_back(quad.pt_a)
+			elif quad.corner == SS2D_Quad.CORNER.OUTER:
+				points.push_back(quad.pt_d)
+			elif quad.corner == SS2D_Quad.CORNER.INNER:
+				pass
+	return points
 
 func _on_dirty_update():
 	if _dirty:
