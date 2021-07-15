@@ -10,6 +10,16 @@ var pt_b: Vector2
 var pt_c: Vector2
 var pt_d: Vector2
 
+var tg_a : Vector2
+var tg_b : Vector2
+var tg_c : Vector2
+var tg_d : Vector2
+
+var bn_a : Vector2
+var bn_b : Vector2
+var bn_c : Vector2
+var bn_d : Vector2
+
 var texture: Texture = null
 var texture_normal: Texture = null
 var color: Color = Color(1.0, 1.0, 1.0, 1.0)
@@ -60,6 +70,16 @@ func duplicate() -> SS2D_Quad:
 	q.corner = corner
 	return q
 
+func update_tangents():
+	tg_a = (pt_d-pt_a).normalized()*0.5 + Vector2.ONE*0.5
+	tg_b = (pt_c-pt_b).normalized()*0.5 + Vector2.ONE*0.5
+	tg_c = tg_b
+	tg_d = tg_a
+	
+	bn_a = (pt_b - pt_a).normalized()*0.5 + Vector2.ONE*0.5
+	bn_b = bn_a
+	bn_c = (pt_c - pt_d).normalized()*0.5 + Vector2.ONE*0.5
+	bn_d = bn_c
 
 func _init(
 	a: Vector2 = Vector2.ZERO,
@@ -74,6 +94,7 @@ func _init(
 	pt_b = b
 	pt_c = c
 	pt_d = d
+	
 	texture = t
 	texture_normal = tn
 	flip_texture = f
