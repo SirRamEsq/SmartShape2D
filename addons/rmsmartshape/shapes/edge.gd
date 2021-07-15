@@ -106,34 +106,35 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 			uv_c = uv_d
 			uv_d = t
 
+		q.update_tangents()
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(q.color)
+		st.add_color(Color(q.tg_a.x, q.tg_a.y, q.bn_a.x, q.bn_a.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
 		_add_uv_to_surface_tool(st, uv_b)
-		st.add_color(q.color)
+		st.add_color(Color(q.tg_b.x, q.tg_b.y, q.bn_b.x, q.bn_b.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(q.color)
+		st.add_color(Color(q.tg_c.x, q.tg_c.y, q.bn_c.x, q.bn_c.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(q.color)
+		st.add_color(Color(q.tg_a.x, q.tg_a.y, q.bn_a.x, q.bn_a.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(q.color)
+		st.add_color(Color(q.tg_c.x, q.tg_c.y, q.bn_c.x, q.bn_c.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
 		_add_uv_to_surface_tool(st, uv_d)
-		st.add_color(q.color)
+		st.add_color(Color(q.tg_d.x, q.tg_d.y, q.bn_d.x, q.bn_d.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
 
 		length_elapsed += section_length
