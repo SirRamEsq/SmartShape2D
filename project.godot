@@ -47,7 +47,7 @@ _global_script_classes=[ {
 "base": "Reference",
 "class": "SS2D_IndexMap",
 "language": "GDScript",
-"path": "res://addons/rmsmartshape/shapes/meta_mat_to_idxs.gd"
+"path": "res://addons/rmsmartshape/shapes/index_map.gd"
 }, {
 "base": "Resource",
 "class": "SS2D_Material_Edge",
@@ -181,7 +181,7 @@ config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/gut/plugin.cfg", "res://addons/rmsmartshape/plugin.cfg" )
+enabled=PoolStringArray( "res://addons/rmsmartshape/plugin.cfg" )
 
 [physics]
 

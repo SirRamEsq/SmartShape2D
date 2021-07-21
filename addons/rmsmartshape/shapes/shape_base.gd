@@ -1075,6 +1075,17 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 		return edges
 
 	var index_maps = get_meta_material_index_mapping(s_mat, verts)
+	var overrides = get_meta_material_index_mapping_for_overrides(s_mat, _points)
+	for override in overrides:
+		var old_to_new_imaps = {}
+		for index_map in index_maps:
+			var new_imaps = index_map.remove_edges(override.indicies)
+			old_to_new_imaps[index_map] = new_imaps
+		for k in old_to_new_imaps:
+			index_maps.erase(k)
+			for new_imap in old_to_new_imaps[k]:
+				index_maps.push_back(new_imap)
+
 	# Might be able to introduce threading here
 	# One thread per index_map? with max of 8/16?
 	for index_map in index_maps:
@@ -1084,34 +1095,22 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 	return edges
 
 """
-Will return an array of SS2D_IndexMap from the current set of points
-TODO Write Tests for this
-TODO Try to break this function out and make it static / have no dependencies
-TODO Move Material override logic out of here
-	- Have a method to create the meta_material mappings (this one)
-	- Have a method to create the _material override mappings (a new one)
-	- Have a method to merge mm2idx classes
+Will return an array of SS2D_IndexMaps
+Each index map will map a set of indicies to a meta_material
 """
-
-
-func get_meta_material_to_indicies_for_overrides(
-	s_material: SS2D_Material_Shape, overrides: Array, wrap_around: bool
+static func get_meta_material_index_mapping_for_overrides(
+	s_material: SS2D_Material_Shape, pa:SS2D_Point_Array
 ) -> Array:
-	var mappings = {}
-	var unique_meta_materials = []
-	# Get unique meta materials
-	#for meta_material in overrides.values():
-		#if not unique_meta_materials.has(meta_material):
-			#unique_meta_materials.push_back(meta_material)
-	## Create a mapping for each unique meta material
-	#for mm in unique_meta_materials:
-		#var mapping = SS2D_IndexMap.new([], mm)
-		#mappings[mm] = mapping
-	## Add index array(s) to each mapping
-	#for indicies in overrides:
-		#var mat = overrides[indicies]
-		#mappings[mm].indicies.merge_arrays(indicies)
-	return mappings.values()
+	var mappings = []
+	var overrides = pa.get_material_overrides()
+	for key_tuple in overrides:
+		var indicies = [pa.get_point_index(key_tuple[0]), pa.get_point_index(key_tuple[1])]
+		indicies = sort_by_int_ascending(indicies)
+		var m = pa.get_material_override(key_tuple)
+		var new_mapping = SS2D_IndexMap.new(indicies, m)
+		mappings.push_back(new_mapping)
+
+	return mappings
 
 
 """
@@ -1153,28 +1152,6 @@ static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, ver
 
 	return final_edges
 
-static func get_meta_material_to_indicies2(s_material: SS2D_Material_Shape, verts: Array) -> Array:
-	var final_edges: Array = []
-	var edge_building: Dictionary = {}
-
-	for idx in range(0, verts.size() - 1, 1):
-		var idx_next = _get_next_point_index(idx, verts)
-		var pt = verts[idx]
-		var pt_next = verts[idx_next]
-		var delta = pt_next - pt
-		var delta_normal = delta.normalized()
-		var normal = Vector2(delta.y, -delta.x).normalized()
-		var edge_meta_materials: Array = s_material.get_edge_meta_materials(normal)
-		for e in edge_meta_materials:
-			# Is exsiting, append
-			if final_edges.has(e):
-				final_edges[e].indicies.push_back(idx_next)
-			# Isn't existing, make a new mapping
-			else:
-				final_edges[e] = SS2D_IndexMap.new([idx, idx_next], e)
-
-	return final_edges
-
 ########
 # MISC #
 ########
@@ -1201,6 +1178,10 @@ func get_collision_polygon_node() -> Node:
 
 static func sort_by_z_index(a: Array) -> Array:
 	a.sort_custom(SS2D_Common_Functions, "sort_z")
+	return a
+
+static func sort_by_int_ascending(a: Array) -> Array:
+	a.sort_custom(SS2D_Common_Functions, "sort_int_ascending")
 	return a
 
 
