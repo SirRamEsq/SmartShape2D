@@ -154,7 +154,7 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 
 	assert_eq(index_maps.size(), 3)
 	for index_map in index_maps:
-		edges.push_back(shape._build_edge_with_material(index_map, offset, false, 0))
+		edges.push_back(shape._build_edge_with_material(index_map, offset, 0))
 		assert_true(index_map.is_valid())
 
 	assert_eq(edges.size(), 3)

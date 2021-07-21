@@ -20,6 +20,7 @@ const TUP = preload("../lib/tuple.gd")
 ################
 # DECLARATIONS #
 ################
+var _final_point_corner_hack = false
 var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
@@ -745,9 +746,9 @@ func generate_collision_points() -> PoolVector2Array:
 		indicies.push_back(i)
 	var edge_data = SS2D_IndexMap.new(indicies, null)
 	var edge = _build_edge_with_material(
-		edge_data, collision_offset - 1.0, false, collision_size
+		edge_data, collision_offset - 1.0, collision_size
 	)
-	_weld_quad_array(edge.quads, 1.0, false)
+	_weld_quad_array(edge.quads, false)
 	if not edge.quads.empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in edge.quads:
@@ -1041,7 +1042,7 @@ static func weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) ->
 
 
 func _weld_quad_array(
-	quads: Array, custom_scale: float, weld_first_and_last: bool, start_idx: int = 0
+	quads: Array, weld_first_and_last: bool, start_idx: int = 0
 ):
 	if quads.empty():
 		return
@@ -1049,7 +1050,7 @@ func _weld_quad_array(
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		var mid_point = weld_quads(this_quad, next_quad, custom_scale)
+		var mid_point = weld_quads(this_quad, next_quad)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
@@ -1062,11 +1063,11 @@ func _weld_quad_array(
 			quads.remove(index)
 			if index < quads.size():
 				var new_index = max(index - 1, 0)
-				_weld_quad_array(quads, custom_scale, weld_first_and_last, new_index)
+				_weld_quad_array(quads, weld_first_and_last, new_index)
 				return
 
 	if weld_first_and_last:
-		weld_quads(quads.back(), quads[0], 1.0)
+		weld_quads(quads.back(), quads[0])
 
 
 func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
@@ -1097,7 +1098,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 	var threads = []
 	for index_map in index_maps:
 		var thread = Thread.new()
-		var args = [index_map, s_mat.render_offset, false, 0.0]
+		var args = [index_map, s_mat.render_offset, 0.0]
 		var priority = 2
 		thread.start(self, "_build_edge_with_material_thread_wrapper", args, priority)
 		threads.push_back(thread)
@@ -1484,11 +1485,10 @@ default_quad_width is the quad width used if a texture isn't available
 
 c_offset is the magnitude to offset all of the points
 the direction of the offset is the surface_normal
-
-TODO remove wrap_around param
 """
-func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_around: bool, default_quad_width:float) -> SS2D_Edge:
+func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, default_quad_width:float) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
+	edge.wrap_around = false
 	if not index_map.is_valid():
 		return edge
 	var c_scale = 1.0
@@ -1526,8 +1526,8 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_
 	var i = 0
 	while i < tess_point_count:
 		var tess_idx = (first_idx_t + i) % verts_t.size()
-		var tess_idx_next = _get_next_unique_point_idx(tess_idx, verts_t, wrap_around)
-		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, verts_t, wrap_around)
+		var tess_idx_next = _get_next_unique_point_idx(tess_idx, verts_t, false)
+		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, verts_t, false)
 
 		# set next_point_delta
 		# next_point_delta is the number of tess_pts from
@@ -1541,7 +1541,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_
 
 		var vert_idx = get_vertex_idx_from_tessellated_point(verts, verts_t, tess_idx)
 		var vert_key = get_point_key_at_index(vert_idx)
-		var next_vert_idx = _get_next_point_index(vert_idx, verts, wrap_around)
+		var next_vert_idx = _get_next_point_index(vert_idx, verts, false)
 		var pt = verts_t[tess_idx]
 		var pt_next = verts_t[tess_idx_next]
 		var pt_prev = verts_t[tess_idx_prev]
@@ -1659,9 +1659,8 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_
 					new_quad.texture_normal = taper_texture_normal
 
 		# Final point for closed shapes fix
-		# TODO, Figure out if this is needed
 		# Corner quads aren't always correctly when the corner is between final and first pt
-		#if is_last_point and index_map.first_connected_to_final:
+		#if is_last_point and _final_point_corner_hack:
 			#var idx_mid = verts_t.size() - 1
 			#var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
 			#var idx_prev = _get_previous_unique_point_idx(idx_mid, verts_t, true)
@@ -1671,7 +1670,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_
 			#var w_p = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
 			#var w_m = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
 			#var q = _edge_generate_corner(
-				#p_p, p_m, p_n, w_p, w_m, edge_material, texture_idx, c_scale, c_offset
+				#p_p, p_m, p_n, w_p, w_m, tex_size.y, edge_material, texture_idx, c_scale, c_offset
 			#)
 			#if q != null:
 				#new_quads.push_back(q)
@@ -1682,129 +1681,9 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_
 		i += next_point_delta
 	if edge_material_meta != null:
 		if edge_material_meta.weld:
-			# TODO, Figure out how to set wrap_around or if needed at all
-			#_weld_quad_array(edge.quads, 1.0, index_map.first_connected_to_final)
-			#edge.wrap_around = index_map.first_connected_to_final
-			_weld_quad_array(edge.quads, 1.0, false)
-			edge.wrap_around = false
-
-	return edge
-
-func _build_edge_without_material(
-	edge_dat: SS2D_IndexMap, size: Vector2, c_scale: float, c_offset: float, c_extends: float
-) -> SS2D_Edge:
-	var edge = SS2D_Edge.new()
-	if not edge_dat.is_valid():
-		return edge
-
-	var first_idx = edge_dat.indicies[0]
-	var last_idx = edge_dat.indicies.back()
-	edge.first_point_key = _points.get_point_key_at_index(first_idx)
-	edge.last_point_key = _points.get_point_key_at_index(last_idx)
-
-	var t_points = get_tessellated_points()
-	var points = get_vertices()
-	var first_t_idx = get_tessellated_idx_from_point(points, t_points, first_idx)
-	var last_t_idx = get_tessellated_idx_from_point(points, t_points, last_idx)
-	var tess_points_covered: int = 0
-	var wrap_around: bool = false
-	for i in range(edge_dat.indicies.size() - 1):
-		var this_idx = edge_dat.indicies[i]
-		var next_idx = edge_dat.indicies[i + 1]
-		# If closed shape and we wrap around
-		if this_idx > next_idx:
-			tess_points_covered += 1
-			wrap_around = true
-			continue
-		var this_t_idx = get_tessellated_idx_from_point(points, t_points, this_idx)
-		var next_t_idx = get_tessellated_idx_from_point(points, t_points, next_idx)
-		var delta = next_t_idx - this_t_idx
-		tess_points_covered += delta
-
-	for i in range(tess_points_covered):
-		var tess_idx = (first_t_idx + i) % t_points.size()
-		var tess_idx_next = _get_next_point_index(tess_idx, t_points, wrap_around)
-		var tess_idx_prev = _get_previous_point_index(tess_idx, t_points, wrap_around)
-		var vert_idx = get_vertex_idx_from_tessellated_point(points, t_points, tess_idx)
-		var next_vert_idx = vert_idx + 1
-		var pt = t_points[tess_idx]
-		var pt_next = t_points[tess_idx_next]
-		var pt_prev = t_points[tess_idx_prev]
-		var generate_corner = SS2D_Quad.CORNER.NONE
-		if tess_idx != last_t_idx and tess_idx != first_t_idx:
-			var ab = pt - pt_prev
-			var bc = pt_next - pt
-			var dot_prod = ab.dot(bc)
-			var determinant = (ab.x * bc.y) - (ab.y * bc.x)
-			var angle = atan2(determinant, dot_prod)
-			# This angle has a range of 360 degrees
-			# Is between 180 and - 180
-			var deg = rad2deg(angle)
-			var dir = 0
-			var corner_range = 10.0
-			var corner_angle = 90.0
-			if abs(deg) >= corner_angle - corner_range and abs(deg) <= corner_angle + corner_range:
-				var inner = false
-				if deg < 0:
-					inner = true
-				if flip_edges:
-					inner = not inner
-				if inner:
-					generate_corner = SS2D_Quad.CORNER.INNER
-				else:
-					generate_corner = SS2D_Quad.CORNER.OUTER
-
-		var width_scale = _get_width_for_tessellated_point(points, t_points, tess_idx)
-		var is_first_point = vert_idx == first_idx
-		var is_last_point = vert_idx == last_idx - 1
-		var is_first_tess_point = tess_idx == first_t_idx
-		var is_last_tess_point = tess_idx == last_t_idx - 1
-
-		var new_quad = build_quad_from_two_points(
-			pt,
-			pt_next,
-			null,
-			null,
-			width_scale * size.y,
-			false,
-			should_flip_edges(),
-			is_first_point,
-			is_last_point,
-			#c_scale,
-			c_offset,
-			c_extends,
-			SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
-		)
-		var new_quads = []
-		new_quads.push_back(new_quad)
-
-		# Corner Quad
-		if generate_corner != SS2D_Quad.CORNER.NONE and not is_first_tess_point:
-			var tess_pt_next = t_points[tess_idx_next]
-			var tess_pt_prev = t_points[tess_idx_prev]
-			var tess_pt = t_points[tess_idx]
-			var prev_width_scale = _get_width_for_tessellated_point(points, t_points, tess_idx_prev)
-			var corner_quad = build_quad_corner(
-				tess_pt_next,
-				tess_pt,
-				tess_pt_prev,
-				width_scale,
-				prev_width_scale,
-				flip_edges,
-				generate_corner,
-				null,
-				null,
-				size,
-				c_scale,
-				c_offset
-			)
-			new_quads.push_front(corner_quad)
-
-		# Add new quads to edge
-		for q in new_quads:
-			edge.quads.push_back(q)
+			_weld_quad_array(edge.quads, edge.wrap_around)
 
 	return edge
 
 func _build_edge_with_material_thread_wrapper(args)->SS2D_Edge:
-	return _build_edge_with_material(args[0], args[1], args[2], args[3])
+	return _build_edge_with_material(args[0], args[1], args[2])

@@ -27,6 +27,7 @@ func get_holes() -> Array:
 func _init():
 	._init()
 	_is_instantiable = true
+	_final_point_corner_hack = true
 
 
 ############
@@ -274,11 +275,9 @@ func generate_collision_points():
 	for i in range(verts.size()):
 		indicies.push_back(i)
 	var edge_data = SS2D_IndexMap.new(indicies, null)
-	var edge = _build_edge_with_material(
-		# size of 0, has no use in a closed shape
-		edge_data, collision_offset - 1.0, false, 1
-	)
-	_weld_quad_array(edge.quads, 1.0, false)
+	# size of 1, has no meaning in a closed shape
+	var edge = _build_edge_with_material(edge_data, collision_offset - 1.0, 1)
+	_weld_quad_array(edge.quads, false)
 	var first_quad = edge.quads[0]
 	var last_quad = edge.quads.back()
 	weld_quads(last_quad, first_quad, 1.0)
@@ -291,6 +290,7 @@ func generate_collision_points():
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
 	return points
+
 
 func _on_dirty_update():
 	if _dirty:
