@@ -1076,6 +1076,8 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 
 	var index_maps = get_meta_material_index_mapping(s_mat, verts)
 	var overrides = get_meta_material_index_mapping_for_overrides(s_mat, _points)
+
+	# Remove the override indicies from the default index_maps
 	for override in overrides:
 		var old_to_new_imaps = {}
 		for index_map in index_maps:
@@ -1086,10 +1088,21 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 			for new_imap in old_to_new_imaps[k]:
 				index_maps.push_back(new_imap)
 
+	# Add the overrides to the mappings to be rendered
+	for override in overrides:
+		index_maps.push_back(override)
+
 	# Might be able to introduce threading here
-	# One thread per index_map? with max of 8/16?
+	# One thread per index_map?
+	var threads = []
 	for index_map in index_maps:
-		var new_edge = _build_edge_with_material(index_map, s_mat.render_offset, false, 0.0)
+		var thread = Thread.new()
+		var args = [index_map, s_mat.render_offset, false, 0.0]
+		var priority = 2
+		thread.start(self, "_build_edge_with_material_thread_wrapper", args, priority)
+		threads.push_back(thread)
+	for thread in threads:
+		var new_edge = thread.wait_to_finish()
 		edges.push_back(new_edge)
 
 	return edges
@@ -1472,9 +1485,7 @@ default_quad_width is the quad width used if a texture isn't available
 c_offset is the magnitude to offset all of the points
 the direction of the offset is the surface_normal
 
-TODO support null indexMap.object (meta mat)
 TODO remove wrap_around param
-TODO Add params from _build_edge_without_material
 """
 func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, wrap_around: bool, default_quad_width:float) -> SS2D_Edge:
 	var edge = SS2D_Edge.new()
@@ -1794,3 +1805,6 @@ func _build_edge_without_material(
 			edge.quads.push_back(q)
 
 	return edge
+
+func _build_edge_with_material_thread_wrapper(args)->SS2D_Edge:
+	return _build_edge_with_material(args[0], args[1], args[2], args[3])
