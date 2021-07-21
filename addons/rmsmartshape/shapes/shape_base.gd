@@ -20,7 +20,6 @@ const TUP = preload("../lib/tuple.gd")
 ################
 # DECLARATIONS #
 ################
-var _final_point_corner_hack = false
 var _dirty: bool = true
 var _edges: Array = []
 var _meshes: Array = []
@@ -1135,7 +1134,7 @@ static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, ver
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
 	for idx in range(0, verts.size() - 1, 1):
-		var idx_next = _get_next_point_index(idx, verts)
+		var idx_next = _get_next_point_index(idx, verts, false)
 		var pt = verts[idx]
 		var pt_next = verts[idx_next]
 		var delta = pt_next - pt
@@ -1526,8 +1525,8 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 	var i = 0
 	while i < tess_point_count:
 		var tess_idx = (first_idx_t + i) % verts_t.size()
-		var tess_idx_next = _get_next_unique_point_idx(tess_idx, verts_t, false)
-		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, verts_t, false)
+		var tess_idx_next = _get_next_unique_point_idx(tess_idx, verts_t, true)
+		var tess_idx_prev = _get_previous_unique_point_idx(tess_idx, verts_t, true)
 
 		# set next_point_delta
 		# next_point_delta is the number of tess_pts from
@@ -1541,7 +1540,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 
 		var vert_idx = get_vertex_idx_from_tessellated_point(verts, verts_t, tess_idx)
 		var vert_key = get_point_key_at_index(vert_idx)
-		var next_vert_idx = _get_next_point_index(vert_idx, verts, false)
+		var next_vert_idx = _get_next_point_index(vert_idx, verts, true)
 		var pt = verts_t[tess_idx]
 		var pt_next = verts_t[tess_idx_next]
 		var pt_prev = verts_t[tess_idx_prev]
@@ -1657,23 +1656,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 				else:
 					new_quad.texture = taper_texture
 					new_quad.texture_normal = taper_texture_normal
-
-		# Final point for closed shapes fix
-		# Corner quads aren't always correctly when the corner is between final and first pt
-		#if is_last_point and _final_point_corner_hack:
-			#var idx_mid = verts_t.size() - 1
-			#var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
-			#var idx_prev = _get_previous_unique_point_idx(idx_mid, verts_t, true)
-			#var p_p = verts_t[idx_prev]
-			#var p_m = verts_t[idx_mid]
-			#var p_n = verts_t[idx_next]
-			#var w_p = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
-			#var w_m = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
-			#var q = _edge_generate_corner(
-				#p_p, p_m, p_n, w_p, w_m, tex_size.y, edge_material, texture_idx, c_scale, c_offset
-			#)
-			#if q != null:
-				#new_quads.push_back(q)
 
 		# Add new quads to edge
 		for q in new_quads:

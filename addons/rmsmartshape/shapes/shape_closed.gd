@@ -27,7 +27,6 @@ func get_holes() -> Array:
 func _init():
 	._init()
 	_is_instantiable = true
-	_final_point_corner_hack = true
 
 
 ############
@@ -342,3 +341,43 @@ func import_from_legacy(legacy: RMSmartShape2D):
 		set_point_texture_index(key, legacy.get_point_texture_index(i))
 		set_point_texture_flip(key, legacy.get_point_texture_flip(i))
 		set_point_width(key, legacy.get_point_width(i))
+
+
+"""
+Differs from the main get_meta_material_index_mapping
+in that the points wrap around
+"""
+static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
+	var final_edges: Array = []
+	var edge_building: Dictionary = {}
+	for idx in range(0, verts.size(), 1):
+		var idx_next = _get_next_point_index(idx, verts, true)
+		var pt = verts[idx]
+		var pt_next = verts[idx_next]
+		var delta = pt_next - pt
+		var delta_normal = delta.normalized()
+		var normal = Vector2(delta.y, -delta.x).normalized()
+
+		# Get all valid edge_meta_materials for this normal value
+		var edge_meta_materials: Array = s_material.get_edge_meta_materials(normal)
+
+		# Append to existing edges being built. Add new ones if needed
+		for e in edge_meta_materials:
+			# Is exsiting, append
+			if edge_building.has(e):
+				edge_building[e].indicies.push_back(idx_next)
+			# Isn't existing, make a new mapping
+			else:
+				edge_building[e] = SS2D_IndexMap.new([idx, idx_next], e)
+
+		# Closeout and stop building edges that are no longer viable
+		for e in edge_building.keys():
+			if not edge_meta_materials.has(e):
+				final_edges.push_back(edge_building[e])
+				edge_building.erase(e)
+
+	# Closeout all edge building
+	for e in edge_building.keys():
+		final_edges.push_back(edge_building[e])
+
+	return final_edges
