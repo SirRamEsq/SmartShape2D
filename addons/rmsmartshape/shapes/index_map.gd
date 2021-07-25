@@ -251,3 +251,11 @@ static func indicies_to_edges(indicies:Array)->Array:
 		if is_array_contiguous(edge):
 			edges.push_back(edge)
 	return edges
+
+static func index_map_array_sort_by_object(imaps:Array)->Dictionary:
+	var dict = {}
+	for imap in imaps:
+		if not dict.has(imap.object):
+			dict[imap.object] = []
+		dict[imap.object].push_back(imap)
+	return dict

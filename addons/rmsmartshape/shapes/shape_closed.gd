@@ -343,14 +343,10 @@ func import_from_legacy(legacy: RMSmartShape2D):
 		set_point_width(key, legacy.get_point_width(i))
 
 
-"""
-Differs from the main get_meta_material_index_mapping
-in that the points wrap around
-"""
 static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
-	for idx in range(0, verts.size(), 1):
+	for idx in range(0, verts.size()-1, 1):
 		var idx_next = _get_next_point_index(idx, verts, true)
 		var pt = verts[idx]
 		var pt_next = verts[idx_next]
@@ -379,5 +375,27 @@ static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, ver
 	# Closeout all edge building
 	for e in edge_building.keys():
 		final_edges.push_back(edge_building[e])
+
+	# See if any edges have both the first (0) and last idx (size)
+	# Merge them into one if so
+	var edges_by_material = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
+	# Erase any with null material
+	edges_by_material.erase(null)
+	for material in edges_by_material:
+		var edge_first_idx = null
+		var edge_last_idx = null
+		for e in edges_by_material[material]:
+			if e.indicies.has(0):
+				edge_first_idx = e
+			if e.indicies.has(verts.size()-1):
+				edge_last_idx = e
+			if edge_first_idx != null and edge_last_idx != null:
+				break
+		if edge_first_idx != null and edge_last_idx != null:
+			final_edges.erase(edge_first_idx)
+			final_edges.erase(edge_last_idx)
+			var indicies = edge_last_idx.indicies + edge_first_idx.indicies
+			var merged_edge = SS2D_IndexMap.new(indicies, material)
+			final_edges.push_back(merged_edge)
 
 	return final_edges
