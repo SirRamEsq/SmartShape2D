@@ -343,41 +343,10 @@ func import_from_legacy(legacy: RMSmartShape2D):
 		set_point_width(key, legacy.get_point_width(i))
 
 
-static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
-	var final_edges: Array = []
-	var edge_building: Dictionary = {}
-	for idx in range(0, verts.size()-1, 1):
-		var idx_next = _get_next_point_index(idx, verts, true)
-		var pt = verts[idx]
-		var pt_next = verts[idx_next]
-		var delta = pt_next - pt
-		var delta_normal = delta.normalized()
-		var normal = Vector2(delta.y, -delta.x).normalized()
-
-		# Get all valid edge_meta_materials for this normal value
-		var edge_meta_materials: Array = s_material.get_edge_meta_materials(normal)
-
-		# Append to existing edges being built. Add new ones if needed
-		for e in edge_meta_materials:
-			# Is exsiting, append
-			if edge_building.has(e):
-				edge_building[e].indicies.push_back(idx_next)
-			# Isn't existing, make a new mapping
-			else:
-				edge_building[e] = SS2D_IndexMap.new([idx, idx_next], e)
-
-		# Closeout and stop building edges that are no longer viable
-		for e in edge_building.keys():
-			if not edge_meta_materials.has(e):
-				final_edges.push_back(edge_building[e])
-				edge_building.erase(e)
-
-	# Closeout all edge building
-	for e in edge_building.keys():
-		final_edges.push_back(edge_building[e])
-
+func _merge_index_maps(imaps:Array, verts:Array) -> Array:
 	# See if any edges have both the first (0) and last idx (size)
 	# Merge them into one if so
+	var final_edges = imaps.duplicate()
 	var edges_by_material = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
 	# Erase any with null material
 	edges_by_material.erase(null)

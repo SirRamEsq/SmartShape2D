@@ -1069,6 +1069,9 @@ func _weld_quad_array(
 		weld_quads(quads.back(), quads[0])
 
 
+func _merge_index_maps(imaps:Array, verts:Array)->Array:
+	return imaps
+
 func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 	var edges: Array = []
 	if s_mat == null:
@@ -1087,6 +1090,10 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 			index_maps.erase(k)
 			for new_imap in old_to_new_imaps[k]:
 				index_maps.push_back(new_imap)
+
+	# Merge index maps
+	index_maps = _merge_index_maps(index_maps, verts)
+
 
 	# Add the overrides to the mappings to be rendered
 	for override in overrides:
