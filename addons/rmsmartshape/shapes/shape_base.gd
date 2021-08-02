@@ -1481,6 +1481,9 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 		return _get_previous_unique_point_idx(previous_idx, pts, wrap_around)
 	return previous_idx
 
+func _is_edge_contiguous(index_amp:SS2D_IndexMap, verts:Array)->bool:
+	return false
+
 
 """
 Will constructe an SS2D_Edge from the passed parameters
@@ -1493,8 +1496,11 @@ c_offset is the magnitude to offset all of the points
 the direction of the offset is the surface_normal
 """
 func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, default_quad_width:float) -> SS2D_Edge:
+	var verts_t = get_tessellated_points()
+	var verts = get_vertices()
 	var edge = SS2D_Edge.new()
-	edge.wrap_around = false
+	var is_edge_contiguous = _is_edge_contiguous(index_map, verts)
+	edge.wrap_around = is_edge_contiguous
 	if not index_map.is_valid():
 		return edge
 	var c_scale = 1.0
@@ -1517,8 +1523,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		edge.z_as_relative = edge_material_meta.z_as_relative
 		edge.material = edge_material_meta.edge_material.material
 
-	var verts_t = get_tessellated_points()
-	var verts = get_vertices()
 	var first_idx = index_map.indicies[0]
 	var last_idx = index_map.indicies.back()
 	var first_idx_t = get_tessellated_idx_from_point(verts, verts_t, first_idx)
@@ -1528,6 +1532,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
+
 
 	var i = 0
 	while i < tess_point_count:
@@ -1560,10 +1565,10 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		var flip_x = get_point_texture_flip(vert_key)
 
 		var width_scale = _get_width_for_tessellated_point(verts, verts_t, tess_idx)
-		var is_first_point = vert_idx == first_idx
-		var is_last_point = vert_idx == last_idx - 1
-		var is_first_tess_point = tess_idx == first_idx_t
-		var is_last_tess_point = tess_idx == last_idx_t - 1
+		var is_first_point = (vert_idx == first_idx) and not is_edge_contiguous
+		var is_last_point = (vert_idx == last_idx - 1) and not is_edge_contiguous
+		var is_first_tess_point = (tess_idx == first_idx_t) and not is_edge_contiguous
+		var is_last_tess_point = (tess_idx == last_idx_t - 1) and not is_edge_contiguous
 
 		var tex = null
 		var tex_normal = null

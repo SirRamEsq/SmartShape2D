@@ -361,10 +361,20 @@ func _merge_index_maps(imaps:Array, verts:Array) -> Array:
 			if edge_first_idx != null and edge_last_idx != null:
 				break
 		if edge_first_idx != null and edge_last_idx != null:
-			final_edges.erase(edge_first_idx)
-			final_edges.erase(edge_last_idx)
-			var indicies = edge_last_idx.indicies + edge_first_idx.indicies
-			var merged_edge = SS2D_IndexMap.new(indicies, material)
-			final_edges.push_back(merged_edge)
+			if edge_first_idx == edge_last_idx:
+				pass
+			else:
+				final_edges.erase(edge_last_idx)
+				final_edges.erase(edge_first_idx)
+				var indicies = edge_last_idx.indicies + edge_first_idx.indicies
+				var merged_edge = SS2D_IndexMap.new(indicies, material)
+				final_edges.push_back(merged_edge)
 
 	return final_edges
+
+func _imap_contains_all_points(imap:SS2D_IndexMap, verts:Array)->bool:
+	return imap.indicies[0] == 0 and imap.indicies.back() == verts.size()-1
+
+func _is_edge_contiguous(imap:SS2D_IndexMap, verts:Array)->bool:
+	var val = _imap_contains_all_points(imap, verts)
+	return val
