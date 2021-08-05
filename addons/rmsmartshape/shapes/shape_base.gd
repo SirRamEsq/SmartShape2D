@@ -1180,7 +1180,6 @@ func _handle_material_change():
 
 
 func _handle_material_override_change(tuple):
-	print("print _handle_material_override_change")
 	set_as_dirty()
 
 
@@ -1558,10 +1557,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		var pt_prev = verts_t[tess_idx_prev]
 
 		var texture_idx = 0
-		if edge_material.randomize_texture:
-			texture_idx = randi() % edge_material.textures.size()
-		else :
-			texture_idx = get_point_texture_index(vert_key)
 		var flip_x = get_point_texture_flip(vert_key)
 
 		var width_scale = _get_width_for_tessellated_point(verts, verts_t, tess_idx)
@@ -1575,6 +1570,10 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		var tex_size = Vector2(default_quad_width, default_quad_width)
 		var fitmode = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 		if edge_material != null:
+			if edge_material.randomize_texture:
+				texture_idx = randi() % edge_material.textures.size()
+			else :
+				texture_idx = get_point_texture_index(vert_key)
 			tex = edge_material.get_texture(texture_idx)
 			tex_size = tex.get_size()
 			tex_normal = edge_material.get_texture_normal(texture_idx)
