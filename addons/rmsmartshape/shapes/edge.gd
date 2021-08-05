@@ -73,6 +73,9 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for q in _quads:
+		q.update_tangents()
+	for i in _quads.size():
+		var q = _quads[i]
 		var section_length: float = q.get_length_average() * change_in_length
 		var highest_value: float = max(q.get_height_left(), q.get_height_right())
 		# When welding and using different widths, quads can look a little weird
@@ -99,35 +102,51 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 			uv_c = uv_d
 			uv_d = t
 
+		var next = _quads[wrapi(i + 1, 0, _quads.size())]
+		var prev = _quads[wrapi(i - 1, 0, _quads.size())]
+
+		# Interpolation and normalization
+		var tg_a = (q.tg_a + prev.tg_d).normalized()*0.5 + Vector2.ONE*0.5
+		var bn_a = (q.bn_a + prev.bn_d).normalized()*0.5 + Vector2.ONE*0.5
+
+		var tg_b = (q.tg_b + prev.tg_c).normalized()*0.5 + Vector2.ONE*0.5
+		var bn_b = (q.bn_b + prev.bn_c).normalized()*0.5 + Vector2.ONE*0.5
+
+		var tg_c = (q.tg_c + next.tg_b).normalized()*0.5 + Vector2.ONE*0.5
+		var bn_c = (q.bn_c + next.bn_b).normalized()*0.5 + Vector2.ONE*0.5
+
+		var tg_d = (q.tg_d + next.tg_a).normalized()*0.5 + Vector2.ONE*0.5
+		var bn_d = (q.bn_d + next.bn_a).normalized()*0.5 + Vector2.ONE*0.5
+
 		q.update_tangents()
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(Color(q.tg_a.x, q.tg_a.y, q.bn_a.x, q.bn_a.y))
+		st.add_color(Color(tg_a.x, tg_a.y, bn_a.x, bn_a.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
 		_add_uv_to_surface_tool(st, uv_b)
-		st.add_color(Color(q.tg_b.x, q.tg_b.y, q.bn_b.x, q.bn_b.y))
+		st.add_color(Color(tg_b.x, tg_b.y, bn_b.x, bn_b.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(Color(q.tg_c.x, q.tg_c.y, q.bn_c.x, q.bn_c.y))
+		st.add_color(Color(tg_c.x, tg_c.y, bn_c.x, bn_c.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(Color(q.tg_a.x, q.tg_a.y, q.bn_a.x, q.bn_a.y))
+		st.add_color(Color(tg_a.x, tg_a.y, bn_a.x, bn_a.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(Color(q.tg_c.x, q.tg_c.y, q.bn_c.x, q.bn_c.y))
+		st.add_color(Color(tg_c.x, tg_c.y, bn_c.x, bn_c.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
 		_add_uv_to_surface_tool(st, uv_d)
-		st.add_color(Color(q.tg_d.x, q.tg_d.y, q.bn_d.x, q.bn_d.y))
+		st.add_color(Color(tg_d.x, tg_d.y, bn_d.x, bn_d.y))
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
 
 		length_elapsed += section_length

@@ -71,14 +71,14 @@ func duplicate() -> SS2D_Quad:
 	return q
 
 func update_tangents():
-	tg_a = (pt_d-pt_a).normalized()*0.5 + Vector2.ONE*0.5
-	tg_b = (pt_c-pt_b).normalized()*0.5 + Vector2.ONE*0.5
+	tg_a = (pt_d-pt_a).normalized()
+	tg_b = (pt_c-pt_b).normalized()
 	tg_c = tg_b
 	tg_d = tg_a
-	
-	bn_a = (pt_b - pt_a).normalized()*0.5 + Vector2.ONE*0.5
+
+	bn_a = (pt_b - pt_a).normalized()
 	bn_b = bn_a
-	bn_c = (pt_c - pt_d).normalized()*0.5 + Vector2.ONE*0.5
+	bn_c = (pt_c - pt_d).normalized()
 	bn_d = bn_c
 
 func _init(
