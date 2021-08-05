@@ -2,6 +2,13 @@ tool
 extends Reference
 class_name SS2D_Edge
 
+"""
+An SS2D_Edge represents an edge that will be rendered
+It contains
+- A list of quads that should be rendered
+- A Godot :Material that dictates how the edge should be rendered
+"""
+
 var quads: Array = []
 var first_point_key: int = -1
 var last_point_key: int = -1

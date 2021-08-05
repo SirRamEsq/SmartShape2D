@@ -1,8 +1,8 @@
 extends "res://addons/gut/test.gd"
 
 func test_change_propagate():
-	var nr1 = SS2D_NormalRange.new(-90.0, 90.0)
-	var nr2 = SS2D_NormalRange.new(91.0, -91.0)
+	var nr1 = SS2D_NormalRange.new(-90.0, 180.0)
+	var nr2 = SS2D_NormalRange.new(91.0, -178.0)
 
 	var edge_mat_1 = SS2D_Material_Edge.new()
 	var edge_mat_2 = SS2D_Material_Edge.new()

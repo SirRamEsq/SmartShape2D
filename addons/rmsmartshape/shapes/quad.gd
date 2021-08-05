@@ -25,6 +25,18 @@ var corner: int = 0
 # EXISTS FOR LEGACY REASONS, THIS PROPERTY IS DEPRECATED
 var width_factor: float = 1.0
 
+# Will return two quads split down the middle of this one
+func bisect() -> Array:
+	var delta = pt_d - pt_a
+	var delta_normal = delta.normalized()
+	var quad_left = duplicate()
+	var quad_right = duplicate()
+	var mid_point = Vector2(get_length_average(), 0.0) * delta_normal
+	quad_left.pt_d = pt_a + mid_point
+	quad_left.pt_c = pt_b + mid_point
+	quad_right.pt_a = pt_d - mid_point
+	quad_right.pt_b = pt_c - mid_point
+	return [quad_left, quad_right]
 
 func _to_string() -> String:
 	return "[Quad] A:%s B:%s C:%s D:%s | Corner: %s" % [pt_a, pt_b, pt_c, pt_d, corner]

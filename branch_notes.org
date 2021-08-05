@@ -1,0 +1,37 @@
+#+TITLE: Branch_notes
+
+* Goal
+- Simplify how edges are generated
+  + This is currently the most unweildy part of the codebase
+- Add unit tests to confirm functionality
+
+* How are edges generated
+- In shape_base, edges are cahced in the cache_edges function
+- if possible to build edges, _build_edges is called
+** Classes
+*** SS2D_IndexMap
+- Maps index ranges to an object
+**** TODO Rename the file this class is defined in
+- Change from meta_mat_to_idxs.gd
+- index_map.gd
+
+** build_edges(shape_material, bool)
+- Should remove boolean parameter
+  + Child classes should overrride if they want to wrap around
+- Should add parameter that takes verticies(?)
+  + If so, can make function static / move it elsewhere
+  + Cannot inherit then though
+- Gets index_mappings using get_meta_material_index_mapping
+- iterates through each index_mapping
+  + Builds an SS2D_Edge with _build_edge_with_material for each index_mapping
+*** get_meta_material_index_mapping
+- Is passed verts as a parameter
+  + if wrap around is desired, should push_back the first vert
+- Returns an array of SS2D_IndexMaps
+  + Each indexMap should be contiguous and map to a meta_material
+*** _build_edge_with /without _material
+- This is where a lot of complexity lies that I would like to remove
+- Make one function instead of two
+- Allow passing null for the material
+- Remove wrap_around parameter
+*** build_quad_from_two_points

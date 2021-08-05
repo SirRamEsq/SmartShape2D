@@ -252,8 +252,8 @@ func _gui_update_edge_info_panel():
 		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse().xform(edge_point))
 		var keys = _get_edge_point_keys_from_offset(offset, true)
 		indicies = [shape.get_point_index(keys[0]), shape.get_point_index(keys[1])]
-		if shape.has_material_override(keys):
-			override = shape.get_material_override(keys)
+		if shape.get_point_array().has_material_override(keys):
+			override = shape.get_point_array().get_material_override(keys)
 	gui_edge_info_panel.set_indicies(indicies)
 	if override != null:
 		gui_edge_info_panel.set_material_override(true)
@@ -544,9 +544,9 @@ static func get_material_override_from_indicies(shape: SS2D_Shape_Base, indicies
 	var keys = []
 	for i in indicies:
 		keys.push_back(shape.get_point_key_at_index(i))
-	if not shape.has_material_override(keys):
+	if not shape.get_point_array().has_material_override(keys):
 		return null
-	return shape.get_material_override(keys)
+	return shape.get_point_array().get_material_override(keys)
 
 
 func _on_set_edge_material_override_render(enabled: bool):
@@ -583,20 +583,20 @@ func _on_set_edge_material_override(enabled: bool):
 
 	# Get the relevant Override data if any exists
 	var override = null
-	if shape.has_material_override(keys):
-		override = shape.get_material_override(keys)
+	if shape.get_point_array().has_material_override(keys):
+		override = shape.get_point_array().get_material_override(keys)
 
 	if enabled:
 		if override == null:
 			override = SS2D_Material_Edge_Metadata.new()
 			override.edge_material = null
-			shape.set_material_override(keys, override)
+			shape.get_point_array().set_material_override(keys, override)
 
 		# Load override data into the info panel
 		gui_edge_info_panel.load_values_from_meta_material(override)
 	else:
 		if override != null:
-			shape.remove_material_override(keys)
+			shape.get_point_array().remove_material_override(keys)
 
 
 static func is_shape_valid(s) -> bool:
@@ -1014,7 +1014,6 @@ func _input_handle_left_click(
 					var copy = copy_shape(shape)
 
 					copy.set_point_array(SS2D_Point_Array.new())
-					copy.clear_all_material_overrides()
 					var new_key = FUNC.action_add_point(
 						self, "update_overlays", undo, copy, local_position
 					)
@@ -1463,7 +1462,7 @@ func copy_shape(shape):
 	copy.tessellation_stages = shape.tessellation_stages
 	copy.tessellation_tolerence = shape.tessellation_tolerence
 	copy.curve_bake_interval = shape.curve_bake_interval
-	copy.material_overrides = shape.material_overrides
+	#copy.material_overrides = shape.material_overrides
 
 	shape.get_parent().add_child(copy)
 	copy.set_owner(get_tree().get_edited_scene_root())

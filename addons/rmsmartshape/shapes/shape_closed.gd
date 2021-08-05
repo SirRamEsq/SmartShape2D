@@ -262,55 +262,33 @@ func _add_point_update():
 	._add_point_update()
 
 
-func bake_collision():
-	if not has_node(collision_polygon_node_path) or not is_shape_closed():
-		return
-	var polygon = get_node(collision_polygon_node_path)
+func generate_collision_points():
+	var points: PoolVector2Array = PoolVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
 	var t_points = get_tessellated_points()
 	if t_points.size() < 2:
-		return
-	var collision_quads = []
-	for i in range(0, t_points.size() - 1, 1):
-		var tess_idx = i
-		var tess_idx_next = _get_next_point_index(i, t_points, true)
-		var tess_idx_prev = _get_previous_point_index(i, t_points, true)
-		var pt = t_points[tess_idx]
-		var pt_next = t_points[tess_idx_next]
-		var pt_prev = t_points[tess_idx_prev]
-		var width = _get_width_for_tessellated_point(verts, t_points, i)
-		collision_quads.push_back(
-			_build_quad_from_point(
-				pt,
-				pt_next,
-				null,
-				null,
-				Vector2(collision_size, collision_size),
-				width,
-				false,
-				should_flip_edges(),
-				i == 0,
-				i == t_points.size() - 1,
-				collision_width,
-				collision_offset - 1.0,
-				collision_extends,
-				SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
-			)
-		)
-	_weld_quad_array(collision_quads, 1.0, false)
-	var first_quad = collision_quads[0]
-	var last_quad = collision_quads.back()
-	_weld_quads(last_quad, first_quad, 1.0)
-	var points: PoolVector2Array = PoolVector2Array()
-	# PT A
-	for quad in collision_quads:
-		points.push_back(
-			polygon.get_global_transform().xform_inv(get_global_transform().xform(quad.pt_a))
-		)
-
-	polygon.polygon = points
+		return points
+	var indicies = []
+	for i in range(verts.size()):
+		indicies.push_back(i)
+	var edge_data = SS2D_IndexMap.new(indicies, null)
+	# size of 1, has no meaning in a closed shape
+	var edge = _build_edge_with_material(edge_data, collision_offset - 1.0, 1)
+	_weld_quad_array(edge.quads, false)
+	var first_quad = edge.quads[0]
+	var last_quad = edge.quads.back()
+	weld_quads(last_quad, first_quad, 1.0)
+	if not edge.quads.empty():
+		for quad in edge.quads:
+			if quad.corner == SS2D_Quad.CORNER.NONE:
+				points.push_back(quad.pt_a)
+			elif quad.corner == SS2D_Quad.CORNER.OUTER:
+				points.push_back(quad.pt_d)
+			elif quad.corner == SS2D_Quad.CORNER.INNER:
+				pass
+	return points
 
 
 func _on_dirty_update():
@@ -330,7 +308,7 @@ func _on_dirty_update():
 
 func cache_edges():
 	if shape_material != null and render_edges:
-		_edges = _build_edges(shape_material, true)
+		_edges = _build_edges(shape_material, get_vertices())
 	else:
 		_edges = []
 
@@ -363,3 +341,40 @@ func import_from_legacy(legacy: RMSmartShape2D):
 		set_point_texture_index(key, legacy.get_point_texture_index(i))
 		set_point_texture_flip(key, legacy.get_point_texture_flip(i))
 		set_point_width(key, legacy.get_point_width(i))
+
+
+func _merge_index_maps(imaps:Array, verts:Array) -> Array:
+	# See if any edges have both the first (0) and last idx (size)
+	# Merge them into one if so
+	var final_edges = imaps.duplicate()
+	var edges_by_material = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
+	# Erase any with null material
+	edges_by_material.erase(null)
+	for material in edges_by_material:
+		var edge_first_idx = null
+		var edge_last_idx = null
+		for e in edges_by_material[material]:
+			if e.indicies.has(0):
+				edge_first_idx = e
+			if e.indicies.has(verts.size()-1):
+				edge_last_idx = e
+			if edge_first_idx != null and edge_last_idx != null:
+				break
+		if edge_first_idx != null and edge_last_idx != null:
+			if edge_first_idx == edge_last_idx:
+				pass
+			else:
+				final_edges.erase(edge_last_idx)
+				final_edges.erase(edge_first_idx)
+				var indicies = edge_last_idx.indicies + edge_first_idx.indicies
+				var merged_edge = SS2D_IndexMap.new(indicies, material)
+				final_edges.push_back(merged_edge)
+
+	return final_edges
+
+func _imap_contains_all_points(imap:SS2D_IndexMap, verts:Array)->bool:
+	return imap.indicies[0] == 0 and imap.indicies.back() == verts.size()-1
+
+func _is_edge_contiguous(imap:SS2D_IndexMap, verts:Array)->bool:
+	var val = _imap_contains_all_points(imap, verts)
+	return val

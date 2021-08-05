@@ -72,6 +72,10 @@ func _get_obj_filename(thing):
 			# If it isn't a packed scene and it doesn't have a script then
 			# we do nothing.  This just read better.
 			pass
+	elif(thing.get_script() is NativeScript):
+		# Work with GDNative scripts:
+		# inst2dict fails with "Not a script with an instance" on GDNative script instances
+		filename = _get_filename(thing.get_script().resource_path)
 	elif(!_utils.is_native_class(thing)):
 		var dict = inst2dict(thing)
 		filename = _get_filename(dict['@path'])
@@ -85,6 +89,7 @@ func _get_obj_filename(thing):
 # whatever is passed in when it can/should.
 # ------------------------------------------------------------------------------
 func type2str(thing):
+	var oc = _utils.OrphanCounter.new()
 	var filename = _get_obj_filename(thing)
 	var str_thing = str(thing)
 
@@ -95,6 +100,11 @@ func type2str(thing):
 		# will pass typeof(thing) == TYPE_OBJECT check so this has to be
 		# before that.
 		str_thing = str(null)
+	elif(typeof(thing) == TYPE_REAL):
+		if(!'.' in str_thing):
+			str_thing += '.0'
+	elif(typeof(thing) == TYPE_STRING):
+		str_thing = str('"', thing, '"')
 	elif(typeof(thing) in _str_ignore_types):
 		# do nothing b/c we already have str(thing) in
 		# to_return.  I think this just reads a little
@@ -118,3 +128,39 @@ func type2str(thing):
 	if(filename != null):
 		str_thing += str('(', filename, ')')
 	return str_thing
+
+# ------------------------------------------------------------------------------
+# Returns the string truncated with an '...' in it.  Shows the start and last
+# 10 chars.  If the string is  smaller than max_size the entire string is
+# returned.  If max_size is -1 then truncation is skipped.
+# ------------------------------------------------------------------------------
+func truncate_string(src, max_size):
+	var to_return = src
+	if(src.length() > max_size - 10 and max_size != -1):
+		to_return = str(src.substr(0, max_size - 10), '...',  src.substr(src.length() - 10, src.length()))
+	return to_return
+
+
+func _get_indent_text(times, pad):
+	var to_return = ''
+	for i in range(times):
+		to_return += pad
+
+	return to_return
+
+func indent_text(text, times, pad):
+	if(times == 0):
+		return text
+
+	var to_return = text
+	var ending_newline = ''
+
+	if(text.ends_with("\n")):
+		ending_newline = "\n"
+		to_return = to_return.left(to_return.length() -1)
+
+	var padding = _get_indent_text(times, pad)
+	to_return = to_return.replace("\n", "\n" + padding)
+	to_return += ending_newline
+
+	return padding + to_return
