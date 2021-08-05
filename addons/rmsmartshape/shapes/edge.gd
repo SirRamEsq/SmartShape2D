@@ -106,17 +106,133 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 		var prev = _quads[wrapi(i - 1, 0, _quads.size())]
 
 		# Interpolation and normalization
-		var tg_a = (q.tg_a + prev.tg_d).normalized()*0.5 + Vector2.ONE*0.5
-		var bn_a = (q.bn_a + prev.bn_d).normalized()*0.5 + Vector2.ONE*0.5
+		#First, consider everything to be a non corner
+		var tg_a = (q.tg_a + prev.tg_d)
+		var bn_a = (q.bn_a + prev.bn_d)
 
-		var tg_b = (q.tg_b + prev.tg_c).normalized()*0.5 + Vector2.ONE*0.5
-		var bn_b = (q.bn_b + prev.bn_c).normalized()*0.5 + Vector2.ONE*0.5
+		var tg_b = (q.tg_b + prev.tg_c)
+		var bn_b = (q.bn_b + prev.bn_c)
 
-		var tg_c = (q.tg_c + next.tg_b).normalized()*0.5 + Vector2.ONE*0.5
-		var bn_c = (q.bn_c + next.bn_b).normalized()*0.5 + Vector2.ONE*0.5
+		var tg_c = (q.tg_c + next.tg_b)
+		var bn_c = (q.bn_c + next.bn_b)
 
-		var tg_d = (q.tg_d + next.tg_a).normalized()*0.5 + Vector2.ONE*0.5
-		var bn_d = (q.bn_d + next.bn_a).normalized()*0.5 + Vector2.ONE*0.5
+		var tg_d = (q.tg_d + next.tg_a)
+		var bn_d = (q.bn_d + next.bn_a)
+
+		#then, fix values for corner cases (and edge ends)
+		if q.corner == q.CORNER.NONE:
+			if prev.corner == q.CORNER.NONE:
+				#check validity
+				if (not q.pt_a.is_equal_approx(prev.pt_d)) or (not q.pt_b.is_equal_approx(prev.pt_c)):
+					tg_a = q.tg_a
+					tg_b = q.tg_b
+					bn_a = q.bn_a
+					bn_b = q.bn_b
+			elif prev.corner == q.CORNER.INNER:
+				tg_a = (-prev.bn_d)
+				bn_a = (-prev.tg_d)
+				tg_b = (q.tg_b - prev.bn_a)
+				bn_b = (q.bn_b - prev.tg_a)
+				#check validity
+				if (not q.pt_a.is_equal_approx(prev.pt_d)) or (not q.pt_b.is_equal_approx(prev.pt_a)):
+					tg_a = q.tg_a
+					tg_b = q.tg_b
+					bn_a = q.bn_a
+					bn_b = q.bn_b
+			elif prev.corner == q.CORNER.OUTER:
+				tg_a = (q.tg_a + prev.bn_c)
+				bn_a = (q.bn_a - prev.tg_c)
+				tg_b = (prev.bn_b)
+				bn_b = (-prev.tg_b)
+				#check validity
+				if (not q.pt_a.is_equal_approx(prev.pt_c)) or (not q.pt_b.is_equal_approx(prev.pt_b)):
+					tg_a = q.tg_a
+					tg_b = q.tg_b
+					bn_a = q.bn_a
+					bn_b = q.bn_b
+			if next.corner == q.CORNER.NONE:
+				#check validity
+				if (not q.pt_c.is_equal_approx(next.pt_b)) or (not q.pt_d.is_equal_approx(next.pt_a)):
+					tg_c = q.tg_c
+					tg_d = q.tg_d
+					bn_c = q.bn_c
+					bn_d = q.bn_d
+			elif next.corner == q.CORNER.INNER:
+				tg_d = (-next.tg_d)
+				bn_d = (next.bn_d)
+				tg_c = (q.tg_c - next.tg_c)
+				bn_c = (q.bn_c + next.bn_c)
+				#check validity
+				if (not q.pt_c.is_equal_approx(next.pt_c)) or (not q.pt_d.is_equal_approx(next.pt_d)):
+					tg_c = q.tg_c
+					tg_d = q.tg_d
+					bn_c = q.bn_c
+					bn_d = q.bn_d
+			elif next.corner == q.CORNER.OUTER:
+				tg_c = (next.tg_b)
+				bn_c = (next.bn_b)
+				#check validity
+				if (not q.pt_c.is_equal_approx(next.pt_b)) or (not q.pt_d.is_equal_approx(next.pt_a)):
+					tg_c = q.tg_c
+					tg_d = q.tg_d
+					bn_c = q.bn_c
+					bn_d = q.bn_d
+
+		elif q.corner == q.CORNER.INNER:
+			#common
+			tg_d = q.tg_d
+			bn_d = q.bn_d
+			tg_b = (q.tg_b)
+			bn_b = (q.bn_b)
+			#previous
+			tg_c = (q.tg_c - prev.tg_c)
+			bn_c = (q.bn_c + prev.bn_c)
+			#next
+			tg_a = (q.tg_a - next.bn_b)
+			bn_a = (q.bn_a - next.tg_b)
+			#check validity
+			if prev.corner != prev.CORNER.NONE or (not q.pt_c.is_equal_approx(prev.pt_c)) or (not q.pt_d.is_equal_approx(prev.pt_d)):
+				tg_c = q.tg_c
+				bn_c = q.bn_c
+			if next.corner != prev.CORNER.NONE or (not q.pt_a.is_equal_approx(next.pt_b)) or (not q.pt_d.is_equal_approx(next.pt_a)):
+				tg_a = q.tg_a
+				bn_a = q.bn_a
+
+		elif q.corner == q.CORNER.OUTER:
+			tg_d = q.tg_d
+			bn_d = q.bn_d
+			tg_b = (q.tg_b)
+			bn_b = (q.bn_b)
+			#previous
+			tg_a = (q.tg_a + prev.tg_d)
+			bn_a = (q.bn_a + prev.bn_d)
+			#next
+			tg_c = (q.tg_c - next.bn_a)
+			bn_c = (q.bn_c + next.tg_a)
+			#check validity
+			if prev.corner != prev.CORNER.NONE or (not q.pt_a.is_equal_approx(prev.pt_d)) or (not q.pt_b.is_equal_approx(prev.pt_c)):
+				tg_a = q.tg_a
+				bn_a = q.bn_a
+			if next.corner != prev.CORNER.NONE or (not q.pt_b.is_equal_approx(next.pt_b)) or (not q.pt_c.is_equal_approx(next.pt_a)):
+				tg_c = q.tg_c
+				bn_c = q.bn_c
+
+		if q.flip_texture:
+			bn_a = -bn_a;
+			bn_b = -bn_b;
+			bn_c = -bn_c;
+			bn_d = -bn_d;
+
+		#Normalize the values
+		tg_a = tg_a.normalized()*0.5 + Vector2.ONE*0.5;
+		tg_b = tg_b.normalized()*0.5 + Vector2.ONE*0.5;
+		tg_c = tg_c.normalized()*0.5 + Vector2.ONE*0.5;
+		tg_d = tg_d.normalized()*0.5 + Vector2.ONE*0.5;
+
+		bn_a = bn_a.normalized()*0.5 + Vector2.ONE*0.5;
+		bn_b = bn_b.normalized()*0.5 + Vector2.ONE*0.5;
+		bn_c = bn_c.normalized()*0.5 + Vector2.ONE*0.5;
+		bn_d = bn_d.normalized()*0.5 + Vector2.ONE*0.5;
 
 		q.update_tangents()
 		# A
