@@ -7,6 +7,10 @@ SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
 
 [![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
 
+SmartShape2D tutorial can be found here (Thanks LucyLavend!):
+
+[![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
+
 # About
 This plugin allows you to create nicely textured 2D polys.
 Simply place a few points then create / assign the shape material and you should have a good looking polygon.
