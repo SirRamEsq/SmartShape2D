@@ -40,6 +40,7 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ###########
 export (bool) var editor_debug: bool = false setget _set_editor_debug
 export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
+export (SS2D_Edge.COLOR_ENCODING) var color_encoding = SS2D_Edge.COLOR_ENCODING.COLOR setget set_color_encoding
 
 export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
 # Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
@@ -295,6 +296,11 @@ func set_curve_bake_interval(f: float):
 	curve_bake_interval = f
 	_curve.bake_interval = f
 	property_list_changed_notify()
+
+func set_color_encoding(i: int):
+	color_encoding = i
+	property_list_changed_notify()
+	set_as_dirty()
 
 
 func _set_material(value: SS2D_Material_Shape):

@@ -37,11 +37,11 @@ https://github.com/SirRamEsq/SmartShape2D-DemoProject
 # Documentation
 - [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
 - [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )
-- Quick Start Video (In Progress)
 - [Migrating from 1.x]( ./addons/rmsmartshape/documentation/Migration.md )
 - [Shapes]( ./addons/rmsmartshape/documentation/Shapes.md )
 - [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
 - [Resources]( ./addons/rmsmartshape/documentation/Resources.md )
+- [Normals]( ./addons/rmsmartshape/documentation/Normals.md )
 - [Controls and Hotkeys]( ./addons/rmsmartshape/documentation/Controls.md )
 - [FAQ]( ./addons/rmsmartshape/documentation/FAQ.md )
 - [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
