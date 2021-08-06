@@ -6,7 +6,7 @@ Even if you assign normal textures to your Edge Material, the normals will look 
 
 For example, consider the following image:
 
-![Normals Wrong]( ./addons/rmsmartshape/documentation/imgs/NormalWrong.png )
+![Normals Wrong]( ./imgs/NormalWrong.png )
 
 The normals in the image clearly don't line up with where the light is actually coming from.
 
@@ -25,7 +25,7 @@ Vertex Shader's Color Parameter.
 
 If we set the COLOR ENCODING value to "Normals", we get this:
 
-![Normals wrong with weird diffuse colors]( ./addons/rmsmartshape/documentation/imgs/NormalColors.png )
+![Normals wrong with weird diffuse colors]( ./imgs/NormalColors.png )
 
 Ok, so now the normals still look wrong, but the colors look wrong too. Great.
 
@@ -55,4 +55,4 @@ void fragment() {
 
 After assigning this shader the the Edge Material's material property, our normals finally look right:
 
-![Normals Correct]( ./addons/rmsmartshape/documentation/imgs/NormalCorrect.png )
+![Normals Correct]( ./imgs/NormalCorrect.png )
