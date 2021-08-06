@@ -5,7 +5,8 @@ Normals
 Even if you assign normal textures to your Edge Material, the normals will look wrong.
 
 For example, consider the following image:
-![Sample Image]( ./addons/rmsmartshape/documentation/imgs/NormalWrong.png )
+
+![Normals Wrong]( ./addons/rmsmartshape/documentation/imgs/NormalWrong.png )
 
 The normals in the image clearly don't line up with where the light is actually coming from.
 
@@ -23,7 +24,8 @@ The COLOR ENCODING paramter of an Edge Material can be used to choose what data 
 Vertex Shader's Color Parameter.
 
 If we set the COLOR ENCODING value to "Normals", we get this:
-![Sample Image]( ./addons/rmsmartshape/documentation/imgs/NormalColors.png )
+
+![Normals wrong with weird diffuse colors]( ./addons/rmsmartshape/documentation/imgs/NormalColors.png )
 
 Ok, so now the normals still look wrong, but the colors look wrong too. Great.
 
@@ -52,4 +54,5 @@ void fragment() {
 ```
 
 After assigning this shader the the Edge Material's material property, our normals finally look right:
-![Sample Image]( ./addons/rmsmartshape/documentation/imgs/NormalCorrect.png )
+
+![Normals Correct]( ./addons/rmsmartshape/documentation/imgs/NormalCorrect.png )
