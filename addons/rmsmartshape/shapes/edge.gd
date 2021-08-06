@@ -9,6 +9,11 @@ It contains
 - A Godot :Material that dictates how the edge should be rendered
 """
 
+# What to encode in the color data (for use by shaders)
+# COLORS will encode a diffuse value to offset the quads color by (currently only ever white)
+# NORMALS will encode normal data in the colors to be unpacked by a shader later
+enum COLOR_ENCODING {COLOR, NORMALS}
+
 var quads: Array = []
 var first_point_key: int = -1
 var last_point_key: int = -1
@@ -45,7 +50,150 @@ static func get_consecutive_quads_for_mesh(_quads: Array) -> Array:
 	quad_ranges.push_back(quad_range)
 	return quad_ranges
 
-static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: bool) -> ArrayMesh:
+"""
+Will generate normals for a given quad
+will interpolate with previous and next quads
+"""
+static func generate_normals_for_quad_interpolated(qp, q, qn):
+	# Interpolation and normalization
+	#First, consider everything to be a non corner
+	var tg_a = (q.tg_a + qp.tg_d)
+	var bn_a = (q.bn_a + qp.bn_d)
+
+	var tg_b = (q.tg_b + qp.tg_c)
+	var bn_b = (q.bn_b + qp.bn_c)
+
+	var tg_c = (q.tg_c + qn.tg_b)
+	var bn_c = (q.bn_c + qn.bn_b)
+
+	var tg_d = (q.tg_d + qn.tg_a)
+	var bn_d = (q.bn_d + qn.bn_a)
+
+	#then, fix values for corner cases (and edge ends)
+	if q.corner == q.CORNER.NONE:
+		if qp.corner == q.CORNER.NONE:
+			#check validity
+			if (not q.pt_a.is_equal_approx(qp.pt_d)) or (not q.pt_b.is_equal_approx(qp.pt_c)):
+				tg_a = q.tg_a
+				tg_b = q.tg_b
+				bn_a = q.bn_a
+				bn_b = q.bn_b
+		elif qp.corner == q.CORNER.INNER:
+			tg_a = (-qp.bn_d)
+			bn_a = (-qp.tg_d)
+			tg_b = (q.tg_b - qp.bn_a)
+			bn_b = (q.bn_b - qp.tg_a)
+			#check validity
+			if (not q.pt_a.is_equal_approx(qp.pt_d)) or (not q.pt_b.is_equal_approx(qp.pt_a)):
+				tg_a = q.tg_a
+				tg_b = q.tg_b
+				bn_a = q.bn_a
+				bn_b = q.bn_b
+		elif qp.corner == q.CORNER.OUTER:
+			tg_a = (q.tg_a + qp.bn_c)
+			bn_a = (q.bn_a - qp.tg_c)
+			tg_b = (qp.bn_b)
+			bn_b = (-qp.tg_b)
+			#check validity
+			if (not q.pt_a.is_equal_approx(qp.pt_c)) or (not q.pt_b.is_equal_approx(qp.pt_b)):
+				tg_a = q.tg_a
+				tg_b = q.tg_b
+				bn_a = q.bn_a
+				bn_b = q.bn_b
+		if qn.corner == q.CORNER.NONE:
+			#check validity
+			if (not q.pt_c.is_equal_approx(qn.pt_b)) or (not q.pt_d.is_equal_approx(qn.pt_a)):
+				tg_c = q.tg_c
+				tg_d = q.tg_d
+				bn_c = q.bn_c
+				bn_d = q.bn_d
+		elif qn.corner == q.CORNER.INNER:
+			tg_d = (-qn.tg_d)
+			bn_d = (qn.bn_d)
+			tg_c = (q.tg_c - qn.tg_c)
+			bn_c = (q.bn_c + qn.bn_c)
+			#check validity
+			if (not q.pt_c.is_equal_approx(qn.pt_c)) or (not q.pt_d.is_equal_approx(qn.pt_d)):
+				tg_c = q.tg_c
+				tg_d = q.tg_d
+				bn_c = q.bn_c
+				bn_d = q.bn_d
+		elif qn.corner == q.CORNER.OUTER:
+			tg_c = (qn.tg_b)
+			bn_c = (qn.bn_b)
+			#check validity
+			if (not q.pt_c.is_equal_approx(qn.pt_b)) or (not q.pt_d.is_equal_approx(qn.pt_a)):
+				tg_c = q.tg_c
+				tg_d = q.tg_d
+				bn_c = q.bn_c
+				bn_d = q.bn_d
+
+	elif q.corner == q.CORNER.INNER:
+		#common
+		tg_d = q.tg_d
+		bn_d = q.bn_d
+		tg_b = (q.tg_b)
+		bn_b = (q.bn_b)
+		#previous
+		tg_c = (q.tg_c - qp.tg_c)
+		bn_c = (q.bn_c + qp.bn_c)
+		#next
+		tg_a = (q.tg_a - qn.bn_b)
+		bn_a = (q.bn_a - qn.tg_b)
+		#check validity
+		if qp.corner != qp.CORNER.NONE or (not q.pt_c.is_equal_approx(qp.pt_c)) or (not q.pt_d.is_equal_approx(qp.pt_d)):
+			tg_c = q.tg_c
+			bn_c = q.bn_c
+		if qn.corner != qp.CORNER.NONE or (not q.pt_a.is_equal_approx(qn.pt_b)) or (not q.pt_d.is_equal_approx(qn.pt_a)):
+			tg_a = q.tg_a
+			bn_a = q.bn_a
+
+	elif q.corner == q.CORNER.OUTER:
+		tg_d = q.tg_d
+		bn_d = q.bn_d
+		tg_b = (q.tg_b)
+		bn_b = (q.bn_b)
+		#previous
+		tg_a = (q.tg_a + qp.tg_d)
+		bn_a = (q.bn_a + qp.bn_d)
+		#qn
+		tg_c = (q.tg_c - qn.bn_a)
+		bn_c = (q.bn_c + qn.tg_a)
+		#check validity
+		if qp.corner != qp.CORNER.NONE or (not q.pt_a.is_equal_approx(qp.pt_d)) or (not q.pt_b.is_equal_approx(qp.pt_c)):
+			tg_a = q.tg_a
+			bn_a = q.bn_a
+		if qn.corner != qp.CORNER.NONE or (not q.pt_b.is_equal_approx(qn.pt_b)) or (not q.pt_c.is_equal_approx(qn.pt_a)):
+			tg_c = q.tg_c
+			bn_c = q.bn_c
+
+	if q.flip_texture:
+		bn_a = -bn_a;
+		bn_b = -bn_b;
+		bn_c = -bn_c;
+		bn_d = -bn_d;
+
+	#Normalize the values
+	var half_vector = Vector2.ONE * 0.5
+	tg_a = tg_a.normalized()*0.5 + half_vector
+	tg_b = tg_b.normalized()*0.5 + half_vector
+	tg_c = tg_c.normalized()*0.5 + half_vector
+	tg_d = tg_d.normalized()*0.5 + half_vector
+
+	bn_a = bn_a.normalized()*0.5 + half_vector
+	bn_b = bn_b.normalized()*0.5 + half_vector
+	bn_c = bn_c.normalized()*0.5 + half_vector
+	bn_d = bn_d.normalized()*0.5 + half_vector
+
+	var normal_pt_a = Color(tg_a.x, tg_a.y, bn_a.x, bn_a.y)
+	var normal_pt_b = Color(tg_b.x, tg_b.y, bn_b.x, bn_b.y)
+	var normal_pt_c = Color(tg_c.x, tg_c.y, bn_c.x, bn_c.y)
+	var normal_pt_d = Color(tg_d.x, tg_d.y, bn_d.x, bn_d.y)
+
+	return [normal_pt_a, normal_pt_b, normal_pt_c, normal_pt_d]
+
+
+static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: bool, color_encoding:int) -> ArrayMesh:
 	"""
 	Assumes each quad in the sequence is of the same render type
 	same textures, values, etc...
@@ -109,167 +257,49 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 			uv_c = uv_d
 			uv_d = t
 
-		var next = _quads[wrapi(i + 1, 0, _quads.size())]
-		var prev = _quads[wrapi(i - 1, 0, _quads.size())]
+		var color_a = q.color
+		var color_b = q.color
+		var color_c = q.color
+		var color_d = q.color
 
-		# Interpolation and normalization
-		#First, consider everything to be a non corner
-		var tg_a = (q.tg_a + prev.tg_d)
-		var bn_a = (q.bn_a + prev.bn_d)
+		if color_encoding == COLOR_ENCODING.NORMALS:
+			var next = _quads[wrapi(i + 1, 0, _quads.size())]
+			var prev = _quads[wrapi(i - 1, 0, _quads.size())]
 
-		var tg_b = (q.tg_b + prev.tg_c)
-		var bn_b = (q.bn_b + prev.bn_c)
+			var normals = generate_normals_for_quad_interpolated(next, q, prev)
+			color_a = normals[0]
+			color_b = normals[1]
+			color_c = normals[2]
+			color_d = normals[3]
 
-		var tg_c = (q.tg_c + next.tg_b)
-		var bn_c = (q.bn_c + next.bn_b)
-
-		var tg_d = (q.tg_d + next.tg_a)
-		var bn_d = (q.bn_d + next.bn_a)
-
-		#then, fix values for corner cases (and edge ends)
-		if q.corner == q.CORNER.NONE:
-			if prev.corner == q.CORNER.NONE:
-				#check validity
-				if (not q.pt_a.is_equal_approx(prev.pt_d)) or (not q.pt_b.is_equal_approx(prev.pt_c)):
-					tg_a = q.tg_a
-					tg_b = q.tg_b
-					bn_a = q.bn_a
-					bn_b = q.bn_b
-			elif prev.corner == q.CORNER.INNER:
-				tg_a = (-prev.bn_d)
-				bn_a = (-prev.tg_d)
-				tg_b = (q.tg_b - prev.bn_a)
-				bn_b = (q.bn_b - prev.tg_a)
-				#check validity
-				if (not q.pt_a.is_equal_approx(prev.pt_d)) or (not q.pt_b.is_equal_approx(prev.pt_a)):
-					tg_a = q.tg_a
-					tg_b = q.tg_b
-					bn_a = q.bn_a
-					bn_b = q.bn_b
-			elif prev.corner == q.CORNER.OUTER:
-				tg_a = (q.tg_a + prev.bn_c)
-				bn_a = (q.bn_a - prev.tg_c)
-				tg_b = (prev.bn_b)
-				bn_b = (-prev.tg_b)
-				#check validity
-				if (not q.pt_a.is_equal_approx(prev.pt_c)) or (not q.pt_b.is_equal_approx(prev.pt_b)):
-					tg_a = q.tg_a
-					tg_b = q.tg_b
-					bn_a = q.bn_a
-					bn_b = q.bn_b
-			if next.corner == q.CORNER.NONE:
-				#check validity
-				if (not q.pt_c.is_equal_approx(next.pt_b)) or (not q.pt_d.is_equal_approx(next.pt_a)):
-					tg_c = q.tg_c
-					tg_d = q.tg_d
-					bn_c = q.bn_c
-					bn_d = q.bn_d
-			elif next.corner == q.CORNER.INNER:
-				tg_d = (-next.tg_d)
-				bn_d = (next.bn_d)
-				tg_c = (q.tg_c - next.tg_c)
-				bn_c = (q.bn_c + next.bn_c)
-				#check validity
-				if (not q.pt_c.is_equal_approx(next.pt_c)) or (not q.pt_d.is_equal_approx(next.pt_d)):
-					tg_c = q.tg_c
-					tg_d = q.tg_d
-					bn_c = q.bn_c
-					bn_d = q.bn_d
-			elif next.corner == q.CORNER.OUTER:
-				tg_c = (next.tg_b)
-				bn_c = (next.bn_b)
-				#check validity
-				if (not q.pt_c.is_equal_approx(next.pt_b)) or (not q.pt_d.is_equal_approx(next.pt_a)):
-					tg_c = q.tg_c
-					tg_d = q.tg_d
-					bn_c = q.bn_c
-					bn_d = q.bn_d
-
-		elif q.corner == q.CORNER.INNER:
-			#common
-			tg_d = q.tg_d
-			bn_d = q.bn_d
-			tg_b = (q.tg_b)
-			bn_b = (q.bn_b)
-			#previous
-			tg_c = (q.tg_c - prev.tg_c)
-			bn_c = (q.bn_c + prev.bn_c)
-			#next
-			tg_a = (q.tg_a - next.bn_b)
-			bn_a = (q.bn_a - next.tg_b)
-			#check validity
-			if prev.corner != prev.CORNER.NONE or (not q.pt_c.is_equal_approx(prev.pt_c)) or (not q.pt_d.is_equal_approx(prev.pt_d)):
-				tg_c = q.tg_c
-				bn_c = q.bn_c
-			if next.corner != prev.CORNER.NONE or (not q.pt_a.is_equal_approx(next.pt_b)) or (not q.pt_d.is_equal_approx(next.pt_a)):
-				tg_a = q.tg_a
-				bn_a = q.bn_a
-
-		elif q.corner == q.CORNER.OUTER:
-			tg_d = q.tg_d
-			bn_d = q.bn_d
-			tg_b = (q.tg_b)
-			bn_b = (q.bn_b)
-			#previous
-			tg_a = (q.tg_a + prev.tg_d)
-			bn_a = (q.bn_a + prev.bn_d)
-			#next
-			tg_c = (q.tg_c - next.bn_a)
-			bn_c = (q.bn_c + next.tg_a)
-			#check validity
-			if prev.corner != prev.CORNER.NONE or (not q.pt_a.is_equal_approx(prev.pt_d)) or (not q.pt_b.is_equal_approx(prev.pt_c)):
-				tg_a = q.tg_a
-				bn_a = q.bn_a
-			if next.corner != prev.CORNER.NONE or (not q.pt_b.is_equal_approx(next.pt_b)) or (not q.pt_c.is_equal_approx(next.pt_a)):
-				tg_c = q.tg_c
-				bn_c = q.bn_c
-
-		if q.flip_texture:
-			bn_a = -bn_a;
-			bn_b = -bn_b;
-			bn_c = -bn_c;
-			bn_d = -bn_d;
-
-		#Normalize the values
-		tg_a = tg_a.normalized()*0.5 + Vector2.ONE*0.5;
-		tg_b = tg_b.normalized()*0.5 + Vector2.ONE*0.5;
-		tg_c = tg_c.normalized()*0.5 + Vector2.ONE*0.5;
-		tg_d = tg_d.normalized()*0.5 + Vector2.ONE*0.5;
-
-		bn_a = bn_a.normalized()*0.5 + Vector2.ONE*0.5;
-		bn_b = bn_b.normalized()*0.5 + Vector2.ONE*0.5;
-		bn_c = bn_c.normalized()*0.5 + Vector2.ONE*0.5;
-		bn_d = bn_d.normalized()*0.5 + Vector2.ONE*0.5;
-
-		q.update_tangents()
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(Color(tg_a.x, tg_a.y, bn_a.x, bn_a.y))
+		st.add_color(color_a)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
 		_add_uv_to_surface_tool(st, uv_b)
-		st.add_color(Color(tg_b.x, tg_b.y, bn_b.x, bn_b.y))
+		st.add_color(color_b)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(Color(tg_c.x, tg_c.y, bn_c.x, bn_c.y))
+		st.add_color(color_c)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(Color(tg_a.x, tg_a.y, bn_a.x, bn_a.y))
+		st.add_color(color_a)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(Color(tg_c.x, tg_c.y, bn_c.x, bn_c.y))
+		st.add_color(color_c)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
 		_add_uv_to_surface_tool(st, uv_d)
-		st.add_color(Color(tg_d.x, tg_d.y, bn_d.x, bn_d.y))
+		st.add_color(color_d)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
 
 		length_elapsed += section_length
@@ -278,8 +308,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 	st.generate_normals()
 	return st.commit()
 
-
-func get_meshes() -> Array:
+func get_meshes(color_encoding:int) -> Array:
 	"""
 	Returns an array of SS2D_Mesh
 	# Get Arrays of consecutive quads with the same mesh data
@@ -295,7 +324,7 @@ func get_meshes() -> Array:
 			continue
 		var st: SurfaceTool = SurfaceTool.new()
 		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(
-			consecutive_quads, wrap_around
+			consecutive_quads, wrap_around, color_encoding
 		)
 		var tex: Texture = consecutive_quads[0].texture
 		var tex_normal: Texture = consecutive_quads[0].texture_normal

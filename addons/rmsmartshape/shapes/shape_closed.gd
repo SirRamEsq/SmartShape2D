@@ -79,7 +79,7 @@ func _build_meshes(edges: Array) -> Array:
 				produced_fill_mesh = true
 
 		# Produce edge Meshes
-		for m in e.get_meshes():
+		for m in e.get_meshes(color_encoding):
 			meshes.push_back(m)
 	if not produced_fill_mesh:
 		for m in _build_fill_mesh(get_tessellated_points(), shape_material):
