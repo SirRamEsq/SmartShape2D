@@ -813,7 +813,7 @@ func _build_meshes(edges: Array) -> Array:
 
 	# Produce edge Meshes
 	for e in edges:
-		for m in e.get_meshes():
+		for m in e.get_meshes(color_encoding):
 			meshes.push_back(m)
 
 	return meshes
