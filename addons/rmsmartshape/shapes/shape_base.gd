@@ -1607,28 +1607,29 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		new_quads.push_back(new_quad)
 
 		# Corner Quad
-		if tess_idx != first_idx_t:
-			var prev_width = _get_width_for_tessellated_point(verts, verts_t, tess_idx_prev)
-			var q = _edge_generate_corner(
-				pt_prev,
-				pt,
-				pt_next,
-				prev_width,
-				width_scale,
-				tex_size.y,
-				edge_material,
-				texture_idx,
-				c_scale,
-				c_offset
-			)
-			if q != null:
-				new_quads.push_front(q)
+		if edge_material != null and edge_material.use_corner_texture:
+			if tess_idx != first_idx_t:
+				var prev_width = _get_width_for_tessellated_point(verts, verts_t, tess_idx_prev)
+				var q = _edge_generate_corner(
+					pt_prev,
+					pt,
+					pt_next,
+					prev_width,
+					width_scale,
+					tex_size.y,
+					edge_material,
+					texture_idx,
+					c_scale,
+					c_offset
+				)
+				if q != null:
+					new_quads.push_front(q)
 
 		# Taper Quad
 		# Bear in mind, a point can be both first AND last
 		# Consider an edge that consists of two points (one edge)
 		# This first point is used to generate the quad; it is both first and last
-		if is_first_tess_point and edge_material != null:
+		if is_first_tess_point and edge_material != null and edge_material.use_taper_texture:
 			var taper_texture = edge_material.get_texture_taper_left(texture_idx)
 			var taper_texture_normal = edge_material.get_texture_normal_taper_left(texture_idx)
 			if taper_texture != null:
@@ -1651,7 +1652,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 				else:
 					new_quad.texture = taper_texture
 					new_quad.texture_normal = taper_texture_normal
-		if is_last_tess_point and edge_material != null:
+		if is_last_tess_point and edge_material != null and edge_material.use_taper_texture:
 			var taper_texture = edge_material.get_texture_taper_right(texture_idx)
 			var taper_texture_normal = edge_material.get_texture_normal_taper_right(texture_idx)
 			if taper_texture != null:
