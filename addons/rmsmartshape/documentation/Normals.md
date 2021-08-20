@@ -45,7 +45,7 @@ varying mat2 NORMAL_MATRIX;
 
 void vertex() {
 	NORMAL_MATRIX = mat2(COLOR.rg, COLOR.ba)*2.0 - mat2(vec2(1.0), vec2(1.0));
-	COLOR = vec4(1);
+	COLOR = texture(TEXTURE, UV);
 }
 
 void fragment() {
