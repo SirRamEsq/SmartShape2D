@@ -1144,10 +1144,14 @@ Will return a dictionary containing array of SS2D_IndexMap
 Each element in the array is a contiguous sequence of indicies that fit inside the meta_material's normalrange
 """
 static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
+	return _get_meta_material_index_mapping(s_material, verts, false)
+
+static func _get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array, wrap_around: bool) -> Array:
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
-	for idx in range(0, verts.size() - 1, 1):
-		var idx_next = _get_next_point_index(idx, verts, false)
+	var vert_count = verts.size() if wrap_around else verts.size() - 1
+	for idx in range(0, vert_count, 1):
+		var idx_next = _get_next_point_index(idx, verts, wrap_around)
 		var pt = verts[idx]
 		var pt_next = verts[idx_next]
 		var delta = pt_next - pt
@@ -1161,7 +1165,8 @@ static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, ver
 		for e in edge_meta_materials:
 			# Is exsiting, append
 			if edge_building.has(e):
-				edge_building[e].indicies.push_back(idx_next)
+				if not idx_next in edge_building[e].indicies:
+					edge_building[e].indicies.push_back(idx_next)
 			# Isn't existing, make a new mapping
 			else:
 				edge_building[e] = SS2D_IndexMap.new([idx, idx_next], e)
@@ -1424,7 +1429,7 @@ func _edge_generate_corner(
 	pt_next: Vector2,
 	width_prev: float,
 	width: float,
-    size: float,
+	size: float,
 	edge_material: SS2D_Material_Edge,
 	texture_idx: int,
 	c_scale: float,
@@ -1608,7 +1613,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 
 		# Corner Quad
 		if edge_material != null and edge_material.use_corner_texture:
-			if tess_idx != first_idx_t:
+			if tess_idx != first_idx_t or is_edge_contiguous:
 				var prev_width = _get_width_for_tessellated_point(verts, verts_t, tess_idx_prev)
 				var q = _edge_generate_corner(
 					pt_prev,

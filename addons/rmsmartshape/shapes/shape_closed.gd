@@ -343,6 +343,14 @@ func import_from_legacy(legacy: RMSmartShape2D):
 		set_point_width(key, legacy.get_point_width(i))
 
 
+"""
+Differs from the main get_meta_material_index_mapping
+in that the points wrap around
+"""
+static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
+	return _get_meta_material_index_mapping(s_material, verts, true)
+
+
 func _merge_index_maps(imaps:Array, verts:Array) -> Array:
 	# See if any edges have both the first (0) and last idx (size)
 	# Merge them into one if so
