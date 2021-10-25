@@ -1149,8 +1149,7 @@ static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, ver
 static func _get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array, wrap_around: bool) -> Array:
 	var final_edges: Array = []
 	var edge_building: Dictionary = {}
-	var vert_count = verts.size() if wrap_around else verts.size() - 1
-	for idx in range(0, vert_count, 1):
+	for idx in range(0, verts.size() - 1, 1):
 		var idx_next = _get_next_point_index(idx, verts, wrap_around)
 		var pt = verts[idx]
 		var pt_next = verts[idx_next]
@@ -1679,6 +1678,23 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 				else:
 					new_quad.texture = taper_texture
 					new_quad.texture_normal = taper_texture_normal
+
+		# Final point for closed shapes fix
+		# Corner quads aren't always correctly when the corner is between final and first pt
+		if is_last_point and is_edge_contiguous:
+			var idx_mid = verts_t.size() - 1
+			var idx_next = _get_next_unique_point_idx(idx_mid, verts_t, true)
+			var idx_prev = _get_previous_unique_point_idx(idx_mid, verts_t, true)
+			var p_p = verts_t[idx_prev]
+			var p_m = verts_t[idx_mid]
+			var p_n = verts_t[idx_next]
+			var w_p = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
+			var w_m = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
+			var q = _edge_generate_corner(
+				p_p, p_m, p_n, w_p, w_m, tex_size.y, edge_material, texture_idx, c_scale, c_offset
+			)
+			if q != null:
+				new_quads.push_back(q)
 
 		# Add new quads to edge
 		for q in new_quads:
