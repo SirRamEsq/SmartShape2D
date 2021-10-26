@@ -16,5 +16,5 @@ func _exit_tree():
 
 func _value_changed():
 	var obj = get_edited_object()
-	control.end = obj.end
+	control.end = obj.end - obj.begin
 	control.start = obj.begin
