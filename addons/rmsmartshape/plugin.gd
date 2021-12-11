@@ -15,6 +15,8 @@ const ICON_HANDLE = preload("assets/icon_editor_handle.svg")
 const ICON_HANDLE_SELECTED = preload("assets/icon_editor_handle_selected.svg")
 const ICON_HANDLE_BEZIER = preload("assets/icon_editor_handle_bezier.svg")
 const ICON_HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
+const ICON_FREEHAND_MODE = preload("assets/freehand.png")
+const ICON_CIRCLE_ERASE = preload("assets/icon_editor_snap.svg")
 const ICON_ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
 const ICON_CURVE_EDIT = preload("assets/icon_curve_edit.svg")
 const ICON_CURVE_CREATE = preload("assets/icon_curve_create.svg")
@@ -27,7 +29,7 @@ const ICON_IMPORT_CLOSED = preload("assets/closed_shape.png")
 const ICON_IMPORT_OPEN = preload("assets/open_shape.png")
 const FUNC = preload("plugin-functionality.gd")
 
-enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT }
+enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
 enum ACTION_VERT {
 	NONE = 0,
@@ -110,6 +112,8 @@ var tb_vert_edit: ToolButton = null
 var tb_edge_edit: ToolButton = null
 var tb_pivot: ToolButton = null
 var tb_collision: ToolButton = null
+var tb_freehand: ToolButton = null
+
 var tb_snap: MenuButton = null
 # The PopupMenu that belongs to tb_snap
 var tb_snap_popup: PopupMenu = null
@@ -126,6 +130,13 @@ var closest_key: int
 var closest_edge_keys: Array = [-1, -1]
 var width_scaling: float
 
+# Vertex paint mode stuff
+var last_point_position: Vector2
+var _mouse_lmb_pressed := false
+var _mouse_rmb_pressed := false
+var freehand_paint_size := 20.0
+var freehand_erase_size := 40.0
+
 # Track our mode of operation
 var current_mode: int = MODE.CREATE_VERT
 var previous_mode: int = MODE.CREATE_VERT
@@ -139,6 +150,10 @@ var cached_shape_global_transform: Transform2D
 
 # Action Move Variables
 var _mouse_motion_delta_starting_pos = Vector2(0, 0)
+
+# Defining the viewport to get the current zoom/scale
+var target_viewport
+var current_zoom_level : float = 1.0
 
 # Track the property plugin
 var plugin
@@ -195,9 +210,13 @@ func _gui_build_toolbar():
 
 	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
 	tb_pivot.connect("pressed", self, "_enter_mode", [MODE.SET_PIVOT])
+	
+	tb_freehand = create_tool_button(ICON_FREEHAND_MODE, SS2D_Strings.EN_TOOLTIP_FREEHAND)
+	tb_freehand.connect("pressed", self, "_enter_mode", [MODE.FREEHAND])
 
 	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION)
 	tb_collision.connect("pressed", self, "_add_collision")
+
 
 	tb_snap = MenuButton.new()
 	tb_snap.hint_tooltip = SS2D_Strings.EN_TOOLTIP_SNAP
@@ -239,6 +258,31 @@ func _gui_update_vert_info_panel():
 	gui_point_info_panel.set_texture_idx(properties.texture_idx)
 	gui_point_info_panel.set_width(properties.width)
 	gui_point_info_panel.set_flip(properties.flip)
+
+
+func _process(delta):
+	if current_mode == MODE.FREEHAND:
+		current_zoom_level = get_canvas_scale()
+
+
+func get_canvas_scale() -> float:
+	get_current_viewport()
+	if target_viewport:
+		return target_viewport.global_canvas_transform.x.x
+	else:
+		return 1.0
+
+func get_current_viewport():
+	if !get_tree().get_edited_scene_root():
+		return
+	var editor_viewport = get_tree().get_edited_scene_root().get_parent()
+	
+	if editor_viewport is Viewport:
+		target_viewport = editor_viewport
+	elif editor_viewport is ViewportContainer:
+		target_viewport = get_tree().get_edited_scene_root()
+	else:
+		target_viewport = editor_viewport.get_parent()
 
 
 func _gui_update_edge_info_panel():
@@ -339,17 +383,20 @@ func forward_canvas_gui_input(event):
 	var grab_threshold = get_editor_interface().get_editor_settings().get(
 		"editors/poly_editor/point_grab_radius"
 	)
-	var return_value = false
-
+	
+	var key_return_value = false
 	if event is InputEventKey:
-		return_value = _input_handle_keyboard_event(event)
+		key_return_value = _input_handle_keyboard_event(event)
+	
+	var mb_return_value = false
+	if event is InputEventMouseButton:
+		mb_return_value = _input_handle_mouse_button_event(event, et, grab_threshold)
 
-	elif event is InputEventMouseButton:
-		return_value = _input_handle_mouse_button_event(event, et, grab_threshold)
+	var mm_return_value = false
+	if event is InputEventMouseMotion:
+		mb_return_value = _input_handle_mouse_motion_event(event, et, grab_threshold)
 
-	elif event is InputEventMouseMotion:
-		return_value = _input_handle_mouse_motion_event(event, et, grab_threshold)
-
+	var return_value = key_return_value == true or mb_return_value == true or mm_return_value == true
 	_gui_update_info_panels()
 	return return_value
 
@@ -626,7 +673,7 @@ static func is_key_valid(s: SS2D_Shape_Base, key: int) -> bool:
 func _enter_mode(mode: int):
 	if current_mode == mode:
 		return
-	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_vert_create]:
+	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_vert_create, tb_freehand]:
 		tb.pressed = false
 
 	previous_mode = current_mode
@@ -640,6 +687,8 @@ func _enter_mode(mode: int):
 			tb_edge_edit.pressed = true
 		MODE.SET_PIVOT:
 			tb_pivot.pressed = true
+		MODE.FREEHAND:
+			tb_freehand.pressed = true
 		_:
 			tb_vert_edit.pressed = true
 	update_overlays()
@@ -728,8 +777,27 @@ func forward_canvas_draw_over_viewport(overlay: Control):
 					draw_new_point_close_preview(overlay)
 		MODE.EDIT_EDGE:
 			draw_mode_edit_edge(overlay)
+		MODE.FREEHAND:
+			if not _mouse_lmb_pressed:
+				draw_new_point_close_preview(overlay)
+			draw_freehand_circle(overlay)
+			draw_mode_edit_vert(overlay, false)
+			
 
 	shape.update()
+
+
+func draw_freehand_circle(overlay: Control):
+	var mouse = overlay.get_local_mouse_position()
+	var size = freehand_paint_size
+	var color = Color.white
+	if Input.is_key_pressed(KEY_CONTROL):
+		color = Color.red
+		size = freehand_erase_size
+	color.a = 0.5
+	overlay.draw_arc(mouse, size * 2 * current_zoom_level, 0, TAU, 64, color, 1, true)
+	color.a = 0.05
+	overlay.draw_circle(mouse, size * 2 * current_zoom_level, color)
 
 
 func draw_mode_edit_edge(overlay: Control):
@@ -756,12 +824,13 @@ func draw_mode_edit_edge(overlay: Control):
 		overlay.draw_line(t.xform(p1), t.xform(p2), color_highlight, 5.0)
 
 
-func draw_mode_edit_vert(overlay: Control):
+func draw_mode_edit_vert(overlay: Control, show_vert_handles: bool = true):
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var verts = shape.get_vertices()
 	var points = shape.get_tessellated_points()
 	draw_shape_outline(overlay, t, points)
-	draw_vert_handles(overlay, t, verts, true)
+	if show_vert_handles:
+		draw_vert_handles(overlay, t, verts, true)
 	if on_edge:
 		overlay.draw_texture(ICON_ADD_HANDLE, edge_point - ICON_ADD_HANDLE.get_size() * 0.5)
 
@@ -790,7 +859,7 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 		# Draw Vert handles
 		var key: int = shape.get_point_key_at_index(i)
 		var hp: Vector2 = t.xform(verts[i])
-		var icon = ICON_HANDLE_BEZIER if Input.is_key_pressed(KEY_SHIFT) else ICON_HANDLE
+		var icon = ICON_HANDLE_BEZIER if (Input.is_key_pressed(KEY_SHIFT) and not current_mode == MODE.FREEHAND) else ICON_HANDLE
 		overlay.draw_texture(icon, hp - icon.get_size() * 0.5)
 
 		# Draw Width handles
@@ -878,8 +947,9 @@ func draw_new_point_close_preview(overlay: Control):
 	var b = t.xform(shape.get_point_position(closest_edge_keys[1]))
 #	var a = 
 #	var b = t.xform()
-	overlay.draw_line(mouse, b, color, width, true)
 	overlay.draw_line(mouse, a, color, width, true)
+	color.a = 0.1
+	overlay.draw_line(mouse, b, color, width, true)
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
 
 
@@ -1052,34 +1122,49 @@ func _input_handle_left_click(
 			var edge_point_keys = _get_edge_point_keys_from_offset(offset, true)
 			select_vertices_to_move([edge_point_keys[0], edge_point_keys[1]], vp_m_pos)
 		return true
+	elif current_mode == MODE.FREEHAND:
+		return true
 	return false
 
 
 func _input_handle_mouse_wheel(btn: int) -> bool:
-	if not shape.can_edit:
-		return false
-	var key = current_action.current_point_key()
-	if Input.is_key_pressed(KEY_SHIFT):
-		var width = shape.get_point_width(key)
-		var width_step = 0.1
-		if btn == BUTTON_WHEEL_DOWN:
-			width_step *= -1
-		var new_width = width + width_step
-		shape.set_point_width(key, new_width)
+	if current_mode == MODE.FREEHAND:
+		if Input.is_key_pressed(KEY_CONTROL) and Input.is_key_pressed(KEY_SHIFT):
+			var step_multiplier = 1.2 if btn == BUTTON_WHEEL_UP else 0.8
+			freehand_erase_size = round(clamp(freehand_erase_size * step_multiplier, 5, 400))
+			update_overlays()
+			return true
+		elif Input.is_key_pressed(KEY_SHIFT):
+			var step_multiplier = 1.2 if btn == BUTTON_WHEEL_UP else 0.8
+			freehand_paint_size = round(clamp(freehand_paint_size * step_multiplier, 5, 400))
+			update_overlays()
+			return true
+	elif current_action.is_single_vert_selected():
+		if not shape.can_edit:
+			return false
+		var key = current_action.current_point_key()
+		if Input.is_key_pressed(KEY_SHIFT):
+			var width = shape.get_point_width(key)
+			var width_step = 0.1
+			if btn == BUTTON_WHEEL_DOWN:
+				width_step *= -1
+			var new_width = width + width_step
+			shape.set_point_width(key, new_width)
 
-	else:
-		var texture_idx_step = 1
-		if btn == BUTTON_WHEEL_DOWN:
-			texture_idx_step *= -1
+		else:
+			var texture_idx_step = 1
+			if btn == BUTTON_WHEEL_DOWN:
+				texture_idx_step *= -1
 
-		var tex_idx: int = shape.get_point_texture_index(key) + texture_idx_step
-		shape.set_point_texture_index(key, tex_idx)
+			var tex_idx: int = shape.get_point_texture_index(key) + texture_idx_step
+			shape.set_point_texture_index(key, tex_idx)
 
-	shape.set_as_dirty()
-	update_overlays()
-	_gui_update_info_panels()
+		shape.set_as_dirty()
+		update_overlays()
+		_gui_update_info_panels()
+		return true
 
-	return true
+	return false
 
 
 func _input_handle_keyboard_event(event: InputEventKey) -> bool:
@@ -1149,8 +1234,9 @@ func _input_handle_mouse_button_event(
 	)
 
 	#######################################
-	# Mouse Button released
+	# Left Mouse Button released
 	if not mb.pressed and mb.button_index == BUTTON_LEFT:
+		_mouse_lmb_pressed = false
 		var rslt: bool = false
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
@@ -1168,19 +1254,26 @@ func _input_handle_mouse_button_event(
 		deselect_verts()
 		return rslt
 
+	#######################################
+	# Right Mouse Button released
+	if not mb.pressed and mb.button_index == BUTTON_RIGHT:
+		_mouse_rmb_pressed = false
+
 	#########################################
 	# Mouse Wheel on valid point
-	elif mouse_wheel_spun and current_action.is_single_vert_selected():
+	elif mouse_wheel_spun:
 		return _input_handle_mouse_wheel(mb.button_index)
 
 	#########################################
 	# Mouse left click
 	elif mb.pressed and mb.button_index == BUTTON_LEFT:
+		_mouse_lmb_pressed = true
 		return _input_handle_left_click(mb, viewport_mouse_position, t, et, grab_threshold)
 
 	#########################################
 	# Mouse right click
 	elif mb.pressed and mb.button_index == BUTTON_RIGHT:
+		_mouse_rmb_pressed = true
 		return _input_handle_right_click_press(mb.position, grab_threshold)
 
 	return false
@@ -1224,7 +1317,7 @@ func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, gr
 	return false
 
 
-func _get_edge_point_keys_from_offset(offset: float, straight: bool = false):
+func _get_edge_point_keys_from_offset(offset: float, straight: bool = false, position:= Vector2(0, 0)):
 	for i in range(0, shape.get_point_count() - 1, 1):
 		var key = shape.get_point_key_at_index(i)
 		var key_next = shape.get_point_key_at_index(i + 1)
@@ -1236,6 +1329,7 @@ func _get_edge_point_keys_from_offset(offset: float, straight: bool = false):
 		else:
 			this_offset = shape.get_closest_offset(shape.get_point_position(key))
 			next_offset = shape.get_closest_offset(shape.get_point_position(key_next))
+		
 		if offset >= this_offset and offset <= next_offset:
 			return [key, key_next]
 		# for when the shape is closed and the final point has an offset of 0
@@ -1275,7 +1369,7 @@ func _input_find_closest_edge_keys(mm: InputEventMouseMotion):
 	closest_point = shape.get_closest_point_straight_edge(xform.affine_inverse().xform(mm.position))
 	var edge_point = xform.xform(closest_point)
 	var offset = shape.get_closest_offset_straight_edge(xform.affine_inverse().xform(edge_point))
-	closest_edge_keys = _get_edge_point_keys_from_offset(offset, true)
+	closest_edge_keys = _get_edge_point_keys_from_offset(offset, true, xform.affine_inverse().xform(mm.position))
 
 
 func get_mouse_over_vert_key(mm: InputEventMouseMotion, grab_threshold: float) -> int:
@@ -1419,7 +1513,7 @@ func _input_handle_mouse_motion_event(
 		else:
 			deselect_verts()
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
-
+	
 	elif current_mode == MODE.EDIT_EDGE:
 		# Don't update if edge panel is visible
 		if gui_edge_info_panel.visible:
@@ -1430,7 +1524,44 @@ func _input_handle_mouse_motion_event(
 		else:
 			deselect_verts()
 		on_edge = _input_motion_is_on_edge(mm, grab_threshold)
-
+	
+	elif current_mode == MODE.FREEHAND:
+		if _mouse_lmb_pressed:
+			if not Input.is_key_pressed(KEY_CONTROL):
+				var local_position = t.affine_inverse().xform(mm.position)
+				if last_point_position.distance_to(local_position) >= freehand_paint_size * 2:
+					last_point_position = local_position
+					if use_snap():
+						local_position = snap(local_position)
+					var new_key = FUNC.action_add_point(
+						self,
+						"update_overlays",
+						undo,
+						shape,
+						local_position,
+						shape.get_point_index(closest_edge_keys[1])
+					)
+				update_overlays()
+				return true
+			else:
+				var closest_point = null
+				var xform: Transform2D = get_et() * shape.get_global_transform()
+				closest_point = (shape as SS2D_Shape_Base).get_point(closest_key).position
+				if closest_point != null:
+					closest_point = xform.xform(closest_point)
+					if closest_point.distance_to(mm.position) / current_zoom_level <= freehand_erase_size * 2:
+						var delete_point = get_mouse_over_vert_key(event, grab_threshold)
+						delete_point = closest_key
+						on_width_handle = false
+						if delete_point != -1:
+							FUNC.action_delete_point(self, "update_overlays", undo, shape, delete_point)
+							last_point_position = Vector2.ZERO
+							undo_version = undo.get_version()
+							update_overlays()
+							return true
+		else:
+			_input_find_closest_edge_keys( mm )
+	
 	update_overlays()
 	return false
 
