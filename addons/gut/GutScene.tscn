@@ -449,6 +449,7 @@ text = "Assert count"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
 [connection signal="mouse_entered" from="TitleBar" to="." method="_on_TitleBar_mouse_entered"]
 [connection signal="mouse_exited" from="TitleBar" to="." method="_on_TitleBar_mouse_exited"]
 [connection signal="draw" from="TitleBar/Maximize" to="." method="_on_Maximize_draw"]
