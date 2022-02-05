@@ -11,22 +11,25 @@ et = editor transform (viewport's canvas transform)
 """
 
 # Icons
-const ICON_HANDLE = preload("assets/icon_editor_handle.svg")
-const ICON_HANDLE_SELECTED = preload("assets/icon_editor_handle_selected.svg")
-const ICON_HANDLE_BEZIER = preload("assets/icon_editor_handle_bezier.svg")
-const ICON_HANDLE_CONTROL = preload("assets/icon_editor_handle_control.svg")
-const ICON_FREEHAND_MODE = preload("assets/freehand.png")
-const ICON_CIRCLE_ERASE = preload("assets/icon_editor_snap.svg")
-const ICON_ADD_HANDLE = preload("assets/icon_editor_handle_add.svg")
-const ICON_CURVE_EDIT = preload("assets/icon_curve_edit.svg")
-const ICON_CURVE_CREATE = preload("assets/icon_curve_create.svg")
-const ICON_CURVE_DELETE = preload("assets/icon_curve_delete.svg")
-const ICON_PIVOT_POINT = preload("assets/icon_editor_position.svg")
-const ICON_COLLISION = preload("assets/icon_collision_polygon_2d.svg")
-const ICON_INTERP_LINEAR = preload("assets/InterpLinear.svg")
-const ICON_SNAP = preload("assets/icon_editor_snap.svg")
-const ICON_IMPORT_CLOSED = preload("assets/closed_shape.png")
-const ICON_IMPORT_OPEN = preload("assets/open_shape.png")
+# TODO: Change to const and preload when this is resolved:
+# https://github.com/godotengine/godot/issues/17483
+var ICON_HANDLE = load("res://addons/rmsmartshape/assets/icon_editor_handle.svg")
+var ICON_HANDLE_SELECTED = load("res://addons/rmsmartshape/assets/icon_editor_handle_selected.svg")
+var ICON_HANDLE_BEZIER = load("res://addons/rmsmartshape/assets/icon_editor_handle_bezier.svg")
+var ICON_HANDLE_CONTROL = load("res://addons/rmsmartshape/assets/icon_editor_handle_control.svg")
+var ICON_FREEHAND_MODE = load("res://addons/rmsmartshape/assets/freehand.png")
+var ICON_CIRCLE_ERASE = load("res://addons/rmsmartshape/assets/icon_editor_snap.svg")
+var ICON_ADD_HANDLE = load("res://addons/rmsmartshape/assets/icon_editor_handle_add.svg")
+var ICON_CURVE_EDIT = load("res://addons/rmsmartshape/assets/icon_curve_edit.svg")
+var ICON_CURVE_CREATE = load("res://addons/rmsmartshape/assets/icon_curve_create.svg")
+var ICON_CURVE_DELETE = load("res://addons/rmsmartshape/assets/icon_curve_delete.svg")
+var ICON_PIVOT_POINT = load("res://addons/rmsmartshape/assets/icon_editor_position.svg")
+var ICON_COLLISION = load("res://addons/rmsmartshape/assets/icon_collision_polygon_2d.svg")
+var ICON_INTERP_LINEAR = load("res://addons/rmsmartshape/assets/InterpLinear.svg")
+var ICON_SNAP = load("res://addons/rmsmartshape/assets/icon_editor_snap.svg")
+var ICON_IMPORT_CLOSED = load("res://addons/rmsmartshape/assets/closed_shape.png")
+var ICON_IMPORT_OPEN = load("res://addons/rmsmartshape/assets/open_shape.png")
+
 const FUNC = preload("plugin-functionality.gd")
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }

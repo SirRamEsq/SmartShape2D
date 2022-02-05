@@ -22,38 +22,38 @@ p_lbl_width = NodePath("Properties/Width")
 p_lbl_flip = NodePath("Properties/Flip")
 
 [node name="Panel" type="Panel" parent="."]
-margin_left = 3.0
-margin_top = 3.0
-margin_right = 103.0
-margin_bottom = 111.0
+margin_left = 6.0
+margin_top = 4.0
+margin_right = 114.0
+margin_bottom = 132.0
 mouse_filter = 2
 
 [node name="Properties" type="VBoxContainer" parent="."]
-margin_left = 3.0
-margin_top = 3.0
-margin_right = 103.0
-margin_bottom = 111.0
+margin_left = 6.0
+margin_top = 4.0
+margin_right = 114.0
+margin_bottom = 132.0
 mouse_filter = 2
 
 [node name="IDX" type="Label" parent="Properties"]
-margin_right = 100.0
-margin_bottom = 24.0
+margin_right = 108.0
+margin_bottom = 29.0
 text = "IDX: 13"
 
 [node name="Tex" type="Label" parent="Properties"]
-margin_top = 28.0
-margin_right = 100.0
-margin_bottom = 52.0
+margin_top = 33.0
+margin_right = 108.0
+margin_bottom = 62.0
 text = "Tex: 1"
 
 [node name="Width" type="Label" parent="Properties"]
-margin_top = 56.0
-margin_right = 100.0
-margin_bottom = 80.0
+margin_top = 66.0
+margin_right = 108.0
+margin_bottom = 95.0
 text = "Width: 1.0"
 
 [node name="Flip" type="Label" parent="Properties"]
-margin_top = 84.0
-margin_right = 100.0
-margin_bottom = 108.0
+margin_top = 99.0
+margin_right = 108.0
+margin_bottom = 128.0
 text = "Flip: N"
