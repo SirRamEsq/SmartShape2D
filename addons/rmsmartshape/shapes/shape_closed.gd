@@ -1,15 +1,15 @@
-tool
+@tool
 extends SS2D_Shape_Base
 class_name SS2D_Shape_Closed, "../assets/closed_shape.png"
 
 ##########
 # CLOSED #
 ##########
-"""
-A Hole is a closed polygon
-Orientation doesn't matter
-Holes should not intersect each other
-"""
+#"""
+#A Hole is a closed polygon
+#Orientation doesn't matter
+#Holes should not intersect each other
+#"""
 var _holes = []
 
 
@@ -25,7 +25,7 @@ func get_holes() -> Array:
 # GODOT #
 #########
 func _init():
-	._init()
+	super._init()
 	_is_instantiable = true
 
 
@@ -49,7 +49,7 @@ func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func has_minimum_point_count() -> bool:
@@ -57,7 +57,7 @@ func has_minimum_point_count() -> bool:
 
 
 func duplicate_self():
-	var _new = .duplicate()
+	var _new = super.duplicate()
 	return _new
 
 
@@ -74,7 +74,7 @@ func _build_meshes(edges: Array) -> Array:
 		if not produced_fill_mesh:
 			if e.z_index > shape_material.fill_texture_z_index:
 				# Produce Fill Meshes
-				for m in _build_fill_mesh(get_tessellated_points(), shape_material):
+				for m in _build_fill_mesh(get_tessellated_points(), shape_material as RefCounted):
 					meshes.push_back(m)
 				produced_fill_mesh = true
 
@@ -82,17 +82,17 @@ func _build_meshes(edges: Array) -> Array:
 		for m in e.get_meshes(color_encoding):
 			meshes.push_back(m)
 	if not produced_fill_mesh:
-		for m in _build_fill_mesh(get_tessellated_points(), shape_material):
+		for m in _build_fill_mesh(get_tessellated_points(), shape_material as RefCounted):
 			meshes.push_back(m)
 		produced_fill_mesh = true
 	return meshes
 
 
 func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> bool:
-	"""
-	Returns true if line segment 'a1a2' and 'b1b2' intersect.
-	Find the four orientations needed for general and special cases
-	"""
+	# """
+	# Returns true if line segment 'a1a2' and 'b1b2' intersect.
+	# Find the four orientations needed for general and special cases
+	# """
 	var o1: int = get_points_orientation([a1, a2, b1])
 	var o2: int = get_points_orientation([a1, a2, b2])
 	var o3: int = get_points_orientation([b1, b2, a1])
@@ -143,24 +143,24 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	var meshes = []
 	if s_mat == null:
 		return meshes
-	if s_mat.fill_textures.empty():
+	if s_mat.fill_textures.is_empty():
 		return meshes
 	if points.size() < 3:
 		return meshes
 
 	var tex = null
-	if s_mat.fill_textures.empty():
+	if s_mat.fill_textures.is_empty():
 		return meshes
 	tex = s_mat.fill_textures[0]
 	var tex_normal = null
-	if not s_mat.fill_texture_normals.empty():
+	if not s_mat.fill_texture_normals.is_empty():
 		tex_normal = s_mat.fill_texture_normals[0]
 	var tex_size = tex.get_size()
 
 	# Points to produce the fill mesh
-	var fill_points: PoolVector2Array = PoolVector2Array()
-	var polygons = Geometry.offset_polygon_2d(
-		PoolVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
+	var fill_points: PackedVector2Array = PackedVector2Array()
+	var polygons = Geometry2D.offset_polygon_2d(
+		PackedVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
 	)
 	points = polygons[0]
 	fill_points.resize(points.size())
@@ -168,8 +168,8 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 		fill_points[i] = points[i]
 
 	# Produce the fill mesh
-	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
-	if fill_tris.empty():
+	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(fill_points)
+	if fill_tris.is_empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
 		return []
 
@@ -178,13 +178,13 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for i in range(0, fill_tris.size() - 1, 3):
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
@@ -203,11 +203,11 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 
 
 func _close_shape() -> bool:
-	"""
-	Will mutate the _points to ensure this is a closed_shape
-	last point will be constrained to first point
-	returns true if _points is modified
-	"""
+	# """
+	# Will mutate the _points to ensure this is a closed_shape
+	# last point will be constrained to first point
+	# returns true if _points is modified
+	# """
 	if is_shape_closed():
 		return false
 	if not has_minimum_point_count():
@@ -237,11 +237,11 @@ func is_shape_closed() -> bool:
 func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
 	for i in range(0, verts.size(), 1):
 		print("%s | %s" % [i, verts[i]])
-	return .add_points(verts, adjust_add_point_index(starting_index), key)
+	return super.add_points(verts, adjust_add_point_index(starting_index), key)
 
 
 func add_point(position: Vector2, index: int = -1, key: int = -1) -> int:
-	return .add_point(position, adjust_add_point_index(index), key)
+	return super.add_point(position, adjust_add_point_index(index), key)
 
 
 func adjust_add_point_index(index: int) -> int:
@@ -259,11 +259,11 @@ func _add_point_update():
 	# _add_point_update() will be called again by having another point added
 	if _close_shape():
 		return
-	._add_point_update()
+	super._add_point_update()
 
 
 func generate_collision_points():
-	var points: PoolVector2Array = PoolVector2Array()
+	var points: PackedVector2Array = PackedVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
@@ -308,7 +308,7 @@ func _on_dirty_update():
 
 func cache_edges():
 	if shape_material != null and render_edges:
-		_edges = _build_edges(shape_material, get_vertices())
+		_edges = _build_edges(shape_material as RefCounted, get_vertices())
 	else:
 		_edges = []
 
@@ -343,10 +343,10 @@ func import_from_legacy(legacy: RMSmartShape2D):
 		set_point_width(key, legacy.get_point_width(i))
 
 
-"""
-Differs from the main get_meta_material_index_mapping
-in that the points wrap around
-"""
+#"""
+#Differs from the main get_meta_material_index_mapping
+#in that the points wrap around
+#"""
 static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
 	return _get_meta_material_index_mapping(s_material, verts, true)
 

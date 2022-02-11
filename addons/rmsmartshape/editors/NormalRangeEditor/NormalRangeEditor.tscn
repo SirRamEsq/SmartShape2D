@@ -32,4 +32,5 @@ texture_under = ExtResource( 4 )
 texture_over = ExtResource( 3 )
 texture_progress = ExtResource( 1 )
 fill_mode = 4
+radial_initial_angle = 360.0
 radial_fill_degrees = 85.3

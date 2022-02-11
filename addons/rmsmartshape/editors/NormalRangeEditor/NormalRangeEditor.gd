@@ -1,11 +1,21 @@
-tool
+@tool
 extends VBoxContainer
 class_name SS2D_NormalRangeEditor
 
 signal value_changed
 
-var start setget _set_start, _get_start
-var end setget _set_end, _get_end
+# var start setget _set_start, _get_start
+var _start 
+var start:
+	get: return _get_start
+	set(v): _set_start
+
+# var end setget _set_end, _get_end
+var _end 
+var end:
+	get: return _end
+	set(v): _set_end
+
 var zero_equals_full_circle = true
 
 

@@ -1,10 +1,10 @@
-tool
-extends Reference
+@tool
+extends RefCounted 
 class_name SS2D_Mesh
 
-"""
-Used to organize all requested meshes to be rendered by their textures
-"""
+# """
+# Used to organize all requested meshes to be rendered by their textures
+# """
 
 var texture: Texture = null
 var texture_normal: Texture = null
@@ -83,7 +83,7 @@ func debug_print_array_mesh(am: ArrayMesh) -> String:
 func render(ci: CanvasItem):
 	#print("mesh count %s" % meshes.size())
 	for mesh in meshes:
-		ci.draw_mesh(mesh, texture, texture_normal)
+		ci.draw_mesh(mesh, texture)
 
 
 # Workaround (class cannot reference itself)

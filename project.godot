@@ -6,144 +6,144 @@
 ;   [section] ; section goes between []
 ;   param=value ; assign values to parameters
 
-config_version=4
+config_version=5
 
-_global_script_classes=[ {
-"base": "Resource",
-"class": "RMS2D_Material",
-"language": "GDScript",
+_global_script_classes=[{
+"base": "RefCounted",
+"class": &"RMS2D_Material",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/RMSmartShapeMaterial.gd"
 }, {
-"base": "Reference",
-"class": "RMS2D_VertexProperties",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"RMS2D_VertexProperties",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/LEGACY_vertex_properties.gd"
 }, {
-"base": "Reference",
-"class": "RMS2D_VertexPropertiesArray",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"RMS2D_VertexPropertiesArray",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/LEGACY_vertex_properties_array.gd"
 }, {
 "base": "Node2D",
-"class": "RMSmartShape2D",
-"language": "GDScript",
+"class": &"RMSmartShape2D",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/RMSmartShape2D.gd"
 }, {
 "base": "Node2D",
-"class": "RMSmartShapeAnchor2D",
-"language": "GDScript",
+"class": &"RMSmartShapeAnchor2D",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/RMSmartShapeAnchor2D.gd"
 }, {
 "base": "Node",
-"class": "SS2D_Common_Functions",
-"language": "GDScript",
+"class": &"SS2D_Common_Functions",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/common_functions.gd"
 }, {
-"base": "Reference",
-"class": "SS2D_Edge",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_Edge",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/edge.gd"
 }, {
-"base": "Reference",
-"class": "SS2D_IndexMap",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_IndexMap",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/index_map.gd"
 }, {
-"base": "Resource",
-"class": "SS2D_Material_Edge",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_Material_Edge",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/materials/edge_material.gd"
 }, {
-"base": "Resource",
-"class": "SS2D_Material_Edge_Metadata",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_Material_Edge_Metadata",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/materials/edge_material_metadata.gd"
 }, {
-"base": "Resource",
-"class": "SS2D_Material_Shape",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_Material_Shape",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/materials/shape_material.gd"
 }, {
-"base": "Reference",
-"class": "SS2D_Mesh",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_Mesh",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/mesh.gd"
 }, {
-"base": "Resource",
-"class": "SS2D_NormalRange",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_NormalRange",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/normal_range.gd"
 }, {
 "base": "VBoxContainer",
-"class": "SS2D_NormalRangeEditor",
-"language": "GDScript",
+"class": &"SS2D_NormalRangeEditor",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.gd"
 }, {
 "base": "EditorProperty",
-"class": "SS2D_NormalRangeEditorProperty",
-"language": "GDScript",
+"class": &"SS2D_NormalRangeEditorProperty",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditorProperty.gd"
 }, {
 "base": "Resource",
-"class": "SS2D_Point",
-"language": "GDScript",
+"class": &"SS2D_Point",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/point.gd"
 }, {
 "base": "Resource",
-"class": "SS2D_Point_Array",
-"language": "GDScript",
+"class": &"SS2D_Point_Array",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/point_array.gd"
 }, {
-"base": "Reference",
-"class": "SS2D_Quad",
-"language": "GDScript",
+"base": "RefCounted",
+"class": &"SS2D_Quad",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/quad.gd"
 }, {
 "base": "Node2D",
-"class": "SS2D_Shape_Anchor",
-"language": "GDScript",
+"class": &"SS2D_Shape_Anchor",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_anchor.gd"
 }, {
 "base": "Node2D",
-"class": "SS2D_Shape_Base",
-"language": "GDScript",
+"class": &"SS2D_Shape_Base",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_base.gd"
 }, {
 "base": "SS2D_Shape_Base",
-"class": "SS2D_Shape_Closed",
-"language": "GDScript",
+"class": &"SS2D_Shape_Closed",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_closed.gd"
 }, {
 "base": "Node2D",
-"class": "SS2D_Shape_Combine_Union",
-"language": "GDScript",
+"class": &"SS2D_Shape_Combine_Union",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_combine_union.gd"
 }, {
 "base": "SS2D_Shape_Base",
-"class": "SS2D_Shape_Meta",
-"language": "GDScript",
+"class": &"SS2D_Shape_Meta",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_meta.gd"
 }, {
 "base": "SS2D_Shape_Base",
-"class": "SS2D_Shape_Open",
-"language": "GDScript",
+"class": &"SS2D_Shape_Open",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_open.gd"
 }, {
 "base": "Node2D",
-"class": "SS2D_Shape_Render",
-"language": "GDScript",
+"class": &"SS2D_Shape_Render",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/shapes/shape_render.gd"
 }, {
 "base": "Resource",
-"class": "SS2D_Strings",
-"language": "GDScript",
+"class": &"SS2D_Strings",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/strings.gd"
 }, {
 "base": "Resource",
-"class": "SS2D_VertexProperties",
-"language": "GDScript",
+"class": &"SS2D_VertexProperties",
+"language": &"GDScript",
 "path": "res://addons/rmsmartshape/vertex_properties.gd"
-} ]
+}]
 _global_script_class_icons={
 "RMS2D_Material": "",
 "RMS2D_VertexProperties": "",
@@ -176,17 +176,10 @@ _global_script_class_icons={
 
 [application]
 
-config/name="Godot"
+config/name="godot_4_smart_shape2d"
 config/icon="res://icon.png"
+config/features=PackedStringArray("4.0", "Vulkan Clustered")
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/rmsmartshape/plugin.cfg" )
-
-[physics]
-
-common/enable_pause_aware_picking=true
-
-[rendering]
-
-environment/default_environment="res://default_env.tres"
+enabled=PackedStringArray("res://addons/rmsmartshape/plugin.cfg")

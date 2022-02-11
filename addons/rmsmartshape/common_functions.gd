@@ -1,4 +1,4 @@
-tool
+@tool
 extends Node
 class_name SS2D_Common_Functions
 

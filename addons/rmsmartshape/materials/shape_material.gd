@@ -1,23 +1,57 @@
-tool
-extends Resource
+@tool
+extends RefCounted
 class_name SS2D_Material_Shape
 
-"""
-This material represents the set of edge materials used for a RMSmartShape2D
-Each edge represents a set of textures used to render an edge
-"""
+# """
+# This material represents the set of edge materials used for a RMSmartShape2D
+# Each edge represents a set of textures used to render an edge
+# """
 
 # List of materials this shape can use
 # Should be SS2D_Material_Edge_Metadata
-export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_meta_materials
-export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
-export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
-export (int) var fill_texture_z_index: int = -10 setget set_fill_texture_z_index
-export (float) var fill_mesh_offset: float = 0.0 setget set_fill_mesh_offset
-export (Material) var fill_mesh_material: Material = null setget set_fill_mesh_material
+
+# export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_meta_materials
+var __edge_meta_materials: Array 
+@export var _edge_meta_materials : Array:
+	get: return __edge_meta_materials
+	set(v): set_edge_meta_materials
+
+# export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
+var _fill_textures: Array = []
+@export var fill_textures : Array:
+	get: return _fill_textures
+	set(v): set_fill_textures
+
+# export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
+var _fill_texture_normals: Array = []
+@export var fill_texture_normals : Array:
+	get: return _fill_texture_normals
+	set(v): set_fill_texture_normals
+
+# export (int) var fill_texture_z_index: int = -10 setget set_fill_texture_z_index
+var _fill_texture_z_index: int = -10
+@export var fill_texture_z_index : int:
+	get: return _fill_texture_z_index
+	set(v): set_fill_texture_z_index
+
+# export (float) var fill_mesh_offset: float = 0.0 setget set_fill_mesh_offset
+var _fill_mesh_offset: float = 0.0
+@export var fill_mesh_offset : float:
+	get: return _fill_mesh_offset
+	set(v): set_fill_mesh_offset
+
+# export (Material) var fill_mesh_material: Material = null setget set_fill_mesh_material
+var _fill_mesh_material: Material = null
+@export var fill_mesh_material : Material:
+	get: return _fill_mesh_material
+	set(v): set_fill_mesh_material
 
 # How much to offset all edges
-export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0 setget set_render_offset
+# export (float, -1.5, 1.5, 0.1) var render_offset: float = 0.0 setget set_render_offset
+var _render_offset: float = 0.0
+@export var render_offset : float:
+	get: return _render_offset
+	set(v): set_render_offset
 
 
 func set_fill_mesh_material(m: Material):

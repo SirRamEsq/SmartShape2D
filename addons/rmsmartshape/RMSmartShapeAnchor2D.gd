@@ -1,21 +1,50 @@
-tool
+@tool
 extends Node2D
 
 class_name RMSmartShapeAnchor2D, "./assets/LEGACY_shape_anchor.png"
 
-export (NodePath) var monitored_shape setget _set_monitored_shape
-export (int) var track_control_point setget _set_track_control_point
-export (float) var normal_length = 100.0 setget _set_normal_length
-export (float, -1.0, 1.0) var control_point_offset setget _set_control_point_offset
-export (float, -3.14159, 3.14159) var rotation_offset = 0 setget _set_rotation_offset
-export (bool) var copy_scale = false setget _set_copy_scale
+# @export (NodePath) var monitored_shape setget _set_monitored_shape
+var _monitored_shape: NodePath
+@export var monitored_shape : NodePath:
+	get: return _monitored_shape
+	set(v): _set_monitored_shape
+
+# @export (int) var track_control_point setget _set_track_control_point
+var _track_control_point : int
+@export var track_control_point : int:
+	get: return _track_control_point
+	set(v): _set_track_control_point
+
+# @export (float) var normal_length = 100.0 setget _set_normal_length
+var _normal_length : float = 100.0
+@export var normal_length : float:
+	get: return _normal_length
+	set(v): _set_normal_length
+
+# @export (float, -1.0, 1.0) var control_point_offset setget _set_control_point_offset
+var _contol_point_offset: float
+@export_range(0.0, 10.0, 0.2, "or_lesser" ) var control_point_offset : float:
+	get: return _contol_point_offset
+	set(v): _set_control_point_offset
+
+# @export (float, -3.14159, 3.14159) var rotation_offset = 0 setget _set_rotation_offset
+var _rotation_offset : float = 0
+@export var rotation_offset : float:
+	get: return _rotation_offset
+	set(v): _set_rotation_offset
+
+# @export (bool) var copy_scale = false setget _set_copy_scale
+var _copy_scale : bool = false
+@export var copy_scale : bool:
+	get: return _copy_scale
+	set(v): _set_copy_scale
 
 var connected = false
 
 var monitored_transform
 
 func _process(delta):
-	if monitored_shape != null and monitored_shape == "":
+	if str(monitored_shape) != null and str(monitored_shape) == "":
 		_set_monitored_shape(null)
 		return
 
@@ -33,21 +62,23 @@ func _process(delta):
 					monitored_transform = n.get_global_transform()
 					
 func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float):
-	var q0 = p0.linear_interpolate(p1, t)
-	var q1 = p1.linear_interpolate(p2, t)
-	var q2 = p2.linear_interpolate(p3, t)
+	var q0 = p0.lerp(p1, t)
+	var q1 = p1.lerp(p2, t)
+	var q2 = p2.lerp(p3, t)
 
-	var r0 = q0.linear_interpolate(q1, t)
-	var r1 = q1.linear_interpolate(q2, t)
+	var r0 = q0.lerp(q1, t)
+	var r1 = q1.lerp(q2, t)
 
-	var s = r0.linear_interpolate(r1, t)
+	var s = r0.lerp(r1, t)
 	return s
 
 func _set_monitored_shape(value):
 	if value == null and monitored_shape != null:
 		if has_node(monitored_shape):
-			get_node(monitored_shape).disconnect("points_modified", self, "_handle_point_change")
-			get_node(monitored_shape).disconnect("tree_exiting", self, "_monitored_node_leaving")
+			# get_node(monitored_shape).disconnect("points_modified", self, "_handle_point_change")
+			get_node(monitored_shape).points_modified.disconnect(_handle_point_change)
+			# get_node(monitored_shape).disconnect("tree_exiting", self, "_monitored_node_leaving")
+			get_node(monitored_shape).tree_exiting.disconnect(_monitored_node_leaving)
 		connected = false
 
 	if value=="":
@@ -55,9 +86,12 @@ func _set_monitored_shape(value):
 
 	if value != null:
 		if has_node(value):
-			get_node(value).connect("points_modified", self, "_handle_point_change")
-			connected = get_node(value).is_connected("points_modified", self, "_handle_point_change")
-			get_node(value).connect("tree_exiting", self, "_monitored_node_leaving")
+			# get_node(value).connect("points_modified", self, "_handle_point_change")
+			get_node(value).points_modified.connect(_handle_point_change)
+			# connected = get_node(value).is_connected("points_modified", self, "_handle_point_change")
+			connected = get_node(value).points_modified.is_connected(_handle_point_change)
+			# get_node(value).connect("tree_exiting", self, "_monitored_node_leaving")
+			get_node(value).tree_exiting.connect(_monitored_node_leaving)
 
 	monitored_shape = value
 	refresh()
@@ -108,10 +142,12 @@ func _set_control_point_offset(value):
 		if not node.is_closed_shape():
 			if track_control_point==0 and value<0:
 				value = 0.001
-				property_list_changed_notify()
+				# property_list_changed_notify()
+				notify_property_list_changed()
 			if track_control_point==node.get_point_count()-1 and value>0:
 				value = -0.001
-				property_list_changed_notify()
+				# property_list_changed_notify()
+				notify_property_list_changed()
 
 	control_point_offset = value
 	refresh()
@@ -126,7 +162,7 @@ func refresh():
 			if is_instance_valid(node) == false:
 				return
 			if node.is_queued_for_deletion() == true:
-				node.disconnect("points_modified", self, "_handle_point_change")
+				node.points_modified.disconnect(_handle_point_change)
 				return
 
 			var point_count = node.get_point_count()

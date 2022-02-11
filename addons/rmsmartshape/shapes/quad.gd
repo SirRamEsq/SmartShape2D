@@ -1,5 +1,5 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 class_name SS2D_Quad
 
 enum ORIENTATION { COLINEAR = 0, CCW, CW }
@@ -27,6 +27,7 @@ var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 var flip_texture: bool = false
 # Deprecated, should remove control_point_index
 var control_point_index: int
+# var fit_texture = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 var fit_texture = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 
 # Contains value from CORNER enum
@@ -116,10 +117,10 @@ func get_rotation() -> float:
 	return SS2D_NormalRange.get_angle_from_vector(pt_c - pt_a)
 
 
-"""
-Given three colinear points p, q, r, the function checks if
-point q lies on line segment 'pr'
-"""
+# """
+# Given three colinear points p, q, r, the function checks if
+# point q lies on line segment 'pr'
+# """
 
 
 func on_segment(p: Vector2, q: Vector2, r: Vector2) -> bool:
@@ -133,10 +134,10 @@ func on_segment(p: Vector2, q: Vector2, r: Vector2) -> bool:
 	return false
 
 
-"""
-Returns CCW, CW, or colinear
-see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-"""
+# """
+# Returns CCW, CW, or colinear
+# see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+# """
 
 
 func get_orientation(a: Vector2, b: Vector2, c: Vector2) -> int:
@@ -148,9 +149,9 @@ func get_orientation(a: Vector2, b: Vector2, c: Vector2) -> int:
 	return ORIENTATION.COLINEAR
 
 
-"""
-Return true if line segments p1q1 and p2q2 intersect
-"""
+# """
+# Return true if line segments p1q1 and p2q2 intersect
+# """
 
 
 func edges_intersect(p1: Vector2, q1: Vector2, p2: Vector2, q2: Vector2) -> bool:

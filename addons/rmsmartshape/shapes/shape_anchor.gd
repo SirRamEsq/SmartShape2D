@@ -1,17 +1,46 @@
-tool
+@tool
 extends Node2D
 
-const DEBUG_DRAW_LINE_LENGTH = 128.0
 
 class_name SS2D_Shape_Anchor, "../assets/Anchor.svg"
+# class_name SS2D_Shape_Anchor
 
-export (NodePath) var shape_path: NodePath setget set_shape_path
-export (int) var shape_point_index: int = 0 setget set_shape_point_index
-export (float, 0.0, 1.0) var shape_point_offset: float = 0.0 setget set_shape_point_offset
-export (float, 0, 3.14) var child_rotation: float = 3.14 setget set_child_rotation
-export (bool) var use_shape_scale: bool = false setget set_use_shape_scale
+const DEBUG_DRAW_LINE_LENGTH = 128.0
+# @export (NodePath) var shape_path: NodePath setget set_shape_path
+var _shape_path: NodePath 
+@export var shape_path: NodePath:
+	get: return _shape_path 
+	set(v): set_shape_path
 
-export (bool) var debug_draw: bool = false setget set_debug_draw
+# @export (int) var shape_point_index: int = 0 setget set_shape_point_index
+var _shape_point_index: int = 0 
+@export var shape_point_index: int:
+	get: return _shape_point_index 
+	set(v): set_shape_point_index
+
+# @export (float, 0.0, 1.0) var shape_point_offset: float = 0.0 setget set_shape_point_offset
+var _shape_point_offset: float = 0.0 
+@export_range(0.0, 1.0, 0.1) var shape_point_offset: float:
+	get: return _shape_point_offset 
+	set(v): set_shape_point_offset
+
+# @export (float, 0, 3.14) var child_rotation: float = 3.14 setget set_child_rotation
+var _child_rotation: float = 3.14 
+@export_range(0, 3.14, 0.1) var child_rotation: float:
+	get: return _child_rotation
+	set(v): set_child_rotation
+
+# @export (bool) var use_shape_scale: bool = false setget set_use_shape_scale
+var _use_shape_scale: bool = false 
+@export var use_shape_scale: bool:
+	get: return _use_shape_scale
+	set(v): set_use_shape_scale
+
+# @export (bool) var debug_draw: bool = false setget set_debug_draw
+var _debug_draw: bool = false 
+@export var debug_draw: bool:
+	get: return _debug_draw
+	set(v): set_debug_draw
 
 var cached_shape_transform:Transform2D = Transform2D.IDENTITY
 var shape = null
@@ -25,7 +54,8 @@ func set_shape_path(value: NodePath):
 	shape_path = value
 	set_shape()
 
-	property_list_changed_notify()
+	# property_list_changed_notify()
+	notify_property_list_changed()
 	refresh()
 
 func set_shape():
@@ -120,25 +150,25 @@ func _handle_point_change():
 # LOGIC #
 #########
 func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
-	var q0 = p0.linear_interpolate(p1, t)
-	var q1 = p1.linear_interpolate(p2, t)
-	var q2 = p2.linear_interpolate(p3, t)
+	var q0 = p0.lerp(p1, t)
+	var q1 = p1.lerp(p2, t)
+	var q2 = p2.lerp(p3, t)
 
-	var r0 = q0.linear_interpolate(q1, t)
-	var r1 = q1.linear_interpolate(q2, t)
+	var r0 = q0.lerp(q1, t)
+	var r1 = q1.lerp(q2, t)
 
-	var s = r0.linear_interpolate(r1, t)
+	var s = r0.lerp(r1, t)
 	return s
 
 
 func disconnect_shape(s: SS2D_Shape_Base):
-	s.disconnect("points_modified", self, "_handle_point_change")
-	s.disconnect("tree_exiting", self, "_monitored_node_leaving")
+	s.points_modified.disconnect(_handle_point_change)
+	s.tree_exiting.disconnect(_monitored_node_leaving)
 
 
 func connect_shape(s: SS2D_Shape_Base):
-	s.connect("points_modified", self, "_handle_point_change")
-	s.connect("tree_exiting", self, "_monitored_node_leaving")
+	s.points_modified.connect(_handle_point_change)
+	s.tree_exiting.connect(_monitored_node_leaving)
 
 
 func refresh():

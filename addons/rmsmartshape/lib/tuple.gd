@@ -1,16 +1,16 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 
-"""
-Everything in this script should be static
-This script contains code that may referenced in multiple locations in the plugin
+# """
+# Everything in this script should be static
+# This script contains code that may referenced in multiple locations in the plugin
 
-This is a simple script for a *very* simple tuple class
-Some notes:
-- "tuples" are just an array with two elements
-- Only intger Tuples are fully supported
-- Tuple(X,Y) is equal to Tuple(Y,X)
-"""
+# This is a simple script for a *very* simple tuple class
+# Some notes:
+# - "tuples" are just an array with two elements
+# - Only intger Tuples are fully supported
+# - Tuple(X,Y) is equal to Tuple(Y,X)
+# """
 
 static func create_tuple(a: int, b: int) -> Array:
 	return [a, b]

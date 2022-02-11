@@ -1,12 +1,17 @@
-tool
+@tool
 extends SS2D_Shape_Base
 class_name SS2D_Shape_Meta, "../assets/meta_shape.png"
 
-"""
-This shape will set the point_array data of all children shapes
-"""
+#"""
+#This shape will set the point_array data of all children shapes
+#"""
 
-export (bool) var press_to_update_cached_children = false setget _on_update_children
+# @export (bool) var press_to_update_cached_children = false setget _on_update_children
+var _press_to_update_cached_children = false 
+@export var press_to_update_cached_children : bool:
+	get: return _press_to_update_cached_children
+	set(v): _on_update_children
+
 var _cached_shape_children: Array = []
 
 
@@ -14,7 +19,7 @@ var _cached_shape_children: Array = []
 # OVERRIDES #
 #############
 func _init():
-	._init()
+	super._init()
 	_is_instantiable = true
 
 
@@ -22,7 +27,7 @@ func _ready():
 	for s in _get_shapes(self):
 		_add_to_meta(s)
 	call_deferred("_update_cached_children")
-	._ready()
+	super._ready()
 
 
 func _draw():
@@ -32,19 +37,19 @@ func _draw():
 func remove_child(node: Node):
 	_remove_from_meta(node)
 	call_deferred("_update_cached_children")
-	.remove_child(node)
+	super.remove_child(node)
 
 
 func add_child(node: Node, legible_unique_name: bool = false):
 	_add_to_meta(node)
 	call_deferred("_update_cached_children")
-	.add_child(node, legible_unique_name)
+	super.add_child(node, legible_unique_name)
 
 
 func add_child_below_node(node: Node, child_node: Node, legible_unique_name: bool = false):
 	_add_to_meta(child_node)
 	call_deferred("_update_cached_children")
-	.add_child_below_node(node, child_node, legible_unique_name)
+	super.add_sibling(child_node, legible_unique_name) # CHANGED to new api deleted node
 
 
 func _on_dirty_update():
@@ -89,7 +94,7 @@ func _add_to_meta(n: Node):
 		return
 	# Assign node to have the same point array data as this meta shape
 	n.set_point_array(_points, false)
-	n.connect("points_modified", self, "_update_shapes", [[n]])
+	n.points_modified.connect(_update_shapes([n]))
 
 
 func _update_shapes(except: Array = []):
@@ -105,7 +110,7 @@ func _remove_from_meta(n: Node):
 		return
 	# Make Point Data Unique
 	n.set_point_array(n.get_point_array(), true)
-	n.disconnect("points_modified", self, "_update_shapes")
+	n.points_modified.disconnect(_update_shapes)
 
 func treat_as_closed()->bool:
 	var has_closed = false

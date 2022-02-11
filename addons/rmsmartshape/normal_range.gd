@@ -1,22 +1,36 @@
-tool
-extends Resource
+@tool
+extends RefCounted
 class_name SS2D_NormalRange
-"""
-This class will determine if the normal of a vector falls within the specifed angle ranges
-- if begin and end are equal, any angle is considered to be within range
-- 360.0 and 0.0 degrees are considered equivilent
-"""
+#"""
+#This class will determine if the normal of a vector falls within the specifed angle ranges
+#- if begin and end are equal, any angle is considered to be within range
+#- 360.0 and 0.0 degrees are considered equivilent
+#"""
 
-export (int, 0, 360, 0) var begin = 0.0 setget set_begin
-export (int, 0, 360, 0) var distance = 0.0 setget set_distance
+# @export (int, 0, 360, 0) var begin = 0.0 setget set_begin
+var _begin = 0.0
+@export var begin : float:
+	get: return _begin
+	set(v): set_begin
+
+# @export (int, 0, 360, 0) var distance = 0.0 setget set_distance
+var _distance = 0.0
+@export var distance : int:
+	get: return distance
+	set(v): set_distance
 
 # Deprecated variable
-var end = 0.0 setget set_end
+# var end = 0.0 setget set_end
+var _end = 0.0
+@export var end : float:
+	get: return _end
+	set(v): set_end
 
 # This is a hack to support the custom editor, needed a property
 # to exist to lock the TextureProgress to.  Makes it flow better
 # in the Inspector.
-export (Vector2) var edgeRendering
+# @export (Vector2) var edgeRendering
+@export var edgeRendering : Vector2
 
 
 func set_distance(f: float):
@@ -70,17 +84,17 @@ static func get_angle_from_vector(vec: Vector2) -> float:
 	return deg
 
 static func _get_positive_angle_deg(degrees: float) -> float:
-	"""
-	Get in range between 0.0 and 360.0
-	"""
+	# """
+	# Get in range between 0.0 and 360.0
+	# """
 	while degrees < 0:
 		degrees += 360
 	return fmod(degrees, 360.0)
 
 static func _get_signed_angle_deg(degrees: float) -> float:
-	"""
-	Get in range between -360.0 and 360.0
-	"""
+	# """
+	# Get in range between -360.0 and 360.0
+	# """
 	var new_degrees = degrees
 	while abs(new_degrees) > 360:
 		new_degrees += (360 * sign(degrees) * -1)

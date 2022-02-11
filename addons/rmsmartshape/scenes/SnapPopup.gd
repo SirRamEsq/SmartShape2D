@@ -1,10 +1,17 @@
-tool
-extends PopupDialog
+@tool
+extends PopupPanel
 
-export (NodePath) var p_snap_offset_x
-export (NodePath) var p_snap_offset_y
-export (NodePath) var p_snap_step_x
-export (NodePath) var p_snap_step_y
+# export (NodePath) var p_snap_offset_x
+@export var p_snap_offset_x : NodePath
+
+# export (NodePath) var p_snap_offset_y
+@export var p_snap_offset_y : NodePath
+
+# export (NodePath) var p_snap_step_x
+@export var p_snap_step_x : NodePath
+
+# export (NodePath) var p_snap_step_y
+@export var p_snap_step_y : NodePath
 
 
 func get_snap_offset() -> Vector2:

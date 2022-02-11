@@ -1,14 +1,14 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 
-"""
-- Everything in this script should be static
-- There is one reason to have code in this script
-	1. To separate out code from the main plugin script to ease testing
+# """
+# - Everything in this script should be static
+# - There is one reason to have code in this script
+# 	1. To separate out code from the main plugin script to ease testing
 
-Common Abbreviations
-et = editor transform (viewport's canvas transform)
-"""
+# Common Abbreviations
+# et = editor transform (viewport's canvas transform)
+# """
 
 const TUP = preload("lib/tuple.gd")
 
@@ -41,7 +41,7 @@ static func _get_intersecting_control_point(
 		if c_pos == Vector2.ZERO:
 			continue
 		var final_pos = vec_pos + c_pos
-		final_pos = xform.xform(final_pos)
+		final_pos = xform.basis_xform(final_pos)
 		if final_pos.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(key)
 
@@ -58,11 +58,11 @@ static func action_set_pivot(
 	et: Transform2D,
 	pos: Vector2
 ):
-	var old_pos = et.xform(s.get_parent().get_global_transform().xform(s.position))
+	var old_pos = et.basis_xform(s.get_parent().get_global_transform().basis_xform(s.position))
 	undo.create_action("Set Pivot")
 
 	undo.add_do_method(update_node, update_method, pos)
-	undo.add_undo_method(update_node, update_method, et.affine_inverse().xform(old_pos))
+	undo.add_undo_method(update_node, update_method, et.affine_inverse().basis_xform(old_pos))
 
 	undo.commit_action()
 
@@ -205,15 +205,15 @@ static func action_split_curve(
 	gpoint: Vector2,
 	xform: Transform2D
 ):
-	"""
-	Will split the shape at the given index
-	The key of the new point will be returned
-	If the orientation is changed, idx will be updated
-	"""
+	# """
+	# Will split the shape at the given index
+	# The key of the new point will be returned
+	# If the orientation is changed, idx will be updated
+	# """
 	idx = s.adjust_add_point_index(idx)
 	undo.create_action("Split Curve")
 
-	undo.add_do_method(s, "add_point", xform.affine_inverse().xform(gpoint), idx)
+	undo.add_do_method(s, "add_point", xform.affine_inverse().basis_xform(gpoint), idx)
 	undo.add_undo_method(s, "remove_point_at_index", idx)
 
 	undo.add_do_method(update_node, update_method)
@@ -234,15 +234,15 @@ static func should_invert_orientation(s: SS2D_Shape_Base) -> bool:
 static func action_invert_orientation(
 	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base
 ) -> bool:
-	"""
-	Will reverse the orientation of the shape verticies
-	This does not create or commit an undo action on its own
-	It's meant to be included with another action
-	Therefore, the function should be called between a block like so:
-		undo.create_action("xxx")
-		action_invert_orientation()-
-		undo.commit_action()
-	"""
+	# """
+	# Will reverse the orientation of the shape verticies
+	# This does not create or commit an undo action on its own
+	# It's meant to be included with another action
+	# Therefore, the function should be called between a block like so:
+	# 	undo.create_action("xxx")
+	# 	action_invert_orientation()-
+	# 	undo.commit_action()
+	# """
 	if should_invert_orientation(s):
 		undo.create_action("Invert Orientation")
 

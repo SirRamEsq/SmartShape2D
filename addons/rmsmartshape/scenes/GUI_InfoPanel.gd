@@ -1,10 +1,10 @@
-tool
+@tool
 extends PanelContainer
 
-export (NodePath) var p_lbl_idx
-export (NodePath) var p_lbl_tex
-export (NodePath) var p_lbl_width
-export (NodePath) var p_lbl_flip
+@export var p_lbl_idx : NodePath
+@export var p_lbl_tex : NodePath
+@export var p_lbl_width : NodePath
+@export var p_lbl_flip : NodePath
 
 func set_idx(i:int):
 	get_node(p_lbl_idx).text = "IDX: %s" % i

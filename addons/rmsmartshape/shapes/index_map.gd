@@ -1,15 +1,18 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 class_name SS2D_IndexMap
 
 const TUP = preload("res://addons/rmsmartshape/lib/tuple.gd")
-
-"""
-Maps a set of indicies to an object
-"""
+#
+#"""
+#Maps a set of indicies to an object
+#"""
 
 var object = null
-var indicies: Array = [] setget set_indicies
+var _indicies : Array = []
+var indicies: Array :
+	get: return _indicies
+	set(v): set_indicies
 
 
 # Workaround (class cannot reference itself)
@@ -164,19 +167,19 @@ func _split_indicies_into_multiple_mappings(new_indicies: Array) -> Array:
 		maps.push_back(__new(new_indicies, object))
 	return maps
 
-"""
-Will create a new set of SS2D_IndexMaps
-The new set will contain all of the indicies of the current set,
-minus the ones specified in the indicies parameter
-ie.
-indicies = [0,1,2,3,4,5,6]
-to_remove = [3,4]
-new_sets = [0,1,2] [5,6]
-
-
-This may split the IndexMap or make it invalid entirely
-As a result, the returned array could have 0 or several IndexMaps
-"""
+#"""
+#Will create a new set of SS2D_IndexMaps
+#The new set will contain all of the indicies of the current set,
+#minus the ones specified in the indicies parameter
+#ie.
+#indicies = [0,1,2,3,4,5,6]
+#to_remove = [3,4]
+#new_sets = [0,1,2] [5,6]
+#
+#
+#This may split the IndexMap or make it invalid entirely
+#As a result, the returned array could have 0 or several IndexMaps
+#"""
 
 
 func remove_indicies(to_remove: Array) -> Array:
@@ -191,19 +194,19 @@ func remove_indicies(to_remove: Array) -> Array:
 	return _split_indicies_into_multiple_mappings(new_indicies)
 
 
-"""
-Will create a new set of SS2D_IndexMaps
-The new set will contain all of the edges of the current set,
-minus the ones specified in the indicies parameter
-ie.
-indicies = [0,1,2,3,4,5,6]
-to_remove = [4,5]
-new_sets = [0,1,2,3,4] [4,5,6]
-
-
-This may split the IndexMap or make it invalid entirely
-As a result, the returned array could have 0 or several IndexMaps
-"""
+#"""
+#Will create a new set of SS2D_IndexMaps
+#The new set will contain all of the edges of the current set,
+#minus the ones specified in the indicies parameter
+#ie.
+#indicies = [0,1,2,3,4,5,6]
+#to_remove = [4,5]
+#new_sets = [0,1,2,3,4] [4,5,6]
+#
+#
+#This may split the IndexMap or make it invalid entirely
+#As a result, the returned array could have 0 or several IndexMaps
+#"""
 
 
 func remove_edges(to_remove: Array) -> Array:

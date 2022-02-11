@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 class_name RMS2D_VertexPropertiesArray
 
 var properties:Array = []
@@ -6,17 +6,18 @@ var properties:Array = []
 #############
 # INTERFACE #
 #############
-"""
-Returns true if changed
-"""
+#"""
+#Returns true if changed
+#"""
 func remove_point(idx:int)->bool:
 	assert(_is_array_index_in_range(properties, idx))
-	properties.remove(idx)
+	# properties.remove(idx)
+	properties.remove_at(idx)
 	return true
 
-"""
-Returns true if changed
-"""
+#"""
+#Returns true if changed
+#"""
 func add_point(idx:int)->bool:
 	var new_point_idx = -1
 	if idx < 0:
@@ -31,9 +32,9 @@ func add_point(idx:int)->bool:
 	properties[new_point_idx] = properties[old_idx].duplicate()
 	return true
 
-"""
-Returns true if changed
-"""
+#"""
+#Returns true if changed
+#"""
 func resize(new_size:int):
 	var old_size = properties.size()
 	var delta = new_size - old_size
@@ -45,27 +46,27 @@ func resize(new_size:int):
 			properties[i] = RMS2D_VertexProperties.new()
 	return true
 
-"""
-Returns true if changed
-"""
+#"""
+#Returns true if changed
+#"""
 func set_texture_idx(v:int, idx:int)->bool:
 	if not _is_array_index_in_range(properties, idx):
 		return false
 	properties[idx].texture_idx = v
 	return true
 
-"""
-Returns true if changed
-"""
+#"""
+#Returns true if changed
+#"""
 func set_flip(v:bool, idx:int)->bool:
 	if not _is_array_index_in_range(properties, idx):
 		return false
 	properties[idx].flip = v
 	return true
 
-"""
-Returns true if changed
-"""
+#"""
+#Returns true if changed
+#"""
 func set_width(v:float, idx:int)->bool:
 	if not _is_array_index_in_range(properties, idx):
 		return false
@@ -76,9 +77,9 @@ func set_width(v:float, idx:int)->bool:
 #########
 # GODOT #
 #########
-"""
-Accepts either int or another instance of this class as a constructor argument
-"""
+#"""
+#Accepts either int or another instance of this class as a constructor argument
+#"""
 func _init(arg):
 	if typeof(arg) == TYPE_INT:
 		__init_size(arg)

@@ -1,19 +1,19 @@
-tool
+@tool
 extends Node2D
 class_name SS2D_Shape_Base
 
-"""
-Represents the base functionality for all smart shapes
-Functions consist of the following categories
-  - Setters / Getters
-  - Curve
-  - Curve Wrapper
-  - Godot
-  - Misc
+# """
+# Represents the base functionality for all smart shapes
+# Functions consist of the following categories
+#   - Setters / Getters
+#   - Curve
+#   - Curve Wrapper
+#   - Godot
+#   - Misc
 
-To use search to jump between categories, use the regex:
-# .+ #
-"""
+# To use search to jump between categories, use the regex:
+# # .+ #
+# """
 
 const TUP = preload("../lib/tuple.gd")
 
@@ -38,49 +38,105 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ###########
 # EXPORTS #
 ###########
-export (bool) var editor_debug: bool = false setget _set_editor_debug
-export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
-export (SS2D_Edge.COLOR_ENCODING) var color_encoding = SS2D_Edge.COLOR_ENCODING.COLOR setget set_color_encoding
+# @export (bool) var editor_debug: bool = false setget _set_editor_debug
+var _editor_debug : bool = false
+@export var editor_debug : bool:
+	get: return _editor_debug
+	set(v): _set_editor_debug
 
-export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
+# @export (float, 1, 512) var curve_bake_interval: float = 20.0 setget set_curve_bake_interval
+var _curve_bake_interval : float = 20.0
+@export_range(1, 512, 2) var curve_bake_interval: float:
+	get: return _curve_bake_interval
+	set(v): set_curve_bake_interval
+
+# @export (SS2D_Edge.COLOR_ENCODING) var color_encoding = SS2D_Edge.COLOR_ENCODING.COLOR setget set_color_encoding
+var _color_encoding = SS2D_Edge.COLOR_ENCODING.COLOR
+@export var color_encoding : int:
+	get: return _color_encoding
+	set(v): set_color_encoding
+
+# @export (Resource) var _points = SS2D_Point_Array.new() setget set_point_array, get_point_array
+var __points : Resource = SS2D_Point_Array.new()
+@export var _points : Resource:
+	get: return __points
+	set(v): set_point_array
+
 # Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
 # Deprecated, exists for Support of older versions
-export (Dictionary) var material_overrides = null setget set_material_overrides
+# @export (Dictionary) var material_overrides = null setget set_material_overrides
+var _material_overrides : Dictionary = null 
+@export var material_overrides : Dictionary:
+	get: return _material_overrides
+	set(v): set_material_overrides
 
 ####################
 # DETAILED EXPORTS #
 ####################
-export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
-"""
-		{
-			"name": "shape_material",
-			"type": TYPE_OBJECT,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_RESOURCE_TYPE,
-			"hint_string": "SS2D_Material_Shape"
-		},
-"""
+# @export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
+var _shape_material : RefCounted = SS2D_Material_Shape.new() 
+@export var shape_material : Resource:
+	get: return _shape_material
+	set(v): _set_material
+
+#"""
+#		{
+#			"name": "shape_material",
+#			"type": TYPE_OBJECT,
+#			"usage":
+#			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
+#			"hint": PROPERTY_HINT_RESOURCE_TYPE,
+#			"hint_string": "SS2D_Material_Shape"
+#		},
+#"""
 
 # COLLISION #
 #export (float)
-var collision_size: float = 32 setget set_collision_size
+# var collision_size: float = 32 setget set_collision_size
+var _collision_size: float = 32 
+var collision_size : float:
+	get: return _collision_size
+	set(v): set_collision_size
+
 #export (float)
-var collision_offset: float = 0.0 setget set_collision_offset
+# var collision_offset: float = 0.0 setget set_collision_offset
+var _collision_offset: float = 0.0 
+var collision_offset : float:
+	get: return _collision_offset
+	set(v): set_collision_offset
+
 #export (NodePath)
 var collision_polygon_node_path: NodePath = ""
 
 # EDGES #
 #export (bool)
-var flip_edges: bool = false setget set_flip_edges
+# var flip_edges: bool = false setget set_flip_edges
+var _flip_edges: bool = false 
+var flip_edges: bool:
+	get: return _flip_edges
+	set(v): set_flip_edges
+
 #export (bool)
-var render_edges: bool = true setget set_render_edges
+# var render_edges: bool = true setget set_render_edges
+var _render_edges: bool = true 
+var render_edges: bool:
+	get: return _render_edges
+	set(v): set_render_edges
 
 # TESSELLATION #
 #export (int, 1, 8)
-var tessellation_stages: int = 5 setget set_tessellation_stages
+# var tessellation_stages: int = 5 setget set_tessellation_stages
+var _tessellation_stages: int = 5 
+var tessellation_stages : int:
+	get: return _tessellation_stages
+	set(v): set_tessellation_stages
+
 #export (float, 1, 8)
-var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
+# var tessellation_tolerence: float = 4.0 setget set_tessellation_tolerence
+var _tessellation_tolerence: float = 4.0 
+var tessellation_tolerence : float:
+	get: return _tessellation_tolerence
+	set(v): set_tessellation_tolerence
 
 
 func _get_property_list():
@@ -107,7 +163,7 @@ func _get_property_list():
 		},
 		{
 			"name": "tessellation_tolerence",
-			"type": TYPE_REAL,
+			"type": TYPE_INT, # CHANGED FROM TYPE_REAL
 			"usage":
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
@@ -135,7 +191,7 @@ func _get_property_list():
 		},
 		{
 			"name": "collision_size",
-			"type": TYPE_REAL,
+			"type": TYPE_FLOAT,
 			"usage":
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
@@ -143,7 +199,7 @@ func _get_property_list():
 		},
 		{
 			"name": "collision_offset",
-			"type": TYPE_REAL,
+			"type": TYPE_FLOAT,
 			"usage":
 			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
 			"hint": PROPERTY_HINT_RANGE,
@@ -168,45 +224,41 @@ func get_point_array() -> SS2D_Point_Array:
 
 func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
 	if _points != null:
-		if _points.is_connected(
-			"material_override_changed", self, "_handle_material_override_change"
-		):
-			_points.disconnect(
-				"material_override_changed", self, "_handle_material_override_change"
-			)
+		if _points.material_override_changed.is_connected(_handle_material_override_change):
+			_points.material_override_changed.disconnect(_handle_material_override_change)
 	if make_unique:
 		_points = a.duplicate(true)
 	else:
 		_points = a
-	_points.connect("material_override_changed", self, "_handle_material_override_change")
+	_points.material_override_changed.connect(_handle_material_override_change)
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_flip_edges(b: bool):
 	flip_edges = b
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_render_edges(b: bool):
 	render_edges = b
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_collision_size(s: float):
 	collision_size = s
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_collision_offset(s: float):
 	collision_offset = s
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func _update_curve_no_control():
@@ -223,7 +275,7 @@ func set_curve(value: Curve2D):
 	_update_curve_no_control()
 	set_as_dirty()
 	emit_signal("points_modified")
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func get_curve():
@@ -233,12 +285,12 @@ func get_curve():
 func _set_editor_debug(value: bool):
 	editor_debug = value
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
-"""
-Overriding this method to set the light mask of all render children
-"""
+# """
+# Overriding this method to set the light mask of all render children
+# """
 
 
 func set_light_mask(value):
@@ -246,7 +298,7 @@ func set_light_mask(value):
 	for c in render_parent.get_children():
 		c.light_mask = value
 	render_parent.light_mask = value
-	.set_light_mask(value)
+	super.set_light_mask(value)
 
 
 func set_render_node_owners(v: bool):
@@ -283,38 +335,38 @@ func update_render_nodes():
 func set_tessellation_stages(value: int):
 	tessellation_stages = value
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_tessellation_tolerence(value: float):
 	tessellation_tolerence = value
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_curve_bake_interval(f: float):
 	curve_bake_interval = f
 	_curve.bake_interval = f
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 func set_color_encoding(i: int):
 	color_encoding = i
-	property_list_changed_notify()
+	notify_property_list_changed()
 	set_as_dirty()
 
 
 func _set_material(value: SS2D_Material_Shape):
 	if (
 		shape_material != null
-		and shape_material.is_connected("changed", self, "_handle_material_change")
+		and shape_material.changed.is_connected(_handle_material_change)
 	):
-		shape_material.disconnect("changed", self, "_handle_material_change")
+		shape_material.changed.disconnect(_handle_material_change)
 
-	shape_material = value
+	shape_material = value as RefCounted
 	if shape_material != null:
-		shape_material.connect("changed", self, "_handle_material_change")
+		shape_material.changed.connect(_handle_material_change)
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_material_overrides(dict):
@@ -346,9 +398,9 @@ func get_vertices() -> Array:
 	return positions
 
 
-func get_tessellated_points() -> PoolVector2Array:
+func get_tessellated_points() -> PackedVector2Array:
 	if _curve.get_point_count() < 2:
-		return PoolVector2Array()
+		return PackedVector2Array()
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
 	# TODO cache this result
@@ -599,10 +651,10 @@ func _init():
 
 
 func _ready():
-	if not _points.is_connected(
-		"material_override_changed", self, "_handle_material_override_change"
+	if not _points.material_override_changed.is_connected(
+		_handle_material_override_change
 	):
-		_points.connect("material_override_changed", self, "_handle_material_override_change")
+		_points.material_override_changed.connect(_handle_material_override_change)
 	if _curve == null:
 		_curve = Curve2D.new()
 	_update_curve(_points)
@@ -626,9 +678,9 @@ func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 	return render_parent
 
 
-"""
-Returns true if the children have changed
-"""
+# """
+# Returns true if the children have changed
+# """
 
 
 func _create_rendering_nodes(size: int) -> bool:
@@ -660,11 +712,11 @@ func _create_rendering_nodes(size: int) -> bool:
 	return true
 
 
-"""
-Takes an array of SS2D_Meshes and returns a flat array of SS2D_Meshes
-If a SS2D_Mesh has n meshes, will return an array contain n SS2D_Mesh
-The returned array will consist of SS2D_Meshes each with a SS2D_Mesh::meshes array of size 1
-"""
+# """
+# Takes an array of SS2D_Meshes and returns a flat array of SS2D_Meshes
+# If a SS2D_Mesh has n meshes, will return an array contain n SS2D_Mesh
+# The returned array will consist of SS2D_Meshes each with a SS2D_Mesh::meshes array of size 1
+# """
 
 
 func _draw_flatten_meshes_array(meshes: Array) -> Array:
@@ -724,8 +776,8 @@ func _process(delta):
 
 func _exit_tree():
 	if shape_material != null:
-		if shape_material.is_connected("changed", self, "_handle_material_change"):
-			shape_material.disconnect("changed", self, "_handle_material_change")
+		if shape_material.changed.is_connected(_handle_material_change):
+			shape_material.changed.disconnect(_handle_material_change)
 
 
 ############
@@ -738,8 +790,8 @@ func should_flip_edges() -> bool:
 	return not (are_points_clockwise() != flip_edges)
 
 
-func generate_collision_points() -> PoolVector2Array:
-	var points: PoolVector2Array = PoolVector2Array()
+func generate_collision_points() -> PackedVector2Array:
+	var points: PackedVector2Array= PackedVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
@@ -788,7 +840,7 @@ func bake_collision():
 		return
 	var polygon = get_node(collision_polygon_node_path)
 	var points = generate_collision_points()
-	var transformed_points = PoolVector2Array()
+	var transformed_points = PackedVector2Array()
 	var poly_transform = polygon.get_global_transform()
 	var shape_transform = get_global_transform()
 	for p in points:
@@ -798,7 +850,7 @@ func bake_collision():
 
 func cache_edges():
 	if shape_material != null and render_edges:
-		_edges = _build_edges(shape_material, get_vertices())
+		_edges = _build_edges(shape_material as RefCounted, get_vertices())
 	else:
 		_edges = []
 
@@ -931,13 +983,13 @@ static func build_quad_from_two_points(
 	return quad
 
 
-"""
-Will build a corner quad
-pt is the center of this corner quad
-width will scale the quad in line with the next point (one dimension)
-prev_width will scale the quad in line with the prev point (hte other dimension)
-custom_scale will scale the quad in both dimensions
-"""
+# """
+# Will build a corner quad
+# pt is the center of this corner quad
+# width will scale the quad in line with the next point (one dimension)
+# prev_width will scale the quad in line with the prev point (hte other dimension)
+# custom_scale will scale the quad in both dimensions
+# """
 static func build_quad_corner(
 	pt_next: Vector2,
 	pt: Vector2,
@@ -994,10 +1046,10 @@ func _get_width_for_tessellated_point(points: Array, t_points: Array, t_idx) -> 
 	return lerp(w1, w2, ratio)
 
 
-"""
-Mutates two quads to be welded
-returns the midpoint of the weld
-"""
+# """
+# Mutates two quads to be welded
+# returns the midpoint of the weld
+# """
 
 
 static func weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) -> Vector2:
@@ -1049,7 +1101,7 @@ static func weld_quads(a: SS2D_Quad, b: SS2D_Quad, custom_scale: float = 1.0) ->
 func _weld_quad_array(
 	quads: Array, weld_first_and_last: bool, start_idx: int = 0
 ):
-	if quads.empty():
+	if quads.is_empty():
 		return
 
 	for index in range(start_idx, quads.size() - 1, 1):
@@ -1065,7 +1117,7 @@ func _weld_quad_array(
 		# This is a tough problem to solve
 		# See http://reedbeta.com/blog/quadrilateral-interpolation-part-1/
 		if this_quad.self_intersects():
-			quads.remove(index)
+			quads.remove_at(index)
 			if index < quads.size():
 				var new_index = max(index - 1, 0)
 				_weld_quad_array(quads, weld_first_and_last, new_index)
@@ -1112,7 +1164,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 		var thread = Thread.new()
 		var args = [index_map, s_mat.render_offset, 0.0]
 		var priority = 2
-		thread.start(self, "_build_edge_with_material_thread_wrapper", args, priority)
+		thread.start(_build_edge_with_material_thread_wrapper, args, priority)
 		threads.push_back(thread)
 	for thread in threads:
 		var new_edge = thread.wait_to_finish()
@@ -1120,10 +1172,10 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
 
 	return edges
 
-"""
-Will return an array of SS2D_IndexMaps
-Each index map will map a set of indicies to a meta_material
-"""
+# """
+# Will return an array of SS2D_IndexMaps
+# Each index map will map a set of indicies to a meta_material
+# """
 static func get_meta_material_index_mapping_for_overrides(
 	s_material: SS2D_Material_Shape, pa:SS2D_Point_Array
 ) -> Array:
@@ -1139,10 +1191,10 @@ static func get_meta_material_index_mapping_for_overrides(
 	return mappings
 
 
-"""
-Will return a dictionary containing array of SS2D_IndexMap
-Each element in the array is a contiguous sequence of indicies that fit inside the meta_material's normalrange
-"""
+# """
+# Will return a dictionary containing array of SS2D_IndexMap
+# Each element in the array is a contiguous sequence of indicies that fit inside the meta_material's normalrange
+# """
 static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
 	return _get_meta_material_index_mapping(s_material, verts, false)
 
@@ -1206,11 +1258,11 @@ func get_collision_polygon_node() -> Node:
 
 
 static func sort_by_z_index(a: Array) -> Array:
-	a.sort_custom(SS2D_Common_Functions, "sort_z")
+	a.sort_custom(SS2D_Common_Functions.sort_z)
 	return a
 
 static func sort_by_int_ascending(a: Array) -> Array:
-	a.sort_custom(SS2D_Common_Functions, "sort_int_ascending")
+	a.sort_custom(SS2D_Common_Functions.sort_int_ascending)
 	return a
 
 
@@ -1369,10 +1421,10 @@ func import_from_legacy(legacy: RMSmartShape2D):
 ###################
 # EDGE GENERATION #
 ###################
-"""
-Get Number of TessPoints from the start and end indicies of the index_map parameter
-TODO Test this function
-"""
+# """
+# Get Number of TessPoints from the start and end indicies of the index_map parameter
+# TODO Test this function
+# """
 func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 	var count: int = 0
 	var points = get_vertices()
@@ -1390,12 +1442,12 @@ func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 	return count
 
 
-"""
-This function determines if a corner quad should be generated
-if so, OUTER or INNER?
-	The conditions deg < 0 and flip_edges are used to determine this
-	These conditions works correctly so long as the points are in Clockwise order
-"""
+# """
+# This function determines if a corner quad should be generated
+# if so, OUTER or INNER?
+# 	The conditions deg < 0 and flip_edges are used to determine this
+# 	These conditions works correctly so long as the points are in Clockwise order
+# """
 static func edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector2, flip_edges:bool) -> bool:
 	var generate_corner = SS2D_Quad.CORNER.NONE
 	var ab = pt - pt_prev
@@ -1465,10 +1517,10 @@ func _edge_generate_corner(
 	return corner_quad
 
 
-"""
-Get the next point that doesn't share the same position with the current point
-In other words, get the next point in the array with a unique position
-"""
+# """
+# Get the next point that doesn't share the same position with the current point
+# In other words, get the next point in the array with a unique position
+# """
 func _get_next_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 	var next_idx = _get_next_point_index(idx, pts, wrap_around)
 	if next_idx == idx:
@@ -1494,16 +1546,16 @@ func _is_edge_contiguous(index_amp:SS2D_IndexMap, verts:Array)->bool:
 	return false
 
 
-"""
-Will constructe an SS2D_Edge from the passed parameters
-index_map must be a SS2D_IndexMap with a SS2D_Material_Edge_Metadata for an object
-the indicies used by index_map should match up with the get_verticies() indicies
+# """
+# Will constructe an SS2D_Edge from the passed parameters
+# index_map must be a SS2D_IndexMap with a SS2D_Material_Edge_Metadata for an object
+# the indicies used by index_map should match up with the get_verticies() indicies
 
-default_quad_width is the quad width used if a texture isn't available
+# default_quad_width is the quad width used if a texture isn't available
 
-c_offset is the magnitude to offset all of the points
-the direction of the offset is the surface_normal
-"""
+# c_offset is the magnitude to offset all of the points
+# the direction of the offset is the surface_normal
+# """
 func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, default_quad_width:float) -> SS2D_Edge:
 	var verts_t = get_tessellated_points()
 	var verts = get_vertices()
@@ -1523,7 +1575,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 			return edge
 		if not edge_material_meta.render:
 			return edge
-		edge_material = edge_material_meta.edge_material
+		edge_material = edge_material_meta.edge_material as RefCounted
 		if edge_material == null:
 			return edge
 		c_offset += edge_material_meta.offset
