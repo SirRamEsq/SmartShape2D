@@ -96,9 +96,9 @@ class QuadInfo:
 		return (pt_d.distance_to(pt_a) + pt_c.distance_to(pt_b)) / 2.0
 
 	func different_render(q: QuadInfo) -> bool:
-		"""
-		Will return true if this quad is part of a different render sequence than q
-		"""
+		# """
+		# Will return true if this quad is part of a different render sequence than q
+		# """
 		if (
 			q.direction != direction
 			or q.tex != tex

@@ -180,9 +180,9 @@ static func action_add_point(
 	new_point: Vector2,
 	idx: int = -1
 ) -> int:
-	"""
-	Will return key of added point
-	"""
+	# """
+	# Will return key of added point
+	# """
 	var new_key = s.get_next_key()
 	undo.create_action("Add Point: %s" % new_point)
 

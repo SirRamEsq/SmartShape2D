@@ -511,9 +511,9 @@ func get_point_index(key: int) -> int:
 
 
 func set_point_in(key: int, v: Vector2):
-	"""
-	point_in controls the edge leading from the previous vertex to this one
-	"""
+	# """
+	# point_in controls the edge leading from the previous vertex to this one
+	# """
 	_points.set_point_in(key, v)
 	_update_curve(_points)
 	set_as_dirty()
@@ -521,9 +521,9 @@ func set_point_in(key: int, v: Vector2):
 
 
 func set_point_out(key: int, v: Vector2):
-	"""
-	point_out controls the edge leading from this vertex to the next
-	"""
+	# """
+	# point_out controls the edge leading from this vertex to the next
+	# """
 	_points.set_point_out(key, v)
 	_update_curve(_points)
 	set_as_dirty()
@@ -878,10 +878,10 @@ func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
 
 
 static func on_segment(p: Vector2, q: Vector2, r: Vector2) -> bool:
-	"""
-	Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'
-	See: https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-	"""
+	# """
+	# Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'
+	# See: https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+	# """
 	if (
 		q.x <= max(p.x, r.x)
 		and q.x >= min(p.x, r.x)
@@ -1331,13 +1331,13 @@ static func _get_previous_point_index_wrap_around(idx: int, points: Array) -> in
 
 
 func get_ratio_from_tessellated_point_to_vertex(points: Array, t_points: Array, t_point_idx: int) -> float:
-	"""
-	Returns a float between 0.0 and 1.0
-	0.0 means that this tessellated point is at the same position as the vertex
-	0.5 means that this tessellated point is half-way between this vertex and the next
-	0.999 means that this tessellated point is basically at the next vertex
-	1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
-	"""
+	# """
+	# Returns a float between 0.0 and 1.0
+	# 0.0 means that this tessellated point is at the same position as the vertex
+	# 0.5 means that this tessellated point is half-way between this vertex and the next
+	# 0.999 means that this tessellated point is basically at the next vertex
+	# 1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0
+	# """
 	if t_point_idx == 0:
 		return 0.0
 

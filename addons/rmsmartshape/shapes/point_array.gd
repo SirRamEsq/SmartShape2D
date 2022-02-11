@@ -114,9 +114,9 @@ func _generate_key() -> int:
 
 
 func get_next_key() -> int:
-	"""
-	Will return the next key that will be used when adding a point
-	"""
+	# """
+	# Will return the next key that will be used when adding a point
+	# """
 	return __generate_key(_next_key)
 
 
@@ -198,9 +198,9 @@ func has_point(key: int) -> bool:
 
 
 func get_all_point_keys() -> Array:
-	"""
-	_point_order should contain every single point ONLY ONCE
-	"""
+	# """
+	# _point_order should contain every single point ONLY ONCE
+	# """
 	return _point_order.duplicate(true)
 
 
@@ -321,10 +321,10 @@ func _update_constraints(src: int):
 
 
 func update_constraints(src: int):
-	"""
-	Will mutate points based on constraints
-	values from Passed key will be used to update constrained points
-	"""
+	# """
+	# Will mutate points based on constraints
+	# values from Passed key will be used to update constrained points
+	# """
 	if not has_point(src) or _updating_constraints:
 		return
 	_updating_constraints = true
@@ -343,9 +343,9 @@ func update_constraints(src: int):
 
 
 func get_point_constraints(key1: int) -> Dictionary:
-	"""
-	Will Return all constraints for a given key
-	"""
+	# """
+	# Will Return all constraints for a given key
+	# """
 	var constraints = {}
 	for tuple in _constraints:
 		if tuple.has(key1):
@@ -354,9 +354,9 @@ func get_point_constraints(key1: int) -> Dictionary:
 
 
 func get_point_constraint(key1: int, key2: int) -> int:
-	"""
-	Will Return the constraint for a pair of keys
-	"""
+	# """
+	# Will Return the constraint for a pair of keys
+	# """
 	var t = TUP.create_tuple(key1, key2)
 	var keys = _constraints.keys()
 	var t_index = TUP.find_tuple_in_array_of_tuples(keys, t)
