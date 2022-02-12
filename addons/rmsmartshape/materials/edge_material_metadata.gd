@@ -15,7 +15,7 @@ var _edge_material = null
 
 # What range of normals can this edge be used on
 # export (Resource) var normal_range = SS2D_NormalRange.new(0, 360) setget set_normal_range
-var _normal_range : RefCounted = SS2D_NormalRange.new(0, 360)
+var _normal_range : Resource = SS2D_NormalRange.new(0, 360) as RefCounted
 @export var normal_range : Resource :
 	get: return _normal_range
 	set(v): set_normal_range
@@ -53,7 +53,7 @@ var _z_as_relative: bool = true
 var _offset: float = 0.0
 @export var offset : float:
 	get: return _offset
-	set(v):set_offset
+	set(v): set_offset
 
 
 func _to_string() -> String:

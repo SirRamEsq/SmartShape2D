@@ -168,7 +168,7 @@ var _flip_edges: bool = false
 	set(v): _set_flip_edge
 
 # @export (Resource) var shape_material = RMS2D_Material.new() setget _set_material
-var _shape_material : RefCounted = RMS2D_Material.new()
+var _shape_material : Resource = RMS2D_Material.new() as RefCounted
 @export var shape_material : Resource:
 	get: return _shape_material 
 	set(v): _set_material

@@ -11,7 +11,7 @@ var _fill_texture = null
 # @export (Texture) var fill_texture_normal = null setget _set_fill_texture_normal
 var _fill_texture_normal = null
 @export var fill_texture_normal : Texture:
-	get: return _fill_texture
+	get: return _fill_texture_normal
 	set(v): _set_fill_texture_normal
 
 # @export (float, 0, 180.0) var top_texture_tilt = 20.0 setget _set_top_texture_tilt
@@ -51,7 +51,7 @@ var left_texture_normal : Array[Texture]:
 	set(v): _set_left_texture_normal
 
 # @export (Array, Texture) var right_texture setget _set_right_texture
-var _right_texture 
+var _right_texture : Array[Texture]
 @export var right_texture : Array[Texture]:
 	get: return _right_texture
 	set(v): _set_right_texture
@@ -89,98 +89,98 @@ var _top_left_inner_texture
 	set(v): _set_top_left_inner_texture
 
 # @export (Texture) var top_left_inner_texture_normal setget _set_top_left_inner_texture_normal
-var _top_left_inner_texture_normal 
+var _top_left_inner_texture_normal :Texture
 @export var top_left_inner_texture_normal : Texture:
 	get: return _top_left_inner_texture_normal
 	set(v): _set_top_left_inner_texture_normal
 
 # @export (Texture) var top_right_inner_texture setget _set_top_right_inner_texture
-var _top_right_inner_texture 
+var _top_right_inner_texture : Texture
 @export var top_right_inner_texture : Texture:
 	get: return _top_right_inner_texture
 	set(v): _set_top_right_inner_texture
 
 # @export (Texture) var top_right_inner_texture_normal setget _set_top_right_inner_texture_normal
-var _top_right_inner_texture_normal 
+var _top_right_inner_texture_normal : Texture
 @export var top_right_inner_texture_normal : Texture:
 	get: return _top_right_inner_texture_normal
 	set(v): _set_top_right_inner_texture_normal
 
 # @export (Texture) var bottom_right_inner_texture setget _set_bottom_right_inner_texture
-var _bottom_right_inner_texture 
+var _bottom_right_inner_texture : Texture
 @export var bottom_right_inner_texture : Texture:
 	get: return _bottom_right_inner_texture
 	set(v): _set_bottom_right_inner_texture
 
 # @export (Texture) var bottom_right_inner_texture_normal setget _set_bottom_right_inner_texture_normal
-var _bottom_right_inner_texture_normal 
+var _bottom_right_inner_texture_normal : Texture
 @export var bottom_right_inner_texture_normal : Texture:
 	get: return _bottom_right_inner_texture_normal
 	set(v): _set_bottom_right_inner_texture_normal
 
 # @export (Texture) var bottom_left_inner_texture setget _set_bottom_left_inner_texture
-var _bottom_left_inner_texture 
+var _bottom_left_inner_texture : Texture
 @export var bottom_left_inner_texture : Texture:
 	get: return _bottom_left_inner_texture
 	set(v): _set_bottom_left_inner_texture
 
 # @export (Texture) var bottom_left_inner_texture_normal setget _set_bottom_left_inner_texture_normal
-var _bottom_left_inner_texture_normal 
+var _bottom_left_inner_texture_normal : Texture
 @export var bottom_left_inner_texture_normal : Texture:
 	get: return _bottom_left_inner_texture_normal
 	set(v): _set_bottom_left_inner_texture_normal
 
 # Outer Angles
 # @export (Texture) var top_left_outer_texture setget _set_top_left_outer_texture
-var _top_left_outer_texture 
+var _top_left_outer_texture : Texture
 @export var top_left_outer_texture : Texture:
 	get: return _top_left_outer_texture
 	set(v): _set_top_left_outer_texture
 
 # @export (Texture) var top_left_outer_texture_normal setget _set_top_left_outer_texture_normal
-var _top_left_outer_texture_normal 
+var _top_left_outer_texture_normal : Texture
 @export var top_left_outer_texture_normal : Texture:
 	get: return _top_left_outer_texture_normal
 	set(v): _set_top_left_outer_texture_normal
 
 # @export (Texture) var top_right_outer_texture setget _set_top_right_outer_texture
-var _top_right_outer_texture 
+var _top_right_outer_texture : Texture
 @export var top_right_outer_texture : Texture:
 	get: return _top_right_outer_texture
 	set(v): _set_top_right_outer_texture
 
 # @export (Texture) var top_right_outer_texture_normal setget _set_top_right_outer_texture_normal
-var _top_right_outer_texture_normal 
+var _top_right_outer_texture_normal : Texture
 @export var top_right_outer_texture_normal :Texture:
 	get: return _top_right_outer_texture_normal
 	set(v): _set_top_right_outer_texture_normal
 
 # @export (Texture) var bottom_right_outer_texture setget _set_bottom_right_outer_texture
-var _bottom_right_outer_texture 
+var _bottom_right_outer_texture : Texture
 @export var bottom_right_outer_texture : Texture:
 	get: return _bottom_right_outer_texture
 	set(v): _set_bottom_right_outer_texture
 
 # @export (Texture) var bottom_right_outer_texture_normal setget _set_bottom_right_outer_texture_normal
-var _bottom_right_outer_texture_normal 
+var _bottom_right_outer_texture_normal : Texture
 @export var bottom_right_outer_texture_normal : Texture:
 	get: return _bottom_right_outer_texture_normal
 	set(v):_set_bottom_right_outer_texture_normal
 
 # @export (Texture) var bottom_left_outer_texture setget _set_bottom_left_outer_texture
-var _bottom_left_outer_texture 
+var _bottom_left_outer_texture : Texture
 @export var bottom_left_outer_texture : Texture:
 	get: return _bottom_left_outer_texture
 	set(v): _set_bottom_left_outer_texture
 
 # @export (Texture) var bottom_left_outer_texture_normal setget _set_bottom_left_outer_texture_normal
-var _bottom_left_outer_texture_normal
+var _bottom_left_outer_texture_normal: Texture
 @export var bottom_left_outer_texture_normal : Texture:
 	get: return _bottom_left_outer_texture_normal
 	set(v): _set_bottom_left_outer_texture_normal
 
 # @export (bool) var weld_edges = false setget _set_weld_edges
-var _weld_edges = false 
+var _weld_edges : bool = false 
 @export var weld_edges : bool:
 	get: return _weld_edges
 	set(v): _set_weld_edges

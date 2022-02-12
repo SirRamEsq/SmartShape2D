@@ -28,25 +28,25 @@ var _texture_normals: Array[Texture] = []
 
 # Textures for the final left and right quad of the edge when the angle is steep
 # export (Array, Texture) var textures_corner_outer: Array = [] setget _set_textures_corner_outer
-var _textures_corner_outer: Array = [] 
+var _textures_corner_outer: Array[Texture] = [] 
 @export var textures_corner_outer : Array[Texture]:
 	get: return _textures_corner_outer
 	set(v): _set_textures_corner_outer
 
 # export (Array, Texture) var textures_corner_inner: Array = [] setget _set_textures_corner_inner
-var _textures_corner_inner: Array = []
+var _textures_corner_inner: Array[Texture] = []
 @export var textures_corner_inner: Array[Texture]:
 	get: return _textures_corner_inner
 	set(v): _set_textures_corner_inner
 
 # export (Array, Texture) var texture_normals_corner_outer: Array = [] setget _set_texture_normals_corner_outer
-var _texture_normals_corner_outer: Array = []
+var _texture_normals_corner_outer: Array[Texture] = []
 @export var texture_normals_corner_outer : Array[Texture]:
 	get: return _texture_normals_corner_outer
 	set(v): _set_texture_normals_corner_outer
 
 # export (Array, Texture) var texture_normals_corner_inner: Array = [] setget _set_texture_normals_corner_inner
-var _texture_normals_corner_inner: Array = []
+var _texture_normals_corner_inner: Array[Texture] = []
 @export var texture_normals_corner_inner : Array[Texture]:
 	get: return _texture_normals_corner_inner
 	set(v): _set_texture_normals_corner_inner
@@ -54,25 +54,25 @@ var _texture_normals_corner_inner: Array = []
 # Textures for the final left and right quad of the edge when the angle is shallow
 # Named as such because the desired look is that the texture "tapers-off"
 # export (Array, Texture) var textures_taper_left: Array = [] setget _set_textures_taper_left
-var _textures_taper_left: Array = []
+var _textures_taper_left: Array[Texture] = []
 @export var textures_taper_left : Array[Texture]:
 	get: return _textures_taper_left
 	set(v): _set_textures_taper_left
 
 # export (Array, Texture) var textures_taper_right: Array = [] setget _set_textures_taper_right
-var _textures_taper_right: Array = []
+var _textures_taper_right: Array[Texture] = []
 @export var textures_taper_right : Array[Texture]:
 	get: return _textures_taper_right
 	set(v): _set_textures_taper_right
 
 # export (Array, Texture) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
-var _texture_normals_taper_left: Array = []
+var _texture_normals_taper_left: Array[Texture] = []
 @export var texture_normals_taper_left: Array[Texture]:
 	get: return _texture_normals_taper_left
 	set(v): _set_texture_normals_taper_left
 
 # export (Array, Texture) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
-var _texture_normals_taper_right: Array = []
+var _texture_normals_taper_right: Array[Texture] = []
 @export var texture_normals_taper_right : Array[Texture]:
 	get: return _texture_normals_taper_right
 	set(v): _set_texture_normals_taper_right
@@ -101,7 +101,7 @@ var _use_taper_texture: bool = true
 # if set to true, then squishing can occur when texture doesn't fit nicely into total length.
 enum FITMODE {SQUISH_AND_STRETCH, CROP}
 # export (FITMODE) var fit_mode = FITMODE.SQUISH_AND_STRETCH setget _set_fit_texture
-var _fit_mode = FITMODE.SQUISH_AND_STRETCH
+var _fit_mode : FITMODE = FITMODE.SQUISH_AND_STRETCH
 @export var fit_mode : FITMODE:
 	get: return _fit_mode
 	set(v): _set_fit_texture

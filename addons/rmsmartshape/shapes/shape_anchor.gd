@@ -54,7 +54,6 @@ func set_shape_path(value: NodePath):
 	shape_path = value
 	set_shape()
 
-	# property_list_changed_notify()
 	notify_property_list_changed()
 	refresh()
 

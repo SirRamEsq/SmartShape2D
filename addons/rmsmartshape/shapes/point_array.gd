@@ -70,15 +70,15 @@ func _init():
 func _ready():
 	for tuple in _material_overrides:
 		var mat = _material_overrides[tuple]
-		if not mat.is_connected("changed", self, "_on_material_override_changed"):
-			mat.connect("changed", self, "_on_material_override_changed", [tuple])
+		if not mat.changed.is_connected(_on_material_override_changed):
+			mat.changed.connect(_on_material_override_changed(tuple))
 
 
 func set_points(ps: Dictionary):
 	# Called by Godot when loading from a saved scene
 	for k in ps:
 		var p = ps[k]
-		p.connect("changed", self, "_on_point_changed", [p])
+		p.changed.connect(_on_point_changed(p))
 	_points = ps
 	# property_list_changed_notify()
 	notify_property_list_changed()

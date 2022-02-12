@@ -3,7 +3,7 @@ extends EditorInspectorPlugin
 var properties = []
 var control = null
 
-func can_handle(object):
+func _can_handle(object):
 	#if object is SS2D_NormalRange:
 	#	return true
 	if object is SS2D_NormalRange:
@@ -33,7 +33,7 @@ func _changed(object):
 	control._value_changed()
 	pass
 
-func parse_property(object, type, path, hint, hint_text, usage):
+func _parse_property(object, type, path, hint, hint_text, usage):
 	if path=="edgeRendering":
 		control = SS2D_NormalRangeEditorProperty.new()
 		add_property_editor(" ", control)

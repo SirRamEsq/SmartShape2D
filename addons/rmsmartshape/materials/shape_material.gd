@@ -11,20 +11,20 @@ class_name SS2D_Material_Shape
 # Should be SS2D_Material_Edge_Metadata
 
 # export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_meta_materials
-var __edge_meta_materials: Array 
-@export var _edge_meta_materials : Array:
+var __edge_meta_materials: Array[Texture] = []
+@export var _edge_meta_materials : Array[Texture]:
 	get: return __edge_meta_materials
 	set(v): set_edge_meta_materials
 
 # export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
-var _fill_textures: Array = []
-@export var fill_textures : Array:
+var _fill_textures: Array[Texture] = []
+@export var fill_textures : Array[Texture]:
 	get: return _fill_textures
 	set(v): set_fill_textures
 
 # export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
-var _fill_texture_normals: Array = []
-@export var fill_texture_normals : Array:
+var _fill_texture_normals: Array[Texture] = []
+@export var fill_texture_normals : Array[Texture]:
 	get: return _fill_texture_normals
 	set(v): set_fill_texture_normals
 
@@ -122,13 +122,13 @@ func set_edge_meta_materials(a: Array):
 		if e == null:
 			continue
 		if not a.has(e):
-			e.disconnect("changed", self, "_on_edge_material_changed")
+			e.changed.disconnect(_on_edge_material_changed)
 
 	for e in a:
 		if e == null:
 			continue
-		if not e.is_connected("changed", self, "_on_edge_material_changed"):
-			e.connect("changed", self, "_on_edge_material_changed")
+		if not e.changed.is_connected(_on_edge_material_changed):
+			e.changed.connect(_on_edge_material_changed)
 
 	_edge_meta_materials = a
 	emit_signal("changed")

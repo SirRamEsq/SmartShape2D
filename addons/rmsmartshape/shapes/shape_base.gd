@@ -74,7 +74,7 @@ var _material_overrides : Dictionary = null
 # DETAILED EXPORTS #
 ####################
 # @export (Resource) var shape_material = SS2D_Material_Shape.new() setget _set_material
-var _shape_material : RefCounted = SS2D_Material_Shape.new() 
+var _shape_material : Resource = SS2D_Material_Shape.new() as RefCounted
 @export var shape_material : Resource:
 	get: return _shape_material
 	set(v): _set_material

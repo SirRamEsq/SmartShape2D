@@ -199,9 +199,9 @@ func _gui_build_toolbar():
 	tb_hb.add_child(sep)
 
 	tb_vert_create = create_tool_button(ICON_CURVE_CREATE, SS2D_Strings.EN_TOOLTIP_CREATE_VERT)
-	# tb_vert_create.pressed.connect(_enter_mode(MODE.CREATE_VERT))
+	# tb_vert_create.pressed.connect(_enter_modei(3))
 	# tb_vert_create.pressed = true # CHANGED: commented out
-	tb_vert_create.pressed.emit() 
+	# tb_vert_create.pressed.emit() 
 
 	tb_vert_edit = create_tool_button(ICON_CURVE_EDIT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
 	# tb_vert_edit.pressed.connect(_enter_mode(MODE.EDIT_VERT))
@@ -670,7 +670,8 @@ static func is_key_valid(s: SS2D_Shape_Base, key: int) -> bool:
 		return false
 	return s.has_point(key)
 
-func _enter_modei():
+func _enter_modei(asdf : int):
+	print("asdf")
 	pass
 
 func _enter_mode(mode: MODE):

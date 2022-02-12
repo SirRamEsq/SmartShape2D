@@ -179,3 +179,7 @@ _global_script_class_icons={
 config/name="godot_4_smart_shape2d"
 config/icon="res://icon.png"
 config/features=PackedStringArray("4.0", "Vulkan Clustered")
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/rmsmartshape/plugin.cfg")

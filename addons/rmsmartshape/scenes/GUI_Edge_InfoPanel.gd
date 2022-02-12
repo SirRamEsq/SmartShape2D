@@ -15,7 +15,7 @@ var indicies = [-1, -1]:
 	get: return indicies
 	set(v): set_indicies
 	
-var edge_material : SS2D_Material_Edge = null
+var edge_material : SS2D_Material_Edge 
 var edge_material_selector := FileDialog.new()
 
 signal _set_material_override(enabled)
