@@ -139,7 +139,7 @@ _global_script_classes=[{
 "language": &"GDScript",
 "path": "res://addons/rmsmartshape/strings.gd"
 }, {
-"base": "Resource",
+"base": "RefCounted",
 "class": &"SS2D_VertexProperties",
 "language": &"GDScript",
 "path": "res://addons/rmsmartshape/vertex_properties.gd"
