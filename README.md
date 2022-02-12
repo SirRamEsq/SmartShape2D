@@ -1,3 +1,11 @@
+
+SmartShape2D for Godot 4 (alpha 2) porting attempt. 
+Current state : 
+- Parsing errors, API changes mostly corrected. 
+- Button class pressed signal doesn't seem to working correctly. Therefor button pressed signals are commented out.
+- Since Reference class being removed in Godot 4, it is replaced by either RefCounted or Resource. It's unclear to me in which case it supposed to be replaced by. Either way because Godot 4 is more strict with static type declaration, more typecasting is needed.
+- Current state of version alpha 2 parser/compiler isn't giving any errors and custom class nodes isn't showing up in node explorer.
+
 SmartShape2D
 ---
 ![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
