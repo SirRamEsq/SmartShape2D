@@ -35,7 +35,7 @@ func _init(pos: Vector2 = Vector2(0, 0)):
 	position = pos
 	point_in = Vector2(0, 0)
 	point_out = Vector2(0, 0)
-	properties = SS2D_VertexProperties.new()
+	properties = SS2D_VertexProperties.new() as RefCounted
 
 
 func equals(other: SS2D_Point) -> bool:
