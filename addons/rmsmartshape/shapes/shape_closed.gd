@@ -197,6 +197,7 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	mesh_data.material = s_mat.fill_mesh_material
 	mesh_data.z_index = s_mat.fill_texture_z_index
 	mesh_data.z_as_relative = true
+	mesh_data.show_behind_parent = s_mat.fill_texture_show_behind_parent
 	meshes.push_back(mesh_data)
 
 	return meshes
