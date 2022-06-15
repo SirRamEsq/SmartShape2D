@@ -879,7 +879,12 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 	):
 		offset *= width_scaling
 		width_handle_key = current_action.keys[0]
-	var width_handle_normal = _get_vert_normal(t, verts, shape.get_point_index(width_handle_key))
+
+	var point_index: int = shape.get_point_index(width_handle_key)
+	if point_index == -1:
+		return
+
+	var width_handle_normal = _get_vert_normal(t, verts, point_index)
 	var vertex_position: Vector2 = t.xform(shape.get_point_position(width_handle_key))
 	var icon_position: Vector2 = vertex_position + width_handle_normal * offset
 	var rect_size: Vector2 = Vector2.ONE * 10.0
@@ -925,16 +930,17 @@ func draw_new_point_preview(overlay: Control):
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var color = Color(1, 1, 1, .5)
 	var width = 2
-
-	var a
 	var mouse = overlay.get_local_mouse_position()
-	if is_shape_closed(shape):
-		a = t.xform(verts[verts.size() - 2])
-		var b = t.xform(verts[0])
-		overlay.draw_line(mouse, b, color, width * .5, true)
-	else:
-		a = t.xform(verts[verts.size() - 1])
-	overlay.draw_line(mouse, a, color, width, true)
+
+	if verts.size() > 0:
+		var a: Vector2
+		if is_shape_closed(shape) and verts.size() > 1:
+			a = t * verts[verts.size() - 2]
+			overlay.draw_line(mouse, t * verts[0], color,width * .5)
+		else:
+			a = t * verts[verts.size() - 1]
+		overlay.draw_line(mouse, a, color, width)
+
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
 
 
@@ -1547,10 +1553,10 @@ func _input_handle_mouse_motion_event(
 				update_overlays()
 				return true
 			else:
-				var closest_point = null
 				var xform: Transform2D = get_et() * shape.get_global_transform()
-				closest_point = (shape as SS2D_Shape_Base).get_point(closest_key).position
-				if closest_point != null:
+				var closest_ss2d_point: SS2D_Point = (shape as SS2D_Shape_Base).get_point(closest_key)
+				if closest_ss2d_point != null:
+					var closest_point = closest_ss2d_point.position
 					closest_point = xform.xform(closest_point)
 					if closest_point.distance_to(mm.position) / current_zoom_level <= freehand_erase_size * 2:
 						var delete_point = get_mouse_over_vert_key(event, grab_threshold)
