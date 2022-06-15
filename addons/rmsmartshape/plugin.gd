@@ -101,6 +101,8 @@ var gui_point_info_panel = GUI_POINT_INFO_PANEL.instance()
 var gui_edge_info_panel = GUI_EDGE_INFO_PANEL.instance()
 var gui_snap_settings = GUI_SNAP_POPUP.instance()
 
+const GUI_POINT_INFO_PANEL_OFFSET = Vector2(256, 130)
+
 # This is the shape node being edited
 var shape = null
 # For when a legacy shape is selected
@@ -1473,7 +1475,7 @@ func _input_handle_mouse_motion_event(
 	var t: Transform2D = et * shape.get_global_transform()
 	var mm: InputEventMouseMotion = event
 	var delta_current_pos = et.affine_inverse().xform(mm.position)
-	gui_point_info_panel.rect_position = mm.position + Vector2(256, -24)
+	gui_point_info_panel.rect_position = mm.position + GUI_POINT_INFO_PANEL_OFFSET
 	var delta = delta_current_pos - _mouse_motion_delta_starting_pos
 
 	closest_key = get_closest_vert_to_point(shape, delta_current_pos)
