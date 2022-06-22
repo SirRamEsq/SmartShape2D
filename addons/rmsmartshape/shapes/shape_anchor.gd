@@ -109,7 +109,7 @@ func _process(delta):
 
 
 func _monitored_node_leaving():
-	set_shape_path("")
+	pass
 
 
 func _handle_point_change():
