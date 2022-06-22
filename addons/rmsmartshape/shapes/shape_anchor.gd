@@ -178,7 +178,12 @@ func refresh():
 		shape.get_point_position(pt_b_key) + shape.get_point_in(pt_b_key)
 	)
 
-	n_pt = _cubic_bezier(pt_a, pt_a_handle, pt_b_handle, pt_b, shape_point_offset)
+	# If this segment uses no bezier curve, use linear interpolation instead
+	if pt_a_handle != pt_a or pt_b_handle != pt_b:
+		n_pt = _cubic_bezier(pt_a, pt_a_handle, pt_b_handle, pt_b, shape_point_offset)
+	else:
+		n_pt = pt_a.linear_interpolate(pt_b, shape_point_offset)
+
 	n_pt_a = _cubic_bezier(
 		pt_a, pt_a_handle, pt_b_handle, pt_b, clamp(shape_point_offset - 0.1, 0.0, 1.0)
 	)
