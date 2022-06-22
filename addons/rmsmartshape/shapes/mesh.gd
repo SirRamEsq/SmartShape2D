@@ -15,6 +15,7 @@ var mesh_transform: Transform2D = Transform2D()
 var material: Material = null
 var z_index: int = 0
 var z_as_relative: bool = true
+var show_behind_parent: bool = false
 
 
 func _init(
@@ -42,6 +43,7 @@ func duplicate(sub_resource: bool = false):
 	_new.material = material
 	_new.z_index = z_index
 	_new.z_as_relative = z_as_relative
+	_new.show_behind_parent = show_behind_parent
 	_new.meshes = []
 	if sub_resource:
 		for m in meshes:

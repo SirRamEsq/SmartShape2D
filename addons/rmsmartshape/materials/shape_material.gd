@@ -13,6 +13,7 @@ export (Array, Resource) var _edge_meta_materials: Array = [] setget set_edge_me
 export (Array, Texture) var fill_textures: Array = [] setget set_fill_textures
 export (Array, Texture) var fill_texture_normals: Array = [] setget set_fill_texture_normals
 export (int) var fill_texture_z_index: int = -10 setget set_fill_texture_z_index
+export (int) var fill_texture_show_behind_parent: bool = false setget set_fill_texture_show_behind_parent
 export (float) var fill_mesh_offset: float = 0.0 setget set_fill_mesh_offset
 export (Material) var fill_mesh_material: Material = null setget set_fill_mesh_material
 
@@ -80,6 +81,11 @@ func set_fill_texture_normals(a: Array):
 
 func set_fill_texture_z_index(i: int):
 	fill_texture_z_index = i
+	emit_signal("changed")
+
+
+func set_fill_texture_show_behind_parent(value: bool):
+	fill_texture_show_behind_parent = value
 	emit_signal("changed")
 
 

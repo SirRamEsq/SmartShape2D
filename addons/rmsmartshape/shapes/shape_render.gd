@@ -15,10 +15,12 @@ func set_mesh(m):
 		material = mesh.material
 		z_index = mesh.z_index
 		z_as_relative = mesh.z_as_relative
+		show_behind_parent = mesh.show_behind_parent
 	else:
 		material = null
 		z_index = 0
 		z_as_relative = true
+		show_behind_parent = false
 	update()
 
 
