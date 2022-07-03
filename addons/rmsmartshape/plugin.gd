@@ -407,11 +407,21 @@ func forward_canvas_gui_input(event):
 
 
 func handles(object):
-	tb_hb.hide()
+	var hideToolbar:bool = true
+	
 	tb_hb_legacy_import.hide()
 	update_overlays()
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
+
+	var selection:EditorSelection = get_editor_interface().get_selection()
+	if selection != null:
+		if selection.get_selected_nodes().size() == 1:
+			if selection.get_selected_nodes()[0] is SS2D_Shape_Base:
+				hideToolbar = false
+				
+	if hideToolbar == true:
+		tb_hb.hide()
 
 	if object is Resource:
 		return false
