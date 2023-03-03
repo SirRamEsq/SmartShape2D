@@ -84,7 +84,7 @@ class ObjectInfo:
 	var _native_class = null
 	var _native_class_name = null
 
-	func _init(path, subpath=null):
+	func _init(path,subpath=null):
 		_path = path
 		if(subpath != null):
 			_subpaths = _utils.split_string(subpath, '/')
@@ -148,7 +148,7 @@ class ObjectInfo:
 		var inst = native_class.new()
 		_native_class_name = inst.get_class()
 		_path = _native_class_name
-		if(!inst is Reference):
+		if(!inst is RefCounted):
 			inst.free()
 
 	func get_native_class_name():
@@ -170,17 +170,17 @@ class FileOrString:
 	func open(path, mode):
 		_path = path
 		if(_do_file):
-			return .open(path, mode)
+			return super.open(path, mode)
 		else:
 			return OK
 
 	func close():
 		if(_do_file):
-			return .close()
+			return super.close()
 
 	func store_string(s):
 		if(_do_file):
-			.store_string(s)
+			super.store_string(s)
 		_contents += s
 
 	func get_contents():
@@ -212,7 +212,7 @@ class PackedSceneDouble:
 		_script = obj
 
 	func instance(edit_state=0):
-		var inst = _scene.instance(edit_state)
+		var inst = _scene.instantiate(edit_state)
 		if(_script !=  null):
 			inst.set_script(_script)
 		return inst
@@ -338,7 +338,7 @@ func _double_scene_and_script(scene_info):
 	var to_return = PackedSceneDouble.new()
 	to_return.load_scene(scene_info.get_path())
 
-	var inst = load(scene_info.get_path()).instance()
+	var inst = load(scene_info.get_path()).instantiate()
 	var script_path = null
 	if(inst.get_script()):
 		script_path = inst.get_script().get_path()
@@ -358,7 +358,7 @@ func _get_methods(object_info):
 	# any method in the script or super script
 	var script_methods = ScriptMethods.new()
 	var methods = obj.get_method_list()
-	if(!(obj is Reference)):
+	if(!(obj is RefCounted)):
 		obj.free()
 
 	# first pass is for local methods only
@@ -528,7 +528,7 @@ func clear_output_directory():
 		# directory becomes res:// and things go on normally and gut clears out
 		# out res:// which is SUPER BAD.
 		if(result == OK):
-			d.list_dir_begin(true)
+			d.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 			var f = d.get_next()
 			while(f != ''):
 				d.remove(f)

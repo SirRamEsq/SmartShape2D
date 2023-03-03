@@ -1,4 +1,4 @@
-tool
+@tool
 extends Resource
 class_name SS2D_Strings
 

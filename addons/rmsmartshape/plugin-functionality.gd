@@ -1,5 +1,5 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 
 """
 - Everything in this script should be static
@@ -41,7 +41,7 @@ static func _get_intersecting_control_point(
 		if c_pos == Vector2.ZERO:
 			continue
 		var final_pos = vec_pos + c_pos
-		final_pos = xform.xform(final_pos)
+		final_pos = xform * final_pos
 		if final_pos.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(key)
 
@@ -58,11 +58,11 @@ static func action_set_pivot(
 	et: Transform2D,
 	pos: Vector2
 ):
-	var old_pos = et.xform(s.get_parent().get_global_transform().xform(s.position))
+	var old_pos = et * s.get_parent().get_global_transform().xform(s.position)
 	undo.create_action("Set Pivot")
 
 	undo.add_do_method(update_node, update_method, pos)
-	undo.add_undo_method(update_node, update_method, et.affine_inverse().xform(old_pos))
+	undo.add_undo_method(update_node, update_method, et.affine_inverse() * old_pos)
 
 	undo.commit_action()
 
@@ -213,7 +213,7 @@ static func action_split_curve(
 	idx = s.adjust_add_point_index(idx)
 	undo.create_action("Split Curve")
 
-	undo.add_do_method(s, "add_point", xform.affine_inverse().xform(gpoint), idx)
+	undo.add_do_method(s, "add_point", xform.affine_inverse() * gpoint, idx)
 	undo.add_undo_method(s, "remove_point_at_index", idx)
 
 	undo.add_do_method(update_node, update_method)

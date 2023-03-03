@@ -1,17 +1,17 @@
-tool
+@tool
+@icon("../assets/Anchor.svg")
 extends Node2D
+class_name SS2D_Shape_Anchor
 
 const DEBUG_DRAW_LINE_LENGTH = 128.0
 
-class_name SS2D_Shape_Anchor, "../assets/Anchor.svg"
+@export var shape_path: NodePath : set = set_shape_path
+@export var shape_point_index: int = 0 : set = set_shape_point_index
+@export_range (0.0, 1.0) var shape_point_offset: float = 0.0 : set = set_shape_point_offset
+@export_range (0, 3.14) var child_rotation: float = 3.14 : set = set_child_rotation
+@export var use_shape_scale: bool = false : set = set_use_shape_scale
 
-export (NodePath) var shape_path: NodePath setget set_shape_path
-export (int) var shape_point_index: int = 0 setget set_shape_point_index
-export (float, 0.0, 1.0) var shape_point_offset: float = 0.0 setget set_shape_point_offset
-export (float, 0, 3.14) var child_rotation: float = 3.14 setget set_child_rotation
-export (bool) var use_shape_scale: bool = false setget set_use_shape_scale
-
-export (bool) var debug_draw: bool = false setget set_debug_draw
+@export var debug_draw: bool = false : set = set_debug_draw
 
 var cached_shape_transform:Transform2D = Transform2D.IDENTITY
 var shape = null
@@ -25,7 +25,7 @@ func set_shape_path(value: NodePath):
 	shape_path = value
 	set_shape()
 
-	property_list_changed_notify()
+	notify_property_list_changed()
 	refresh()
 
 func set_shape():
@@ -66,31 +66,31 @@ func set_shape_point_index(value: int):
 		return
 
 	shape_point_index = get_shape_index_range(shape, value)
-	#property_list_changed_notify()
+	#notify_property_list_changed()
 	refresh()
 
 
 func set_shape_point_offset(value: float):
 	shape_point_offset = value
-	#property_list_changed_notify()
+	#notify_property_list_changed()
 	refresh()
 
 
 func set_use_shape_scale(value: bool):
 	use_shape_scale = value
-	#property_list_changed_notify()
+	#notify_property_list_changed()
 	refresh()
 
 
 func set_child_rotation(value: float):
 	child_rotation = value
-	#property_list_changed_notify()
+	#notify_property_list_changed()
 	refresh()
 
 
 func set_debug_draw(v: bool):
 	debug_draw = v
-	#property_list_changed_notify()
+	#notify_property_list_changed()
 	refresh()
 
 
@@ -120,25 +120,25 @@ func _handle_point_change():
 # LOGIC #
 #########
 func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
-	var q0 = p0.linear_interpolate(p1, t)
-	var q1 = p1.linear_interpolate(p2, t)
-	var q2 = p2.linear_interpolate(p3, t)
+	var q0 = p0.lerp(p1, t)
+	var q1 = p1.lerp(p2, t)
+	var q2 = p2.lerp(p3, t)
 
-	var r0 = q0.linear_interpolate(q1, t)
-	var r1 = q1.linear_interpolate(q2, t)
+	var r0 = q0.lerp(q1, t)
+	var r1 = q1.lerp(q2, t)
 
-	var s = r0.linear_interpolate(r1, t)
+	var s = r0.lerp(r1, t)
 	return s
 
 
 func disconnect_shape(s: SS2D_Shape_Base):
-	s.disconnect("points_modified", self, "_handle_point_change")
-	s.disconnect("tree_exiting", self, "_monitored_node_leaving")
+	s.disconnect("points_modified",Callable(self,"_handle_point_change"))
+	s.disconnect("tree_exiting",Callable(self,"_monitored_node_leaving"))
 
 
 func connect_shape(s: SS2D_Shape_Base):
-	s.connect("points_modified", self, "_handle_point_change")
-	s.connect("tree_exiting", self, "_monitored_node_leaving")
+	s.connect("points_modified",Callable(self,"_handle_point_change"))
+	s.connect("tree_exiting",Callable(self,"_monitored_node_leaving"))
 
 
 func refresh():
@@ -159,8 +159,8 @@ func refresh():
 	var pt_a_key = shape.get_point_key_at_index(pt_a_index)
 	var pt_b_key = shape.get_point_key_at_index(pt_b_index)
 
-	var pt_a: Vector2 = shape.global_transform.xform(shape.get_point_position(pt_a_key))
-	var pt_b: Vector2 = shape.global_transform.xform(shape.get_point_position(pt_b_key))
+	var pt_a: Vector2 = shape.global_transform * shape.get_point_position(pt_a_key)
+	var pt_b: Vector2 = shape.global_transform * shape.get_point_position(pt_b_key)
 
 	var pt_a_handle: Vector2
 	var pt_b_handle: Vector2
@@ -171,10 +171,10 @@ func refresh():
 
 	var angle = 0.0
 
-	pt_a_handle = shape.global_transform.xform(
+	pt_a_handle = shape.global_transform * (
 		shape.get_point_position(pt_a_key) + shape.get_point_out(pt_a_key)
 	)
-	pt_b_handle = shape.global_transform.xform(
+	pt_b_handle = shape.global_transform * (
 		shape.get_point_position(pt_b_key) + shape.get_point_in(pt_b_key)
 	)
 
@@ -182,7 +182,7 @@ func refresh():
 	if pt_a_handle != pt_a or pt_b_handle != pt_b:
 		n_pt = _cubic_bezier(pt_a, pt_a_handle, pt_b_handle, pt_b, shape_point_offset)
 	else:
-		n_pt = pt_a.linear_interpolate(pt_b, shape_point_offset)
+		n_pt = pt_a.lerp(pt_b, shape_point_offset)
 
 	n_pt_a = _cubic_bezier(
 		pt_a, pt_a_handle, pt_b_handle, pt_b, clamp(shape_point_offset - 0.1, 0.0, 1.0)
@@ -198,9 +198,9 @@ func refresh():
 	if use_shape_scale:
 		self.scale = shape.scale
 
-	update()
+	queue_redraw()
 
 
 func _draw():
-	if Engine.editor_hint and debug_draw:
+	if Engine.is_editor_hint() and debug_draw:
 		draw_line(Vector2.ZERO, Vector2(0, -DEBUG_DRAW_LINE_LENGTH), self.modulate)

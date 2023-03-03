@@ -1,13 +1,13 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 class_name SS2D_Mesh
 
 """
 Used to organize all requested meshes to be rendered by their textures
 """
 
-var texture: Texture = null
-var texture_normal: Texture = null
+var texture: Texture2D = null
+var texture_normal: Texture2D = null
 var flip_texture: bool = false
 # Array of ArrayMesh
 var meshes: Array = []
@@ -19,8 +19,8 @@ var show_behind_parent: bool = false
 
 
 func _init(
-	t: Texture = null,
-	tn: Texture = null,
+	t: Texture2D = null,
+	tn: Texture2D = null,
 	f: bool = false,
 	xform: Transform2D = Transform2D(),
 	m: Array = [],
@@ -51,7 +51,7 @@ func duplicate(sub_resource: bool = false):
 	return _new
 
 
-func matches(tex: Texture, tex_n: Texture, f: bool, t: Transform2D, m: Material, zi: int, zb: bool) -> bool:
+func matches(tex: Texture2D, tex_n: Texture2D, f: bool, t: Transform2D, m: Material, zi: int, zb: bool) -> bool:
 	if (
 		tex == texture
 		and tex_n == texture_normal
@@ -85,7 +85,11 @@ func debug_print_array_mesh(am: ArrayMesh) -> String:
 func render(ci: CanvasItem):
 	#print("mesh count %s" % meshes.size())
 	for mesh in meshes:
-		ci.draw_mesh(mesh, texture, texture_normal)
+		#ci.draw_mesh(mesh, texture, texture_normal)
+		# WARNING: no normal texture in Godot 4 CanvasItem!
+		# v3 -> void draw_mesh(mesh: Mesh, texture: Texture, normal_map: Texture = null, transform: Transform2D = Transform2D( 1, 0, 0, 1, 0, 0 ), modulate: Color = Color( 1, 1, 1, 1 ))
+		# v4 -> void draw_mesh(mesh: Mesh, texture: Texture2D, transform: Transform2D = Transform2D(1, 0, 0, 1, 0, 0), modulate: Color = Color(1, 1, 1, 1))
+		ci.draw_mesh(mesh, texture)
 
 
 # Workaround (class cannot reference itself)

@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 class_name RMS2D_VertexPropertiesArray
 
 var properties:Array = []
@@ -11,7 +11,7 @@ Returns true if changed
 """
 func remove_point(idx:int)->bool:
 	assert(_is_array_index_in_range(properties, idx))
-	properties.remove(idx)
+	properties.remove_at(idx)
 	return true
 
 """

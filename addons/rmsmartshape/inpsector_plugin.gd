@@ -9,8 +9,8 @@ func can_handle(object):
 	if object is SS2D_NormalRange:
 		#Connect
 		var parms = [object]
-		if object.is_connected("changed", self, "_changed")==false:
-			object.connect("changed", self, "_changed", parms)
+		if object.is_connected("changed",Callable(self,"_changed"))==false:
+			object.connect("changed",Callable(self,"_changed").bind(parms))
 		return true
 	else:
 		#Disconnect
@@ -18,8 +18,8 @@ func can_handle(object):
 			control = null
 		
 		if object.has_signal("changed"):
-			if object.is_connected("changed", self, "_changed"):
-				object.disconnect("changed", self, "_changed")
+			if object.is_connected("changed",Callable(self,"_changed")):
+				object.disconnect("changed",Callable(self,"_changed"))
 		pass
 
 	return false

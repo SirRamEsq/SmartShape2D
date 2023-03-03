@@ -1,5 +1,5 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 
 """
 Everything in this script should be static
@@ -31,7 +31,7 @@ static func overwrite_array_a_into_array_b(a: Array, b: Array) -> Array:
 					continue
 				overlapping_points.append(idx)
 
-			if overlapping_points.empty():
+			if overlapping_points.is_empty():
 				continue
 
 			# Remove all overlapping points

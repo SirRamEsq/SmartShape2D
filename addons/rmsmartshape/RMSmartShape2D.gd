@@ -1,6 +1,7 @@
-tool
+@tool
+@icon("./assets/LEGACY_shape.png")
 extends Node2D
-class_name RMSmartShape2D, "./assets/LEGACY_shape.png"
+class_name RMSmartShape2D
 
 """
 - This class assumes that points are in clockwise orientation
@@ -60,21 +61,21 @@ func _dir_to_string(d: int):
 
 
 class MeshInfo:
-	extends Reference
+	extends RefCounted
 	"""
-	Extends from Reference to avoid memory leaks
+	Extends from RefCounted to avoid memory leaks
 	Used to organize all requested meshes to be rendered by their texture
 	"""
-	var texture: Texture = null
-	var normal_texture: Texture = null
+	var texture: Texture2D = null
+	var normal_texture: Texture2D = null
 	var meshes: Array
 	var direction: int
 
 
 class QuadInfo:
-	extends Reference
+	extends RefCounted
 	"""
-	Extends from Reference to avoid memory leaks
+	Extends from RefCounted to avoid memory leaks
 	Used to describe the welded quads that form the edge data
 	"""
 	var pt_a: Vector2
@@ -82,8 +83,8 @@ class QuadInfo:
 	var pt_c: Vector2
 	var pt_d: Vector2
 
-	var tex: Texture
-	var normal_tex: Texture
+	var tex: Texture2D
+	var normal_tex: Texture2D
 	var color: Color
 
 	var flip_texture: bool = false
@@ -108,19 +109,19 @@ class QuadInfo:
 		return false
 
 
-export (bool) var editor_debug = false setget _set_editor_debug
-export (Curve2D) var curve: Curve2D = null setget _set_curve
-export (bool) var closed_shape = false setget _set_close_shape
-export (bool) var auto_update_collider = false setget _set_auto_update_collider
-export (int, 1, 8) var tessellation_stages = 5 setget _set_tessellation_stages
-export (int, 1, 8) var tessellation_tolerence = 4 setget _set_tolerence
-export (bool) var use_global_space = false setget _set_use_global_space
-export (NodePath) var collision_polygon_node
-export (int, 1, 512) var collision_bake_interval = 20
-export (bool) var draw_edges: bool = false setget _set_has_edge
-export (bool) var flip_edges: bool = false setget _set_flip_edge
+@export var editor_debug: bool = false : set = _set_editor_debug
+@export var curve: Curve2D = null : set = _set_curve
+@export var closed_shape: bool = false : set = _set_close_shape
+@export var auto_update_collider: bool = false : set = _set_auto_update_collider
+@export_range (1, 8) var tessellation_stages: int = 5 : set = _set_tessellation_stages
+@export_range (1, 8) var tessellation_tolerence: int = 4 : set = _set_tolerence
+@export var use_global_space: bool = false : set = _set_use_global_space
+@export var collision_polygon_node: NodePath
+@export_range (1, 512) var collision_bake_interval: int = 20
+@export var draw_edges: bool = false : set = _set_has_edge
+@export var flip_edges: bool = false : set = _set_flip_edge
 
-export (Resource) var shape_material = RMS2D_Material.new() setget _set_material
+@export var shape_material: Resource = RMS2D_Material.new() : set = _set_material
 
 # This will set true if it is time to rebake mesh, should prevent unnecessary
 # mesh creation unless a change to a property deems it necessary
@@ -133,7 +134,7 @@ var meshes: Array = Array()
 var _quads: Array
 
 # Reduce clockwise check if points don't change
-var is_clockwise: bool = false setget , are_points_clockwise
+var is_clockwise: bool = false : get = are_points_clockwise
 
 # Signals
 signal points_modified
@@ -170,7 +171,7 @@ func _enter_tree():
 func _exit_tree():
 	if shape_material != null:
 		if ClassDB.class_has_signal("RMS2D_Material", "changed"):
-			shape_material.disconnect("changed", self, "_handle_material_change")
+			shape_material.disconnect("changed",Callable(self,"_handle_material_change"))
 
 
 func _on_dirty_update():
@@ -179,7 +180,7 @@ func _on_dirty_update():
 		if auto_update_collider:
 			bake_collision()
 		bake_mesh()
-		update()
+		queue_redraw()
 		_dirty = false
 		emit_signal("on_dirty_update")
 
@@ -268,7 +269,7 @@ func _draw():
 				draw_mesh(m, mesh.texture, mesh.normal_texture)
 
 	# Draw edge quads for debug purposes (ONLY IN EDITOR)
-	if Engine.editor_hint and editor_debug:
+	if Engine.is_editor_hint() and editor_debug:
 		for q in _quads:
 			var t: QuadInfo = q
 			draw_line(t.pt_a, t.pt_b, t.color)
@@ -333,13 +334,13 @@ func _set_tolerence(value: int):
 func _set_material(value: RMS2D_Material):
 	if (
 		shape_material != null
-		and shape_material.is_connected("changed", self, "_handle_material_change")
+		and shape_material.is_connected("changed",Callable(self,"_handle_material_change"))
 	):
-		shape_material.disconnect("changed", self, "_handle_material_change")
+		shape_material.disconnect("changed",Callable(self,"_handle_material_change"))
 
 	shape_material = value
 	if shape_material != null:
-		shape_material.connect("changed", self, "_handle_material_change")
+		shape_material.connect("changed",Callable(self,"_handle_material_change"))
 	set_as_dirty()
 
 
@@ -347,8 +348,8 @@ func _set_close_shape(value):
 	closed_shape = value
 	fix_close_shape()
 	emit_signal("on_closed_change")
-	if Engine.editor_hint:
-		property_list_changed_notify()
+	if Engine.is_editor_hint():
+		notify_property_list_changed()
 
 
 func _set_auto_update_collider(value: bool):
@@ -364,8 +365,8 @@ func _set_curve(value: Curve2D):
 		set_as_dirty()
 		emit_signal("points_modified")
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+		if Engine.is_editor_hint():
+			notify_property_list_changed()
 
 
 ######################
@@ -376,8 +377,8 @@ func set_point_width(width: float, at_position: int):
 		set_as_dirty()
 		emit_signal("points_modified")
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+		if Engine.is_editor_hint():
+			notify_property_list_changed()
 
 
 func get_point_width(at_position: int) -> float:
@@ -393,8 +394,8 @@ func set_point_texture_index(point_index: int, tex_index: int):
 		set_as_dirty()
 		emit_signal("points_modified")
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+		if Engine.is_editor_hint():
+			notify_property_list_changed()
 
 
 func get_point_texture_index(at_position: int) -> int:
@@ -410,8 +411,8 @@ func set_point_texture_flip(flip: bool, at_position: int):
 		set_as_dirty()
 		emit_signal("points_modified")
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+		if Engine.is_editor_hint():
+			notify_property_list_changed()
 
 
 ######################
@@ -493,7 +494,7 @@ func get_point_position(at_position: int):
 ############
 # GEOMETRY #
 ############
-func _add_mesh(mesh: ArrayMesh, texture: Texture, normal_texture: Texture, direction: int):
+func _add_mesh(mesh: ArrayMesh, texture: Texture2D, normal_texture: Texture2D, direction: int):
 	var found: bool = false
 
 	# Is there already a MeshInfo with these textures?
@@ -668,7 +669,7 @@ func _get_direction_three_points(
 	var angle = atan2(determinant, dot_prod)
 	# This angle has a range of 360 degrees
 	# Is between 180 and - 180
-	var deg = rad2deg(angle)
+	var deg = rad_to_deg(angle)
 
 	var clockwise = are_points_clockwise()
 	var dir = 0
@@ -710,7 +711,7 @@ func to_positive_angle(angle: float) -> float:
 
 
 func _vector_to_corner_dir(vec: Vector2, inner: bool) -> int:
-	var deg = rad2deg(vec.angle()) + 90.0
+	var deg = rad_to_deg(vec.angle()) + 90.0
 	deg = to_positive_angle(deg)
 
 	if _in_range(deg, 0.0, 90.0):
@@ -738,8 +739,8 @@ func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt) -> int:
 	var v2: Vector2 = point_next
 
 	if use_global_space:
-		v1 = get_global_transform().xform(point)
-		v2 = get_global_transform().xform(point_next)
+		v1 = get_global_transform() * point
+		v2 = get_global_transform() * point_next
 
 	var clockwise = are_points_clockwise()
 	var top_mid = 0.0
@@ -751,11 +752,11 @@ func _get_direction_two_points(point, point_next, top_tilt, bottom_tilt) -> int:
 	var angle = atan2(v2.y - v1.y, v2.x - v1.x)
 
 	#Precedence is given to top
-	if abs(top_mid - abs(angle)) <= deg2rad(top_tilt):
+	if abs(top_mid - abs(angle)) <= deg_to_rad(top_tilt):
 		return DIRECTION.TOP
 
 	#And then to bottom
-	if abs(bottom_mid - abs(angle)) <= deg2rad(bottom_tilt):
+	if abs(bottom_mid - abs(angle)) <= deg_to_rad(bottom_tilt):
 		return DIRECTION.BOTTOM
 
 	if angle > 0:
@@ -778,8 +779,8 @@ func _adjust_mesh_quad_segment(quads: Array, quad_indices: Array):
 	var st: SurfaceTool = SurfaceTool.new()
 	var first_quad = quads[quad_indices[0]]
 	# All quads should not differ. Should have same tex and normal_tex
-	var tex: Texture = first_quad.tex
-	var normal_tex: Texture = first_quad.normal_tex
+	var tex: Texture2D = first_quad.tex
+	var normal_tex: Texture2D = first_quad.normal_tex
 
 	var length: float = 0.0
 	var mesh_direction: int
@@ -798,7 +799,7 @@ func _adjust_mesh_quad_segment(quads: Array, quad_indices: Array):
 		if section_length == 0:
 			section_length = tex.get_size().x
 
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 
 		# A
 		if tex != null:
@@ -1018,11 +1019,11 @@ func get_vertex_idx_from_tessellated_point(points, tess_points, tess_point_index
 	return vertex_idx
 
 
-func get_tessellated_points() -> PoolVector2Array:
+func get_tessellated_points() -> PackedVector2Array:
 	# Point 0 will be the same on both the curve points and the vertecies
 	# Point size - 1 will be the same on both the curve points and the vertecies
 	if not _has_minimum_point_count():
-		return PoolVector2Array()
+		return PackedVector2Array()
 	var points = curve.tessellate(tessellation_stages)
 	points[0] = curve.get_point_position(0)
 	points[points.size() - 1] = curve.get_point_position(curve.get_point_count() - 1)
@@ -1099,17 +1100,17 @@ func _build_corner_quad(
 		return new_quad
 
 	var tex_size = texture.get_size()
-	var extents = tex_size / 2.0
+	var size = tex_size / 2.0
 	var delta_12 = pt - pt_prev
 	var delta_23 = pt_next - pt
 	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
 	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
 	var width = (pt_prev_width + pt_width) / 2.0
-	var center = pt + (delta_12.normalized() * extents)
+	var center = pt + (delta_12.normalized() * size)
 
-	var offset_12 = (normal_12 * custom_scale * pt_width * extents)
-	var offset_23 = (normal_23 * custom_scale * pt_prev_width * extents)
-	var custom_offset_13 = ((normal_12 + normal_23) * custom_offset * extents)
+	var offset_12 = (normal_12 * custom_scale * pt_width * size)
+	var offset_23 = (normal_23 * custom_scale * pt_prev_width * size)
+	var custom_offset_13 = ((normal_12 + normal_23) * custom_offset * size)
 	if flip_edges:
 		offset_12 *= -1
 		offset_23 *= -1
@@ -1162,8 +1163,8 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 	"""
 	# The remainder of the code build up the edge quads
 	var quads: Array = []
-	var tex: Texture = null
-	var tex_normal: Texture = null
+	var tex: Texture2D = null
+	var tex_normal: Texture2D = null
 	var tex_size: Vector2
 	var tex_index: int = 0
 
@@ -1225,7 +1226,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 					material_textures_diffuse = shape_material.right_texture
 					material_textures_normal = shape_material.right_texture_normal
 			if material_textures_diffuse != null:
-				if not material_textures_diffuse.empty():
+				if not material_textures_diffuse.is_empty():
 					tex_index = (
 						abs(vertex_properties.get_texture_idx(pt_index))
 						% material_textures_diffuse.size()
@@ -1261,16 +1262,16 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 		if flip_edges:  # allow developer to override
 			vtx *= -1
 
-		var clr: Color = Color.white
+		var clr: Color = Color.WHITE
 		match cardinal_direction:
 			DIRECTION.TOP:
-				clr = Color.green
+				clr = Color.GREEN
 			DIRECTION.LEFT:
-				clr = Color.yellow
+				clr = Color.YELLOW
 			DIRECTION.RIGHT:
-				clr = Color.red
+				clr = Color.RED
 			DIRECTION.BOTTOM:
-				clr = Color.blue
+				clr = Color.BLUE
 
 		var offset = Vector2.ZERO
 		if tex != null and custom_offset != 0.0:
@@ -1334,7 +1335,7 @@ func _build_quads(custom_scale: float = 1.0, custom_offset: float = 0, custom_ex
 				var previous_quad = null
 				if quads.size() > 0:
 					previous_quad = quads[quads.size() - 1]
-				new_quad2.color = Color.purple
+				new_quad2.color = Color.PURPLE
 				new_quad2.flip_texture = vertex_properties.get_flip(pt_index)
 				new_quad2.width_factor = w
 				quads.push_back(new_quad2)
@@ -1371,7 +1372,7 @@ func bake_collision():
 
 	if has_node(collision_polygon_node):
 		var col_polygon = get_node(collision_polygon_node)
-		var points: PoolVector2Array = PoolVector2Array()
+		var points: PackedVector2Array = PackedVector2Array()
 		var collision_quads = Array()
 
 		var collision_width = 1.0
@@ -1393,31 +1394,31 @@ func bake_collision():
 			#var curve_points = get_tessellated_points()
 			#for i in curve_points:
 			#points.push_back(
-			#col_polygon.get_global_transform().xform_inv(get_global_transform().xform(i))
+			#col_polygon.get_global_transform()get_global_transform() * i * 
 			#)
 			collision_quads = _build_quads(collision_width, collision_offset, collision_extends)
 			for quad in collision_quads:
 				if _is_cardinal_direction(quad.direction):
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
-							get_global_transform().xform(quad.pt_a)
+							get_global_transform() * quad.pt_a
 						)
 					)
 				elif _is_inner_direction(quad.direction):
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
-							get_global_transform().xform(quad.pt_d)
+							get_global_transform() * quad.pt_d
 						)
 					)
 				elif _is_outer_direction(quad.direction):
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
-							get_global_transform().xform(quad.pt_a)
+							get_global_transform() * quad.pt_a
 						)
 					)
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
-							get_global_transform().xform(quad.pt_d)
+							get_global_transform() * quad.pt_d
 						)
 					)
 			curve.bake_interval = collision_bake_interval
@@ -1425,21 +1426,20 @@ func bake_collision():
 			collision_quads = _build_quads(collision_width, collision_offset, collision_extends)
 			_weld_quads(collision_quads, collision_width)
 
-			if not collision_quads.empty():
+			if not collision_quads.is_empty():
 				# PT A
 				for quad in collision_quads:
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
-							get_global_transform().xform(quad.pt_a)
+							get_global_transform() * quad.pt_a
 						)
 					)
 
 				# PT D
 				points.push_back(
 					col_polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(
+						get_global_transform() *
 							collision_quads[collision_quads.size() - 1].pt_d
-						)
 					)
 				)
 
@@ -1448,14 +1448,14 @@ func bake_collision():
 					var quad = collision_quads[collision_quads.size() - 1 - quad_index]
 					points.push_back(
 						col_polygon.get_global_transform().xform_inv(
-							get_global_transform().xform(quad.pt_c)
+							get_global_transform() * quad.pt_c
 						)
 					)
 
 				# PT B
 				points.push_back(
 					col_polygon.get_global_transform().xform_inv(
-						get_global_transform().xform(collision_quads[0].pt_b)
+						get_global_transform() * collision_quads[0].pt_b
 					)
 				)
 
@@ -1481,12 +1481,12 @@ func bake_mesh(force: bool = false):
 	_quads = Array()
 
 	# Produce Fill Mesh
-	var fill_points:PoolVector2Array = PoolVector2Array()
+	var fill_points:PackedVector2Array = PackedVector2Array()
 	fill_points.resize(point_count)
 	for i in point_count:
 		fill_points[i] = points[i]
 
-	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
+	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(fill_points)
 	var st: SurfaceTool
 
 	if closed_shape and shape_material.fill_texture != null:
@@ -1494,13 +1494,13 @@ func bake_mesh(force: bool = false):
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 		for i in range(0, fill_tris.size() - 1, 3):
-			st.add_color(Color.white)
+			st.add_color(Color.WHITE)
 			_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]]))
 			st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-			st.add_color(Color.white)
+			st.add_color(Color.WHITE)
 			_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]]))
 			st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-			st.add_color(Color.white)
+			st.add_color(Color.WHITE)
 			_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]]))
 			st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 		st.index()
@@ -1550,8 +1550,8 @@ func invert_point_order():
 	# Update and set as dirty
 	set_as_dirty()
 
-	if Engine.editor_hint:
-		property_list_changed_notify()
+	if Engine.is_editor_hint():
+		notify_property_list_changed()
 
 func clear_points():
 	curve.clear_points()
@@ -1583,8 +1583,8 @@ func _add_point_update():
 	set_as_dirty()
 	emit_signal("points_modified")
 
-	if Engine.editor_hint:
-		property_list_changed_notify()
+	if Engine.is_editor_hint():
+		notify_property_list_changed()
 
 func _is_curve_index_in_range(i: int) -> bool:
 	if curve.get_point_count() > i and i >= 0:
@@ -1612,8 +1612,8 @@ func remove_point(idx: int):
 		set_as_dirty()
 		emit_signal("points_modified")
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+		if Engine.is_editor_hint():
+			notify_property_list_changed()
 
 
 func resize_points(size: int):
@@ -1624,8 +1624,8 @@ func resize_points(size: int):
 	if vertex_properties.resize(size):
 		set_as_dirty()
 
-		if Engine.editor_hint:
-			property_list_changed_notify()
+		if Engine.is_editor_hint():
+			notify_property_list_changed()
 
 
 ########

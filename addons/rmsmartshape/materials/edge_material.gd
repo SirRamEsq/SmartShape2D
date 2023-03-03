@@ -1,4 +1,4 @@
-tool
+@tool
 extends Resource
 class_name SS2D_Material_Edge
 
@@ -13,33 +13,33 @@ This consists of:
 # All variations of the main edge texture
 # _textures[0] is considered the "main" texture for the EdgeMaterial
 #### Will be used to generate an icon representing an edge texture
-export (Array, Texture) var textures: Array = [] setget _set_textures
-export (Array, Texture) var texture_normals: Array = [] setget _set_texture_normals
+@export var textures: Array[Texture2D] = [] : set = _set_textures
+@export var texture_normals: Array[Texture2D] = [] : set = _set_texture_normals
 
 # Textures for the final left and right quad of the edge when the angle is steep
-export (Array, Texture) var textures_corner_outer: Array = [] setget _set_textures_corner_outer
-export (Array, Texture) var textures_corner_inner: Array = [] setget _set_textures_corner_inner
-export (Array, Texture) var texture_normals_corner_outer: Array = [] setget _set_texture_normals_corner_outer
-export (Array, Texture) var texture_normals_corner_inner: Array = [] setget _set_texture_normals_corner_inner
+@export var textures_corner_outer: Array[Texture2D] = [] : set = _set_textures_corner_outer
+@export var textures_corner_inner: Array[Texture2D] = [] : set = _set_textures_corner_inner
+@export var texture_normals_corner_outer: Array[Texture2D] = [] : set = _set_texture_normals_corner_outer
+@export var texture_normals_corner_inner: Array[Texture2D] = [] : set = _set_texture_normals_corner_inner
 
 # Textures for the final left and right quad of the edge when the angle is shallow
 # Named as such because the desired look is that the texture "tapers-off"
-export (Array, Texture) var textures_taper_left: Array = [] setget _set_textures_taper_left
-export (Array, Texture) var textures_taper_right: Array = [] setget _set_textures_taper_right
-export (Array, Texture) var texture_normals_taper_left: Array = [] setget _set_texture_normals_taper_left
-export (Array, Texture) var texture_normals_taper_right: Array = [] setget _set_texture_normals_taper_right
+@export var textures_taper_left: Array[Texture2D] = [] : set = _set_textures_taper_left
+@export var textures_taper_right: Array[Texture2D] = [] : set = _set_textures_taper_right
+@export var texture_normals_taper_left: Array[Texture2D] = [] : set = _set_texture_normals_taper_left
+@export var texture_normals_taper_right: Array[Texture2D] = [] : set = _set_texture_normals_taper_right
 
 # If the texture choice should be randomized instead of the choice by point setup
-export (bool) var randomize_texture: bool = false setget _set_randomize_texture
+@export var randomize_texture: bool = false : set = _set_randomize_texture
 # If corner textures should be used
-export (bool) var use_corner_texture: bool = true setget _set_use_corner
+@export var use_corner_texture: bool = true : set = _set_use_corner
 # If taper textures should be used
-export (bool) var use_taper_texture: bool = true setget _set_use_taper
+@export var use_taper_texture: bool = true : set = _set_use_taper
 # if set to true, then squishing can occur when texture doesn't fit nicely into total length.
 enum FITMODE {SQUISH_AND_STRETCH, CROP}
-export (FITMODE) var fit_mode = FITMODE.SQUISH_AND_STRETCH setget _set_fit_texture
+@export var fit_mode: FITMODE = FITMODE.SQUISH_AND_STRETCH : set = _set_fit_texture
 
-export (Material) var material: Material = null setget _set_material
+@export var material: Material = null : set = _set_material
 
 
 ###########
@@ -164,11 +164,11 @@ func get_texture_normal_taper_right(idx: int):
 #########
 # USAGE #
 #########
-func get_icon_texture() -> Texture:
+func get_icon_texture() -> Texture2D:
 	"""
 	Returns main texture used to visually identify this edge material
 	"""
-	if not textures.empty():
+	if not textures.is_empty():
 		return textures[0]
 	return null
 
@@ -177,7 +177,7 @@ func get_icon_texture() -> Texture:
 # INTERNAL #
 ############
 func _get_element(idx: int, a: Array):
-	if a.empty():
+	if a.is_empty():
 		return null
 	return a[_adjust_idx(idx, a)]
 

@@ -1,5 +1,5 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 class_name SS2D_Quad
 
 enum ORIENTATION { COLINEAR = 0, CCW, CW }
@@ -20,8 +20,8 @@ var bn_b : Vector2
 var bn_c : Vector2
 var bn_d : Vector2
 
-var texture: Texture = null
-var texture_normal: Texture = null
+var texture: Texture2D = null
+var texture_normal: Texture2D = null
 var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 var flip_texture: bool = false
@@ -98,8 +98,8 @@ func _init(
 	b: Vector2 = Vector2.ZERO,
 	c: Vector2 = Vector2.ZERO,
 	d: Vector2 = Vector2.ZERO,
-	t: Texture = null,
-	tn: Texture = null,
+	t: Texture2D = null,
+	tn: Texture2D = null,
 	f: bool = false
 ):
 	pt_a = a

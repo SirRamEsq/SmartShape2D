@@ -1,16 +1,16 @@
-tool
+@tool
 extends PanelContainer
 
-export (NodePath) var p_lbl_idx
-export (NodePath) var p_lbl_tex
-export (NodePath) var p_lbl_width
-export (NodePath) var p_lbl_flip
+@export (NodePath) var p_lbl_idx
+@export (NodePath) var p_lbl_tex
+@export (NodePath) var p_lbl_width
+@export (NodePath) var p_lbl_flip
 
 func set_idx(i:int):
 	get_node(p_lbl_idx).text = "IDX: %s" % i
 
 func set_texture_idx(i:int):
-	get_node(p_lbl_tex).text = "Texture: %s" % i
+	get_node(p_lbl_tex).text = "Texture2D: %s" % i
 
 func set_width(f:float):
 	get_node(p_lbl_width).text = "Width: %s" % f

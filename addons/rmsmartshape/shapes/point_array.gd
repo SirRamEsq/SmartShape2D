@@ -1,4 +1,4 @@
-tool
+@tool
 extends Resource
 class_name SS2D_Point_Array
 
@@ -7,17 +7,17 @@ const TUP = preload("../lib/tuple.gd")
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
 # Maps a key to each point
-export var _points: Dictionary = {} setget set_points
+@export var _points: Dictionary = {} : set = set_points
 # Contains all keys; the order of the keys determines the order of the points
-export var _point_order: Array = [] setget set_point_order
+@export var _point_order: Array = [] : set = set_point_order
 # Key is tuple of point_keys; Value is the CONSTRAINT enum
-export var _constraints = {} setget set_constraints
+@export var _constraints = {} : set = set_constraints
 # Next key value to generate
-export var _next_key = 0 setget set_next_key
+@export var _next_key = 0 : set = set_next_key
 # Dictionary of specific materials to use for specific tuples of points
 # Key is tuple of two point keys
 # Value is material
-export (Dictionary) var _material_overrides = null setget set_material_overrides
+@export var _material_overrides: Dictionary = {} : set = set_material_overrides
 
 var _constraints_enabled: bool = true
 
@@ -45,32 +45,32 @@ func _init():
 func _ready():
 	for tuple in _material_overrides:
 		var mat = _material_overrides[tuple]
-		if not mat.is_connected("changed", self, "_on_material_override_changed"):
-			mat.connect("changed", self, "_on_material_override_changed", [tuple])
+		if not mat.is_connected("changed",Callable(self,"_on_material_override_changed")):
+			mat.connect("changed",Callable(self,"_on_material_override_changed").bind(tuple))
 
 
 func set_points(ps: Dictionary):
 	# Called by Godot when loading from a saved scene
 	for k in ps:
 		var p = ps[k]
-		p.connect("changed", self, "_on_point_changed", [p])
+		p.connect("changed",Callable(self,"_on_point_changed").bind(p))
 	_points = ps
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_point_order(po: Array):
 	_point_order = po
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_constraints(cs: Dictionary):
 	_constraints = cs
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func set_next_key(i: int):
 	_next_key = i
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func __generate_key(next: int) -> int:
@@ -105,7 +105,7 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 	if next_key == -1 or not is_key_valid(next_key):
 		next_key = _generate_key()
 	var new_point = SS2D_Point.new(point)
-	new_point.connect("changed", self, "_on_point_changed", [new_point])
+	new_point.connect("changed",Callable(self,"_on_point_changed").bind(new_point))
 	_points[next_key] = new_point
 	_point_order.push_back(next_key)
 	if idx != -1:
@@ -150,7 +150,7 @@ func get_point_index(key: int) -> int:
 
 
 func invert_point_order():
-	_point_order.invert()
+	_point_order.reverse()
 
 
 func set_point_index(key: int, idx: int):
@@ -161,7 +161,7 @@ func set_point_index(key: int, idx: int):
 		idx = _points.size() - 1
 	if idx == old_idx:
 		return
-	_point_order.remove(old_idx)
+	_point_order.remove_at(old_idx)
 	_point_order.insert(idx, key)
 
 
@@ -180,9 +180,9 @@ func remove_point(key: int) -> bool:
 	if has_point(key):
 		remove_constraints(key)
 		var p = _points[key]
-		if p.is_connected("changed", self, "_on_point_changed"):
-			p.disconnect("changed", self, "_on_point_changed")
-		_point_order.remove(get_point_index(key))
+		if p.is_connected("changed",Callable(self,"_on_point_changed")):
+			p.disconnect("changed",Callable(self,"_on_point_changed"))
+		_point_order.remove_at(get_point_index(key))
 		_points.erase(key)
 		return true
 	return false
@@ -304,7 +304,7 @@ func update_constraints(src: int):
 	_update_constraints(src)
 
 	# Subsequent required passes of updating constraints
-	while not _keys_to_update_constraints.empty():
+	while not _keys_to_update_constraints.is_empty():
 		var key_set = _keys_to_update_constraints.duplicate(true)
 		_keys_to_update_constraints.clear()
 		for k in key_set:
@@ -427,13 +427,13 @@ func set_material_overrides(dict:Dictionary):
 
 	if _material_overrides != null:
 		for old in _material_overrides.values():
-			if old.is_connected("changed", self, "_on_material_override_changed"):
-				old.disconnect("changed", self, "_on_material_override_changed")
+			if old.is_connected("changed",Callable(self,"_on_material_override_changed")):
+				old.disconnect("changed",Callable(self,"_on_material_override_changed"))
 
 	_material_overrides = dict
 	for tuple in _material_overrides:
 		var m = _material_overrides[tuple]
-		m.connect("changed", self, "_on_material_override_changed", [tuple])
+		m.connect("changed",Callable(self,"_on_material_override_changed").bind(tuple))
 
 func get_material_override_tuple(tuple: Array) -> Array:
 	var keys = _material_overrides.keys()
@@ -452,8 +452,8 @@ func remove_material_override(tuple: Array):
 	if not has_material_override(tuple):
 		return
 	var old = get_material_override(tuple)
-	if old.is_connected("changed", self, "_on_material_override_changed"):
-		old.disconnect("changed", self, "_on_material_override_changed")
+	if old.is_connected("changed",Callable(self,"_on_material_override_changed")):
+		old.disconnect("changed",Callable(self,"_on_material_override_changed"))
 	_material_overrides.erase(get_material_override_tuple(tuple))
 	_on_material_override_changed(tuple)
 
@@ -464,10 +464,10 @@ func set_material_override(tuple: Array, mat: SS2D_Material_Edge_Metadata):
 		if old == mat:
 			return
 		else:
-			if old.is_connected("changed", self, "_on_material_override_changed"):
-				old.disconnect("changed", self, "_on_material_override_changed")
-	if not mat.is_connected("changed", self, "_on_material_override_changed"):
-		mat.connect("changed", self, "_on_material_override_changed", [tuple])
+			if old.is_connected("changed",Callable(self,"_on_material_override_changed")):
+				old.disconnect("changed",Callable(self,"_on_material_override_changed"))
+	if not mat.is_connected("changed",Callable(self,"_on_material_override_changed")):
+		mat.connect("changed",Callable(self,"_on_material_override_changed").bind(tuple))
 	_material_overrides[get_material_override_tuple(tuple)] = mat
 	_on_material_override_changed(tuple)
 

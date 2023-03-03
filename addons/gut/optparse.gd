@@ -148,7 +148,7 @@ class Option:
 	var default = null
 	var description = ''
 
-	func _init(name, default_value, desc=''):
+	func _init(name,default_value,desc=''):
 		option_name = name
 		default = default_value
 		description = desc

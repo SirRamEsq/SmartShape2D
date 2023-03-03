@@ -1,6 +1,7 @@
-tool
+@tool
+@icon("../assets/closed_shape.png")
 extends SS2D_Shape_Base
-class_name SS2D_Shape_Closed, "../assets/closed_shape.png"
+class_name SS2D_Shape_Closed
 
 ##########
 # CLOSED #
@@ -25,7 +26,7 @@ func get_holes() -> Array:
 # GODOT #
 #########
 func _init():
-	._init()
+	super._init()
 	_is_instantiable = true
 
 
@@ -49,7 +50,7 @@ func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
-	property_list_changed_notify()
+	notify_property_list_changed()
 
 
 func has_minimum_point_count() -> bool:
@@ -57,7 +58,7 @@ func has_minimum_point_count() -> bool:
 
 
 func duplicate_self():
-	var _new = .duplicate()
+	var _new = super.duplicate()
 	return _new
 
 
@@ -143,24 +144,24 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	var meshes = []
 	if s_mat == null:
 		return meshes
-	if s_mat.fill_textures.empty():
+	if s_mat.fill_textures.is_empty():
 		return meshes
 	if points.size() < 3:
 		return meshes
 
 	var tex = null
-	if s_mat.fill_textures.empty():
+	if s_mat.fill_textures.is_empty():
 		return meshes
 	tex = s_mat.fill_textures[0]
 	var tex_normal = null
-	if not s_mat.fill_texture_normals.empty():
+	if not s_mat.fill_texture_normals.is_empty():
 		tex_normal = s_mat.fill_texture_normals[0]
 	var tex_size = tex.get_size()
 
 	# Points to produce the fill mesh
-	var fill_points: PoolVector2Array = PoolVector2Array()
-	var polygons = Geometry.offset_polygon_2d(
-		PoolVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
+	var fill_points: PackedVector2Array = PackedVector2Array()
+	var polygons = Geometry2D.offset_polygon(
+		PackedVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
 	)
 	points = polygons[0]
 	fill_points.resize(points.size())
@@ -168,8 +169,8 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 		fill_points[i] = points[i]
 
 	# Produce the fill mesh
-	var fill_tris: PoolIntArray = Geometry.triangulate_polygon(fill_points)
-	if fill_tris.empty():
+	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(fill_points)
+	if fill_tris.is_empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
 		return []
 
@@ -178,13 +179,13 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for i in range(0, fill_tris.size() - 1, 3):
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-		st.add_color(Color.white)
+		st.add_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
@@ -238,11 +239,11 @@ func is_shape_closed() -> bool:
 func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
 	for i in range(0, verts.size(), 1):
 		print("%s | %s" % [i, verts[i]])
-	return .add_points(verts, adjust_add_point_index(starting_index), key)
+	return super.add_points(verts, adjust_add_point_index(starting_index), key)
 
 
 func add_point(position: Vector2, index: int = -1, key: int = -1) -> int:
-	return .add_point(position, adjust_add_point_index(index), key)
+	return super.add_point(position, adjust_add_point_index(index), key)
 
 
 func adjust_add_point_index(index: int) -> int:
@@ -260,11 +261,11 @@ func _add_point_update():
 	# _add_point_update() will be called again by having another point added
 	if _close_shape():
 		return
-	._add_point_update()
+	super._add_point_update()
 
 
 func generate_collision_points():
-	var points: PoolVector2Array = PoolVector2Array()
+	var points: PackedVector2Array = PackedVector2Array()
 	var collision_width = 1.0
 	var collision_extends = 0.0
 	var verts = get_vertices()
@@ -281,7 +282,7 @@ func generate_collision_points():
 	var first_quad = edge.quads[0]
 	var last_quad = edge.quads.back()
 	weld_quads(last_quad, first_quad, 1.0)
-	if not edge.quads.empty():
+	if not edge.quads.is_empty():
 		for quad in edge.quads:
 			if quad.corner == SS2D_Quad.CORNER.NONE:
 				points.push_back(quad.pt_a)
@@ -302,7 +303,7 @@ func _on_dirty_update():
 			bake_collision()
 			cache_edges()
 			cache_meshes()
-		update()
+		queue_redraw()
 		_dirty = false
 		emit_signal("on_dirty_update")
 

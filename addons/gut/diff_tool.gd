@@ -57,7 +57,7 @@ func _invalidate():
 	differences = null
 
 
-func _init(v1, v2, diff_type=DEEP):
+func _init(v1,v2,diff_type=DEEP):
 	_value_1 = v1
 	_value_2 = v2
 	_diff_type = diff_type

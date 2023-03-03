@@ -6,8 +6,8 @@
 [node name="GUI_InfoPanel" type="PanelContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_right = -918.0
-margin_bottom = -486.0
+offset_right = -918.0
+offset_bottom = -486.0
 mouse_filter = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -22,38 +22,38 @@ p_lbl_width = NodePath("Properties/Width")
 p_lbl_flip = NodePath("Properties/Flip")
 
 [node name="Panel" type="Panel" parent="."]
-margin_left = 6.0
-margin_top = 4.0
-margin_right = 114.0
-margin_bottom = 132.0
+offset_left = 6.0
+offset_top = 4.0
+offset_right = 114.0
+offset_bottom = 132.0
 mouse_filter = 2
 
 [node name="Properties" type="VBoxContainer" parent="."]
-margin_left = 6.0
-margin_top = 4.0
-margin_right = 114.0
-margin_bottom = 132.0
+offset_left = 6.0
+offset_top = 4.0
+offset_right = 114.0
+offset_bottom = 132.0
 mouse_filter = 2
 
 [node name="IDX" type="Label" parent="Properties"]
-margin_right = 108.0
-margin_bottom = 29.0
+offset_right = 108.0
+offset_bottom = 29.0
 text = "IDX: 13"
 
 [node name="Tex" type="Label" parent="Properties"]
-margin_top = 33.0
-margin_right = 108.0
-margin_bottom = 62.0
+offset_top = 33.0
+offset_right = 108.0
+offset_bottom = 62.0
 text = "Tex: 1"
 
 [node name="Width" type="Label" parent="Properties"]
-margin_top = 66.0
-margin_right = 108.0
-margin_bottom = 95.0
+offset_top = 66.0
+offset_right = 108.0
+offset_bottom = 95.0
 text = "Width: 1.0"
 
 [node name="Flip" type="Label" parent="Properties"]
-margin_top = 99.0
-margin_right = 108.0
-margin_bottom = 128.0
+offset_top = 99.0
+offset_right = 108.0
+offset_bottom = 128.0
 text = "Flip: N"

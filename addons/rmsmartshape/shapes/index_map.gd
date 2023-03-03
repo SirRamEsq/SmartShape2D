@@ -1,5 +1,5 @@
-tool
-extends Reference
+@tool
+extends RefCounted
 class_name SS2D_IndexMap
 
 const TUP = preload("res://addons/rmsmartshape/lib/tuple.gd")
@@ -9,7 +9,7 @@ Maps a set of indicies to an object
 """
 
 var object = null
-var indicies: Array = [] setget set_indicies
+var indicies: Array = [] : set = set_indicies
 
 
 # Workaround (class cannot reference itself)
@@ -23,7 +23,7 @@ func duplicate(sub_resource: bool = false):
 	return _new
 
 
-func _init(i: Array, o):
+func _init(i: Array,o):
 	object = o
 	set_indicies(i)
 
@@ -58,7 +58,7 @@ func get_contiguous_segments() -> Array:
 		segments.push_back(new_slice)
 		remainder = remainder.slice(break_idx, remainder.size() - 1)
 		break_idx = find_break_in_array(remainder)
-	if not remainder.empty():
+	if not remainder.is_empty():
 		segments.push_back(remainder)
 	return segments
 

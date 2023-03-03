@@ -1,13 +1,14 @@
-tool
+@tool
+@icon("../assets/open_shape.png")
 extends SS2D_Shape_Base
-class_name SS2D_Shape_Open, "../assets/open_shape.png"
+class_name SS2D_Shape_Open
 
 
 #########
 # GODOT #
 #########
 func _init():
-	._init()
+	super._init()
 	_is_instantiable = true
 
 
@@ -16,7 +17,7 @@ func _init():
 # OVERRIDE #
 ############
 func duplicate_self():
-	var _new = .duplicate()
+	var _new = super.duplicate()
 	return _new
 
 
