@@ -58,7 +58,7 @@ static func action_set_pivot(
 	et: Transform2D,
 	pos: Vector2
 ):
-	var old_pos = et * s.get_parent().get_global_transform().xform(s.position)
+	var old_pos = et * s.get_parent().get_global_transform() * s.position
 	undo.create_action("Set Pivot")
 
 	undo.add_do_method(update_node, update_method, pos)

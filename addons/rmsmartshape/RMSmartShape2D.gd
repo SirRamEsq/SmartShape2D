@@ -1400,24 +1400,24 @@ func bake_collision():
 			for quad in collision_quads:
 				if _is_cardinal_direction(quad.direction):
 					points.push_back(
-						col_polygon.get_global_transform().xform_inv(
+						col_polygon.get_global_transform().inverse() * (
 							get_global_transform() * quad.pt_a
 						)
 					)
 				elif _is_inner_direction(quad.direction):
 					points.push_back(
-						col_polygon.get_global_transform().xform_inv(
+						col_polygon.get_global_transform().inverse() * (
 							get_global_transform() * quad.pt_d
 						)
 					)
 				elif _is_outer_direction(quad.direction):
 					points.push_back(
-						col_polygon.get_global_transform().xform_inv(
+						col_polygon.get_global_transform().inverse() * (
 							get_global_transform() * quad.pt_a
 						)
 					)
 					points.push_back(
-						col_polygon.get_global_transform().xform_inv(
+						col_polygon.get_global_transform().inverse() * (
 							get_global_transform() * quad.pt_d
 						)
 					)
@@ -1430,14 +1430,14 @@ func bake_collision():
 				# PT A
 				for quad in collision_quads:
 					points.push_back(
-						col_polygon.get_global_transform().xform_inv(
+						col_polygon.get_global_transform().inverse() * (
 							get_global_transform() * quad.pt_a
 						)
 					)
 
 				# PT D
 				points.push_back(
-					col_polygon.get_global_transform().xform_inv(
+					col_polygon.get_global_transform().inverse() * (
 						get_global_transform() *
 							collision_quads[collision_quads.size() - 1].pt_d
 					)
@@ -1447,14 +1447,14 @@ func bake_collision():
 				for quad_index in collision_quads.size():
 					var quad = collision_quads[collision_quads.size() - 1 - quad_index]
 					points.push_back(
-						col_polygon.get_global_transform().xform_inv(
+						col_polygon.get_global_transform().inverse() * (
 							get_global_transform() * quad.pt_c
 						)
 					)
 
 				# PT B
 				points.push_back(
-					col_polygon.get_global_transform().xform_inv(
+					col_polygon.get_global_transform().inverse() * (
 						get_global_transform() * collision_quads[0].pt_b
 					)
 				)

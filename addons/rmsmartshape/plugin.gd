@@ -830,13 +830,13 @@ func draw_mode_edit_edge(overlay: Control):
 		var edge_point_keys = current_action.keys
 		var p1 = shape.get_point_position(edge_point_keys[0])
 		var p2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t.xform(p2), color_highlight, 5.0)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
 	elif on_edge:
 		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_point_keys = _get_edge_point_keys_from_offset(offset, true)
 		var p1 = shape.get_point_position(edge_point_keys[0])
 		var p2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t.xform(p2), color_highlight, 5.0)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
 
 
 func draw_mode_edit_vert(overlay: Control, show_vert_handles: bool = true):
@@ -966,8 +966,6 @@ func draw_new_point_close_preview(overlay: Control):
 	var mouse = overlay.get_local_mouse_position()
 	var a = t * shape.get_point_position(closest_edge_keys[0])
 	var b = t * shape.get_point_position(closest_edge_keys[1])
-#	var a = 
-#	var b = t.xform()
 	overlay.draw_line(mouse,a,color,width)
 	color.a = 0.1
 	overlay.draw_line(mouse,b,color,width)
