@@ -261,7 +261,7 @@ func _gui_update_vert_info_panel():
 	gui_point_info_panel.set_flip(properties.flip)
 
 
-func _process(delta):
+func _process(delta: float):
 	if current_mode == MODE.FREEHAND:
 		current_zoom_level = get_canvas_scale()
 
@@ -370,7 +370,8 @@ func _exit_tree():
 	tb_hb.queue_free()
 	tb_hb_legacy_import.queue_free()
 
-func _forward_canvas_gui_input(event):
+
+func _forward_canvas_gui_input(event: InputEvent):
 	if not is_shape_valid(shape):
 		return false
 
@@ -401,7 +402,7 @@ func _forward_canvas_gui_input(event):
 	return return_value
 
 
-func handles(object):
+func _handles(object: Object) -> bool:
 	var hideToolbar:bool = true
 	
 	tb_hb_legacy_import.hide()
@@ -425,7 +426,7 @@ func handles(object):
 	return rslt
 
 
-func edit(object):
+func _edit(object: Object):
 	on_edge = false
 	deselect_verts()
 	if is_shape_valid(shape):
@@ -461,7 +462,7 @@ func edit(object):
 	update_overlays()
 
 
-func _make_visible(visible):
+func _make_visible(visible: bool):
 	pass
 
 
