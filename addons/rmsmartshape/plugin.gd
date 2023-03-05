@@ -790,7 +790,7 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 			draw_mode_edit_vert(overlay, false)
 			
 
-	shape.update()
+	shape.queue_redraw()
 
 
 func draw_freehand_circle(overlay: Control):
@@ -1184,7 +1184,7 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 				var key = current_action.current_point_key()
 				shape.set_point_texture_flip(key, not shape.get_point_texture_flip(key))
 				shape.set_as_dirty()
-				shape.update()
+				shape.queue_redraw()
 				_gui_update_info_panels()
 
 		if kb.pressed and kb.keycode == KEY_ESCAPE:
