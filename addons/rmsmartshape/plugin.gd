@@ -381,7 +381,7 @@ func _forward_canvas_gui_input(event):
 
 	var et = get_et()
 	var grab_threshold = get_editor_interface().get_editor_settings().get(
-		"editors/poly_editor/point_grab_radius"
+		"editors/polygon_editor/point_grab_radius"
 	)
 	
 	var key_return_value = false
