@@ -147,7 +147,6 @@ var current_mode: int = MODE.CREATE_VERT
 var previous_mode: int = MODE.CREATE_VERT
 
 # Undo stuff
-var undo: UndoRedo = null
 var undo_version: int = 0
 
 var current_action = ActionDataVert.new([], [], [], [], [], ACTION_VERT.NONE)
@@ -341,7 +340,6 @@ func _init():
 
 
 func _ready():
-	undo = get_undo_redo()
 	# Support the undo-redo actions
 	_gui_build_toolbar()
 	add_child(gui_point_info_panel)
@@ -535,6 +533,11 @@ static func snap_position(
 ##########
 # PLUGIN #
 ##########
+func _get_undo() -> UndoRedo:
+	var urman: EditorUndoRedoManager = get_undo_redo()
+	return urman.get_history_undo_redo(urman.get_object_history_id(get_editor_interface().get_edited_scene_root()))
+
+
 func _import_legacy():
 	call_deferred("_import_legacy_impl")
 
@@ -672,7 +675,7 @@ static func is_shape_valid(s) -> bool:
 
 
 func _on_shape_point_modified():
-	FUNC.action_invert_orientation(self, "update_overlays", undo, shape)
+	FUNC.action_invert_orientation(self, "update_overlays", _get_undo(), shape)
 
 
 func get_et() -> Transform2D:
@@ -764,6 +767,8 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 	# in this case do some updating to be sure
 	if not is_shape_valid(shape) or not is_inside_tree():
 		return
+
+	var undo := _get_undo()
 
 	if undo_version != undo.get_version():
 		if (
@@ -1024,6 +1029,7 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 	if not shape.can_edit:
 		return false
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
+		var undo := _get_undo()
 		# Mouse over a single vertex?
 		if current_action.is_single_vert_selected():
 			FUNC.action_delete_point(self, "update_overlays", undo, shape, current_action.keys[0])
@@ -1061,6 +1067,7 @@ func _input_handle_left_click(
 	et: Transform2D,
 	grab_threshold: float
 ) -> bool:
+	var undo := _get_undo()
 	# Set Pivot?
 	if current_mode == MODE.SET_PIVOT:
 		var local_position = et.affine_inverse() * mb.position
@@ -1260,6 +1267,7 @@ func _input_handle_mouse_button_event(
 		var type = current_action.type
 		var _in = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
 		var _out = type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_OUT
+		var undo := _get_undo()
 		if type == ACTION_VERT.MOVE_VERT:
 			FUNC.action_move_verticies(self, "update_overlays", undo, shape, current_action)
 			undo_version = undo.get_version()
@@ -1310,6 +1318,7 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 	if insertion_point == -1:
 		insertion_point = shape.get_point_count() - 1
 
+	var undo := _get_undo()
 	var key = FUNC.action_split_curve(
 		self, "update_overlays", undo, shape, insertion_point, gpoint, t
 	)
@@ -1546,6 +1555,7 @@ func _input_handle_mouse_motion_event(
 	
 	elif current_mode == MODE.FREEHAND:
 		if _mouse_lmb_pressed:
+			var undo := _get_undo()
 			if not Input.is_key_pressed(KEY_CTRL):
 				var local_position = t.affine_inverse() * mm.position
 				if last_point_position.distance_to(local_position) >= freehand_paint_size * 2:
