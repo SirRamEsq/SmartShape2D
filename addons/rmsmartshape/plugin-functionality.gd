@@ -246,11 +246,11 @@ static func action_invert_orientation(
 	if should_invert_orientation(s):
 		undo.create_action("Invert Orientation")
 
-		undo.add_do_method(s, "invert_point_order")
-		undo.add_undo_method(s, "invert_point_order")
+		undo.add_do_method(s.invert_point_order)
+		undo.add_undo_method(s.invert_point_order)
 
-		undo.add_do_method(update_node, update_method)
-		undo.add_undo_method(update_node, update_method)
+		undo.add_do_method(Callable(update_node, update_method))
+		undo.add_undo_method(Callable(update_node, update_method))
 
 		undo.commit_action()
 		return true
