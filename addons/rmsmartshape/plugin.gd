@@ -165,13 +165,10 @@ var plugin
 
 
 func gui_display_snap_settings():
-	var win_size = get_window().get_size()
-	gui_snap_settings.popup_centered_ratio(0.5)
-	gui_snap_settings.set_as_minsize()
-	# Get Centered
-	gui_snap_settings.position = (win_size / 2.0) - gui_snap_settings.size / 2.0
-	# Move up
-	gui_snap_settings.position.y = (win_size.y / 8.0)
+	var pos := tb_snap.get_screen_position() + tb_snap.size
+	pos.x -= (gui_snap_settings.size.x + tb_snap.size.x) / 2.0
+	gui_snap_settings.position = pos
+	gui_snap_settings.popup()
 
 
 func _snapping_item_selected(id: int):
@@ -349,6 +346,7 @@ func _ready():
 	gui_edge_info_panel.connect("set_z_index",Callable(self,"_on_set_edge_material_override_z_index"))
 	gui_edge_info_panel.connect("set_edge_material",Callable(self,"_on_set_edge_material"))
 	add_child(gui_snap_settings)
+	gui_snap_settings.hide()
 
 
 func _enter_tree():
