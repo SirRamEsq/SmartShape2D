@@ -120,6 +120,7 @@ var tb_edge_edit: Button = null
 var tb_pivot: Button = null
 var tb_collision: Button = null
 var tb_freehand: Button = null
+var tb_button_group: ButtonGroup = null
 
 var tb_snap: MenuButton = null
 # The PopupMenu that belongs to tb_snap
@@ -198,6 +199,8 @@ func _gui_build_toolbar():
 	var sep = VSeparator.new()
 	tb_hb.add_child(sep)
 
+	tb_button_group = ButtonGroup.new()
+
 	tb_vert_create = create_tool_button(ICON_CURVE_CREATE, SS2D_Strings.EN_TOOLTIP_CREATE_VERT)
 	tb_vert_create.connect("pressed",Callable(self,"_enter_mode").bind(MODE.CREATE_VERT))
 	tb_vert_create.button_pressed = true
@@ -234,9 +237,12 @@ func _gui_build_toolbar():
 	tb_hb_legacy_import.hide()
 
 
-func create_tool_button(icon, tooltip):
-	var tb = Button.new()
+func create_tool_button(icon: Texture2D, tooltip: String) -> Button:
+	var tb := Button.new()
 	tb.toggle_mode = true
+	tb.button_group =  tb_button_group
+	tb.focus_mode = Control.FOCUS_NONE
+	tb.flat = true
 	tb.icon = icon
 	tb.tooltip_text = tooltip
 	tb_hb.add_child(tb)
