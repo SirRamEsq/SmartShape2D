@@ -1,6 +1,8 @@
 @tool
 extends EditorPlugin
 
+
+
 """
 Common Abbreviations
 et = editor transform (viewport's canvas transform)
@@ -258,7 +260,7 @@ func _gui_update_vert_info_panel():
 	gui_point_info_panel.set_flip(properties.flip)
 
 
-func _process(delta: float):
+func _process(_delta: float):
 	if current_mode == MODE.FREEHAND:
 		current_zoom_level = get_canvas_scale()
 
@@ -460,7 +462,7 @@ func _edit(object: Object):
 	update_overlays()
 
 
-func _make_visible(visible: bool):
+func _make_visible(_visible: bool):
 	pass
 
 
@@ -601,13 +603,13 @@ func connect_shape(s):
 			s.connect("on_closed_change",Callable(self,"_on_legacy_closed_changed"))
 
 
-static func get_material_override_from_indicies(shape: SS2D_Shape_Base, indicies: Array):
+static func get_material_override_from_indicies(s: SS2D_Shape_Base, indicies: Array):
 	var keys = []
 	for i in indicies:
-		keys.push_back(shape.get_point_key_at_index(i))
-	if not shape.get_point_array().has_material_override(keys):
+		keys.push_back(s.get_point_key_at_index(i))
+	if not s.get_point_array().has_material_override(keys):
 		return null
-	return shape.get_point_array().get_material_override(keys)
+	return s.get_point_array().get_material_override(keys)
 
 
 func _on_set_edge_material_override_render(enabled: bool):
@@ -709,8 +711,6 @@ func _enter_mode(mode: int):
 
 
 func _set_pivot(point: Vector2):
-	var et = get_et()
-
 	var np: Vector2 = point
 	var ct: Transform2D = shape.get_global_transform()
 	ct.origin = np
@@ -734,7 +734,6 @@ func _add_collision():
 func _add_deferred_collision():
 	if not shape.get_parent() is StaticBody2D:
 		var static_body: StaticBody2D = StaticBody2D.new()
-		var t: Transform2D = shape.transform
 		static_body.position = shape.position
 		shape.position = Vector2.ZERO
 
@@ -808,7 +807,6 @@ func draw_freehand_circle(overlay: Control):
 func draw_mode_edit_edge(overlay: Control):
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var verts = shape.get_vertices()
-	var edges = shape.get_edges()
 
 	var color_highlight = Color(1.0, 0.75, 0.75, 1.0)
 	var color_normal = Color(1.0, 0.25, 0.25, 0.8)
@@ -862,7 +860,6 @@ func draw_shape_outline(overlay: Control, t: Transform2D, points, color = null, 
 func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: bool):
 	for i in range(0, verts.size(), 1):
 		# Draw Vert handles
-		var key: int = shape.get_point_key_at_index(i)
 		var hp: Vector2 = t * verts[i]
 		var icon = ICON_HANDLE_BEZIER if (Input.is_key_pressed(KEY_SHIFT) and not current_mode == MODE.FREEHAND) else ICON_HANDLE
 		overlay.draw_texture(icon, hp - icon.get_size() * 0.5)
@@ -899,7 +896,6 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 	# Draw Control point handles
 	if control_points:
 		for i in range(0, verts.size(), 1):
-			var normal = _get_vert_normal(t, verts, i)
 			var key = shape.get_point_key_at_index(i)
 			var hp = t * verts[i]
 
@@ -948,7 +944,6 @@ func draw_new_point_preview(overlay: Control):
 
 func draw_new_point_close_preview(overlay: Control):
 	# Draw lines to where a new point will be added
-	var verts = shape.get_vertices()
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var color = Color(1, 1, 1, .5)
 	var width = 2
@@ -1102,7 +1097,7 @@ func _input_handle_left_click(
 					selection.clear()
 					selection.add_node(copy)
 				elif Input.is_key_pressed(KEY_ALT):
-					var new_key = FUNC.action_add_point(
+					FUNC.action_add_point(
 						self,
 						"update_overlays",
 						undo,
@@ -1321,7 +1316,7 @@ func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, gr
 	return false
 
 
-func _get_edge_point_keys_from_offset(offset: float, straight: bool = false, position:= Vector2(0, 0)):
+func _get_edge_point_keys_from_offset(offset: float, straight: bool = false, _position := Vector2(0, 0)):
 	for i in range(0, shape.get_point_count() - 1, 1):
 		var key = shape.get_point_key_at_index(i)
 		var key_next = shape.get_point_key_at_index(i + 1)
@@ -1371,8 +1366,8 @@ func _input_find_closest_edge_keys(mm: InputEventMouseMotion):
 	var closest_point = null
 
 	closest_point = shape.get_closest_point_straight_edge(xform.affine_inverse() * mm.position)
-	var edge_point = xform * closest_point
-	var offset = shape.get_closest_offset_straight_edge(xform.affine_inverse() * edge_point)
+	var edge_p = xform * closest_point
+	var offset = shape.get_closest_offset_straight_edge(xform.affine_inverse() * edge_p)
 	closest_edge_keys = _get_edge_point_keys_from_offset(offset, true, xform.affine_inverse() * mm.position)
 
 
@@ -1404,7 +1399,6 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 	var rslt = false
 	for i in range(0, current_action.keys.size(), 1):
 		var key = current_action.keys[i]
-		var from = current_action.starting_positions[i]
 		var out_multiplier = 1
 		# Invert the delta for position_out if moving both at once
 		if _out and _in:
@@ -1425,6 +1419,8 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 			rslt = true
 		shape.set_as_dirty()
 		update_overlays()
+
+	# TODO: should this always be false? rslt is set but unused
 	return false
 
 
@@ -1538,7 +1534,7 @@ func _input_handle_mouse_motion_event(
 					last_point_position = local_position
 					if use_snap():
 						local_position = snap(local_position)
-					var new_key = FUNC.action_add_point(
+					FUNC.action_add_point(
 						self,
 						"update_overlays",
 						undo,
@@ -1577,36 +1573,36 @@ func _get_vert_normal(t: Transform2D, verts, i: int):
 	return ((prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2)).normalized()
 
 
-func copy_shape(shape):
+func copy_shape(s: SS2D_Shape_Base):
 	var copy: SS2D_Shape_Base
-	if shape is SS2D_Shape_Closed:
+	if s is SS2D_Shape_Closed:
 		copy = SS2D_Shape_Closed.new()
-	if shape is SS2D_Shape_Open:
+	if s is SS2D_Shape_Open:
 		copy = SS2D_Shape_Open.new()
-	if shape is SS2D_Shape_Meta:
+	if s is SS2D_Shape_Meta:
 		copy = SS2D_Shape_Meta.new()
-	copy.position = shape.position
-	copy.scale = shape.scale
-	copy.modulate = shape.modulate
-	copy.shape_material = shape.shape_material
-	copy.editor_debug = shape.editor_debug
-	copy.flip_edges = shape.flip_edges
-	copy.editor_debug = shape.editor_debug
-	copy.collision_size = shape.collision_size
-	copy.collision_offset = shape.collision_offset
-	copy.tessellation_stages = shape.tessellation_stages
-	copy.tessellation_tolerence = shape.tessellation_tolerence
-	copy.curve_bake_interval = shape.curve_bake_interval
-	#copy.material_overrides = shape.material_overrides
+	copy.position = s.position
+	copy.scale = s.scale
+	copy.modulate = s.modulate
+	copy.shape_material = s.shape_material
+	copy.editor_debug = s.editor_debug
+	copy.flip_edges = s.flip_edges
+	copy.editor_debug = s.editor_debug
+	copy.collision_size = s.collision_size
+	copy.collision_offset = s.collision_offset
+	copy.tessellation_stages = s.tessellation_stages
+	copy.tessellation_tolerence = s.tessellation_tolerence
+	copy.curve_bake_interval = s.curve_bake_interval
+	#copy.material_overrides = s.material_overrides
 
-	shape.get_parent().add_child(copy)
+	s.get_parent().add_child(copy)
 	copy.set_owner(get_tree().get_edited_scene_root())
 
 	if (
-		shape.collision_polygon_node_path != ""
-		and shape.has_node(shape.collision_polygon_node_path)
+		not s.collision_polygon_node_path.is_empty()
+		and s.has_node(s.collision_polygon_node_path)
 	):
-		var collision_polygon_original = shape.get_node(shape.collision_polygon_node_path)
+		var collision_polygon_original = s.get_node(s.collision_polygon_node_path)
 		var collision_polygon_new = CollisionPolygon2D.new()
 		collision_polygon_new.visible = collision_polygon_original.visible
 
@@ -1618,10 +1614,10 @@ func copy_shape(shape):
 	return copy
 
 
-func is_shape_closed(shape):
-	if shape is SS2D_Shape_Open:
+func is_shape_closed(s: SS2D_Shape_Base):
+	if s is SS2D_Shape_Open:
 		return false
-	if shape is SS2D_Shape_Meta:
+	if s is SS2D_Shape_Meta:
 		return shape.treat_as_closed()
 	return true
 

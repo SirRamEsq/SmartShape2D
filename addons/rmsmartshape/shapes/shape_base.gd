@@ -167,7 +167,7 @@ func get_point_array() -> SS2D_Point_Array:
 
 func set_point_array_setter(a: SS2D_Point_Array):
 	set_point_array(a)
-	
+
 func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
 	if _points != null:
 		if _points.is_connected(
@@ -255,14 +255,14 @@ func set_render_node_owners(v: bool):
 	if Engine.is_editor_hint():
 		# Force scene tree update
 		var render_parent = _get_rendering_nodes_parent()
-		var owner = null
+		var new_owner = null
 		if v:
-			owner = get_tree().edited_scene_root
-		render_parent.set_owner(owner)
+			new_owner = get_tree().edited_scene_root
+		render_parent.set_owner(new_owner)
 
 		# Set owner recurisvely
 		for c in render_parent.get_children():
-			c.set_owner(owner)
+			c.set_owner(new_owner)
 
 		# Force update
 		var dummy_name = "__DUMMY__"
@@ -274,7 +274,7 @@ func set_render_node_owners(v: bool):
 		var dummy = Node2D.new()
 		dummy.name = dummy_name
 		add_child(dummy)
-		dummy.set_owner(owner)
+		dummy.set_owner(new_owner)
 
 
 func update_render_nodes():
@@ -299,7 +299,7 @@ func set_curve_bake_interval(f: float):
 	_curve.bake_interval = f
 	notify_property_list_changed()
 
-func set_color_encoding(i: int):
+func set_color_encoding(i: SS2D_Edge.COLOR_ENCODING):
 	color_encoding = i
 	notify_property_list_changed()
 	set_as_dirty()
@@ -391,8 +391,8 @@ func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
 
 
 # Meant to override in subclasses
-func add_point(position: Vector2, index: int = -1, key: int = -1) -> int:
-	key = _points.add_point(position, index, key)
+func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
+	key = _points.add_point(pos, index, key)
 	_add_point_update()
 	return key
 
@@ -417,8 +417,8 @@ func is_index_in_range(idx: int) -> bool:
 	return _points.is_index_in_range(idx)
 
 
-func set_point_position(key: int, position: Vector2):
-	_points.set_point_position(key, position)
+func set_point_position(key: int, pos: Vector2):
+	_points.set_point_position(key, pos)
 	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
@@ -720,7 +720,7 @@ func _draw_debug(edges: Array):
 			q.render_points(1, 1.0, self)
 
 
-func _process(delta):
+func _process(_delta):
 	_on_dirty_update()
 
 
@@ -742,8 +742,6 @@ func should_flip_edges() -> bool:
 
 func generate_collision_points() -> PackedVector2Array:
 	var points: PackedVector2Array = PackedVector2Array()
-	var collision_width = 1.0
-	var collision_extends = 0.0
 	var verts = get_vertices()
 	var t_points = get_tessellated_points()
 	if t_points.size() < 2:
@@ -899,7 +897,6 @@ static func build_quad_from_two_points(
 	var delta = pt_next - pt
 	var delta_normal = delta.normalized()
 	var normal_direction = Vector2(delta.y, -delta.x).normalized()
-	var normal_rotation = Vector2(0, -1).angle_to(normal_direction)
 	var normal_length = width
 	var normal_with_magnitude: Vector2 = normal_direction * (normal_length * 0.5)
 	if flip_y:
@@ -946,7 +943,7 @@ static func build_quad_corner(
 	pt_prev: Vector2,
 	pt_width: float,
 	pt_prev_width: float,
-	flip_edges: bool,
+	flip_edges_: bool,
 	corner_status: int,
 	texture: Texture2D,
 	texture_normal: Texture2D,
@@ -961,12 +958,11 @@ static func build_quad_corner(
 	var delta_23 = pt_next - pt
 	var normal_23 = Vector2(delta_23.y, -delta_23.x).normalized()
 	var normal_12 = Vector2(delta_12.y, -delta_12.x).normalized()
-	var width = (pt_prev_width + pt_width) / 2.0
 
 	var offset_12 = normal_12 * custom_scale * pt_prev_width * quad_size
 	var offset_23 = normal_23 * custom_scale * pt_width * quad_size
 	var custom_offset_13 = (normal_12 + normal_23) * custom_offset * quad_size
-	if flip_edges:
+	if flip_edges_:
 		offset_12 *= -1
 		offset_23 *= -1
 		custom_offset_13 *= -1
@@ -1056,8 +1052,6 @@ func _weld_quad_array(
 
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
-		var next_quad: SS2D_Quad = quads[index + 1]
-		var mid_point = weld_quads(this_quad, next_quad)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
@@ -1077,7 +1071,7 @@ func _weld_quad_array(
 		weld_quads(quads.back(), quads[0])
 
 
-func _merge_index_maps(imaps:Array, verts:Array)->Array:
+func _merge_index_maps(imaps: Array, _verts: Array)->Array:
 	return imaps
 
 func _build_edges(s_mat: SS2D_Material_Shape, verts:Array) -> Array:
@@ -1127,7 +1121,7 @@ Will return an array of SS2D_IndexMaps
 Each index map will map a set of indicies to a meta_material
 """
 static func get_meta_material_index_mapping_for_overrides(
-	s_material: SS2D_Material_Shape, pa:SS2D_Point_Array
+	_s_material: SS2D_Material_Shape, pa: SS2D_Point_Array
 ) -> Array:
 	var mappings = []
 	var overrides = pa.get_material_overrides()
@@ -1156,7 +1150,6 @@ static func _get_meta_material_index_mapping(s_material: SS2D_Material_Shape, ve
 		var pt = verts[idx]
 		var pt_next = verts[idx_next]
 		var delta = pt_next - pt
-		var delta_normal = delta.normalized()
 		var normal = Vector2(delta.y, -delta.x).normalized()
 
 		# Get all valid edge_meta_materials for this normal value
@@ -1191,7 +1184,7 @@ func _handle_material_change():
 	set_as_dirty()
 
 
-func _handle_material_override_change(tuple):
+func _handle_material_override_change(_tuple):
 	set_as_dirty()
 
 
@@ -1241,7 +1234,7 @@ func _on_dirty_update():
 # TODO, Migrate these 'point index' functions to a helper library and make static?
 
 
-static func get_first_point_index(points: Array) -> int:
+static func get_first_point_index(_points_: Array) -> int:
 	return 0
 
 
@@ -1265,7 +1258,7 @@ static func _get_next_point_index_no_wrap_around(idx: int, points: Array) -> int
 	return int(min(idx + 1, points.size() - 1))
 
 
-static func _get_previous_point_index_no_wrap_around(idx: int, points: Array) -> int:
+static func _get_previous_point_index_no_wrap_around(idx: int, _points_: Array) -> int:
 	return int(max(idx - 1, 0))
 
 
@@ -1364,7 +1357,7 @@ func debug_print_points():
 
 
 # Should be overridden by children
-func import_from_legacy(legacy: RMSmartShape2D):
+func import_from_legacy(_legacy: RMSmartShape2D):
 	pass
 
 
@@ -1398,7 +1391,7 @@ if so, OUTER or INNER?
 	The conditions deg < 0 and flip_edges are used to determine this
 	These conditions works correctly so long as the points are in Clockwise order
 """
-static func edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector2, flip_edges:bool) -> bool:
+static func edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: Vector2, flip_edges_: bool) -> bool:
 	var generate_corner = SS2D_Quad.CORNER.NONE
 	var ab = pt - pt_prev
 	var bc = pt_next - pt
@@ -1408,14 +1401,13 @@ static func edge_should_generate_corner(pt_prev: Vector2, pt: Vector2, pt_next: 
 	# This angle has a range of 360 degrees
 	# Is between 180 and - 180
 	var deg = rad_to_deg(angle)
-	var dir = 0
 	var corner_range = 10.0
 	var corner_angle = 90.0
 	if abs(deg) >= corner_angle - corner_range and abs(deg) <= corner_angle + corner_range:
 		var inner = false
 		if deg < 0:
 			inner = true
-		if flip_edges:
+		if flip_edges_:
 			inner = not inner
 		if inner:
 			generate_corner = SS2D_Quad.CORNER.INNER
@@ -1492,7 +1484,7 @@ func _get_previous_unique_point_idx(idx: int, pts: Array, wrap_around: bool):
 		return _get_previous_unique_point_idx(previous_idx, pts, wrap_around)
 	return previous_idx
 
-func _is_edge_contiguous(index_amp:SS2D_IndexMap, verts:Array)->bool:
+func _is_edge_contiguous(_index_amp: SS2D_IndexMap, _verts: Array)->bool:
 	return false
 
 
@@ -1563,7 +1555,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 
 		var vert_idx = get_vertex_idx_from_tessellated_point(verts, verts_t, tess_idx)
 		var vert_key = get_point_key_at_index(vert_idx)
-		var next_vert_idx = _get_next_point_index(vert_idx, verts, true)
 		var pt = verts_t[tess_idx]
 		var pt_next = verts_t[tess_idx_next]
 		var pt_prev = verts_t[tess_idx_prev]
