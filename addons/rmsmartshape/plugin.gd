@@ -106,7 +106,7 @@ var gui_snap_settings = GUI_SNAP_POPUP.instantiate()
 const GUI_POINT_INFO_PANEL_OFFSET = Vector2(256, 130)
 
 # This is the shape node being edited
-var shape = null
+var shape: SS2D_Shape_Base = null
 # For when a legacy shape is selected
 var legacy_shape = null
 
@@ -289,8 +289,8 @@ func _gui_update_edge_info_panel():
 	# Don't update if already visible
 	if gui_edge_info_panel.visible:
 		return
-	var indicies = [-1, -1]
-	var override = null
+	var indicies: Array[int] = [-1, -1]
+	var override: SS2D_Material_Edge_Metadata = null
 	if on_edge:
 		var t: Transform2D = get_et() * shape.get_global_transform()
 		var offset = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
@@ -342,11 +342,11 @@ func _ready():
 	gui_point_info_panel.visible = false
 	add_child(gui_edge_info_panel)
 	gui_edge_info_panel.visible = false
-	gui_edge_info_panel.connect("set_material_override",Callable(self,"_on_set_edge_material_override"))
-	gui_edge_info_panel.connect("set_render",Callable(self,"_on_set_edge_material_override_render"))
-	gui_edge_info_panel.connect("set_weld",Callable(self,"_on_set_edge_material_override_weld"))
-	gui_edge_info_panel.connect("set_z_index",Callable(self,"_on_set_edge_material_override_z_index"))
-	gui_edge_info_panel.connect("set_edge_material",Callable(self,"_on_set_edge_material"))
+	gui_edge_info_panel.connect("material_override_toggled", self._on_edge_material_override_toggled)
+	gui_edge_info_panel.connect("render_toggled", self._on_edge_material_override_render_toggled)
+	gui_edge_info_panel.connect("weld_toggled", self._on_edge_material_override_weld_toggled)
+	gui_edge_info_panel.connect("z_index_changed", self._on_edge_material_override_z_index_changed)
+	gui_edge_info_panel.connect("edge_material_changed", self._on_edge_material_changed)
 	add_child(gui_snap_settings)
 	gui_snap_settings.hide()
 
@@ -612,32 +612,32 @@ static func get_material_override_from_indicies(s: SS2D_Shape_Base, indicies: Ar
 	return s.get_point_array().get_material_override(keys)
 
 
-func _on_set_edge_material_override_render(enabled: bool):
+func _on_edge_material_override_render_toggled(enabled: bool) -> void:
 	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
 	if override != null:
 		override.render = enabled
 
 
-func _on_set_edge_material_override_weld(enabled: bool):
+func _on_edge_material_override_weld_toggled(enabled: bool) -> void:
 	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
 	if override != null:
 		override.weld = enabled
 
 
-func _on_set_edge_material_override_z_index(z: int):
+func _on_edge_material_override_z_index_changed(z: int) -> void:
 	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
 	if override != null:
 		override.z_index = z
 
 
-func _on_set_edge_material(m: SS2D_Material_Edge):
+func _on_edge_material_changed(m: SS2D_Material_Edge) -> void:
 	var override = get_material_override_from_indicies(shape, gui_edge_info_panel.indicies)
 	if override != null:
 		override.edge_material = m
 
 
-func _on_set_edge_material_override(enabled: bool):
-	var indicies = gui_edge_info_panel.indicies
+func _on_edge_material_override_toggled(enabled: bool) -> void:
+	var indicies: Array[int] = gui_edge_info_panel.indicies
 	if indicies.has(-1) or indicies.size() != 2:
 		return
 	var keys = []
@@ -1033,7 +1033,8 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 	elif current_mode == MODE.EDIT_EDGE:
 		if on_edge:
 			gui_edge_info_panel.visible = not gui_edge_info_panel.visible
-			gui_edge_info_panel.position = mb_position + Vector2(256, -24)
+			gui_edge_info_panel.position = get_window().get_mouse_position()
+			return true
 	return false
 
 
@@ -1316,10 +1317,10 @@ func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, gr
 	return false
 
 
-func _get_edge_point_keys_from_offset(offset: float, straight: bool = false, _position := Vector2(0, 0)):
+func _get_edge_point_keys_from_offset(offset: float, straight: bool = false, _position := Vector2(0, 0)) -> Array[int]:
 	for i in range(0, shape.get_point_count() - 1, 1):
-		var key = shape.get_point_key_at_index(i)
-		var key_next = shape.get_point_key_at_index(i + 1)
+		var key: int = shape.get_point_key_at_index(i)
+		var key_next: int = shape.get_point_key_at_index(i + 1)
 		var this_offset = 0
 		var next_offset = 0
 		if straight:
