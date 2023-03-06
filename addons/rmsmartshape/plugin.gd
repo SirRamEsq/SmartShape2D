@@ -165,13 +165,10 @@ var plugin
 
 
 func gui_display_snap_settings():
-	var win_size = get_window().get_size()
-	gui_snap_settings.popup_centered_ratio(0.5)
-	gui_snap_settings.set_as_minsize()
-	# Get Centered
-	gui_snap_settings.position = (win_size / 2.0) - gui_snap_settings.size / 2.0
-	# Move up
-	gui_snap_settings.position.y = (win_size.y / 8.0)
+	var pos := tb_snap.get_screen_position() + tb_snap.size
+	pos.x -= (gui_snap_settings.size.x + tb_snap.size.x) / 2.0
+	gui_snap_settings.position = pos
+	gui_snap_settings.popup()
 
 
 func _snapping_item_selected(id: int):
@@ -261,7 +258,7 @@ func _gui_update_vert_info_panel():
 	gui_point_info_panel.set_flip(properties.flip)
 
 
-func _process(delta):
+func _process(delta: float):
 	if current_mode == MODE.FREEHAND:
 		current_zoom_level = get_canvas_scale()
 
@@ -349,6 +346,7 @@ func _ready():
 	gui_edge_info_panel.connect("set_z_index",Callable(self,"_on_set_edge_material_override_z_index"))
 	gui_edge_info_panel.connect("set_edge_material",Callable(self,"_on_set_edge_material"))
 	add_child(gui_snap_settings)
+	gui_snap_settings.hide()
 
 
 func _enter_tree():
@@ -370,7 +368,8 @@ func _exit_tree():
 	tb_hb.queue_free()
 	tb_hb_legacy_import.queue_free()
 
-func _forward_canvas_gui_input(event):
+
+func _forward_canvas_gui_input(event: InputEvent):
 	if not is_shape_valid(shape):
 		return false
 
@@ -381,7 +380,7 @@ func _forward_canvas_gui_input(event):
 
 	var et = get_et()
 	var grab_threshold = get_editor_interface().get_editor_settings().get(
-		"editors/poly_editor/point_grab_radius"
+		"editors/polygon_editor/point_grab_radius"
 	)
 	
 	var key_return_value = false
@@ -401,7 +400,7 @@ func _forward_canvas_gui_input(event):
 	return return_value
 
 
-func handles(object):
+func _handles(object: Object) -> bool:
 	var hideToolbar:bool = true
 	
 	tb_hb_legacy_import.hide()
@@ -425,7 +424,7 @@ func handles(object):
 	return rslt
 
 
-func edit(object):
+func _edit(object: Object):
 	on_edge = false
 	deselect_verts()
 	if is_shape_valid(shape):
@@ -461,7 +460,7 @@ func edit(object):
 	update_overlays()
 
 
-func _make_visible(visible):
+func _make_visible(visible: bool):
 	pass
 
 
@@ -790,7 +789,7 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 			draw_mode_edit_vert(overlay, false)
 			
 
-	shape.update()
+	shape.queue_redraw()
 
 
 func draw_freehand_circle(overlay: Control):
@@ -1184,7 +1183,7 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 				var key = current_action.current_point_key()
 				shape.set_point_texture_flip(key, not shape.get_point_texture_flip(key))
 				shape.set_as_dirty()
-				shape.update()
+				shape.queue_redraw()
 				_gui_update_info_panels()
 
 		if kb.pressed and kb.keycode == KEY_ESCAPE:

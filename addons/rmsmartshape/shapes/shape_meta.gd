@@ -36,16 +36,16 @@ func remove_child(node: Node):
 	super.remove_child(node)
 
 
-func add_child(node: Node, legible_unique_name: bool = false):
+func add_child(node: Node, force_readable_name: bool = false, internal: InternalMode = 0):
 	_add_to_meta(node)
 	call_deferred("_update_cached_children")
-	super.add_child(node, legible_unique_name)
+	super.add_child(node, force_readable_name, internal)
 
 
-func add_sibling(node: Node, child_node: Node, legible_unique_name: bool = false):
-	_add_to_meta(child_node)
+func add_sibling(sibling: Node, force_readable_name: bool = false):
+	_add_to_meta(sibling)
 	call_deferred("_update_cached_children")
-	super.add_sibling(node, child_node, legible_unique_name)
+	super.add_sibling(sibling, force_readable_name)
 
 
 func _on_dirty_update():
