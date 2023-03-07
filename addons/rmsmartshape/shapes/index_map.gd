@@ -18,12 +18,11 @@ func __new(i: Array, o) -> SS2D_IndexMap:
 
 
 # Sub resource has no effect, no sub resources to duplicate
-func duplicate(sub_resource: bool = false):
-	var _new = __new(indicies, object)
-	return _new
+func duplicate(_sub_resource: bool = false):
+	return __new(indicies, object)
 
 
-func _init(i: Array,o):
+func _init(i: Array, o):
 	object = o
 	set_indicies(i)
 

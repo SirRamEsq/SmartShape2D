@@ -57,16 +57,6 @@ func has_minimum_point_count() -> bool:
 	return _points.get_point_count() >= 3
 
 
-func duplicate_self():
-	var _new = super.duplicate()
-	return _new
-
-
-# Workaround (class cannot reference itself)
-func __new():
-	return get_script().new()
-
-
 func _build_meshes(edges: Array) -> Array:
 	var meshes = []
 

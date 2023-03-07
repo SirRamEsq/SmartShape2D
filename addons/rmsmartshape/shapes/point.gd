@@ -32,18 +32,6 @@ func equals(other: SS2D_Point) -> bool:
 	return true
 
 
-func duplicate(sub_resource: bool = false):
-	var _new = __new()
-	_new.position = position
-	_new.point_in = point_in
-	_new.point_out = point_out
-	if sub_resource:
-		_new.properties = properties.duplicate(true)
-	else:
-		_new.properties = properties
-	return _new
-
-
 func _set_position(v: Vector2):
 	if position != v:
 		position = v
@@ -65,13 +53,8 @@ func _set_point_out(v: Vector2):
 	notify_property_list_changed()
 
 
-func _set_properties(other:SS2D_VertexProperties):
+func _set_properties(other: SS2D_VertexProperties):
 	if not properties.equals(other):
 		properties = other.duplicate(true)
 		emit_signal("changed")
 	notify_property_list_changed()
-
-
-# Workaround (class cannot reference itself)
-func __new() -> SS2D_Point:
-	return get_script().new()

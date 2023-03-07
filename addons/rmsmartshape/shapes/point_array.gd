@@ -384,36 +384,6 @@ func debug_print():
 		print("%s = P:%s | I:%s | O:%s" % [k, pos, _in, out])
 
 
-func duplicate(sub_resource: bool = false):
-	var _new = __new()
-	_new._next_key = _next_key
-	if sub_resource:
-		var new_point_dict = {}
-		for k in _points:
-			new_point_dict[k] = _points[k].duplicate(true)
-		_new._points = new_point_dict
-		_new._point_order = _point_order.duplicate(true)
-
-		_new._constraints = {}
-		for tuple in _constraints:
-			_new._constraints[tuple] = _constraints[tuple]
-
-		_new._material_overrides = {}
-		for tuple in _material_overrides:
-			_new._material_overrides[tuple] = _material_overrides[tuple]
-	else:
-		_new._points = _points
-		_new._point_order = _point_order
-		_new._constraints = _constraints
-		_new._material_overrides = _material_overrides
-	return _new
-
-
-# Workaround (class cannot reference itself)
-func __new():
-	return get_script().new()
-
-
 ######################
 # MATERIAL OVERRIDES #
 ######################

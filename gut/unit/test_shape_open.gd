@@ -164,7 +164,7 @@ func test_invert_point_order():
 #shape.set_point_texture_flip(2, true)
 #shape.set_point_texture_flip(4, true)
 #
-#var copy = shape.duplicate_self()
+#var copy = shape.duplicate()
 #add_child_autofree(copy)
 #assert_ne(shape.get_curve(), copy.get_curve())
 #assert_eq(shape.get_point_count(), copy.get_point_count())

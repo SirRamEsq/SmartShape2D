@@ -16,15 +16,5 @@ func _init():
 ############
 # OVERRIDE #
 ############
-func duplicate_self():
-	var _new = super.duplicate()
-	return _new
-
-
-# Workaround (class cannot reference itself)
-func __new():
-	return get_script().new()
-
-
 func should_flip_edges() -> bool:
 	return flip_edges
