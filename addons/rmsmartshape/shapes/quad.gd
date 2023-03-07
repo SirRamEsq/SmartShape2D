@@ -32,9 +32,6 @@ var fit_texture = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 # Contains value from CORNER enum
 var corner: int = 0
 
-# EXISTS FOR LEGACY REASONS, THIS PROPERTY IS DEPRECATED
-var width_factor: float = 1.0
-
 # Will return two quads split down the middle of this one
 func bisect() -> Array:
 	var delta = pt_d - pt_a
@@ -76,7 +73,6 @@ func duplicate() -> SS2D_Quad:
 	q.color = color
 
 	q.flip_texture = flip_texture
-	q.width_factor = width_factor
 	q.control_point_index = control_point_index
 
 	q.corner = corner

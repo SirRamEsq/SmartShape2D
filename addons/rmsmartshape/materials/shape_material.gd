@@ -3,7 +3,7 @@ extends Resource
 class_name SS2D_Material_Shape
 
 """
-This material represents the set of edge materials used for a RMSmartShape2D
+This material represents the set of edge materials used for a smart shape.
 Each edge represents a set of textures used to render an edge
 """
 

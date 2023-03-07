@@ -1356,11 +1356,6 @@ func debug_print_points():
 	_points.debug_print()
 
 
-# Should be overridden by children
-func import_from_legacy(_legacy: RMSmartShape2D):
-	pass
-
-
 ###################
 # EDGE GENERATION #
 ###################

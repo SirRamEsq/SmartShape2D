@@ -107,13 +107,9 @@ const GUI_POINT_INFO_PANEL_OFFSET = Vector2(256, 130)
 
 # This is the shape node being edited
 var shape: SS2D_Shape_Base = null
-# For when a legacy shape is selected
-var legacy_shape = null
 
 # Toolbar Stuff
 var tb_hb: HBoxContainer = null
-var tb_hb_legacy_import: HBoxContainer = null
-var tb_import: Button = null
 var tb_vert_create: Button = null
 var tb_vert_edit: Button = null
 var tb_edge_edit: Button = null
@@ -186,15 +182,6 @@ func _snapping_item_selected(id: int):
 func _gui_build_toolbar():
 	tb_hb = HBoxContainer.new()
 	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
-	tb_hb_legacy_import = HBoxContainer.new()
-	add_control_to_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb_legacy_import)
-	tb_import = Button.new()
-	tb_import.icon = ICON_IMPORT_CLOSED
-	tb_import.toggle_mode = false
-	tb_import.button_pressed = false
-	tb_import.tooltip_text = SS2D_Strings.EN_TOOLTIP_IMPORT
-	tb_import.connect("pressed",Callable(self,"_import_legacy"))
-	tb_hb_legacy_import.add_child(tb_import)
 
 	var sep = VSeparator.new()
 	tb_hb.add_child(sep)
@@ -234,7 +221,6 @@ func _gui_build_toolbar():
 	tb_snap_popup.connect("id_pressed",Callable(self,"_snapping_item_selected"))
 
 	tb_hb.hide()
-	tb_hb_legacy_import.hide()
 
 
 func create_tool_button(icon: Texture2D, tooltip: String) -> Button:
@@ -372,9 +358,7 @@ func _exit_tree():
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
 	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb)
-	remove_control_from_container(EditorPlugin.CONTAINER_CANVAS_EDITOR_MENU, tb_hb_legacy_import)
 	tb_hb.queue_free()
-	tb_hb_legacy_import.queue_free()
 
 
 func _forward_canvas_gui_input(event: InputEvent):
@@ -411,7 +395,6 @@ func _forward_canvas_gui_input(event: InputEvent):
 func _handles(object: Object) -> bool:
 	var hideToolbar:bool = true
 
-	tb_hb_legacy_import.hide()
 	update_overlays()
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
@@ -428,8 +411,7 @@ func _handles(object: Object) -> bool:
 	if object is Resource:
 		return false
 
-	var rslt: bool = object is SS2D_Shape_Base or object is RMSmartShape2D
-	return rslt
+	return object is SS2D_Shape_Base
 
 
 func _edit(object: Object):
@@ -437,28 +419,13 @@ func _edit(object: Object):
 	deselect_verts()
 	if is_shape_valid(shape):
 		disconnect_shape(shape)
-	if is_shape_valid(legacy_shape):
-		disconnect_shape(legacy_shape)
 
 	shape = null
-	legacy_shape = null
 
-	if object is RMSmartShape2D:
-		tb_hb.hide()
-		tb_hb_legacy_import.show()
-		if object.closed_shape:
-			tb_import.icon = ICON_IMPORT_CLOSED
-		else:
-			tb_import.icon = ICON_IMPORT_OPEN
+	tb_hb.show()
 
-		legacy_shape = object
-		connect_shape(legacy_shape)
-	else:
-		tb_hb.show()
-		tb_hb_legacy_import.hide()
-
-		shape = object
-		connect_shape(shape)
+	shape = object
+	connect_shape(shape)
 
 	if not is_shape_valid(shape):
 		gui_point_info_panel.visible = false
@@ -542,71 +509,14 @@ func _get_undo() -> UndoRedo:
 	return urman.get_history_undo_redo(urman.get_object_history_id(get_editor_interface().get_edited_scene_root()))
 
 
-func _import_legacy():
-	call_deferred("_import_legacy_impl")
-
-
-func _import_legacy_impl():
-	if legacy_shape == null:
-		push_error("LEGACY SHAPE IS NULL")
-		return
-	if not legacy_shape is RMSmartShape2D:
-		push_error("LEGACY SHAPE NOT VALID")
-		return
-	var par = legacy_shape.get_parent()
-	if par == null:
-		push_error("LEGACY SHAPE PARENT IS NULL")
-		return
-
-	# Make new shape and set values
-	var new_shape = null
-	if legacy_shape.closed_shape:
-		new_shape = SS2D_Shape_Closed.new()
-		new_shape.name = "SS2D_Shape_Closed"
-	else:
-		new_shape = SS2D_Shape_Open.new()
-		new_shape.name = "SS2D_Shape_Open"
-	new_shape.import_from_legacy(legacy_shape)
-	new_shape.transform = legacy_shape.transform
-
-	# Add new to scene tree
-	par.add_child(new_shape)
-	new_shape.owner = get_editor_interface().get_edited_scene_root()
-
-	# Remove Legacy from scene tree
-	disconnect_shape(legacy_shape)
-	par.remove_child(legacy_shape)
-	legacy_shape.queue_free()
-	legacy_shape = null
-
-	# Edit the new shape
-	#edit(new_shape)
-
-
-func _on_legacy_closed_changed():
-	if is_shape_valid(legacy_shape):
-		if legacy_shape is RMSmartShape2D:
-			if legacy_shape.closed_shape:
-				tb_import.icon = ICON_IMPORT_CLOSED
-			else:
-				tb_import.icon = ICON_IMPORT_OPEN
-
-
 func disconnect_shape(s):
 	if s.is_connected("points_modified",Callable(self,"_on_shape_point_modified")):
 		s.disconnect("points_modified",Callable(self,"_on_shape_point_modified"))
-	# Legacy
-	if s is RMSmartShape2D:
-		if s.is_connected("on_closed_change",Callable(self,"_on_legacy_closed_changed")):
-			s.disconnect("on_closed_change",Callable(self,"_on_legacy_closed_changed"))
 
 
 func connect_shape(s):
 	if not s.is_connected("points_modified",Callable(self,"_on_shape_point_modified")):
 		s.connect("points_modified",Callable(self,"_on_shape_point_modified"))
-	if s is RMSmartShape2D:
-		if not s.is_connected("on_closed_change",Callable(self,"_on_legacy_closed_changed")):
-			s.connect("on_closed_change",Callable(self,"_on_legacy_closed_changed"))
 
 
 static func get_material_override_from_indicies(s: SS2D_Shape_Base, indicies: Array):
