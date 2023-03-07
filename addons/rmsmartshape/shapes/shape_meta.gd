@@ -14,57 +14,51 @@ var _cached_shape_children: Array = []
 #############
 # OVERRIDES #
 #############
-func _init():
+func _init() -> void:
 	super._init()
 	_is_instantiable = true
 
 
-func _ready():
+func _ready() -> void:
 	for s in _get_shapes(self):
 		_add_to_meta(s)
+	connect("child_entered_tree", self._on_child_entered_tree)
+	connect("child_exiting_tree", self._on_child_exiting_tree)
 	call_deferred("_update_cached_children")
 	super._ready()
 
 
-func _draw():
+func _draw() -> void:
 	pass
 
 
-func remove_child(node: Node):
-	_remove_from_meta(node)
+func _on_child_entered_tree(child: Node) -> void:
+	_add_to_meta(child)
 	call_deferred("_update_cached_children")
-	super.remove_child(node)
 
 
-func add_child(node: Node, force_readable_name: bool = false, internal: InternalMode = 0):
-	_add_to_meta(node)
+func _on_child_exiting_tree(child: Node) -> void:
+	_remove_from_meta(child)
 	call_deferred("_update_cached_children")
-	super.add_child(node, force_readable_name, internal)
 
 
-func add_sibling(sibling: Node, force_readable_name: bool = false):
-	_add_to_meta(sibling)
-	call_deferred("_update_cached_children")
-	super.add_sibling(sibling, force_readable_name)
-
-
-func _on_dirty_update():
+func _on_dirty_update() -> void:
 	pass
 
 
-func set_as_dirty():
+func set_as_dirty() -> void:
 	_update_shapes()
 
 ########
 # META #
 ########
-func _on_update_children(_ignore: bool):
+func _on_update_children(_ignore: bool) -> void:
 	#print("Updating Cached Children...")
 	_update_cached_children()
 	#print("...Updated")
 
 
-func _update_cached_children():
+func _update_cached_children() -> void:
 	# TODO, need to be made aware when cached children's children change!
 	_cached_shape_children = _get_shapes(self)
 	if treat_as_closed():
@@ -85,7 +79,7 @@ func _get_shapes(n: Node, a: Array = []) -> Array:
 	return a
 
 
-func _add_to_meta(n: Node):
+func _add_to_meta(n: Node) -> void:
 	if not n is SS2D_Shape_Base:
 		return
 	# Assign node to have the same point array data as this meta shape
@@ -93,7 +87,7 @@ func _add_to_meta(n: Node):
 	n.connect("points_modified",Callable(self,"_update_shapes").bind(n))
 
 
-func _update_shapes(except: Array = []):
+func _update_shapes(except: Array = []) -> void:
 	_update_curve(_points)
 	for s in _cached_shape_children:
 		if not except.has(s):
@@ -101,14 +95,15 @@ func _update_shapes(except: Array = []):
 			s._update_curve(s.get_point_array())
 
 
-func _remove_from_meta(n: Node):
+func _remove_from_meta(n: Node) -> void:
 	if not n is SS2D_Shape_Base:
 		return
 	# Make Point Data Unique
 	n.set_point_array(n.get_point_array(), true)
 	n.disconnect("points_modified",Callable(self,"_update_shapes"))
 
-func treat_as_closed()->bool:
+
+func treat_as_closed() -> bool:
 	var has_closed = false
 	for c in _cached_shape_children:
 		if c is SS2D_Shape_Closed:
