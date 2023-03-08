@@ -2,32 +2,24 @@
 extends RefCounted
 class_name SS2D_IndexMap
 
+## Maps a set of indicies to an object.
+
 const TUP = preload("res://addons/rmsmartshape/lib/tuple.gd")
 
-"""
-Maps a set of indicies to an object
-"""
-
-var object = null
+var object: Variant = null
 var indicies: Array = [] : set = set_indicies
 
 
-# Workaround (class cannot reference itself)
-func __new(i: Array, o) -> SS2D_IndexMap:
-	return get_script().new(i, o)
+## Parameter [param subresources] has no effect, no subresources to duplicate.
+func duplicate(_subresources: bool = false) -> SS2D_IndexMap:
+	return SS2D_IndexMap.new(indicies, object)
 
 
-# Sub resource has no effect, no sub resources to duplicate
-func duplicate(_sub_resource: bool = false):
-	return __new(indicies, object)
-
-
-func _init(i: Array, o):
+func _init(i: Array, o: Variant) -> void:
 	object = o
 	set_indicies(i)
 
 
-# Sort indicies in ascending order
 func set_indicies(a: Array):
 	indicies = a.duplicate()
 
@@ -61,8 +53,9 @@ func get_contiguous_segments() -> Array:
 		segments.push_back(remainder)
 	return segments
 
-# Will join together segments that share the same idx
-# ex. [1,2], [4,5], and [2,3,4] become [1,2,3,4,5]
+
+## Will join together segments that share the same idx,
+## ex. [1,2], [4,5], and [2,3,4] become [1,2,3,4,5]
 static func join_segments(segments: Array) -> Array:
 	var final_segments = segments.duplicate()
 	var to_join_tuple = []
@@ -74,8 +67,6 @@ static func join_segments(segments: Array) -> Array:
 			for ii in range(i + 1, final_segments.size()):
 				var a = final_segments[i]
 				var b = final_segments[ii]
-				var ab = [a.back(), b[0]]
-				var ba = [b.back(), a[0]]
 				if a.back() == b[0]:
 					to_join_tuple = TUP.create_tuple(i, ii)
 				if b.back() == a[0]:
@@ -99,7 +90,7 @@ static func join_segments(segments: Array) -> Array:
 	return final_segments
 
 
-# Does each index increment by 1 without any breaks
+## Does each index increment by 1 without any breaks.
 func is_contiguous() -> bool:
 	return is_array_contiguous(indicies)
 
@@ -108,8 +99,8 @@ static func is_array_contiguous(a: Array) -> bool:
 	return find_break_in_array(a) == -1
 
 
-# Find a break in the indexes where they aren't contiguous
-# Will return -1 if there's no break
+## Find a break in the indexes where they aren't contiguous.
+## Will return -1 if there's no break.
 func find_break() -> int:
 	return find_break_in_array(indicies)
 
@@ -121,8 +112,8 @@ static func find_break_in_array(a: Array) -> int:
 	return -1
 
 
-# Whether there is a break at the given index
-# Will return -1 if there's no break
+## Whether there is a break at the given index.
+## Will return -1 if there's no break.
 func is_break_at_index(i: int) -> bool:
 	return is_break_at_index_in_array(indicies, i)
 
@@ -154,30 +145,28 @@ func _split_indicies_into_multiple_mappings(new_indicies: Array) -> Array:
 		for i in range(0, break_idx, 1):
 			sub_indicies.push_back(new_indicies[i])
 		if is_index_array_valid(sub_indicies):
-			maps.push_back(__new(sub_indicies, object))
+			maps.push_back(SS2D_IndexMap.new(sub_indicies, object))
 		for i in sub_indicies:
 			new_indicies.erase(i)
 		break_idx = find_break_in_array(new_indicies)
 
 	if is_index_array_valid(new_indicies):
-		maps.push_back(__new(new_indicies, object))
+		maps.push_back(SS2D_IndexMap.new(new_indicies, object))
 	return maps
 
-"""
-Will create a new set of SS2D_IndexMaps
-The new set will contain all of the indicies of the current set,
-minus the ones specified in the indicies parameter
-ie.
-indicies = [0,1,2,3,4,5,6]
-to_remove = [3,4]
-new_sets = [0,1,2] [5,6]
 
-
-This may split the IndexMap or make it invalid entirely
-As a result, the returned array could have 0 or several IndexMaps
-"""
-
-
+## Will create a new set of SS2D_IndexMaps.
+##
+## The new set will contain all of the indicies of the current set,
+## minus the ones specified in the indicies parameter.
+##
+## ie.
+## indicies = [0,1,2,3,4,5,6]
+## to_remove = [3,4]
+## new_sets = [0,1,2] [5,6]
+##
+## This may split the IndexMap or make it invalid entirely
+## As a result, the returned array could have 0 or several IndexMaps.
 func remove_indicies(to_remove: Array) -> Array:
 	var new_indicies = indicies.duplicate()
 	for r in to_remove:
@@ -185,26 +174,23 @@ func remove_indicies(to_remove: Array) -> Array:
 	if not is_index_array_valid(new_indicies):
 		return []
 	if is_array_contiguous(new_indicies):
-		return [__new(new_indicies, object)]
+		return [SS2D_IndexMap.new(new_indicies, object)]
 
 	return _split_indicies_into_multiple_mappings(new_indicies)
 
 
-"""
-Will create a new set of SS2D_IndexMaps
-The new set will contain all of the edges of the current set,
-minus the ones specified in the indicies parameter
-ie.
-indicies = [0,1,2,3,4,5,6]
-to_remove = [4,5]
-new_sets = [0,1,2,3,4] [4,5,6]
-
-
-This may split the IndexMap or make it invalid entirely
-As a result, the returned array could have 0 or several IndexMaps
-"""
-
-
+## Will create a new set of SS2D_IndexMaps.
+##
+## The new set will contain all of the edges of the current set,
+## minus the ones specified in the indicies parameter.
+##
+## ie.
+## indicies = [0,1,2,3,4,5,6]
+## to_remove = [4,5]
+## new_sets = [0,1,2,3,4] [4,5,6]
+##
+## This may split the IndexMap or make it invalid entirely
+## As a result, the returned array could have 0 or several IndexMaps.
 func remove_edges(to_remove: Array) -> Array:
 	# Corner case
 	if to_remove.size() == 2:
@@ -216,12 +202,11 @@ func remove_edges(to_remove: Array) -> Array:
 				var set_2 = indicies.slice(idx+1, indicies.size()-1)
 				var new_maps = []
 				if is_index_array_valid(set_1):
-					new_maps.push_back(__new(set_1, object))
+					new_maps.push_back(SS2D_IndexMap.new(set_1, object))
 				if is_index_array_valid(set_2):
-					new_maps.push_back(__new(set_2, object))
+					new_maps.push_back(SS2D_IndexMap.new(set_2, object))
 				return new_maps
-		return [__new(indicies, object)]
-
+		return [SS2D_IndexMap.new(indicies, object)]
 
 	# General case
 	var new_edges = indicies_to_edges(indicies.duplicate())
@@ -240,8 +225,9 @@ func remove_edges(to_remove: Array) -> Array:
 	new_edges = join_segments(new_edges)
 	var new_index_mappings = []
 	for e in new_edges:
-		new_index_mappings.push_back(__new(e, object))
+		new_index_mappings.push_back(SS2D_IndexMap.new(e, object))
 	return new_index_mappings
+
 
 static func indicies_to_edges(indicies:Array)->Array:
 	var edges = []
@@ -250,6 +236,7 @@ static func indicies_to_edges(indicies:Array)->Array:
 		if is_array_contiguous(edge):
 			edges.push_back(edge)
 	return edges
+
 
 static func index_map_array_sort_by_object(imaps:Array)->Dictionary:
 	var dict = {}
