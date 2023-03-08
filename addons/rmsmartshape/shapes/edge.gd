@@ -308,29 +308,23 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 	st.generate_normals()
 	return st.commit()
 
-func get_meshes(color_encoding:int) -> Array:
-	"""
-	Returns an array of SS2D_Mesh
-	# Get Arrays of consecutive quads with the same mesh data
-	# For each array
-	## Generate Mesh Data from the quad
-	"""
 
-	var consecutive_quad_arrays = get_consecutive_quads_for_mesh(quads)
+func get_meshes(color_encoding: int) -> Array[SS2D_Mesh]:
+	# Get Arrays of consecutive quads with the same mesh data.
+	# For each array, generate Mesh Data from the quad.
+
+	var consecutive_quad_arrays: Array[Array] = SS2D_Edge.get_consecutive_quads_for_mesh(quads)
 	#print("Arrays: %s" % consecutive_quad_arrays.size())
-	var meshes = []
+	var meshes: Array[SS2D_Mesh] = []
 	for consecutive_quads in consecutive_quad_arrays:
 		if consecutive_quads.is_empty():
 			continue
-		var st: SurfaceTool = SurfaceTool.new()
-		var array_mesh: ArrayMesh = generate_array_mesh_from_quad_sequence(
+		var array_mesh: ArrayMesh = SS2D_Edge.generate_array_mesh_from_quad_sequence(
 			consecutive_quads, wrap_around, color_encoding
 		)
 		var tex: Texture2D = consecutive_quads[0].texture
-		var tex_normal: Texture2D = consecutive_quads[0].texture_normal
-		var flip = consecutive_quads[0].flip_texture
-		var transform = Transform2D()
-		var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh], material)
+		var flip: bool = consecutive_quads[0].flip_texture
+		var mesh_data := SS2D_Mesh.new(tex, flip, Transform2D(), [array_mesh], material)
 		mesh_data.z_index = z_index
 		mesh_data.z_as_relative = z_as_relative
 		meshes.push_back(mesh_data)

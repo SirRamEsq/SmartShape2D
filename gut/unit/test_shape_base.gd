@@ -177,7 +177,6 @@ func test_build_quad_no_texture(width = use_parameters(width_params)):
 	var pt: Vector2 = Vector2(0,0)
 	var pt_next: Vector2 = Vector2(16,0)
 	var tex: Texture = null
-	var tex_normal: Texture = null
 	var size: Vector2 = Vector2(8,8)
 	var flip_x: bool = false
 	var flip_y: bool = false
@@ -186,9 +185,9 @@ func test_build_quad_no_texture(width = use_parameters(width_params)):
 	var custom_offset: float = 0.0
 	var custom_extends: float = 0.0
 	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
-	var q = SS2D_Shape_Base.build_quad_from_two_points(
+	var q: SS2D_Quad = SS2D_Shape_Base.build_quad_from_two_points(
 		pt, pt_next,
-		tex, tex_normal,
+		tex,
 		width,
 		flip_x, flip_y,
 		first_point, last_point,
@@ -210,7 +209,6 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var pt_next: Vector2 = Vector2(16,0)
 	var tex: Texture = TEST_TEXTURE
 	var tex_height = tex.get_size().y
-	var tex_normal: Texture = null
 	var size: Vector2 = Vector2(8,8)
 	var flip_x: bool = false
 	var flip_y: bool = false
@@ -221,7 +219,7 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 	var q = SS2D_Shape_Base.build_quad_from_two_points(
 		pt, pt_next,
-		tex, tex_normal,
+		tex,
 		width_scale * tex_height,
 		flip_x, flip_y,
 		first_point, last_point,
@@ -263,7 +261,6 @@ func test_build_corner_quad():
 	var pt_next: Vector2 = Vector2(000, 16)
 	var tex: Texture = TEST_TEXTURE
 	var tex_height = tex.get_size().y
-	var tex_normal: Texture = null
 	var width  = 1.0
 	var width_prev  = 1.0
 	var size: Vector2 = Vector2(8,8)
@@ -278,7 +275,7 @@ func test_build_corner_quad():
 		width, width_prev,
 		flip_edges,
 		corner_status,
-		tex, tex_normal,
+		tex,
 		size,
 		custom_scale, custom_offset
 	)
@@ -289,7 +286,7 @@ func test_build_corner_quad():
 		width, width_prev,
 		flip_edges,
 		corner_status,
-		tex, tex_normal,
+		tex,
 		size,
 		custom_scale*2, custom_offset
 	)
@@ -301,7 +298,7 @@ func test_build_corner_quad():
 		width*2, width_prev,
 		flip_edges,
 		corner_status,
-		tex, tex_normal,
+		tex,
 		size,
 		custom_scale, custom_offset
 	)
@@ -313,7 +310,7 @@ func test_build_corner_quad():
 		width*2, width_prev*2,
 		flip_edges,
 		corner_status,
-		tex, tex_normal,
+		tex,
 		size,
 		custom_scale*2, custom_offset
 	)
@@ -324,7 +321,7 @@ func test_build_corner_quad():
 		width, width_prev*2,
 		flip_edges,
 		corner_status,
-		tex, tex_normal,
+		tex,
 		size,
 		custom_scale, custom_offset
 	)
@@ -338,7 +335,7 @@ func test_build_corner_quad():
 		width, width_prev,
 		flip_edges,
 		corner_status,
-		tex, tex_normal,
+		tex,
 		size,
 		custom_scale, custom_offset
 	)

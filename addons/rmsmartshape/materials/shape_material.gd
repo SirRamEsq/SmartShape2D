@@ -11,7 +11,6 @@ Each edge represents a set of textures used to render an edge
 # Should be SS2D_Material_Edge_Metadata
 @export var _edge_meta_materials: Array[Resource] = [] : set = set_edge_meta_materials
 @export var fill_textures: Array[Texture2D] = [] : set = set_fill_textures
-@export var fill_texture_normals: Array[Texture2D] = [] : set = set_fill_texture_normals
 @export var fill_texture_z_index: int = -10 : set = set_fill_texture_z_index
 @export var fill_texture_show_behind_parent: bool = false : set = set_fill_texture_show_behind_parent
 @export var fill_mesh_offset: float = 0.0 : set = set_fill_mesh_offset
@@ -71,11 +70,6 @@ func _on_edge_material_changed():
 
 func set_fill_textures(a: Array):
 	fill_textures = a
-	emit_signal("changed")
-
-
-func set_fill_texture_normals(a: Array):
-	fill_texture_normals = a
 	emit_signal("changed")
 
 

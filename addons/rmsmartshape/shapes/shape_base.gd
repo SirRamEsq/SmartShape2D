@@ -874,7 +874,6 @@ static func build_quad_from_two_points(
 	pt: Vector2,
 	pt_next: Vector2,
 	tex: Texture2D,
-	tex_normal: Texture2D,
 	width: float,
 	flip_x: bool,
 	flip_y: bool,
@@ -882,12 +881,11 @@ static func build_quad_from_two_points(
 	last_point: bool,
 	custom_offset: float,
 	custom_extends: float,
-	fit_texture: int
+	fit_texture: SS2D_Material_Edge.FITMODE
 ) -> SS2D_Quad:
 	# Create new quad
-	var quad = SS2D_Quad.new()
+	var quad := SS2D_Quad.new()
 	quad.texture = tex
-	quad.texture_normal = tex_normal
 	quad.color = Color(1.0, 1.0, 1.0, 1.0)
 	quad.flip_texture = flip_x
 	quad.fit_texture = fit_texture
@@ -945,7 +943,6 @@ static func build_quad_corner(
 	flip_edges_: bool,
 	corner_status: int,
 	texture: Texture2D,
-	texture_normal: Texture2D,
 	size: Vector2,
 	custom_scale: float,
 	custom_offset: float
@@ -977,7 +974,6 @@ static func build_quad_corner(
 
 	new_quad.corner = corner_status
 	new_quad.texture = texture
-	new_quad.texture_normal = texture_normal
 
 	return new_quad
 
@@ -1421,22 +1417,17 @@ func _edge_generate_corner(
 	texture_idx: int,
 	c_scale: float,
 	c_offset: float
-):
+) -> SS2D_Quad:
 	var generate_corner = edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
 	if generate_corner == SS2D_Quad.CORNER.NONE:
 		return null
 	var corner_texture = null
-	var corner_texture_normal = null
 	if edge_material != null:
 		if generate_corner == SS2D_Quad.CORNER.OUTER:
 			corner_texture = edge_material.get_texture_corner_outer(texture_idx)
-			corner_texture_normal = edge_material.get_texture_normal_corner_outer(texture_idx)
 		elif generate_corner == SS2D_Quad.CORNER.INNER:
 			corner_texture = edge_material.get_texture_corner_inner(texture_idx)
-			corner_texture_normal = edge_material.get_texture_normal_corner_inner(texture_idx)
-	#if corner_texture == null:
-		#return null
-	var corner_quad = build_quad_corner(
+	var corner_quad: SS2D_Quad = build_quad_corner(
 		pt_next,
 		pt,
 		pt_prev,
@@ -1445,8 +1436,7 @@ func _edge_generate_corner(
 		flip_edges,
 		generate_corner,
 		corner_texture,
-		corner_texture_normal,
-		Vector2(size,size),
+		Vector2(size, size),
 		c_scale,
 		c_offset
 	)
@@ -1562,10 +1552,9 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		var is_first_tess_point = (tess_idx == first_idx_t) and not is_edge_contiguous
 		var is_last_tess_point = (tess_idx == last_idx_t - 1) and not is_edge_contiguous
 
-		var tex = null
-		var tex_normal = null
-		var tex_size = Vector2(default_quad_width, default_quad_width)
-		var fitmode = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
+		var tex: Texture2D = null
+		var tex_size := Vector2(default_quad_width, default_quad_width)
+		var fitmode := SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 		if edge_material != null:
 			if edge_material.randomize_texture:
 				texture_idx = randi() % edge_material.textures.size()
@@ -1573,7 +1562,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 				texture_idx = get_point_texture_index(vert_key)
 			tex = edge_material.get_texture(texture_idx)
 			tex_size = tex.get_size()
-			tex_normal = edge_material.get_texture_normal(texture_idx)
 			fitmode = edge_material.fit_mode
 			# Exit if we have an edge material defined but no texture to render
 			if tex == null:
@@ -1584,7 +1572,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 			pt,
 			pt_next,
 			tex,
-			tex_normal,
 			width_scale * c_scale * tex_size.y,
 			flip_x,
 			should_flip_edges(),
@@ -1621,8 +1608,7 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 		# Consider an edge that consists of two points (one edge)
 		# This first point is used to generate the quad; it is both first and last
 		if is_first_tess_point and edge_material != null and edge_material.use_taper_texture:
-			var taper_texture = edge_material.get_texture_taper_left(texture_idx)
-			var taper_texture_normal = edge_material.get_texture_normal_taper_left(texture_idx)
+			var taper_texture: Texture2D = edge_material.get_texture_taper_left(texture_idx)
 			if taper_texture != null:
 				var taper_size = taper_texture.get_size()
 				var fit = abs(taper_size.x) <= new_quad.get_length_average()
@@ -1630,9 +1616,8 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 					var taper_quad = new_quad.duplicate()
 					taper_quad.corner = 0
 					taper_quad.texture = taper_texture
-					taper_quad.texture_normal = taper_texture_normal
-					var delta_normal = (taper_quad.pt_d - taper_quad.pt_a).normalized()
-					var offset = delta_normal * taper_size
+					var delta_normal: Vector2 = (taper_quad.pt_d - taper_quad.pt_a).normalized()
+					var offset: Vector2 = delta_normal * taper_size
 
 					taper_quad.pt_d = taper_quad.pt_a + offset
 					taper_quad.pt_c = taper_quad.pt_b + offset
@@ -1642,10 +1627,8 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 				# If a new taper quad doesn't fit, re-texture the new_quad
 				else:
 					new_quad.texture = taper_texture
-					new_quad.texture_normal = taper_texture_normal
 		if is_last_tess_point and edge_material != null and edge_material.use_taper_texture:
-			var taper_texture = edge_material.get_texture_taper_right(texture_idx)
-			var taper_texture_normal = edge_material.get_texture_normal_taper_right(texture_idx)
+			var taper_texture: Texture2D = edge_material.get_texture_taper_right(texture_idx)
 			if taper_texture != null:
 				var taper_size = taper_texture.get_size()
 				var fit = abs(taper_size.x) <= new_quad.get_length_average()
@@ -1653,9 +1636,8 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 					var taper_quad = new_quad.duplicate()
 					taper_quad.corner = 0
 					taper_quad.texture = taper_texture
-					taper_quad.texture_normal = taper_texture_normal
-					var delta_normal = (taper_quad.pt_d - taper_quad.pt_a).normalized()
-					var offset = delta_normal * taper_size
+					var delta_normal: Vector2 = (taper_quad.pt_d - taper_quad.pt_a).normalized()
+					var offset: Vector2 = delta_normal * taper_size
 					taper_quad.pt_a = taper_quad.pt_d - offset
 					taper_quad.pt_b = taper_quad.pt_c - offset
 					new_quad.pt_d = taper_quad.pt_a
@@ -1664,7 +1646,6 @@ func _build_edge_with_material(index_map: SS2D_IndexMap,  c_offset: float, defau
 				# If a new taper quad doesn't fit, re-texture the new_quad
 				else:
 					new_quad.texture = taper_texture
-					new_quad.texture_normal = taper_texture_normal
 
 		# Final point for closed shapes fix
 		# Corner quads aren't always correctly when the corner is between final and first pt

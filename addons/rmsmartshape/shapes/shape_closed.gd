@@ -143,9 +143,6 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	if s_mat.fill_textures.is_empty():
 		return meshes
 	tex = s_mat.fill_textures[0]
-	var tex_normal = null
-	if not s_mat.fill_texture_normals.is_empty():
-		tex_normal = s_mat.fill_texture_normals[0]
 	var tex_size = tex.get_size()
 
 	# Points to produce the fill mesh
@@ -184,7 +181,7 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	var array_mesh = st.commit()
 	var flip = false
 	var transform = Transform2D()
-	var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+	var mesh_data := SS2D_Mesh.new(tex, flip, transform, [array_mesh])
 	mesh_data.material = s_mat.fill_mesh_material
 	mesh_data.z_index = s_mat.fill_texture_z_index
 	mesh_data.z_as_relative = true

@@ -14,20 +14,15 @@ This consists of:
 # _textures[0] is considered the "main" texture for the EdgeMaterial
 #### Will be used to generate an icon representing an edge texture
 @export var textures: Array[Texture2D] = [] : set = _set_textures
-@export var texture_normals: Array[Texture2D] = [] : set = _set_texture_normals
 
 # Textures for the final left and right quad of the edge when the angle is steep
 @export var textures_corner_outer: Array[Texture2D] = [] : set = _set_textures_corner_outer
 @export var textures_corner_inner: Array[Texture2D] = [] : set = _set_textures_corner_inner
-@export var texture_normals_corner_outer: Array[Texture2D] = [] : set = _set_texture_normals_corner_outer
-@export var texture_normals_corner_inner: Array[Texture2D] = [] : set = _set_texture_normals_corner_inner
 
 # Textures for the final left and right quad of the edge when the angle is shallow
 # Named as such because the desired look is that the texture "tapers-off"
 @export var textures_taper_left: Array[Texture2D] = [] : set = _set_textures_taper_left
 @export var textures_taper_right: Array[Texture2D] = [] : set = _set_textures_taper_right
-@export var texture_normals_taper_left: Array[Texture2D] = [] : set = _set_texture_normals_taper_left
-@export var texture_normals_taper_right: Array[Texture2D] = [] : set = _set_texture_normals_taper_right
 
 # If the texture choice should be randomized instead of the choice by point setup
 @export var randomize_texture: bool = false : set = _set_randomize_texture
@@ -50,18 +45,8 @@ func _set_textures(ta: Array):
 	emit_signal("changed")
 
 
-func _set_texture_normals(ta: Array):
-	texture_normals = ta
-	emit_signal("changed")
-
-
 func _set_textures_corner_outer(a: Array):
 	textures_corner_outer = a
-	emit_signal("changed")
-
-
-func _set_texture_normals_corner_outer(a: Array):
-	texture_normals_corner_outer = a
 	emit_signal("changed")
 
 
@@ -70,28 +55,13 @@ func _set_textures_corner_inner(a: Array):
 	emit_signal("changed")
 
 
-func _set_texture_normals_corner_inner(a: Array):
-	texture_normals_corner_inner = a
-	emit_signal("changed")
-
-
 func _set_textures_taper_left(a: Array):
 	textures_taper_left = a
 	emit_signal("changed")
 
 
-func _set_texture_normals_taper_left(a: Array):
-	texture_normals_taper_left = a
-	emit_signal("changed")
-
-
 func _set_textures_taper_right(a: Array):
 	textures_taper_right = a
-	emit_signal("changed")
-
-
-func _set_texture_normals_taper_right(a: Array):
-	texture_normals_taper_right = a
 	emit_signal("changed")
 
 
@@ -108,10 +78,12 @@ func _set_use_corner(b: bool):
 func _set_use_taper(b: bool):
 	use_taper_texture = b
 	emit_signal("changed")
-	
+
+
 func _set_fit_texture(fitmode):
 	fit_mode = fitmode
 	emit_signal("changed")
+
 
 func _set_material(m:Material):
 	material = m
@@ -125,40 +97,20 @@ func get_texture(idx: int):
 	return _get_element(idx, textures)
 
 
-func get_texture_normal(idx: int):
-	return _get_element(idx, texture_normals)
-
-
 func get_texture_corner_inner(idx: int):
 	return _get_element(idx, textures_corner_inner)
-
-
-func get_texture_normal_corner_inner(idx: int):
-	return _get_element(idx, texture_normals_corner_inner)
 
 
 func get_texture_corner_outer(idx: int):
 	return _get_element(idx, textures_corner_outer)
 
 
-func get_texture_normal_corner_outer(idx: int):
-	return _get_element(idx, texture_normals_corner_outer)
-
-
 func get_texture_taper_left(idx: int):
 	return _get_element(idx, textures_taper_left)
 
 
-func get_texture_normal_taper_left(idx: int):
-	return _get_element(idx, texture_normals_taper_left)
-
-
 func get_texture_taper_right(idx: int):
 	return _get_element(idx, textures_taper_right)
-
-
-func get_texture_normal_taper_right(idx: int):
-	return _get_element(idx, texture_normals_taper_right)
 
 
 #########
