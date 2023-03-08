@@ -243,12 +243,11 @@ Overriding this method to set the light mask of all render children
 """
 
 
-func set_light_mask(value):
-	var render_parent = _get_rendering_nodes_parent()
+func set_render_node_light_masks(value: int) -> void:
+	var render_parent: SS2D_Shape_Render = _get_rendering_nodes_parent()
 	for c in render_parent.get_children():
 		c.light_mask = value
 	render_parent.light_mask = value
-	super.set_light_mask(value)
 
 
 func set_render_node_owners(v: bool):
@@ -279,7 +278,7 @@ func set_render_node_owners(v: bool):
 
 func update_render_nodes():
 	set_render_node_owners(editor_debug)
-	set_light_mask(light_mask)
+	set_render_node_light_masks(light_mask)
 
 
 func set_tessellation_stages(value: int):
