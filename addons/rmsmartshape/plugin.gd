@@ -806,7 +806,7 @@ func draw_vert_handles(overlay: Control, t: Transform2D, verts, control_points: 
 	var width_handle_color = Color("f53351")
 	overlay.draw_line(vertex_position,icon_position,width_handle_color,1.0)
 	overlay.draw_set_transform(icon_position, width_handle_normal.angle(), Vector2.ONE)
-	overlay.draw_rect(Rect2(-size / 2.0, size), width_handle_color, true, 1.0)
+	overlay.draw_rect(Rect2(-size / 2.0, size), width_handle_color, true)
 	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
 	# Draw Control point handles
