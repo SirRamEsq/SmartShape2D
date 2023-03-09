@@ -225,7 +225,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 		change_in_length = 1.0
 
 	var length_elapsed: float = 0.0
-	var st = SurfaceTool.new()
+	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for q in _quads:
 		q.update_tangents()
@@ -274,32 +274,32 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array, wrap_around: b
 
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(color_a)
+		st.set_color(color_a)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# B
 		_add_uv_to_surface_tool(st, uv_b)
-		st.add_color(color_b)
+		st.set_color(color_b)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_b))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(color_c)
+		st.set_color(color_c)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# A
 		_add_uv_to_surface_tool(st, uv_a)
-		st.add_color(color_a)
+		st.set_color(color_a)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_a))
 
 		# C
 		_add_uv_to_surface_tool(st, uv_c)
-		st.add_color(color_c)
+		st.set_color(color_c)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_c))
 
 		# D
 		_add_uv_to_surface_tool(st, uv_d)
-		st.add_color(color_d)
+		st.set_color(color_d)
 		st.add_vertex(SS2D_Common_Functions.to_vector3(q.pt_d))
 
 		length_elapsed += section_length
@@ -332,6 +332,6 @@ func get_meshes(color_encoding: int) -> Array[SS2D_Mesh]:
 	return meshes
 
 
-static func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
-	surface_tool.add_uv(uv)
-	surface_tool.add_uv2(uv)
+static func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2) -> void:
+	surface_tool.set_uv(uv)
+	surface_tool.set_uv2(uv)

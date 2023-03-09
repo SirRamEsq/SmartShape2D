@@ -866,8 +866,8 @@ func are_points_clockwise() -> bool:
 
 
 func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2):
-	surface_tool.add_uv(uv)
-	surface_tool.add_uv2(uv)
+	surface_tool.set_uv(uv)
+	surface_tool.set_uv2(uv)
 
 
 static func build_quad_from_two_points(

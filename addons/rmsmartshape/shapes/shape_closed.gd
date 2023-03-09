@@ -166,13 +166,13 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for i in range(0, fill_tris.size() - 1, 3):
-		st.add_color(Color.WHITE)
+		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-		st.add_color(Color.WHITE)
+		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-		st.add_color(Color.WHITE)
+		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
