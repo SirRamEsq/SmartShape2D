@@ -20,7 +20,7 @@ gdscript/warnings/exclude_addons=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/rmsmartshape/plugin.cfg")
+enabled=PackedStringArray("res://addons/rmsmartshape/plugin.cfg", "res://addons/gut/plugin.cfg")
 
 [physics]
 
