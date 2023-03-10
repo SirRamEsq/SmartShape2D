@@ -143,9 +143,6 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	if s_mat.fill_textures.is_empty():
 		return meshes
 	tex = s_mat.fill_textures[0]
-	var tex_normal = null
-	if not s_mat.fill_texture_normals.is_empty():
-		tex_normal = s_mat.fill_texture_normals[0]
 	var tex_size = tex.get_size()
 
 	# Points to produce the fill mesh
@@ -169,13 +166,13 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for i in range(0, fill_tris.size() - 1, 3):
-		st.add_color(Color.WHITE)
+		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-		st.add_color(Color.WHITE)
+		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-		st.add_color(Color.WHITE)
+		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
@@ -184,7 +181,7 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	var array_mesh = st.commit()
 	var flip = false
 	var transform = Transform2D()
-	var mesh_data = SS2D_Mesh.new(tex, tex_normal, flip, transform, [array_mesh])
+	var mesh_data := SS2D_Mesh.new(tex, flip, transform, [array_mesh])
 	mesh_data.material = s_mat.fill_mesh_material
 	mesh_data.z_index = s_mat.fill_texture_z_index
 	mesh_data.z_as_relative = true

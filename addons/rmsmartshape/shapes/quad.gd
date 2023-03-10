@@ -21,7 +21,6 @@ var bn_c : Vector2
 var bn_d : Vector2
 
 var texture: Texture2D = null
-var texture_normal: Texture2D = null
 var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 var flip_texture: bool = false
@@ -52,7 +51,6 @@ func _to_string() -> String:
 func matches_quad(q: SS2D_Quad) -> bool:
 	if (
 		texture == q.texture
-		and texture_normal == q.texture_normal
 		and color == q.color
 		and flip_texture == q.flip_texture
 		and fit_texture == q.fit_texture
@@ -69,7 +67,6 @@ func duplicate() -> SS2D_Quad:
 	q.pt_d = pt_d
 
 	q.texture = texture
-	q.texture_normal = texture_normal
 	q.color = color
 
 	q.flip_texture = flip_texture
@@ -102,9 +99,8 @@ func _init(
 	pt_b = b
 	pt_c = c
 	pt_d = d
-	
+
 	texture = t
-	texture_normal = tn
 	flip_texture = f
 
 
