@@ -18,9 +18,9 @@ func _init(
 	t: Texture2D = null,
 	f: bool = false,
 	xform: Transform2D = Transform2D(),
-	m: Array = [],
+	m: Array[ArrayMesh] = [],
 	mat: Material = null
-):
+) -> void:
 	texture = t
 	flip_texture = f
 	meshes = m
@@ -28,8 +28,8 @@ func _init(
 	material = mat
 
 
+# Note: Not an override.
 func duplicate(subresources: bool = false) -> SS2D_Mesh:
-	# Note: Not an override.
 	var copy := SS2D_Mesh.new()
 	copy.texture = texture
 	copy.flip_texture = flip_texture
@@ -56,7 +56,7 @@ func matches(tex: Texture2D, f: bool, t: Transform2D, m: Material, zi: int, zb: 
 	)
 
 
-func mesh_matches(m) -> bool:
+func mesh_matches(m: SS2D_Mesh) -> bool:
 	return matches(
 		m.texture,
 		m.flip_texture,
@@ -68,7 +68,7 @@ func mesh_matches(m) -> bool:
 
 
 func debug_print_array_mesh(am: ArrayMesh) -> String:
-	var s = "Faces:%s  |  Surfs:%s  | " % [am.get_faces(), am.get_surface_count()]
+	var s := "Faces:%s  |  Surfs:%s  | " % [am.get_faces(), am.get_surface_count()]
 	return s
 
 

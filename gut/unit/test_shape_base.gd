@@ -184,7 +184,7 @@ func test_build_quad_no_texture(width = use_parameters(width_params)):
 	var last_point: bool = false
 	var custom_offset: float = 0.0
 	var custom_extends: float = 0.0
-	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
+	var fit_texture := SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 	var q: SS2D_Quad = SS2D_Shape_Base.build_quad_from_two_points(
 		pt, pt_next,
 		tex,
@@ -195,12 +195,12 @@ func test_build_quad_no_texture(width = use_parameters(width_params)):
 		fit_texture
 	)
 	assert_not_null(q)
-	var variance = Vector2(0.0, 0.0)
+	var variance := Vector2(0.0, 0.0)
 	# There is no texture, should have a width of 'width'
 	assert_eq(abs(q.pt_a.y - q.pt_b.y), abs(width))
 	assert_almost_eq((q.pt_a - q.pt_b).length(), abs(width), 0.01)
-	var half_width = width/2.0
-	var half_width_n = half_width * -1
+	var half_width := width/2.0
+	var half_width_n := half_width * -1
 	assert_quad_point_eq(gut,q,Vector2(0, half_width_n),Vector2(0,half_width),
 						Vector2(16,half_width),Vector2(16,half_width_n),variance)
 
@@ -216,7 +216,7 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var last_point: bool = false
 	var custom_offset: float = 0.0
 	var custom_extends: float = 0.0
-	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
+	var fit_texture := SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 	var q = SS2D_Shape_Base.build_quad_from_two_points(
 		pt, pt_next,
 		tex,

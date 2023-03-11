@@ -24,12 +24,12 @@ var edge_material_selector := FileDialog.new()
 
 
 func _ready() -> void:
-	material_override_button.connect("toggled", Callable(self, "_on_toggle_material_override"))
-	render_checkbox.connect("toggled", Callable(self, "_on_toggle_render"))
-	weld_checkbox.connect("toggled", Callable(self, "_on_toggle_weld"))
-	z_index_spinbox.connect("value_changed", Callable(self, "_on_set_z_index"))
-	set_material_button.connect("pressed", Callable(self, "_on_set_edge_material_pressed"))
-	clear_material_button.connect("pressed", Callable(self, "_on_set_edge_material_clear_pressed"))
+	material_override_button.connect("toggled", self._on_toggle_material_override)
+	render_checkbox.connect("toggled", self._on_toggle_render)
+	weld_checkbox.connect("toggled", self._on_toggle_weld)
+	z_index_spinbox.connect("value_changed", self._on_set_z_index)
+	set_material_button.connect("pressed", self._on_set_edge_material_pressed)
+	clear_material_button.connect("pressed", self._on_set_edge_material_clear_pressed)
 
 	override_container.hide()
 	clear_material_button.hide()
@@ -40,7 +40,7 @@ func _ready() -> void:
 	edge_material_selector.mode_overrides_title = false
 	edge_material_selector.title = "Select Edge Material"
 	edge_material_selector.filters = PackedStringArray(["*.tres"])
-	edge_material_selector.connect("file_selected",Callable(self,"_on_set_edge_material_file_selected"))
+	edge_material_selector.connect("file_selected", self._on_set_edge_material_file_selected)
 	add_child(edge_material_selector)
 
 

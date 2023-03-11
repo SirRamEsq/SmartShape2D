@@ -66,12 +66,11 @@ func generate_quads(
 	var c = Vector2(extents.x, extents.y)
 	var d = Vector2(extents.x, -extents.y)
 	var t = tex
-	var tn = null
 	var f = false
 
 	for i in range(0, amnt, 1):
 		var offset = Vector2(extents.x * 2 * i, 0)
 		if indicies_to_change.has(i):
 			f = not f
-		quads.push_back(SS2D_Quad.new(a + offset, b + offset, c + offset, d + offset, t, tn, f))
+		quads.push_back(SS2D_Quad.new(a + offset, b + offset, c + offset, d + offset, t, f))
 	return quads

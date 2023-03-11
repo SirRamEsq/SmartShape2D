@@ -2,14 +2,12 @@
 extends Node2D
 class_name SS2D_Shape_Render
 
-"""
-Node is used to render shape geometry
-"""
+## Node is used to render shape geometry.
 
-var mesh = null : set = set_mesh
+var mesh: SS2D_Mesh = null : set = set_mesh
 
 
-func set_mesh(m):
+func set_mesh(m: SS2D_Mesh) -> void:
 	mesh = m
 	if m != null:
 		material = mesh.material
@@ -24,6 +22,6 @@ func set_mesh(m):
 	queue_redraw()
 
 
-func _draw():
+func _draw() -> void:
 	if mesh != null:
 		mesh.render(self)

@@ -1,15 +1,14 @@
 @tool
 extends RefCounted
 
-"""
-Everything in this script should be static
-This script contains code that may referenced in multiple locations in the plugin
+## Everything in this script should be static.
+## This script contains code that may referenced in multiple locations in the plugin
+##
+## This is a simple script to work with arrays of SS2D_IndexMap
 
-This is a simple script to work with arrays of SS2D_IndexMap
-Some notes:
-"""
 
-# Will merge two arrays of MetaMatToIdxs; a overriting on top of b; returning a new array of MetaMatToIDxs
+## FIXME: Method unused within project. Remove file?
+## Will merge two arrays of MetaMatToIdxs; a overriting on top of b; returning a new array of MetaMatToIDxs.
 static func overwrite_array_a_into_array_b(a: Array, b: Array) -> Array:
 	var ret = []
 	# Make equal to b; b serves as the baseline

@@ -73,18 +73,18 @@ func test_curve_duplicate():
 
 
 func test_tess_point_vertex_relationship():
-	var shape = SS2D_Shape_Open.new()
+	var shape := SS2D_Shape_Open.new()
 	add_child_autofree(shape)
-	var points = get_clockwise_points()
+	var points := get_clockwise_points()
 
 	shape.add_points(points)
 
-	var verts = shape.get_vertices()
-	var t_verts = shape.get_tessellated_points()
+	var verts: PackedVector2Array = shape.get_vertices()
+	var t_verts: PackedVector2Array = shape.get_tessellated_points()
 	assert_eq(points.size(), t_verts.size())
 
-	var control_point_value = Vector2(-16, 0)
-	var control_point_vtx_idx = 4
+	var control_point_value := Vector2(-16, 0)
+	var control_point_vtx_idx := 4
 
 	shape.set_point_in(control_point_vtx_idx, control_point_value)
 	shape.set_point_out(control_point_vtx_idx, control_point_value * -1)
@@ -93,21 +93,21 @@ func test_tess_point_vertex_relationship():
 	t_verts = shape.get_tessellated_points()
 	assert_ne(points.size(), t_verts.size())
 
-	var test_idx = 4
-	var test_t_idx = shape.get_tessellated_idx_from_point(verts, t_verts, test_idx)
+	var test_idx := 4
+	var test_t_idx := shape.get_tessellated_idx_from_point(verts, t_verts, test_idx)
 	assert_ne(test_idx, test_t_idx)
 	assert_eq(verts[test_idx], t_verts[test_t_idx])
-	var new_test_idx = shape.get_vertex_idx_from_tessellated_point(verts, t_verts, test_t_idx)
+	var new_test_idx := shape.get_vertex_idx_from_tessellated_point(verts, t_verts, test_t_idx)
 	assert_eq(test_idx, new_test_idx)
 
-	var results = [
+	var results := [
 		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx),
 		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 1),
 		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 2),
 		shape.get_ratio_from_tessellated_point_to_vertex(verts, t_verts, test_t_idx + 3)
 	]
 	assert_eq(0.0, results[0])
-	var message = "Ratio increasing with distance from prev vector"
+	var message := "Ratio increasing with distance from prev vector"
 	for i in range(1, results.size(), 1):
 		assert_true(results[i - 1] < results[i], message)
 
@@ -290,7 +290,7 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	var tex_size = TEST_TEXTURE.get_size()
 	var vtx: Vector2 = normal * (tex_size * 0.5)
 
-	var quad = shape.build_quad_from_two_points(
+	var quad := shape.build_quad_from_two_points(
 		pt,
 		pt_next,
 		TEST_TEXTURE,
@@ -346,7 +346,7 @@ func test_get_width_for_tessellated_point():
 	assert_almost_eq(test_width, w_average, 0.1)
 
 
-func get_clockwise_points() -> Array:
+func get_clockwise_points() -> PackedVector2Array:
 	return [
 		Vector2(0, 0),
 		Vector2(50, -50),
