@@ -173,11 +173,10 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 		i += 1
 
 var width_params = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
-func test_build_quad_no_texture(width = use_parameters(width_params)):
+func test_build_quad_no_texture(width: float = use_parameters(width_params)):
 	var pt: Vector2 = Vector2(0,0)
 	var pt_next: Vector2 = Vector2(16,0)
 	var tex: Texture = null
-	var size: Vector2 = Vector2(8,8)
 	var flip_x: bool = false
 	var flip_y: bool = false
 	var first_point: bool = false
@@ -209,7 +208,6 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var pt_next: Vector2 = Vector2(16,0)
 	var tex: Texture = TEST_TEXTURE
 	var tex_height = tex.get_size().y
-	var size: Vector2 = Vector2(8,8)
 	var flip_x: bool = false
 	var flip_y: bool = false
 	var first_point: bool = false
@@ -260,14 +258,12 @@ func test_build_corner_quad():
 	var pt: Vector2 =      Vector2(000, 00)
 	var pt_next: Vector2 = Vector2(000, 16)
 	var tex: Texture = TEST_TEXTURE
-	var tex_height = tex.get_size().y
 	var width  = 1.0
 	var width_prev  = 1.0
 	var size: Vector2 = Vector2(8,8)
 	var flip_edges: bool = false
 	var custom_scale: float = 1.0
 	var custom_offset: float = 0.0
-	var fit_texture: int = SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
 
 	var corner_status = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
 	var q = SS2D_Shape_Base.build_quad_corner(
@@ -345,15 +341,15 @@ func test_build_corner_quad():
 								Vector2(4,4)+offset,Vector2(4,-4)+offset,
 								Vector2(0,0))
 
-func assert_quad_point_eq(gut,q,a,b,c,d,variance=Vector2(0,0)):
+func assert_quad_point_eq(_gut,q,a,b,c,d,variance=Vector2(0,0)):
 	assert_almost_eq(q.pt_a, a, variance, "Test Pt A")
 	assert_almost_eq(q.pt_b, b, variance, "Test Pt B")
 	assert_almost_eq(q.pt_c, c, variance, "Test Pt C")
 	assert_almost_eq(q.pt_d, d, variance, "Test Pt D")
 
 func test_weld_quads():
-	var left = SS2D_Quad.new(Vector2(-4,-4),Vector2(-4,4),Vector2(4,4),Vector2(4,-4), null, null, false)
-	var right = SS2D_Quad.new(Vector2(-8,-8),Vector2(-8,8),Vector2(8,8),Vector2(8,-8), null, null, false)
+	var left = SS2D_Quad.new(Vector2(-4, -4), Vector2(-4, 4), Vector2(4, 4), Vector2(4, -4), null, false)
+	var right = SS2D_Quad.new(Vector2(-8, -8), Vector2(-8, 8), Vector2(8, 8), Vector2(8, -8), null, false)
 	var custom_scale:float=1.0
 	SS2D_Shape_Base.weld_quads(left, right, custom_scale)
 	var pt_top = (left.pt_d + right.pt_a)/2.0

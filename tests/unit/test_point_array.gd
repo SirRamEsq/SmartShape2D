@@ -180,8 +180,8 @@ func test_material_override_add_delete():
 	pa.set_material_override([2,1], mmat2)
 	assert_eq(2, pa.get_material_overrides().size())
 
-	assert_true(mmat1.is_connected("changed", pa, "_on_material_override_changed"))
-	assert_true(mmat2.is_connected("changed", pa, "_on_material_override_changed"))
+	assert_true(mmat1.is_connected("changed", pa._on_material_override_changed))
+	assert_true(mmat2.is_connected("changed", pa._on_material_override_changed))
 
 
 	# Get
@@ -200,8 +200,8 @@ func test_material_override_add_delete():
 	pa.set_material_override([1,0], mmat2)
 	assert_eq(mmat2, pa.get_material_override([0,1]))
 
-	assert_false(mmat1.is_connected("changed", pa, "_on_material_override_changed"))
-	assert_true(mmat2.is_connected("changed", pa, "_on_material_override_changed"))
+	assert_false(mmat1.is_connected("changed", pa._on_material_override_changed))
+	assert_true(mmat2.is_connected("changed", pa._on_material_override_changed))
 
 
 	# Delete
@@ -210,8 +210,8 @@ func test_material_override_add_delete():
 	pa.remove_material_override([0,1])
 	assert_eq(0, pa.get_material_overrides().size())
 
-	assert_false(mmat1.is_connected("changed", pa, "_on_material_override_changed"))
-	assert_false(mmat2.is_connected("changed", pa, "_on_material_override_changed"))
+	assert_false(mmat1.is_connected("changed", pa._on_material_override_changed))
+	assert_false(mmat2.is_connected("changed", pa._on_material_override_changed))
 
 func generate_points() -> Array:
 	return [

@@ -6,7 +6,7 @@ const TUP = preload("../lib/tuple.gd")
 
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
-# Maps a key to each point
+# Maps a key to each point: Dict[int, SS2D_Point]
 @export var _points: Dictionary = {} : set = set_points
 # Contains all keys; the order of the keys determines the order of the points
 @export var _point_order: Array[int] = [] : set = set_point_order
