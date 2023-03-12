@@ -7,7 +7,7 @@ class_name SS2D_Shape_Open
 #########
 # GODOT #
 #########
-func _init():
+func _init() -> void:
 	super._init()
 	_is_instantiable = true
 

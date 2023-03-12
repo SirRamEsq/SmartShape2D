@@ -6,26 +6,29 @@ class_name SS2D_Shape_Closed
 ##########
 # CLOSED #
 ##########
-"""
-A Hole is a closed polygon
-Orientation doesn't matter
-Holes should not intersect each other
-"""
-var _holes = []
+
+# A Hole is a closed polygon
+# Orientation doesn't matter
+# Holes should not intersect each other
+
+# FIXME: unused member.
+#var _holes = []
 
 
-func set_holes(holes: Array):
-	_holes = holes
+# FIXME: unused method.
+#func set_holes(holes: Array):
+#	_holes = holes
 
 
-func get_holes() -> Array:
-	return _holes
+# FIXME: unused method.
+#func get_holes() -> Array:
+#	return _holes
 
 
 #########
 # GODOT #
 #########
-func _init():
+func _init() -> void:
 	super._init()
 	_is_instantiable = true
 
@@ -33,7 +36,7 @@ func _init():
 ############
 # OVERRIDE #
 ############
-func remove_point(key: int):
+func remove_point(key: int) -> void:
 	_points.remove_point(key)
 	_close_shape()
 	_update_curve(_points)
@@ -41,7 +44,7 @@ func remove_point(key: int):
 	emit_signal("points_modified")
 
 
-func set_point_array(a: SS2D_Point_Array, make_unique: bool = true):
+func set_point_array(a: SS2D_Point_Array, make_unique: bool = true) -> void:
 	if make_unique:
 		_points = a.duplicate(true)
 	else:
@@ -57,10 +60,10 @@ func has_minimum_point_count() -> bool:
 	return _points.get_point_count() >= 3
 
 
-func _build_meshes(edges: Array) -> Array:
-	var meshes = []
+func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
+	var meshes: Array[SS2D_Mesh] = []
 
-	var produced_fill_mesh = false
+	var produced_fill_mesh := false
 	for e in edges:
 		if not produced_fill_mesh:
 			if e.z_index > shape_material.fill_texture_z_index:
@@ -79,11 +82,9 @@ func _build_meshes(edges: Array) -> Array:
 	return meshes
 
 
+## Returns true if line segment 'a1a2' and 'b1b2' intersect.[br]
+## Find the four orientations needed for general and special cases.[br]
 func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> bool:
-	"""
-	Returns true if line segment 'a1a2' and 'b1b2' intersect.
-	Find the four orientations needed for general and special cases
-	"""
 	var o1: int = get_points_orientation([a1, a2, b1])
 	var o2: int = get_points_orientation([a1, a2, b2])
 	var o3: int = get_points_orientation([b1, b2, a1])
@@ -114,15 +115,15 @@ func do_edges_intersect(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> b
 	return false
 
 
-static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2):
-	var den = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y)
+static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vector2) -> Variant:
+	var den: float = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y)
 
 	# Check if lines are parallel or coincident
 	if den == 0:
 		return null
 
-	var ua = ((b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x)) / den
-	var ub = ((a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x)) / den
+	var ua: float = ((b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x)) / den
+	var ub: float = ((a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x)) / den
 
 	if ua < 0 or ub < 0 or ua > 1 or ub > 1:
 		return null
@@ -130,8 +131,8 @@ static func get_edge_intersection(a1: Vector2, a2: Vector2, b1: Vector2, b2: Vec
 	return Vector2(a1.x + ua * (a2.x - a1.x), a1.y + ua * (a2.y - a1.y))
 
 
-func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
-	var meshes = []
+func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) -> Array[SS2D_Mesh]:
+	var meshes: Array[SS2D_Mesh] = []
 	if s_mat == null:
 		return meshes
 	if s_mat.fill_textures.is_empty():
@@ -139,15 +140,15 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	if points.size() < 3:
 		return meshes
 
-	var tex = null
+	var tex: Texture2D = null
 	if s_mat.fill_textures.is_empty():
 		return meshes
 	tex = s_mat.fill_textures[0]
-	var tex_size = tex.get_size()
+	var tex_size: Vector2 = tex.get_size()
 
 	# Points to produce the fill mesh
 	var fill_points: PackedVector2Array = PackedVector2Array()
-	var polygons = Geometry2D.offset_polygon(
+	var polygons: Array[PackedVector2Array] = Geometry2D.offset_polygon(
 		PackedVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
 	)
 	points = polygons[0]
@@ -178,10 +179,10 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	st.index()
 	st.generate_normals()
 	st.generate_tangents()
-	var array_mesh = st.commit()
-	var flip = false
-	var transform = Transform2D()
-	var mesh_data := SS2D_Mesh.new(tex, flip, transform, [array_mesh])
+	var array_mesh := st.commit()
+	var flip := false
+	var trans := Transform2D()
+	var mesh_data := SS2D_Mesh.new(tex, flip, trans, [array_mesh])
 	mesh_data.material = s_mat.fill_mesh_material
 	mesh_data.z_index = s_mat.fill_texture_z_index
 	mesh_data.z_as_relative = true
@@ -191,19 +192,17 @@ func _build_fill_mesh(points: Array, s_mat: SS2D_Material_Shape) -> Array:
 	return meshes
 
 
+# Will mutate the _points to ensure this is a closed_shape.
+# last point will be constrained to first point
+# returns true if _points is modified
 func _close_shape() -> bool:
-	"""
-	Will mutate the _points to ensure this is a closed_shape
-	last point will be constrained to first point
-	returns true if _points is modified
-	"""
 	if is_shape_closed():
 		return false
 	if not has_minimum_point_count():
 		return false
 
-	var key_first = _points.get_point_key_at_index(0)
-	var key_last = _points.get_point_key_at_index(get_point_count() - 1)
+	var key_first: int = _points.get_point_key_at_index(0)
+	var key_last: int = _points.get_point_key_at_index(get_point_count() - 1)
 
 	# If points are not the same pos, add new point
 	if get_point_position(key_first) != get_point_position(key_last):
@@ -215,35 +214,35 @@ func _close_shape() -> bool:
 
 
 func is_shape_closed() -> bool:
-	var point_count = _points.get_point_count()
+	var point_count: int = _points.get_point_count()
 	if not has_minimum_point_count():
 		return false
-	var key1 = _points.get_point_key_at_index(0)
-	var key2 = _points.get_point_key_at_index(point_count - 1)
+	var key1: int = _points.get_point_key_at_index(0)
+	var key2: int = _points.get_point_key_at_index(point_count - 1)
 	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
 
 
-func add_points(verts: Array, starting_index: int = -1, key: int = -1) -> Array:
+func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
 	for i in range(0, verts.size(), 1):
 		print("%s | %s" % [i, verts[i]])
 	return super.add_points(verts, adjust_add_point_index(starting_index), key)
 
 
-func add_point(position: Vector2, index: int = -1, key: int = -1) -> int:
-	return super.add_point(position, adjust_add_point_index(index), key)
+func add_point(p_position: Vector2, index: int = -1, key: int = -1) -> int:
+	return super.add_point(p_position, adjust_add_point_index(index), key)
 
 
 func adjust_add_point_index(index: int) -> int:
 	# Don't allow a point to be added after the last point of the closed shape or before the first
 	if is_shape_closed():
 		if index < 0 or (index > get_point_count() - 1):
-			index = max(get_point_count() - 1, 0)
+			index = maxi(get_point_count() - 1, 0)
 		if index < 1:
 			index = 1
 	return index
 
 
-func _add_point_update():
+func _add_point_update() -> void:
 	# Return early if _close_shape() adds another point
 	# _add_point_update() will be called again by having another point added
 	if _close_shape():
@@ -251,23 +250,23 @@ func _add_point_update():
 	super._add_point_update()
 
 
-func generate_collision_points():
-	var points: PackedVector2Array = PackedVector2Array()
-	var collision_width = 1.0
-	var collision_extends = 0.0
-	var verts = get_vertices()
-	var t_points = get_tessellated_points()
+func generate_collision_points() -> PackedVector2Array:
+	var points := PackedVector2Array()
+#	var collision_width := 1.0
+#	var collision_extends := 0.0
+	var verts: PackedVector2Array = get_vertices()
+	var t_points: PackedVector2Array = get_tessellated_points()
 	if t_points.size() < 2:
 		return points
-	var indicies = []
+	var indicies: Array[int] = []
 	for i in range(verts.size()):
 		indicies.push_back(i)
-	var edge_data = SS2D_IndexMap.new(indicies, null)
+	var edge_data := SS2D_IndexMap.new(indicies, null)
 	# size of 1, has no meaning in a closed shape
-	var edge = _build_edge_with_material(edge_data, collision_offset - 1.0, 1)
+	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, 1)
 	_weld_quad_array(edge.quads, false)
-	var first_quad = edge.quads[0]
-	var last_quad = edge.quads.back()
+	var first_quad: SS2D_Quad = edge.quads[0]
+	var last_quad: SS2D_Quad = edge.quads.back()
 	weld_quads(last_quad, first_quad, 1.0)
 	if not edge.quads.is_empty():
 		for quad in edge.quads:
@@ -280,7 +279,7 @@ func generate_collision_points():
 	return points
 
 
-func _on_dirty_update():
+func _on_dirty_update() -> void:
 	if _dirty:
 		update_render_nodes()
 		clear_cached_data()
@@ -295,32 +294,30 @@ func _on_dirty_update():
 		emit_signal("on_dirty_update")
 
 
-func cache_edges():
+func cache_edges() -> void:
 	if shape_material != null and render_edges:
 		_edges = _build_edges(shape_material, get_vertices())
 	else:
 		_edges = []
 
 
-"""
-Differs from the main get_meta_material_index_mapping
-in that the points wrap around
-"""
-static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: Array) -> Array:
+## Differs from the main get_meta_material_index_mapping
+## in that the points wrap around.
+static func get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
 	return _get_meta_material_index_mapping(s_material, verts, true)
 
 
-func _merge_index_maps(imaps:Array, verts:Array) -> Array:
+func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
 	# See if any edges have both the first (0) and last idx (size)
 	# Merge them into one if so
-	var final_edges = imaps.duplicate()
-	var edges_by_material = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
+	var final_edges: Array[SS2D_IndexMap] = imaps.duplicate()
+	var edges_by_material: Dictionary = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
 	# Erase any with null material
 	edges_by_material.erase(null)
-	for material in edges_by_material:
-		var edge_first_idx = null
-		var edge_last_idx = null
-		for e in edges_by_material[material]:
+	for mat in edges_by_material:
+		var edge_first_idx: SS2D_IndexMap = null
+		var edge_last_idx: SS2D_IndexMap = null
+		for e in edges_by_material[mat]:
 			if e.indicies.has(0):
 				edge_first_idx = e
 			if e.indicies.has(verts.size()-1):
@@ -333,15 +330,16 @@ func _merge_index_maps(imaps:Array, verts:Array) -> Array:
 			else:
 				final_edges.erase(edge_last_idx)
 				final_edges.erase(edge_first_idx)
-				var indicies = edge_last_idx.indicies + edge_first_idx.indicies
-				var merged_edge = SS2D_IndexMap.new(indicies, material)
+				var indicies := edge_last_idx.indicies + edge_first_idx.indicies
+				var merged_edge := SS2D_IndexMap.new(indicies, mat)
 				final_edges.push_back(merged_edge)
 
 	return final_edges
 
-func _imap_contains_all_points(imap:SS2D_IndexMap, verts:Array)->bool:
+
+func _imap_contains_all_points(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
 	return imap.indicies[0] == 0 and imap.indicies.back() == verts.size()-1
 
-func _is_edge_contiguous(imap:SS2D_IndexMap, verts:Array)->bool:
-	var val = _imap_contains_all_points(imap, verts)
-	return val
+
+func _is_edge_contiguous(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
+	return _imap_contains_all_points(imap, verts)

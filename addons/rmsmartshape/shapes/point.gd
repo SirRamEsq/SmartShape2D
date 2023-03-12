@@ -5,14 +5,14 @@ class_name SS2D_Point
 @export var position: Vector2 : set = _set_position
 @export var point_in: Vector2 : set = _set_point_in
 @export var point_out: Vector2 : set = _set_point_out
-@export var properties: Resource : set = _set_properties
+@export var properties: SS2D_VertexProperties : set = _set_properties
 
 # If class members are written to, the 'changed' signal may not be emitted
 # Signal is only emitted when data is actually changed
 # If assigned data is the same as the existing data, no signal is emitted
 
 
-func _init(pos: Vector2 = Vector2(0, 0)):
+func _init(pos: Vector2 = Vector2(0, 0)) -> void:
 	position = pos
 	point_in = Vector2(0, 0)
 	point_out = Vector2(0, 0)
@@ -32,29 +32,29 @@ func equals(other: SS2D_Point) -> bool:
 	return true
 
 
-func _set_position(v: Vector2):
+func _set_position(v: Vector2) -> void:
 	if position != v:
 		position = v
 		emit_signal("changed")
 	notify_property_list_changed()
 
 
-func _set_point_in(v: Vector2):
+func _set_point_in(v: Vector2) -> void:
 	if point_in != v:
 		point_in = v
 		emit_signal("changed")
 	notify_property_list_changed()
 
 
-func _set_point_out(v: Vector2):
+func _set_point_out(v: Vector2) -> void:
 	if point_out != v:
 		point_out = v
 		emit_signal("changed")
 	notify_property_list_changed()
 
 
-func _set_properties(other: SS2D_VertexProperties):
-	if not properties.equals(other):
+func _set_properties(other: SS2D_VertexProperties) -> void:
+	if properties == null or not properties.equals(other):
 		properties = other.duplicate(true)
 		emit_signal("changed")
-	notify_property_list_changed()
+		notify_property_list_changed()

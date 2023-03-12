@@ -3,12 +3,10 @@
 extends SS2D_Shape_Base
 class_name SS2D_Shape_Meta
 
-"""
-This shape will set the point_array data of all children shapes
-"""
+## This shape will set the point_array data of all children shapes.
 
 @export var press_to_update_cached_children: bool = false : set = _on_update_children
-var _cached_shape_children: Array = []
+var _cached_shape_children: Array[SS2D_Shape_Base] = []
 
 
 #############
@@ -64,14 +62,14 @@ func _update_cached_children() -> void:
 	if treat_as_closed():
 		can_edit = false
 		if editor_debug:
-			print ("META Shape contains Closed shapes, edit the meta shape using the child closed shape; DO NOT EDIT META DIRECTLY")
+			print("META Shape contains Closed shapes, edit the meta shape using the child closed shape; DO NOT EDIT META DIRECTLY")
 	else:
 		can_edit = true
 		if editor_debug:
-			print ("META Shape contains no Closed shapes, can edit META shape directly")
+			print("META Shape contains no Closed shapes, can edit META shape directly")
 
 
-func _get_shapes(n: Node, a: Array = []) -> Array:
+func _get_shapes(n: Node, a: Array[SS2D_Shape_Base] = []) -> Array[SS2D_Shape_Base]:
 	for c in n.get_children():
 		if c is SS2D_Shape_Base:
 			a.push_back(c)
@@ -84,10 +82,10 @@ func _add_to_meta(n: Node) -> void:
 		return
 	# Assign node to have the same point array data as this meta shape
 	n.set_point_array(_points, false)
-	n.connect("points_modified",Callable(self,"_update_shapes").bind(n))
+	n.connect("points_modified", self._update_shapes.bind(n))
 
 
-func _update_shapes(except: Array = []) -> void:
+func _update_shapes(except: Array[SS2D_Shape_Base] = []) -> void:
 	_update_curve(_points)
 	for s in _cached_shape_children:
 		if not except.has(s):
@@ -100,11 +98,11 @@ func _remove_from_meta(n: Node) -> void:
 		return
 	# Make Point Data Unique
 	n.set_point_array(n.get_point_array(), true)
-	n.disconnect("points_modified",Callable(self,"_update_shapes"))
+	n.disconnect("points_modified", self._update_shapes)
 
 
 func treat_as_closed() -> bool:
-	var has_closed = false
+	var has_closed := false
 	for c in _cached_shape_children:
 		if c is SS2D_Shape_Closed:
 			has_closed = true

@@ -7,25 +7,25 @@ class_name SS2D_VertexProperties
 @export var width: float #: set = set_width
 
 
-func set_texture_idx(i: int):
+func set_texture_idx(i: int) -> void:
 	texture_idx = i
 	emit_signal("changed")
 	notify_property_list_changed()
 
 
-func set_flip(b: bool):
+func set_flip(b: bool) -> void:
 	flip = b
 	emit_signal("changed")
 	notify_property_list_changed()
 
 
-func set_width(w: float):
+func set_width(w: float) -> void:
 	width = w
 	emit_signal("changed")
 	notify_property_list_changed()
 
 
-func _init():
+func _init() -> void:
 	texture_idx = 0
 	flip = false
 	width = 1.0

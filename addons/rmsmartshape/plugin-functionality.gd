@@ -1,14 +1,12 @@
 @tool
 extends RefCounted
 
-"""
-- Everything in this script should be static
-- There is one reason to have code in this script
-	1. To separate out code from the main plugin script to ease testing
-
-Common Abbreviations
-et = editor transform (viewport's canvas transform)
-"""
+## - Everything in this script should be static
+## - There is one reason to have code in this script
+##		1. To separate out code from the main plugin script to ease testing
+##
+## Common Abbreviations
+## et = editor transform (viewport's canvas transform)
 
 const TUP = preload("lib/tuple.gd")
 
@@ -17,30 +15,32 @@ const TUP = preload("lib/tuple.gd")
 #########
 static func get_intersecting_control_point_in(
 	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
-) -> Array:
+) -> Array[int]:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, true)
+
 
 static func get_intersecting_control_point_out(
 	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
-) -> Array:
+) -> Array[int]:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, false)
+
 
 static func _get_intersecting_control_point(
 	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float, _in: bool
-) -> Array:
-	var points = []
+) -> Array[int]:
+	var points: Array[int] = []
 	var xform: Transform2D = et * s.get_global_transform()
 	for i in range(0, s.get_point_count(), 1):
-		var key = s.get_point_key_at_index(i)
-		var vec_pos = s.get_point_position(key)
-		var c_pos = Vector2.ZERO
+		var key: int = s.get_point_key_at_index(i)
+		var vec_pos: Vector2 = s.get_point_position(key)
+		var c_pos := Vector2.ZERO
 		if _in:
 			c_pos = s.get_point_in(key)
 		else:
 			c_pos = s.get_point_out(key)
 		if c_pos == Vector2.ZERO:
 			continue
-		var final_pos = vec_pos + c_pos
+		var final_pos := vec_pos + c_pos
 		final_pos = xform * final_pos
 		if final_pos.distance_to(mouse_pos) <= grab_threshold:
 			points.push_back(key)
@@ -57,8 +57,8 @@ static func action_set_pivot(
 	s: SS2D_Shape_Base,
 	et: Transform2D,
 	pos: Vector2
-):
-	var old_pos = et * s.get_parent().get_global_transform() * s.position
+) -> void:
+	var old_pos: Vector2 = et * s.get_parent().get_global_transform() * s.position
 	undo.create_action("Set Pivot")
 
 	undo.add_do_method(Callable(update_node, update_method).bind(pos))
@@ -66,9 +66,10 @@ static func action_set_pivot(
 
 	undo.commit_action()
 
+
 static func action_move_verticies(
 	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, action
-):
+) -> void:
 	undo.create_action("Move Vertex")
 
 	for i in range(0, action.keys.size(), 1):
@@ -91,7 +92,7 @@ static func action_move_control_points(
 	action,
 	_in: bool,
 	_out: bool
-):
+) -> void:
 	if not _in and not _out:
 		return
 	undo.create_action("Move Control Point")
@@ -115,7 +116,7 @@ static func action_move_control_points(
 
 static func action_delete_point_in(
 	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, key: int
-):
+) -> void:
 	var from_position_in = s.get_point_in(key)
 	undo.create_action("Delete Control Point In")
 
@@ -128,9 +129,10 @@ static func action_delete_point_in(
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
 
+
 static func action_delete_point_out(
 	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, key: int
-):
+) -> void:
 	var from_position_out = s.get_point_out(key)
 	undo.create_action("Delete Control Point Out")
 
@@ -143,24 +145,26 @@ static func action_delete_point_out(
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
 
-static func get_constrained_points_to_delete(s: SS2D_Shape_Base, k: int, keys = []):
+
+static func get_constrained_points_to_delete(s: SS2D_Shape_Base, k: int, keys: Array[int] = []) -> Array[int]:
 	keys.push_back(k)
-	var constraints = s.get_point_constraints(k)
+	var constraints: Dictionary = s.get_point_constraints(k)
 	for tuple in constraints:
-		var constraint = constraints[tuple]
+		var constraint: SS2D_Point_Array.CONSTRAINT = constraints[tuple]
 		if constraint == SS2D_Point_Array.CONSTRAINT.NONE:
 			continue
-		var k2 = TUP.get_other_value_from_tuple(tuple, k)
+		var k2: int = TUP.get_other_value_from_tuple(tuple, k)
 		if constraint & SS2D_Point_Array.CONSTRAINT.ALL:
 			if not keys.has(k2):
 				get_constrained_points_to_delete(s, k2, keys)
 	return keys
 
+
 static func action_delete_point(
 	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, first_key: int
-):
-	var dupe = s.get_point_array().duplicate(true)
-	var keys = get_constrained_points_to_delete(s, first_key)
+) -> void:
+	var dupe: SS2D_Point_Array = s.get_point_array().duplicate(true)
+	var keys: Array[int] = get_constrained_points_to_delete(s, first_key)
 	undo.create_action("Delete Point")
 	for key in keys:
 		undo.add_do_method(s.remove_point.bind(key))
@@ -172,6 +176,8 @@ static func action_delete_point(
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
 
+
+## Will return key of added point.
 static func action_add_point(
 	update_node: Node,
 	update_method: String,
@@ -180,10 +186,7 @@ static func action_add_point(
 	new_point: Vector2,
 	idx: int = -1
 ) -> int:
-	"""
-	Will return key of added point
-	"""
-	var new_key = s.get_next_key()
+	var new_key: int = s.get_next_key()
 	undo.create_action("Add Point: %s" % new_point)
 
 	undo.add_do_method(s.add_point.bind(new_point, idx, new_key))
@@ -196,6 +199,8 @@ static func action_add_point(
 	action_invert_orientation(update_node, update_method, undo, s)
 	return new_key
 
+
+
 static func action_split_curve(
 	update_node: Node,
 	update_method: String,
@@ -204,12 +209,10 @@ static func action_split_curve(
 	idx: int,
 	gpoint: Vector2,
 	xform: Transform2D
-):
-	"""
-	Will split the shape at the given index
-	The key of the new point will be returned
-	If the orientation is changed, idx will be updated
-	"""
+) -> int:
+	## Will split the shape at the given index.[br]
+	## The key of the new point will be returned.[br]
+	## If the orientation is changed, idx will be updated.[br]
 	idx = s.adjust_add_point_index(idx)
 	undo.create_action("Split Curve")
 
@@ -220,9 +223,10 @@ static func action_split_curve(
 	undo.add_undo_method(Callable(update_node, update_method))
 
 	undo.commit_action()
-	var key = s.get_point_key_at_index(idx)
+	var key: int = s.get_point_key_at_index(idx)
 	action_invert_orientation(update_node, update_method, undo, s)
 	return key
+
 
 static func should_invert_orientation(s: SS2D_Shape_Base) -> bool:
 	if s == null:
@@ -231,18 +235,17 @@ static func should_invert_orientation(s: SS2D_Shape_Base) -> bool:
 		return false
 	return not s.are_points_clockwise() and s.get_point_count() >= 3
 
+
 static func action_invert_orientation(
 	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base
 ) -> bool:
-	"""
-	Will reverse the orientation of the shape verticies
-	This does not create or commit an undo action on its own
-	It's meant to be included with another action
-	Therefore, the function should be called between a block like so:
-		undo.create_action("xxx")
-		action_invert_orientation()-
-		undo.commit_action()
-	"""
+	## Will reverse the orientation of the shape verticies
+	## This does not create or commit an undo action on its own
+	## It's meant to be included with another action
+	## Therefore, the function should be called between a block like so:
+	##     undo.create_action("xxx")
+	##     action_invert_orientation()-
+	##     undo.commit_action()
 	if should_invert_orientation(s):
 		undo.create_action("Invert Orientation")
 
