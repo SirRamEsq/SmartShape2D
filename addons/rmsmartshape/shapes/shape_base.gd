@@ -1052,6 +1052,8 @@ func _weld_quad_array(
 
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
+		var next_quad: SS2D_Quad = quads[index + 1]
+		SS2D_Shape_Base.weld_quads(this_quad, next_quad)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
