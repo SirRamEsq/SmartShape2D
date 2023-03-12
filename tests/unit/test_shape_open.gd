@@ -94,10 +94,10 @@ func test_tess_point_vertex_relationship():
 	assert_ne(points.size(), t_verts.size())
 
 	var test_idx := 4
-	var test_t_idx := shape.get_tessellated_idx_from_point(verts, t_verts, test_idx)
+	var test_t_idx := SS2D_Shape_Open.get_tessellated_idx_from_point(verts, t_verts, test_idx)
 	assert_ne(test_idx, test_t_idx)
 	assert_eq(verts[test_idx], t_verts[test_t_idx])
-	var new_test_idx := shape.get_vertex_idx_from_tessellated_point(verts, t_verts, test_t_idx)
+	var new_test_idx := SS2D_Shape_Open.get_vertex_idx_from_tessellated_point(verts, t_verts, test_t_idx)
 	assert_eq(test_idx, new_test_idx)
 
 	var results := [
@@ -203,7 +203,7 @@ func test_get_edge_meta_materials_one():
 	var points = get_clockwise_points()
 	shape.add_points(points)
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
-	var mappings = shape.get_meta_material_index_mapping(s_m, points)
+	var mappings = SS2D_Shape_Open.get_meta_material_index_mapping(s_m, points)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
 	assert_eq(mappings.size(), 1, "Should be one EdgeData specified")
@@ -260,7 +260,7 @@ func test_get_edge_meta_materials_many():
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	assert_eq(shape.get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
-	var mappings = shape.get_meta_material_index_mapping(s_m, points)
+	var mappings = SS2D_Shape_Open.get_meta_material_index_mapping(s_m, points)
 	assert_eq(mappings.size(), edge_materials_count, "Expecting %s materials" % edge_materials_count)
 	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
 	for i in range(0, mappings.size(), 1):
@@ -275,8 +275,6 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	var shape = SS2D_Shape_Open.new()
 	add_child_autofree(shape)
 
-	var edge_mat = SS2D_Material_Edge.new()
-
 	var pt_prev = Vector2(100, 100)
 	var pt = Vector2(200, 100)
 	var pt_next = Vector2(300, 100)
@@ -290,11 +288,10 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	var tex_size = TEST_TEXTURE.get_size()
 	var vtx: Vector2 = normal * (tex_size * 0.5)
 
-	var quad := shape.build_quad_from_two_points(
+	var quad := SS2D_Shape_Open.build_quad_from_two_points(
 		pt,
 		pt_next,
 		TEST_TEXTURE,
-		null,
 		width * TEST_TEXTURE.get_size().y * c_scale,
 		false,
 		false,
@@ -336,8 +333,8 @@ func test_get_width_for_tessellated_point():
 
 	var t_points = shape.get_tessellated_points()
 	points = shape.get_vertices()
-	var t_idx_1 = shape.get_tessellated_idx_from_point(points, t_points, idx1)
-	var t_idx_2 = shape.get_tessellated_idx_from_point(points, t_points, idx2)
+	var t_idx_1 = SS2D_Shape_Open.get_tessellated_idx_from_point(points, t_points, idx1)
+	var t_idx_2 = SS2D_Shape_Open.get_tessellated_idx_from_point(points, t_points, idx2)
 	var test_t_idx = int(floor((t_idx_1 + t_idx_2) / 2.0))
 	assert_ne(t_idx_1, t_idx_2)
 	assert_ne(test_t_idx, t_idx_1)

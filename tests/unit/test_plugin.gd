@@ -13,8 +13,8 @@ func test_intersect_control_point():
 	shape.set_point_out(key, Vector2(32, 0))
 	var et = Transform2D()
 	var grab = 16.0
-	var f1 = funcref(FUNC, "get_intersecting_control_point_out")
-	var f2 = funcref(FUNC, "get_intersecting_control_point_in")
+	var f1 = Callable(FUNC, "get_intersecting_control_point_out")
+	var f2 = Callable(FUNC, "get_intersecting_control_point_in")
 	var functions = [f1, f2]
 	var f_name = ["out", "in"]
 	var f_offset = [Vector2(32, 0), Vector2(-32, 0)]
