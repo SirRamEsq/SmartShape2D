@@ -3,7 +3,7 @@
  "compact_mode": false,
  "config_file": "res://.gutconfig.json",
  "dirs": [
-  "res://tests/unit"
+  "res://tests"
  ],
  "disable_colors": false,
  "double_strategy": "partial",
@@ -13,7 +13,7 @@
  "gut_on_top": true,
  "hide_orphans": false,
  "ignore_pause": false,
- "include_subdirs": false,
+ "include_subdirs": true,
  "inner_class": null,
  "junit_xml_file": "",
  "junit_xml_timestamp": false,
