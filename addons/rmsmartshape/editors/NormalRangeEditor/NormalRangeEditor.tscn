@@ -1,35 +1,32 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=5 format=3 uid="uid://cg1vy768oxwxr"]
 
-[ext_resource path="res://addons/rmsmartshape/editors/NormalRangeEditor/progress_texture.png" type="Texture2D" id=1]
-[ext_resource path="res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.gd" type="Script" id=2]
-[ext_resource path="res://addons/rmsmartshape/editors/NormalRangeEditor/over_texture.png" type="Texture2D" id=3]
-[ext_resource path="res://addons/rmsmartshape/editors/NormalRangeEditor/under_texture.png" type="Texture2D" id=4]
+[ext_resource type="Texture2D" uid="uid://dajqljvjm2d2q" path="res://addons/rmsmartshape/editors/NormalRangeEditor/progress_texture.png" id="1"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://dgd4sbhsw1no3" path="res://addons/rmsmartshape/editors/NormalRangeEditor/over_texture.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://cax163h05b60j" path="res://addons/rmsmartshape/editors/NormalRangeEditor/under_texture.png" id="4"]
 
 [node name="NormalRangeEditor" type="VBoxContainer"]
+anchors_preset = -1
 anchor_right = 0.087
 anchor_bottom = 0.027
 offset_right = 38.912
 offset_bottom = 203.8
 size_flags_horizontal = 3
 size_flags_vertical = 9
-script = ExtResource( 2 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
+script = ExtResource("2")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
-offset_right = 128.0
-offset_bottom = 128.0
+layout_mode = 2
 
 [node name="TextureProgressBar" type="TextureProgressBar" parent="CenterContainer"]
-offset_right = 128.0
-offset_bottom = 128.0
-pivot_offset = Vector2( 64, 64 )
+unique_name_in_owner = true
+layout_mode = 2
 max_value = 1.0
 step = 0.0
 value = 1.0
-texture_under = ExtResource( 4 )
-texture_over = ExtResource( 3 )
-texture_progress = ExtResource( 1 )
 fill_mode = 4
-radial_fill_degrees = 85.3
+texture_under = ExtResource("4")
+texture_over = ExtResource("3")
+texture_progress = ExtResource("1")
+radial_initial_angle = 79.3
+radial_fill_degrees = 93.8

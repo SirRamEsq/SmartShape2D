@@ -1,7 +1,10 @@
 extends EditorProperty
 class_name SS2D_NormalRangeEditorProperty
 
-var control = preload("res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.tscn").instantiate()
+var control: Control = preload(
+		"res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.tscn"
+	).instantiate()
+
 
 func _init() -> void:
 	add_child(control)
