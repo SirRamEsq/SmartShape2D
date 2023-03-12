@@ -53,7 +53,7 @@ static func _get_intersecting_control_point(
 static func action_set_pivot(
 	update_node: Node,
 	update_method: String,
-	undo: UndoRedo,
+	undo: EditorUndoRedoManager,
 	s: SS2D_Shape_Base,
 	et: Transform2D,
 	pos: Vector2
@@ -61,14 +61,14 @@ static func action_set_pivot(
 	var old_pos: Vector2 = et * s.get_parent().get_global_transform() * s.position
 	undo.create_action("Set Pivot")
 
-	undo.add_do_method(Callable(update_node, update_method).bind(pos))
-	undo.add_undo_method(Callable(update_node, update_method).bind(et.affine_inverse() * old_pos))
+	undo.add_do_method(update_node, update_method,pos)
+	undo.add_undo_method(update_node, update_method, et.affine_inverse() * old_pos)
 
 	undo.commit_action()
 
 
 static func action_move_verticies(
-	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, action
+	update_node: Node, update_method: String, undo: EditorUndoRedoManager, s: SS2D_Shape_Base, action
 ) -> void:
 	undo.create_action("Move Vertex")
 
@@ -76,18 +76,18 @@ static func action_move_verticies(
 		var key = action.keys[i]
 		var from_position = action.starting_positions[i]
 		var this_position = s.get_point_position(key)
-		undo.add_do_method(s.set_point_position.bind(key, this_position))
-		undo.add_undo_method(s.set_point_position.bind(key, from_position))
+		undo.add_do_method(s, "set_point_position", key, this_position)
+		undo.add_undo_method(s, "set_point_position", key, from_position)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 
 	undo.commit_action()
 
 static func action_move_control_points(
 	update_node: Node,
 	update_method: String,
-	undo: UndoRedo,
+	undo: EditorUndoRedoManager,
 	s: SS2D_Shape_Base,
 	action,
 	_in: bool,
@@ -104,43 +104,43 @@ static func action_move_control_points(
 		var to_position_in = s.get_point_in(key)
 		var to_position_out = s.get_point_out(key)
 		if _in:
-			undo.add_do_method(s.set_point_in.bind(key, to_position_in))
-			undo.add_undo_method(s.set_point_in.bind(key, from_position_in))
+			undo.add_do_method(s, "set_point_in", key, to_position_in)
+			undo.add_undo_method(s, "set_point_in", key, from_position_in)
 		if _out:
-			undo.add_do_method(s.set_point_out.bind(key, to_position_out))
-			undo.add_undo_method(s.set_point_out.bind(key, from_position_out))
+			undo.add_do_method(s, "set_point_out", key, to_position_out)
+			undo.add_undo_method(s, "set_point_out", key, from_position_out)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 	undo.commit_action()
 
 static func action_delete_point_in(
-	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, key: int
+	update_node: Node, update_method: String, undo: EditorUndoRedoManager, s: SS2D_Shape_Base, key: int
 ) -> void:
 	var from_position_in = s.get_point_in(key)
 	undo.create_action("Delete Control Point In")
 
-	undo.add_do_method(s.set_point_in.bind(key, Vector2.ZERO))
-	undo.add_undo_method(s.set_point_in.bind(key, from_position_in))
+	undo.add_do_method(s, "set_point_in", key, Vector2.ZERO)
+	undo.add_undo_method(s, "set_point_in", key, from_position_in)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
 
 
 static func action_delete_point_out(
-	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, key: int
+	update_node: Node, update_method: String, undo: EditorUndoRedoManager, s: SS2D_Shape_Base, key: int
 ) -> void:
 	var from_position_out = s.get_point_out(key)
 	undo.create_action("Delete Control Point Out")
 
-	undo.add_do_method(s.set_point_out.bind(key, Vector2.ZERO))
-	undo.add_undo_method(s.set_point_out.bind(key, from_position_out))
+	undo.add_do_method(s, "set_point_out", key, Vector2.ZERO)
+	undo.add_undo_method(s, "set_point_out", key, from_position_out)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
@@ -161,17 +161,17 @@ static func get_constrained_points_to_delete(s: SS2D_Shape_Base, k: int, keys: A
 
 
 static func action_delete_point(
-	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base, first_key: int
+	update_node: Node, update_method: String, undo: EditorUndoRedoManager, s: SS2D_Shape_Base, first_key: int
 ) -> void:
 	var dupe: SS2D_Point_Array = s.get_point_array().duplicate(true)
 	var keys: Array[int] = get_constrained_points_to_delete(s, first_key)
 	undo.create_action("Delete Point")
 	for key in keys:
-		undo.add_do_method(s.remove_point.bind(key))
-	undo.add_undo_method(s.set_point_array.bind(dupe))
+		undo.add_do_method(s, "remove_point", key)
+	undo.add_undo_method(s, "set_point_array", dupe)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
@@ -181,7 +181,7 @@ static func action_delete_point(
 static func action_add_point(
 	update_node: Node,
 	update_method: String,
-	undo: UndoRedo,
+	undo: EditorUndoRedoManager,
 	s: SS2D_Shape_Base,
 	new_point: Vector2,
 	idx: int = -1
@@ -189,11 +189,11 @@ static func action_add_point(
 	var new_key: int = s.get_next_key()
 	undo.create_action("Add Point: %s" % new_point)
 
-	undo.add_do_method(s.add_point.bind(new_point, idx, new_key))
-	undo.add_undo_method(s.remove_point.bind(new_key))
+	undo.add_do_method(s, "add_point", new_point, idx, new_key)
+	undo.add_undo_method(s, "remove_point", new_key)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 
 	undo.commit_action()
 	action_invert_orientation(update_node, update_method, undo, s)
@@ -204,7 +204,7 @@ static func action_add_point(
 static func action_split_curve(
 	update_node: Node,
 	update_method: String,
-	undo: UndoRedo,
+	undo: EditorUndoRedoManager,
 	s: SS2D_Shape_Base,
 	idx: int,
 	gpoint: Vector2,
@@ -216,11 +216,11 @@ static func action_split_curve(
 	idx = s.adjust_add_point_index(idx)
 	undo.create_action("Split Curve")
 
-	undo.add_do_method(s.add_point.bind(xform.affine_inverse() * gpoint, idx))
-	undo.add_undo_method(s.remove_point_at_index.bind(idx))
+	undo.add_do_method(s, "add_point", xform.affine_inverse() * gpoint, idx)
+	undo.add_undo_method(s, "remove_point_at_index", idx)
 
-	undo.add_do_method(Callable(update_node, update_method))
-	undo.add_undo_method(Callable(update_node, update_method))
+	undo.add_do_method(update_node, update_method)
+	undo.add_undo_method(update_node, update_method)
 
 	undo.commit_action()
 	var key: int = s.get_point_key_at_index(idx)
@@ -237,7 +237,7 @@ static func should_invert_orientation(s: SS2D_Shape_Base) -> bool:
 
 
 static func action_invert_orientation(
-	update_node: Node, update_method: String, undo: UndoRedo, s: SS2D_Shape_Base
+	update_node: Node, update_method: String, undo: EditorUndoRedoManager, s: SS2D_Shape_Base
 ) -> bool:
 	## Will reverse the orientation of the shape verticies
 	## This does not create or commit an undo action on its own
@@ -249,11 +249,11 @@ static func action_invert_orientation(
 	if should_invert_orientation(s):
 		undo.create_action("Invert Orientation")
 
-		undo.add_do_method(s.invert_point_order)
-		undo.add_undo_method(s.invert_point_order)
+		undo.add_do_method(s, "invert_point_order")
+		undo.add_undo_method(s, "invert_point_order")
 
-		undo.add_do_method(Callable(update_node, update_method))
-		undo.add_undo_method(Callable(update_node, update_method))
+		undo.add_do_method(update_node, update_method)
+		undo.add_undo_method(update_node, update_method)
 
 		undo.commit_action()
 		return true

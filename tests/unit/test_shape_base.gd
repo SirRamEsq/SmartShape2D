@@ -1,5 +1,6 @@
 extends "res://addons/gut/test.gd"
-var TEST_TEXTURE = preload("res://gut/unit/test.png")
+
+var TEST_TEXTURE: Texture2D = preload("res://tests/unit/test.png")
 var n_right = Vector2(1, 0)
 var n_left = Vector2(-1, 0)
 var n_down = Vector2(0, 1)

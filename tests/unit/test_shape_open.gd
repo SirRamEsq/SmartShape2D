@@ -1,6 +1,6 @@
 extends "res://addons/gut/test.gd"
 
-var TEST_TEXTURE = preload("res://gut/unit/test.png")
+var TEST_TEXTURE: Texture2D = preload("res://tests/unit/test.png")
 
 
 class z_sort:
