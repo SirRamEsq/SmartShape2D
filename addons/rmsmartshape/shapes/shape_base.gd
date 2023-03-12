@@ -695,19 +695,28 @@ func should_flip_edges() -> bool:
 	return not (are_points_clockwise() != flip_edges)
 
 
-func generate_collision_points() -> PackedVector2Array:
-	var points: PackedVector2Array = PackedVector2Array()
-	var verts: PackedVector2Array = get_vertices()
-	var t_points: PackedVector2Array = get_tessellated_points()
-	if t_points.size() < 2:
-		return points
-	var indicies: Array[int]
-	indicies.assign(range(verts.size()))
+func _prepare_generate_collision_points(default_quad_width: float) -> SS2D_Edge:
+	var num_points := get_point_count()
+	if num_points < 2:
+		return null
+
+	var indicies: Array[int] = []
+	indicies.assign(range(num_points))  # assign() also type casts the array
+
 	var edge_data := SS2D_IndexMap.new(indicies, null)
-	var edge: SS2D_Edge = _build_edge_with_material(
-		edge_data, collision_offset - 1.0, collision_size
-	)
+	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, default_quad_width)
 	_weld_quad_array(edge.quads, false)
+
+	return edge
+
+
+func generate_collision_points() -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var edge := _prepare_generate_collision_points(collision_size)
+
+	if not edge:
+		return points
+
 	if not edge.quads.is_empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in edge.quads:
