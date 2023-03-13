@@ -11,7 +11,7 @@ enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTI
 # Contains all keys; the order of the keys determines the order of the points
 @export var _point_order: Array[int] = [] : set = set_point_order
 # Key is tuple of point_keys; Value is the CONSTRAINT enum
-@export var _constraints: Dictionary = {} : set = set_constraints
+@export var _constraints: Dictionary = {} : set = _set_constraints
 # Next key value to generate
 @export var _next_key: int = 0 : set = set_next_key
 # Dictionary of specific materials to use for specific tuples of points
@@ -43,13 +43,6 @@ func _init() -> void:
 		_material_overrides = {}
 
 
-func _ready() -> void:
-	for tuple in _material_overrides:
-		var mat: SS2D_Material_Edge_Metadata = _material_overrides[tuple]
-		if not mat.is_connected("changed", self._on_material_override_changed):
-			mat.connect("changed", self._on_material_override_changed.bind(tuple))
-
-
 func set_points(ps: Dictionary) -> void:
 	# Called by Godot when loading from a saved scene
 	for k in ps:
@@ -64,8 +57,21 @@ func set_point_order(po: Array[int]) -> void:
 	notify_property_list_changed()
 
 
-func set_constraints(cs: Dictionary) -> void:
+func _set_constraints(cs: Dictionary) -> void:
 	_constraints = cs
+
+	# Fix for Backwards Compatibility with Godot 3.x
+	if Engine.is_editor_hint():
+		for tuple in _constraints:
+			if not tuple is Array:
+				push_error("Constraints Dictionary should have the following structure: key is a tuple of point_keys and value is the CONSTRAINT enum")
+			elif tuple.get_typed_builtin() != TYPE_INT:
+				# Try to convert
+				var new_tuple: Array[int] = Array(tuple, TYPE_INT, "", null)
+				var constraint: CONSTRAINT = _constraints[tuple]
+				_constraints.erase(tuple)
+				_constraints[new_tuple] = constraint
+
 	notify_property_list_changed()
 
 
