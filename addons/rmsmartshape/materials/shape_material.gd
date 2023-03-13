@@ -20,17 +20,17 @@ class_name SS2D_Material_Shape
 
 func set_fill_mesh_material(m: Material) -> void:
 	fill_mesh_material = m
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_fill_mesh_offset(f: float) -> void:
 	fill_mesh_offset = f
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_render_offset(f: float) -> void:
 	render_offset = f
-	emit_signal("changed")
+	emit_changed()
 
 
 ## Get all valid edge materials for this normal.
@@ -63,22 +63,22 @@ func add_edge_material(e: SS2D_Material_Edge_Metadata) -> void:
 
 
 func _on_edge_material_changed() -> void:
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_fill_textures(a: Array[Texture2D]) -> void:
 	fill_textures = a
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_fill_texture_z_index(i: int) -> void:
 	fill_texture_z_index = i
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_fill_texture_show_behind_parent(value: bool) -> void:
 	fill_texture_show_behind_parent = value
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_edge_meta_materials(a: Array[SS2D_Material_Edge_Metadata]) -> void:
@@ -95,4 +95,4 @@ func set_edge_meta_materials(a: Array[SS2D_Material_Edge_Metadata]) -> void:
 			e.connect("changed", self._on_edge_material_changed)
 
 	_edge_meta_materials = a
-	emit_signal("changed")
+	emit_changed()

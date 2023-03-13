@@ -27,7 +27,7 @@ func _to_string() -> String:
 
 func set_render(b: bool) -> void:
 	render = b
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_edge_material(m: SS2D_Material_Edge) -> void:
@@ -37,7 +37,7 @@ func set_edge_material(m: SS2D_Material_Edge) -> void:
 	edge_material = m
 	if edge_material != null:
 		edge_material.connect("changed", self._on_edge_changed)
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_normal_range(nr: SS2D_NormalRange) -> void:
@@ -47,28 +47,28 @@ func set_normal_range(nr: SS2D_NormalRange) -> void:
 		normal_range.disconnect("changed", self._on_edge_changed)
 	normal_range = nr
 	normal_range.connect("changed", self._on_edge_changed)
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_weld(b: bool) -> void:
 	weld = b
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_z_index(z: int) -> void:
 	z_index = z
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_z_as_relative(b: bool) -> void:
 	z_as_relative = b
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_offset(f: float) -> void:
 	offset = f
-	emit_signal("changed")
+	emit_changed()
 
 
 func _on_edge_changed() -> void:
-	emit_signal("changed")
+	emit_changed()

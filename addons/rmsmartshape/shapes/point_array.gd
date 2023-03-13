@@ -196,7 +196,7 @@ func clear() -> void:
 	_point_order.clear()
 	_constraints.clear()
 	_next_key = 0
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_point_in(key: int, value: Vector2) -> void:
@@ -312,7 +312,7 @@ func update_constraints(src: int) -> void:
 			_update_constraints(k)
 
 	_updating_constraints = false
-	emit_signal("changed")
+	emit_changed()
 
 
 ## Will Return all constraints for a given key.

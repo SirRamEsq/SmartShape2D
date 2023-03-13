@@ -18,12 +18,12 @@ class_name SS2D_NormalRange
 
 func set_distance(f: float) -> void:
 	distance = f
-	emit_signal("changed")
+	emit_changed()
 
 
 func set_begin(f: float) -> void:
 	begin = f
-	emit_signal("changed")
+	emit_changed()
 
 
 func _to_string() -> String:
