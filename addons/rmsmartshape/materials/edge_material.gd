@@ -41,52 +41,52 @@ enum FITMODE {SQUISH_AND_STRETCH, CROP}
 ###########
 func _set_textures(ta: Array[Texture2D]) -> void:
 	textures = ta
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_textures_corner_outer(a: Array[Texture2D]) -> void:
 	textures_corner_outer = a
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_textures_corner_inner(a: Array[Texture2D]) -> void:
 	textures_corner_inner = a
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_textures_taper_left(a: Array[Texture2D]) -> void:
 	textures_taper_left = a
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_textures_taper_right(a: Array[Texture2D]) -> void:
 	textures_taper_right = a
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_randomize_texture(b: bool) -> void:
 	randomize_texture = b
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_use_corner(b: bool) -> void:
 	use_corner_texture = b
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_use_taper(b: bool) -> void:
 	use_taper_texture = b
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_fit_texture(fitmode: FITMODE) -> void:
 	fit_mode = fitmode
-	emit_signal("changed")
+	emit_changed()
 
 
 func _set_material(m: Material) -> void:
 	material = m
-	emit_signal("changed")
+	emit_changed()
 
 
 ###########

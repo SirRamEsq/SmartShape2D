@@ -47,7 +47,7 @@ func get_contiguous_segments() -> Array:
 		for i in range(0, break_idx):
 			new_slice.push_back(remainder[i])
 		segments.push_back(new_slice)
-		remainder = remainder.slice(break_idx, remainder.size() - 1)
+		remainder = remainder.slice(break_idx, remainder.size())
 		break_idx = SS2D_IndexMap.find_break_in_array(remainder)
 	if not remainder.is_empty():
 		segments.push_back(remainder)
@@ -63,6 +63,8 @@ static func join_segments(segments: Array) -> Array:
 	while join_performed:
 		join_performed = false
 		for i in range(0, final_segments.size()):
+			if join_performed:
+				break
 			for ii in range(i + 1, final_segments.size()):
 				var a: Array[int] = final_segments[i]
 				var b: Array[int] = final_segments[ii]
@@ -197,8 +199,8 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 		if idx != indicies.size()-1:
 			if indicies[idx+1] == to_remove[1]:
 				# Need one split
-				var set_1 := indicies.slice(0, idx)
-				var set_2 := indicies.slice(idx+1, indicies.size()-1)
+				var set_1 := indicies.slice(0, idx+1)
+				var set_2 := indicies.slice(idx+1, indicies.size())
 				var new_maps: Array[SS2D_IndexMap] = []
 				if SS2D_IndexMap.is_index_array_valid(set_1):
 					new_maps.push_back(SS2D_IndexMap.new(set_1, object))
@@ -231,7 +233,7 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 static func indicies_to_edges(p_indicies: Array[int]) -> Array:
 	var edges: Array = []
 	for i in range(0, p_indicies.size()-1, 1):
-		var edge := [i,i+1]
+		var edge: Array[int] = [i,i+1]
 		if is_array_contiguous(edge):
 			edges.push_back(edge)
 	return edges

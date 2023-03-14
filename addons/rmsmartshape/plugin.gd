@@ -155,6 +155,8 @@ var current_zoom_level : float = 1.0
 # Track the property plugin
 var plugin: EditorInspectorPlugin
 
+var is_2d_screen_active := false
+
 #######
 # GUI #
 #######
@@ -300,6 +302,9 @@ func _gui_update_edge_info_panel():
 
 
 func _gui_update_info_panels() -> void:
+	if not is_2d_screen_active:
+		_gui_hide_info_panels()
+		return
 	match current_mode:
 		MODE.EDIT_VERT:
 			_gui_update_vert_info_panel()
@@ -308,6 +313,10 @@ func _gui_update_info_panels() -> void:
 			_gui_update_edge_info_panel()
 			gui_point_info_panel.visible = false
 
+
+func _gui_hide_info_panels() -> void:
+	gui_edge_info_panel.visible = false
+	gui_point_info_panel.visible = false
 
 #########
 # GODOT #
@@ -339,6 +348,8 @@ func _ready() -> void:
 	gui_edge_info_panel.connect("edge_material_changed", self._on_edge_material_changed)
 	add_child(gui_snap_settings)
 	gui_snap_settings.hide()
+
+	connect("main_screen_changed", self._on_main_screen_changed)
 
 
 func _enter_tree() -> void:
@@ -436,6 +447,12 @@ func _edit(object: Object) -> void:
 
 func _make_visible(_visible: bool) -> void:
 	pass
+
+
+func _on_main_screen_changed(screen_name: String) -> void:
+	is_2d_screen_active = screen_name == "2D"
+	if not is_2d_screen_active:
+		_gui_hide_info_panels()
 
 
 ############

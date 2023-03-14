@@ -9,19 +9,19 @@ class_name SS2D_VertexProperties
 
 func set_texture_idx(i: int) -> void:
 	texture_idx = i
-	emit_signal("changed")
+	emit_changed()
 	notify_property_list_changed()
 
 
 func set_flip(b: bool) -> void:
 	flip = b
-	emit_signal("changed")
+	emit_changed()
 	notify_property_list_changed()
 
 
 func set_width(w: float) -> void:
 	width = w
-	emit_signal("changed")
+	emit_changed()
 	notify_property_list_changed()
 
 
