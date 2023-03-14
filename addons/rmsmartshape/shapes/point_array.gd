@@ -67,7 +67,8 @@ func _set_constraints(cs: Dictionary) -> void:
 				push_error("Constraints Dictionary should have the following structure: key is a tuple of point_keys and value is the CONSTRAINT enum")
 			elif tuple.get_typed_builtin() != TYPE_INT:
 				# Try to convert
-				var new_tuple: Array[int] = Array(tuple, TYPE_INT, "", null)
+				var new_tuple: Array[int]
+				new_tuple.assign(tuple)
 				var constraint: CONSTRAINT = _constraints[tuple]
 				_constraints.erase(tuple)
 				_constraints[new_tuple] = constraint
