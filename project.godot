@@ -14,10 +14,6 @@ config/name="SmartShape2D"
 config/features=PackedStringArray("4.0")
 config/icon="res://icon.png"
 
-[debug]
-
-gdscript/warnings/exclude_addons=false
-
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/rmsmartshape/plugin.cfg", "res://addons/gut/plugin.cfg")
