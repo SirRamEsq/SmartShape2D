@@ -1146,7 +1146,8 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 		if kb.keycode == KEY_CTRL:
 			if kb.pressed and not kb.echo:
 				on_edge = false
-				current_action = select_verticies([closest_key], ACTION_VERT.NONE)
+				if closest_key != -1:
+					current_action = select_verticies([closest_key], ACTION_VERT.NONE)
 			else:
 				deselect_verts()
 			update_overlays()
