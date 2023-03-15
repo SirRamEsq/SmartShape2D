@@ -592,11 +592,11 @@ func set_point_properties(key: int, properties: SS2D_VertexProperties) -> void:
 #########
 # GODOT #
 #########
-func _init() -> void:
-	pass
-
 
 func _ready() -> void:
+	if _points == null:
+		_points = SS2D_Point_Array.new()
+
 	if not _points.is_connected("material_override_changed", self._handle_material_override_change):
 		_points.connect("material_override_changed", self._handle_material_override_change)
 	if _curve == null:

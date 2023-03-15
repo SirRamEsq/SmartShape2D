@@ -80,11 +80,14 @@ func _get_shapes(n: Node, a: Array[SS2D_Shape_Base] = []) -> Array[SS2D_Shape_Ba
 func _add_to_meta(n: Node) -> void:
 	if not n is SS2D_Shape_Base:
 		return
+	var s: SS2D_Shape_Base = n
 	# Assign node to have the same point array data as this meta shape
-	n.set_point_array(_points, false)
-	n.connect("points_modified", self._update_shapes.bind(n))
+	s.set_point_array(_points)
+	var except: Array[SS2D_Shape_Base] = [s]
+	s.connect("points_modified", self._update_shapes.bind(except))
 
 
+# except: Array[SS2D_Shape_Base]
 func _update_shapes(except: Array[SS2D_Shape_Base] = []) -> void:
 	_update_curve(_points)
 	for s in _cached_shape_children:
@@ -97,8 +100,9 @@ func _remove_from_meta(n: Node) -> void:
 	if not n is SS2D_Shape_Base:
 		return
 	# Make Point Data Unique
-	n.set_point_array(n.get_point_array(), true)
-	n.disconnect("points_modified", self._update_shapes)
+	var s: SS2D_Shape_Base = n
+	s.set_point_array(s.get_point_array().clone(true))
+	s.disconnect("points_modified", self._update_shapes)
 
 
 func treat_as_closed() -> bool:

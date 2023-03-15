@@ -739,7 +739,6 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 			draw_freehand_circle(overlay)
 			draw_mode_edit_vert(overlay, false)
 
-
 	shape.queue_redraw()
 
 
