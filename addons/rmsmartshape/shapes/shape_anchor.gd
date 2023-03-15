@@ -18,8 +18,9 @@ var shape: SS2D_Shape_Base = null
 
 
 ###########
-# SETTERS #
+#-SETTERS-#
 ###########
+
 func set_shape_path(value: NodePath) -> void:
 	# Assign path value
 	shape_path = value
@@ -96,7 +97,7 @@ func set_debug_draw(v: bool) -> void:
 
 
 ##########
-# EVENTS #
+#-EVENTS-#
 ##########
 func _process(_delta: float) -> void:
 	if shape == null:
@@ -118,7 +119,7 @@ func _handle_point_change() -> void:
 
 
 #########
-# LOGIC #
+#LOGIC-#
 #########
 func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
 	var q0 := p0.lerp(p1, t)
