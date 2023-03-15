@@ -38,14 +38,20 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ###########
 # EXPORTS #
 ###########
+
+# ActionProperty will add a button to inspector to execute this action,
+# When non-empty string is passed into setter, action is considerd executed.
+## Execute to refresh shape rendered geometry and textures.
+@export_placeholder("ActionProperty") var _refresh: String = "" : set = _refresh_action
+
 @export var editor_debug: bool = false : set = _set_editor_debug
 @export_range (1, 512) var curve_bake_interval: float = 20.0 : set = set_curve_bake_interval
 @export var color_encoding: SS2D_Edge.COLOR_ENCODING = SS2D_Edge.COLOR_ENCODING.COLOR : set = set_color_encoding
 
 @export_group("Geometry")
 
-## Toggle to make shape point geometry unique (not materials).
-@export var _make_unique: bool = false : set = _make_unique_trigger
+## Execute to make shape point geometry unique (not materials).
+@export_placeholder("ActionProperty") var _make_unique: String = "" : set = _make_unique_action
 ## Resource that holds shape point geometry.
 @export var _points := SS2D_Point_Array.new() : set = set_point_array
 
@@ -107,8 +113,13 @@ func _point_array_assigned() -> void:
 	pass
 
 
-func _make_unique_trigger(value: bool) -> void:
-	if value == true:
+func _refresh_action(value: String) -> void:
+	if value.length() > 0:
+		set_as_dirty()
+
+
+func _make_unique_action(value: String) -> void:
+	if value.length() > 0:
 		emit_signal("make_unique_pressed", self)
 
 

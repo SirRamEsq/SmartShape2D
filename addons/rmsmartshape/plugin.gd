@@ -363,11 +363,13 @@ func _ready() -> void:
 
 
 func _enter_tree() -> void:
-	plugin = load("res://addons/rmsmartshape/inspector_plugin.gd").new()
+	plugin = load("res://addons/rmsmartshape/editors/normal_range_inspector_plugin.gd").new()
 	if plugin != null:
 		add_inspector_plugin(plugin)
 
-	pass
+	var action_plugin: EditorInspectorPlugin = load("res://addons/rmsmartshape/editors/action_property_inspector_plugin.gd").new()
+	if action_plugin != null:
+		add_inspector_plugin(action_plugin)
 
 
 func _exit_tree() -> void:
