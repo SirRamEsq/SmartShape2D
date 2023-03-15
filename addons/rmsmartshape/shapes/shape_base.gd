@@ -49,120 +49,36 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ## Resource that holds shape point geometry.
 @export var _points: SS2D_Point_Array: set = set_point_array
 
+@export_group("Edges")
+
+@export var flip_edges: bool = false : set = set_flip_edges
+@export var render_edges: bool = true : set = set_render_edges
+
 @export_group("Materials")
 
 @export var shape_material := SS2D_Material_Shape.new() : set = _set_material
-"""
-		{
-			"name": "shape_material",
-			"type": TYPE_OBJECT,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_RESOURCE_TYPE,
-			"hint_string": "SS2D_Material_Shape"
-		},
-"""
 
 # Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
 # Deprecated, exists for Support of older versions
 @export var material_overrides: Dictionary = {} : set = set_material_overrides
 
-# COLLISION #
-#export (float)
-var collision_size: float = 32 : set = set_collision_size
-#export (float)
-var collision_offset: float = 0.0 : set = set_collision_offset
-#export (NodePath)
-var collision_polygon_node_path: NodePath = ""
+@export_group("Tesselation")
 
-# EDGES #
-#export (bool)
-var flip_edges: bool = false : set = set_flip_edges
-#export (bool)
-var render_edges: bool = true : set = set_render_edges
-
-# TESSELLATION #
-#export (int, 1, 8)
+@export_range(0, 8, 1)
 var tessellation_stages: int = 5 : set = set_tessellation_stages
-#export (float, 1, 8)
+
+@export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
 var tessellation_tolerence: float = 4.0 : set = set_tessellation_tolerence
 
+@export_group("Collision")
 
-func _get_property_list() -> Array[Dictionary]:
-	return [
-		{
-			"name": "Edges",
-			"type": TYPE_NIL,
-			"hint_string": "edge_",
-			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			"name": "Tessellation",
-			"type": TYPE_NIL,
-			"hint_string": "tessellation_",
-			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			"name": "tessellation_stages",
-			"type": TYPE_INT,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "0,8,1"
-		},
-		{
-			"name": "tessellation_tolerence",
-			"type": TYPE_FLOAT,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "0.1,8.0,1,or_greater,or_lesser"
-		},
-		{
-			"name": "flip_edges",
-			"type": TYPE_BOOL,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_NONE,
-		},
-		{
-			"name": "render_edges",
-			"type": TYPE_BOOL,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_NONE,
-		},
-		{
-			"name": "Collision",
-			"type": TYPE_NIL,
-			"hint_string": "collision_",
-			"usage": PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			"name": "collision_size",
-			"type": TYPE_FLOAT,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "0,64,1,or_greater"
-		},
-		{
-			"name": "collision_offset",
-			"type": TYPE_FLOAT,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "-64,64,1,or_greater,or_lesser"
-		},
-		{
-			"name": "collision_polygon_node_path",
-			"type": TYPE_NODE_PATH,
-			"usage":
-			PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR,
-			"hint": PROPERTY_HINT_NONE
-		}
-	]
+@export_range(0.0, 64.0, 1.0, "or_greater")
+var collision_size: float = 32 : set = set_collision_size
 
+@export_range(-64.0, 64.0, 1.0, "or_greater", "or_lesser")
+var collision_offset: float = 0.0 : set = set_collision_offset
+
+@export var collision_polygon_node_path: NodePath = ""
 
 #####################
 # SETTERS / GETTERS #
