@@ -689,15 +689,15 @@ func _add_deferred_collision() -> void:
 		static_body.position = shape.position
 		shape.position = Vector2.ZERO
 
-		shape.get_parent().add_child(static_body)
+		shape.get_parent().add_child(static_body, true)
 		static_body.owner = get_editor_interface().get_edited_scene_root()
 
 		shape.get_parent().remove_child(shape)
-		static_body.add_child(shape)
+		static_body.add_child(shape, true)
 		shape.owner = get_editor_interface().get_edited_scene_root()
 
 		var poly: CollisionPolygon2D = CollisionPolygon2D.new()
-		static_body.add_child(poly)
+		static_body.add_child(poly, true)
 		poly.owner = get_editor_interface().get_edited_scene_root()
 		# TODO: Make this a option at some point
 		poly.modulate.a = 0.3
@@ -1545,7 +1545,7 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 	copy.curve_bake_interval = s.curve_bake_interval
 	#copy.material_overrides = s.material_overrides
 
-	s.get_parent().add_child(copy)
+	s.get_parent().add_child(copy, true)
 	copy.set_owner(get_tree().get_edited_scene_root())
 
 	if (
@@ -1556,7 +1556,7 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 		var collision_polygon_new := CollisionPolygon2D.new()
 		collision_polygon_new.visible = collision_polygon_original.visible
 
-		collision_polygon_original.get_parent().add_child(collision_polygon_new)
+		collision_polygon_original.get_parent().add_child(collision_polygon_new, true)
 		collision_polygon_new.set_owner(get_tree().get_edited_scene_root())
 
 		copy.collision_polygon_node_path = copy.get_path_to(collision_polygon_new)
