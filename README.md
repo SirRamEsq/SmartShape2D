@@ -27,8 +27,9 @@ Read the section below on Contributing and post an issue if one doesn't already 
 </a>
 
 # Support
-- Supported and Tested on Godot 3.2
-- Should work with later versions of Godot 3.x
+- Newest version is developed for Godot 4
+- Older version is supported and tested on Godot 3.2
+  - Should work with later versions of Godot 3.x
 
 # Demo
 A Sample Godot Project can be found here:
@@ -37,6 +38,7 @@ https://github.com/SirRamEsq/SmartShape2D-DemoProject
 # Documentation
 - [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
 - [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )
+- [Using SmartShape2D with Godot 4.0](./addons/rmsmartshape/documentation/Godot4.md)
 - [Migrating from 1.x]( ./addons/rmsmartshape/documentation/Migration.md )
 - [Shapes]( ./addons/rmsmartshape/documentation/Shapes.md )
 - [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
@@ -64,6 +66,10 @@ Issues can be added [here](https://github.com/SirRamEsq/SmartShape2D/issues)
 
 ## Development
 We have a set of tests we run against the code (courtesy of [GUT](https://github.com/bitwes/Gut)).
+
+To download GUT use this git command after cloning:
+`git submodule update --init --recursive`
+
 If making a merge request, please ensure that the tests pass. If the tests have been updated appropriately to pass, please note this in the merge request.
 
 ## Discord

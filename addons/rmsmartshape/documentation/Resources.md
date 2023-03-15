@@ -7,9 +7,11 @@ Once a shape material is defined, it can be easily reused by any number of Smart
 
 - Edge Meta Materials
   - An array of resources of type SS2D_Material_Edge_Metadata
-- Fill Textures / Fill Texture Normals
+- Fill Textures
   - Used as the texture for the inside of the polygon for Closed Shapes
   - Currently, only the first texture can be used, multiple textures may be supported at a later date
+- Normal Textures
+  - In Godot 4, you can set normal textures with `CanvasTexture` resource.
 - Fill Texture Z Index
   - Each Edge Meta Material has a ZIndex indicating which edges are drawn first
   - This sets the ZIndex for the fill texture
@@ -55,25 +57,30 @@ If the edge's Normal is inside a Meta Material's Normal Range, the Meta Material
 # Edge Material
 The actual textures used to define an edge
 
-For all cases, using texture normals is completely optional
-## Textures / Normals
+## Textures
 - The primary textures used for the edge
 - At least one texture must be defined
 - Example: ![Grass]( ./imgs/grass.png )
-## Taper Textures / Normals
+## Taper Textures
 These textures will be used as the first or last quad in an edge.
 They're named "Taper Textures" because the purpose is to show the edge "tapering off"
 - Textures_Taper_Left is the first quad in an edge
   - Example: ![Grass Taper Left]( ./imgs/grass-taper-left.png )
 - Textures_Taper_Right is the final quad in an edge
   - Example: ![Grass Taper Right]( ./imgs/grass-taper-right.png )
-## Corner Textures / Normals
+## Corner Textures
 These textures will be used when the edge forms a sharp corner (80 degrees - 100 degrees)
 These are used because corners can look warped when using only regular textures
 - Texture_Corner_Inner is used when the corner forms an inner corner
   - Example: ![Grass Corner Inner]( ./imgs/grass-corner-inner.png )
 - Texture_Corner_Outer is used when the corner forms an outer angle
   - Example: ![Grass Corner Outer]( ./imgs/grass-corner-outer.png )
+## Normal Texture and Repeat
+To use normal textures, you can create a `CanvasTexture` resource in the inspector on any property, 
+that allows to set a texture. There you can assign your texture and your normal texture, as well as set 
+those to `repeat`.
+## Repeat Textures
+See previous section.
 ## Fit Mode
 Most likely, the textures you use will not *perfectly* fit the polygon.
 This setting allows you to determine how SmartShape will rectify this.
