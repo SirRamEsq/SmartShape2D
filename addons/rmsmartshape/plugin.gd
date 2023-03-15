@@ -119,6 +119,8 @@ var tb_snap: MenuButton = null
 # The PopupMenu that belongs to tb_snap
 var tb_snap_popup: PopupMenu = null
 
+var make_unique_dialog: AcceptDialog
+
 # Edge Stuff
 var on_edge: bool = false
 var edge_point: Vector2
@@ -349,6 +351,14 @@ func _ready() -> void:
 	add_child(gui_snap_settings)
 	gui_snap_settings.hide()
 
+	make_unique_dialog = AcceptDialog.new()
+	make_unique_dialog.title = "Make Shape Unique"
+	make_unique_dialog.get_label().text = "Make shape point geometry unique (not materials). Proceed?"
+	make_unique_dialog.get_ok_button().text = "Proceed"
+	make_unique_dialog.add_cancel_button("Cancel")
+	make_unique_dialog.connect("confirmed", self._shape_make_unique)
+	add_child(make_unique_dialog)
+
 	connect("main_screen_changed", self._on_main_screen_changed)
 
 
@@ -524,11 +534,15 @@ static func snap_position(
 func disconnect_shape(s) -> void:
 	if s.is_connected("points_modified", self._on_shape_point_modified):
 		s.disconnect("points_modified", self._on_shape_point_modified)
+	if s.is_connected("make_unique_pressed", self._on_shape_make_unique):
+		s.disconnect("make_unique_pressed", self._on_shape_make_unique)
 
 
 func connect_shape(s) -> void:
 	if not s.is_connected("points_modified", self._on_shape_point_modified):
 		s.connect("points_modified", self._on_shape_point_modified)
+	if not s.is_connected("make_unique_pressed", self._on_shape_make_unique):
+		s.connect("make_unique_pressed", self._on_shape_make_unique)
 
 
 static func get_material_override_from_indicies(
@@ -604,6 +618,14 @@ static func is_shape_valid(s) -> bool:
 
 func _on_shape_point_modified() -> void:
 	FUNC.action_invert_orientation(self, "update_overlays", get_undo_redo(), shape)
+
+
+func _on_shape_make_unique(_shape: SS2D_Shape_Base) -> void:
+	make_unique_dialog.popup_centered()
+
+
+func _shape_make_unique() -> void:
+	FUNC.action_make_shape_unique(shape, get_undo_redo())
 
 
 func get_et() -> Transform2D:

@@ -2,6 +2,7 @@
 extends Node2D
 class_name SS2D_Shape_Base
 
+
 ## Represents the base functionality for all smart shapes.
 
 # Functions consist of the following categories:[br]
@@ -30,6 +31,7 @@ var can_edit: bool = true
 
 signal points_modified
 signal on_dirty_update
+signal make_unique_pressed(shape: SS2D_Shape_Base)
 
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
@@ -40,22 +42,15 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 @export_range (1, 512) var curve_bake_interval: float = 20.0 : set = set_curve_bake_interval
 @export var color_encoding: SS2D_Edge.COLOR_ENCODING = SS2D_Edge.COLOR_ENCODING.COLOR : set = set_color_encoding
 
-# Note: Extra '_' is needed for backward compatibility.
-var __points := SS2D_Point_Array.new()
-@warning_ignore("unused_private_class_variable")
-@export var _points: SS2D_Point_Array:
-	get:
-		return __points
-	set(value):
-		set_point_array(value, true)
+@export_group("Geometry")
 
-# Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
-# Deprecated, exists for Support of older versions
-@export var material_overrides: Dictionary = {} : set = set_material_overrides
+## Toggle to make shape point geometry unique (not materials).
+@export var _make_unique: bool = false : set = _make_unique_trigger
+## Resource that holds shape point geometry.
+@export var _points: SS2D_Point_Array: set = set_point_array
 
-####################
-# DETAILED EXPORTS #
-####################
+@export_group("Materials")
+
 @export var shape_material := SS2D_Material_Shape.new() : set = _set_material
 """
 		{
@@ -67,6 +62,10 @@ var __points := SS2D_Point_Array.new()
 			"hint_string": "SS2D_Material_Shape"
 		},
 """
+
+# Dictionary of (Array of 2 keys) to (SS2D_Material_Edge_Metadata)
+# Deprecated, exists for Support of older versions
+@export var material_overrides: Dictionary = {} : set = set_material_overrides
 
 # COLLISION #
 #export (float)
@@ -169,23 +168,32 @@ func _get_property_list() -> Array[Dictionary]:
 # SETTERS / GETTERS #
 #####################
 func get_point_array() -> SS2D_Point_Array:
-	return __points
+	return _points
 
 
-func set_point_array(a: SS2D_Point_Array, make_unique: bool = true) -> void:
-	if __points != null:
-		if __points.is_connected("material_override_changed", self._handle_material_override_change):
-			__points.disconnect("material_override_changed", self._handle_material_override_change)
-	if make_unique:
-		# FIXME: This prevents clearing points resource in the editor and prints an error.
-		__points = a.duplicate(true)
-	else:
-		__points = a
-	__points.connect("material_override_changed", self._handle_material_override_change)
+func set_point_array(a: SS2D_Point_Array) -> void:
+	if _points != null:
+		if _points.is_connected("material_override_changed", self._handle_material_override_change):
+			_points.disconnect("material_override_changed", self._handle_material_override_change)
+	if a == null:
+		a = SS2D_Point_Array.new()
+	_points = a
+	_point_array_assigned()
+	_points.connect("material_override_changed", self._handle_material_override_change)
 	clear_cached_data()
-	_update_curve(__points)
+	_update_curve(_points)
 	set_as_dirty()
 	notify_property_list_changed()
+
+
+# @virtual
+func _point_array_assigned() -> void:
+	pass
+
+
+func _make_unique_trigger(value: bool) -> void:
+	if value == true:
+		emit_signal("make_unique_pressed", self)
 
 
 func set_flip_edges(b: bool) -> void:
@@ -220,9 +228,9 @@ func _update_curve_no_control() -> void:
 
 func set_curve(value: Curve2D) -> void:
 	_curve = value
-	__points.clear()
+	_points.clear()
 	for i in range(0, _curve.get_point_count(), 1):
-		__points.add_point(_curve.get_point_position(i))
+		_points.add_point(_curve.get_point_position(i))
 	_update_curve_no_control()
 	set_as_dirty()
 	emit_signal("points_modified")
@@ -320,7 +328,7 @@ func set_material_overrides(dict: Dictionary) -> void:
 	material_overrides = {}
 	if dict == null:
 		return
-	__points.set_material_overrides(dict)
+	_points.set_material_overrides(dict)
 
 
 #########
@@ -340,8 +348,8 @@ func _update_curve(p_array: SS2D_Point_Array) -> void:
 
 func get_vertices() -> PackedVector2Array:
 	var positions: PackedVector2Array = []
-	for p_key in __points.get_all_point_keys():
-		positions.push_back(__points.get_point_position(p_key))
+	for p_key in _points.get_all_point_keys():
+		positions.push_back(_points.get_point_position(p_key))
 	return positions
 
 
@@ -358,14 +366,14 @@ func get_tessellated_points() -> PackedVector2Array:
 
 
 func invert_point_order() -> void:
-	__points.invert_point_order()
-	_update_curve(__points)
+	_points.invert_point_order()
+	_update_curve(_points)
 	set_as_dirty()
 
 
 func clear_points() -> void:
-	__points.clear()
-	_update_curve(__points)
+	_points.clear()
+	_update_curve(_points)
 	set_as_dirty()
 
 
@@ -380,26 +388,26 @@ func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = 
 	for i in range(0, verts.size(), 1):
 		var v: Vector2 = verts[i]
 		if starting_index != -1:
-			keys.push_back(__points.add_point(v, starting_index + i, key))
+			keys.push_back(_points.add_point(v, starting_index + i, key))
 		else:
-			keys.push_back(__points.add_point(v, starting_index, key))
+			keys.push_back(_points.add_point(v, starting_index, key))
 	_add_point_update()
 	return keys
 
 
 # Meant to override in subclasses
 func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
-	key = __points.add_point(pos, index, key)
+	key = _points.add_point(pos, index, key)
 	_add_point_update()
 	return key
 
 
 func get_next_key() -> int:
-	return __points.get_next_key()
+	return _points.get_next_key()
 
 
 func _add_point_update():
-	_update_curve(__points)
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
 
@@ -409,19 +417,19 @@ func _is_array_index_in_range(a, i: int) -> bool:
 
 
 func is_index_in_range(idx: int) -> bool:
-	return __points.is_index_in_range(idx)
+	return _points.is_index_in_range(idx)
 
 
 func set_point_position(key: int, pos: Vector2) -> void:
-	__points.set_point_position(key, pos)
-	_update_curve(__points)
+	_points.set_point_position(key, pos)
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
 
 
 func remove_point(key: int) -> void:
-	__points.remove_point(key)
-	_update_curve(__points)
+	_points.remove_point(key)
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
 
@@ -436,29 +444,29 @@ func remove_point_at_index(idx: int) -> void:
 
 
 func has_point(key: int) -> bool:
-	return __points.has_point(key)
+	return _points.has_point(key)
 
 
 func get_all_point_keys() -> Array[int]:
-	return __points.get_all_point_keys()
+	return _points.get_all_point_keys()
 
 
 func get_point_key_at_index(idx: int) -> int:
-	return __points.get_point_key_at_index(idx)
+	return _points.get_point_key_at_index(idx)
 
 
 func get_point_at_index(idx: int) -> SS2D_Point:
-	return __points.get_point_at_index(idx)
+	return _points.get_point_at_index(idx)
 
 
 func get_point_index(key: int) -> int:
-	return __points.get_point_index(key)
+	return _points.get_point_index(key)
 
 
 ## point_in controls the edge leading from the previous vertex to this one
 func set_point_in(key: int, v: Vector2) -> void:
-	__points.set_point_in(key, v)
-	_update_curve(__points)
+	_points.set_point_in(key, v)
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
 
@@ -466,18 +474,18 @@ func set_point_in(key: int, v: Vector2) -> void:
 
 ## point_out controls the edge leading from this vertex to the next
 func set_point_out(key: int, v: Vector2) -> void:
-	__points.set_point_out(key, v)
-	_update_curve(__points)
+	_points.set_point_out(key, v)
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
 
 
 func get_point_in(key: int) -> Vector2:
-	return __points.get_point_in(key)
+	return _points.get_point_in(key)
 
 
 func get_point_out(key: int) -> Vector2:
-	return __points.get_point_out(key)
+	return _points.get_point_out(key)
 
 
 func get_closest_point(to_point: Vector2) -> Vector2:
@@ -501,15 +509,15 @@ func get_closest_offset(to_point: Vector2) -> float:
 
 
 func disable_constraints() -> void:
-	__points.disable_constraints()
+	_points.disable_constraints()
 
 
 func enable_constraints() -> void:
-	__points.enable_constraints()
+	_points.enable_constraints()
 
 
 func get_point_count() -> int:
-	return __points.get_point_count()
+	return _points.get_point_count()
 
 
 func get_edges() -> Array[SS2D_Edge]:
@@ -517,68 +525,68 @@ func get_edges() -> Array[SS2D_Edge]:
 
 
 func get_point_position(key: int) -> Vector2:
-	return __points.get_point_position(key)
+	return _points.get_point_position(key)
 
 
 func get_point(key: int) -> SS2D_Point:
-	return __points.get_point(key)
+	return _points.get_point(key)
 
 
 func get_point_constraints(key: int) -> Dictionary:
-	return __points.get_point_constraints(key)
+	return _points.get_point_constraints(key)
 
 
 func get_point_constraint(key1: int, key2: int) -> SS2D_Point_Array.CONSTRAINT:
-	return __points.get_point_constraint(key1, key2)
+	return _points.get_point_constraint(key1, key2)
 
 
 func set_constraint(key1: int, key2: int, c: SS2D_Point_Array.CONSTRAINT) -> void:
-	__points.set_constraint(key1, key2, c)
+	_points.set_constraint(key1, key2, c)
 
 
 func set_point(key: int, value: SS2D_Point) -> void:
-	__points.set_point(key, value)
-	_update_curve(__points)
+	_points.set_point(key, value)
+	_update_curve(_points)
 	set_as_dirty()
 
 
 func set_point_width(key: int, w: float) -> void:
-	var props: SS2D_VertexProperties = __points.get_point_properties(key)
+	var props: SS2D_VertexProperties = _points.get_point_properties(key)
 	props.width = w
-	__points.set_point_properties(key, props)
+	_points.set_point_properties(key, props)
 	set_as_dirty()
 
 
 func get_point_width(key: int) -> float:
-	return __points.get_point_properties(key).width
+	return _points.get_point_properties(key).width
 
 
 func set_point_texture_index(key: int, tex_idx: int) -> void:
-	var props: SS2D_VertexProperties = __points.get_point_properties(key)
+	var props: SS2D_VertexProperties = _points.get_point_properties(key)
 	props.texture_idx = tex_idx
-	__points.set_point_properties(key, props)
+	_points.set_point_properties(key, props)
 
 
 func get_point_texture_index(key: int) -> int:
-	return __points.get_point_properties(key).texture_idx
+	return _points.get_point_properties(key).texture_idx
 
 
 func set_point_texture_flip(key: int, flip: bool) -> void:
-	var props: SS2D_VertexProperties = __points.get_point_properties(key)
+	var props: SS2D_VertexProperties = _points.get_point_properties(key)
 	props.flip = flip
-	__points.set_point_properties(key, props)
+	_points.set_point_properties(key, props)
 
 
 func get_point_texture_flip(key: int) -> bool:
-	return __points.get_point_properties(key).flip
+	return _points.get_point_properties(key).flip
 
 
 func get_point_properties(key: int) -> SS2D_VertexProperties:
-	return __points.get_point_properties(key)
+	return _points.get_point_properties(key)
 
 
 func set_point_properties(key: int, properties: SS2D_VertexProperties) -> void:
-	__points.set_point_properties(key, properties)
+	_points.set_point_properties(key, properties)
 
 
 #########
@@ -589,11 +597,11 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	if not __points.is_connected("material_override_changed", self._handle_material_override_change):
-		__points.connect("material_override_changed", self._handle_material_override_change)
+	if not _points.is_connected("material_override_changed", self._handle_material_override_change):
+		_points.connect("material_override_changed", self._handle_material_override_change)
 	if _curve == null:
 		_curve = Curve2D.new()
-	_update_curve(__points)
+	_update_curve(_points)
 	if not _is_instantiable:
 		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
 		queue_free()
@@ -959,8 +967,8 @@ static func build_quad_corner(
 func _get_width_for_tessellated_point(points: PackedVector2Array, t_points: PackedVector2Array, t_idx) -> float:
 	var v_idx: int = get_vertex_idx_from_tessellated_point(points, t_points, t_idx)
 	var v_idx_next: int = _get_next_point_index(v_idx, points)
-	var w1: float = __points.get_point_properties(__points.get_point_key_at_index(v_idx)).width
-	var w2: float = __points.get_point_properties(__points.get_point_key_at_index(v_idx_next)).width
+	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
+	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
 	var ratio: float = get_ratio_from_tessellated_point_to_vertex(points, t_points, t_idx)
 	return lerp(w1, w2, ratio)
 
@@ -1054,7 +1062,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 		return edges
 
 	var index_maps: Array[SS2D_IndexMap] = get_meta_material_index_mapping(s_mat, verts)
-	var overrides: Array[SS2D_IndexMap] = get_meta_material_index_mapping_for_overrides(s_mat, __points)
+	var overrides: Array[SS2D_IndexMap] = get_meta_material_index_mapping_for_overrides(s_mat, _points)
 
 	# Remove the override indicies from the default index_maps
 	for override in overrides:
@@ -1334,7 +1342,7 @@ static func get_tessellated_idx_from_point(
 
 
 func debug_print_points():
-	__points.debug_print()
+	_points.debug_print()
 
 
 ###################
@@ -1496,8 +1504,8 @@ func _build_edge_with_material(
 	var last_idx: int = index_map.indicies[-1]
 	var first_idx_t: int = get_tessellated_idx_from_point(verts, verts_t, first_idx)
 	var last_idx_t: int = get_tessellated_idx_from_point(verts, verts_t, last_idx)
-	edge.first_point_key = __points.get_point_key_at_index(first_idx)
-	edge.last_point_key = __points.get_point_key_at_index(last_idx)
+	edge.first_point_key = _points.get_point_key_at_index(first_idx)
+	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)

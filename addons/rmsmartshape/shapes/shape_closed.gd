@@ -37,27 +37,19 @@ func _init() -> void:
 # OVERRIDE #
 ############
 func remove_point(key: int) -> void:
-	__points.remove_point(key)
+	_points.remove_point(key)
 	_close_shape()
-	_update_curve(__points)
+	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
 
 
-func set_point_array(a: SS2D_Point_Array, make_unique: bool = true) -> void:
-	if make_unique:
-		__points = a.duplicate(true)
-	else:
-		__points = a
+func _point_array_assigned() -> void:
 	_close_shape()
-	clear_cached_data()
-	_update_curve(__points)
-	set_as_dirty()
-	notify_property_list_changed()
 
 
 func has_minimum_point_count() -> bool:
-	return __points.get_point_count() >= 3
+	return _points.get_point_count() >= 3
 
 
 func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
@@ -201,24 +193,24 @@ func _close_shape() -> bool:
 	if not has_minimum_point_count():
 		return false
 
-	var key_first: int = __points.get_point_key_at_index(0)
-	var key_last: int = __points.get_point_key_at_index(get_point_count() - 1)
+	var key_first: int = _points.get_point_key_at_index(0)
+	var key_last: int = _points.get_point_key_at_index(get_point_count() - 1)
 
 	# If points are not the same pos, add new point
 	if get_point_position(key_first) != get_point_position(key_last):
-		key_last = __points.add_point(__points.get_point_position(key_first))
+		key_last = _points.add_point(_points.get_point_position(key_first))
 
-	__points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
+	_points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
 	_add_point_update()
 	return true
 
 
 func is_shape_closed() -> bool:
-	var point_count: int = __points.get_point_count()
+	var point_count: int = _points.get_point_count()
 	if not has_minimum_point_count():
 		return false
-	var key1: int = __points.get_point_key_at_index(0)
-	var key2: int = __points.get_point_key_at_index(point_count - 1)
+	var key1: int = _points.get_point_key_at_index(0)
+	var key2: int = _points.get_point_key_at_index(point_count - 1)
 	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
 
 

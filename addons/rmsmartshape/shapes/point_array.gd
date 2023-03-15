@@ -43,6 +43,31 @@ func _init() -> void:
 		_material_overrides = {}
 
 
+func clone(deep: bool = false) -> SS2D_Point_Array:
+	var copy := SS2D_Point_Array.new()
+	copy._next_key = _next_key
+	if deep:
+		var new_point_dict := {}
+		for k in _points:
+			new_point_dict[k] = _points[k].duplicate(true)
+		copy._points = new_point_dict
+		copy._point_order = _point_order.duplicate(true)
+
+		copy._constraints = {}
+		for tuple in _constraints:
+			copy._constraints[tuple] = _constraints[tuple]
+
+		copy._material_overrides = {}
+		for tuple in _material_overrides:
+			copy._material_overrides[tuple] = _material_overrides[tuple]
+	else:
+		copy._points = _points
+		copy._point_order = _point_order
+		copy._constraints = _constraints
+		copy._material_overrides = _material_overrides
+	return copy
+
+
 func set_points(ps: Dictionary) -> void:
 	# Called by Godot when loading from a saved scene
 	for k in ps:

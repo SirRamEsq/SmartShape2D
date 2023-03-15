@@ -258,3 +258,11 @@ static func action_invert_orientation(
 		undo.commit_action()
 		return true
 	return false
+
+
+static func action_make_shape_unique(s: SS2D_Shape_Base, undo: EditorUndoRedoManager) -> bool:
+	undo.create_action("Make Unique")
+	undo.add_do_method(s, "set_point_array", s.get_point_array().clone(true))
+	undo.add_undo_method(s, "set_point_array", s.get_point_array())
+	undo.commit_action()
+	return true
