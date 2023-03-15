@@ -358,15 +358,16 @@ func test_weld_quads():
 	assert_quad_point_eq(gut,left, left.pt_a, left.pt_b, pt_bottom, pt_top)
 	assert_quad_point_eq(gut,right, pt_top, pt_bottom, right.pt_c, right.pt_d)
 
-func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, tex:Texture=TEST_TEXTURE)->SS2D_Material_Shape:
+func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, tex:Texture2D=TEST_TEXTURE)->SS2D_Material_Shape:
 	var edge_materials = []
-	var edge_materials_meta = []
+	var edge_materials_meta: Array[SS2D_Material_Edge_Metadata] = []
 	for i in range(0, edge_materials_count, 1):
 		var edge_mat = SS2D_Material_Edge.new()
 		edge_materials.push_back(edge_mat)
-		edge_mat.textures = [tex]
+		var t_arr: Array[Texture2D] = [tex]
+		edge_mat.textures = t_arr
 
-		var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
+		var edge_mat_meta := SS2D_Material_Edge_Metadata.new()
 		edge_materials_meta.push_back(edge_mat_meta)
 		var division = 360.0 / edge_materials_count
 		var offset = -45
@@ -378,6 +379,6 @@ func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, 
 	#for e in edge_materials_meta:
 		#print(e.normal_range)
 
-	var s_m = SS2D_Material_Shape.new()
+	var s_m := SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials(edge_materials_meta)
 	return s_m

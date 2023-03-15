@@ -68,13 +68,13 @@ static func join_segments(segments: Array) -> Array:
 			for ii in range(i + 1, final_segments.size()):
 				var a: Array[int] = final_segments[i]
 				var b: Array[int] = final_segments[ii]
-				if a[-1] == b[0]:
+				if a.back() == b[0]:
 					to_join_tuple = TUP.create_tuple(i, ii)
 					join_performed = true
-					break
-				if b[-1] == a[0]:
+				if b.back() == a[0]:
 					to_join_tuple = TUP.create_tuple(ii, i)
 					join_performed = true
+				if join_performed:
 					break
 		if join_performed:
 			var idx_lowest: int = to_join_tuple[0]
@@ -233,7 +233,7 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 static func indicies_to_edges(p_indicies: Array[int]) -> Array:
 	var edges: Array = []
 	for i in range(0, p_indicies.size()-1, 1):
-		var edge: Array[int] = [i,i+1]
+		var edge: Array[int] = [i, i+1]
 		if is_array_contiguous(edge):
 			edges.push_back(edge)
 	return edges

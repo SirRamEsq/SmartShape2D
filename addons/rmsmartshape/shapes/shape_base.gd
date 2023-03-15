@@ -47,7 +47,7 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ## Toggle to make shape point geometry unique (not materials).
 @export var _make_unique: bool = false : set = _make_unique_trigger
 ## Resource that holds shape point geometry.
-@export var _points: SS2D_Point_Array: set = set_point_array
+@export var _points := SS2D_Point_Array.new() : set = set_point_array
 
 @export_group("Edges")
 
@@ -510,9 +510,6 @@ func set_point_properties(key: int, properties: SS2D_VertexProperties) -> void:
 #########
 
 func _ready() -> void:
-	if _points == null:
-		_points = SS2D_Point_Array.new()
-
 	if not _points.is_connected("material_override_changed", self._handle_material_override_change):
 		_points.connect("material_override_changed", self._handle_material_override_change)
 	if _curve == null:

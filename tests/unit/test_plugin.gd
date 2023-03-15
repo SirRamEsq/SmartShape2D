@@ -13,32 +13,32 @@ func test_intersect_control_point():
 	shape.set_point_out(key, Vector2(32, 0))
 	var et = Transform2D()
 	var grab = 16.0
-	var f1 = Callable(FUNC, "get_intersecting_control_point_out")
-	var f2 = Callable(FUNC, "get_intersecting_control_point_in")
+	var f1 := Callable(FUNC, "get_intersecting_control_point_out")
+	var f2 := Callable(FUNC, "get_intersecting_control_point_in")
 	var functions = [f1, f2]
 	var f_name = ["out", "in"]
 	var f_offset = [Vector2(32, 0), Vector2(-32, 0)]
 	var intersect = []
 	for i in range(0, functions.size(), 1):
-		var f = functions[i]
+		var f: Callable = functions[i]
 		var s = f_name[i]
 		var o = f_offset[i]
 		shape.position = Vector2(0, 0)
-		intersect = f.call_func(shape, et, Vector2(0, 0), grab)
+		intersect = f.call(shape, et, Vector2(0, 0), grab)
 		assert_eq(intersect.size(), 0, s)
-		intersect = f.call_func(shape, et, vert_p, grab)
+		intersect = f.call(shape, et, vert_p, grab)
 		assert_eq(intersect.size(), 0, s)
-		intersect = f.call_func(shape, et, vert_p + o - Vector2(grab, 0), grab)
+		intersect = f.call(shape, et, vert_p + o - Vector2(grab, 0), grab)
 		assert_eq(intersect.size(), 1, s)
-		intersect = f.call_func(shape, et, vert_p + o - Vector2(grab + 1, 0), grab)
+		intersect = f.call(shape, et, vert_p + o - Vector2(grab + 1, 0), grab)
 		assert_eq(intersect.size(), 0, s)
-		intersect = f.call_func(shape, et, vert_p + o + Vector2(grab, 0), grab)
+		intersect = f.call(shape, et, vert_p + o + Vector2(grab, 0), grab)
 		assert_eq(intersect.size(), 1, s)
-		intersect = f.call_func(shape, et, vert_p + o + Vector2(grab + 1, 0), grab)
+		intersect = f.call(shape, et, vert_p + o + Vector2(grab + 1, 0), grab)
 		assert_eq(intersect.size(), 0, s)
 
 		shape.position.x = 1
-		intersect = f.call_func(shape, et, vert_p + o + Vector2(grab + 1, 0), grab)
+		intersect = f.call(shape, et, vert_p + o + Vector2(grab + 1, 0), grab)
 		assert_eq(intersect.size(), 1, s)
 
 

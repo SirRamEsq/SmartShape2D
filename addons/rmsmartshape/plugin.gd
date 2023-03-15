@@ -363,7 +363,7 @@ func _ready() -> void:
 
 
 func _enter_tree() -> void:
-	plugin = preload("res://addons/rmsmartshape/inspector_plugin.gd").new()
+	plugin = load("res://addons/rmsmartshape/inspector_plugin.gd").new()
 	if plugin != null:
 		add_inspector_plugin(plugin)
 

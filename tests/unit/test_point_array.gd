@@ -115,15 +115,19 @@ func test_point_constraints():
 
 
 # TODO Test that material overrides are correctly handled when duplicating
-func test_duplicate():
-	var p_array = SS2D_Point_Array.new()
+func test_clone():
+	var p_array := SS2D_Point_Array.new()
 	for p in generate_points():
 		p_array.add_point(p)
 
-	var other = p_array.duplicate(true)
+	var other := p_array.clone(true)
 	assert_ne(p_array, other)
+	p_array._constraints["dummy"] = ""
 	assert_ne(p_array._constraints, other._constraints)
+	p_array._constraints.erase("dummy")
+	p_array._points["dummy"] = ""
 	assert_ne(p_array._points, other._points)
+	p_array._points.erase("dummy")
 
 	assert_eq(p_array._point_order, other._point_order)
 	p_array._point_order.push_back(31337)
@@ -141,18 +145,23 @@ func test_duplicate():
 
 	for k in p_array._points:
 		var p1 = p_array._points[k]
+		print("p1: ", p1.get_instance_id())
 		var p2 = other._points[k]
+		print("p2: ", p2.get_instance_id())
 		assert_ne(p1, p2, "Unique Point with key %s" % k)
 		assert_ne(p1.properties, p2.properties)
 
 		assert_eq(p1.get_signal_connection_list("changed").size(), 1, "SIGNALS CONNECTED")
+		print(p1.get_signal_connection_list("changed")[0])
 		assert_eq(
-			p1.get_signal_connection_list("changed")[0].target,
+			p1.get_signal_connection_list("changed")[0].callable.get_object(),
 			p_array,
 			"SIGNALS CONNECTED to Parent"
 		)
 		assert_eq(
-			p2.get_signal_connection_list("changed")[0].target, other, "SIGNALS CONNECTED to Parent"
+			p2.get_signal_connection_list("changed")[0].callable.get_object(),
+			other,
+			"SIGNALS CONNECTED to Parent"
 		)
 		assert_eq(
 			p1.get_signal_connection_list("changed").size(),

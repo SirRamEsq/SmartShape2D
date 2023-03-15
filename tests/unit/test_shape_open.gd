@@ -43,7 +43,7 @@ func test_are_points_clockwise():
 	add_child_autofree(shape)
 	var points_clockwise = [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
 	var points_c_clockwise = points_clockwise.duplicate()
-	points_c_clockwise.invert()
+	points_c_clockwise.reverse()
 
 	shape.add_points(points_clockwise)
 	assert_true(shape.are_points_clockwise())
@@ -184,7 +184,7 @@ func test_get_edge_meta_materials_one():
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 
 	var edge_mat = SS2D_Material_Edge.new()
-	edge_mat.textures = [TEST_TEXTURE]
+	edge_mat.textures = Array([TEST_TEXTURE], TYPE_OBJECT, "Texture2D", null)
 
 	var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
 	var normal_range = SS2D_NormalRange.new(0, 360.0)
@@ -220,11 +220,11 @@ func test_get_edge_meta_materials_many():
 
 	var edge_materials_count = 4
 	var edge_materials = []
-	var edge_materials_meta = []
+	var edge_materials_meta: Array[SS2D_Material_Edge_Metadata] = []
 	for i in range(0, edge_materials_count, 1):
 		var edge_mat = SS2D_Material_Edge.new()
 		edge_materials.push_back(edge_mat)
-		edge_mat.textures = [TEST_TEXTURE]
+		edge_mat.textures = Array([TEST_TEXTURE], TYPE_OBJECT, "Texture2D", null)
 
 		var edge_mat_meta = SS2D_Material_Edge_Metadata.new()
 		edge_materials_meta.push_back(edge_mat_meta)
@@ -238,7 +238,7 @@ func test_get_edge_meta_materials_many():
 	for e in edge_materials_meta:
 		print(e.normal_range)
 
-	var s_m = SS2D_Material_Shape.new()
+	var s_m := SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials(edge_materials_meta)
 	var n_right = Vector2(1, 0)
 	var n_left = Vector2(-1, 0)

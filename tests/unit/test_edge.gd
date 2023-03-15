@@ -4,7 +4,7 @@ var TEST_TEXTURE: Texture2D = preload("res://tests/unit/test.png")
 
 
 func test_consecutive_quads():
-	var big_exclude = [2, 8, 34, 56, 78, 99, 123, 154, 198, 234]
+	var big_exclude: Array[int] = [2, 8, 34, 56, 78, 99, 123, 154, 198, 234]
 	assert_eq(SS2D_Edge.get_consecutive_quads_for_mesh(generate_quads(256)).size(), 1)
 	assert_eq(
 		SS2D_Edge.get_consecutive_quads_for_mesh(generate_quads(256, null, big_exclude)).size(),
@@ -59,8 +59,8 @@ func generate_quads(
 	tex: Texture = null,
 	indicies_to_change: Array = [],
 	extents: Vector2 = Vector2(16.0, 16.0)
-) -> Array:
-	var quads = []
+) -> Array[SS2D_Quad]:
+	var quads: Array[SS2D_Quad] = []
 	var a = Vector2(-extents.x, -extents.y)
 	var b = Vector2(-extents.x, extents.y)
 	var c = Vector2(extents.x, extents.y)
