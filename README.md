@@ -67,9 +67,6 @@ Issues can be added [here](https://github.com/SirRamEsq/SmartShape2D/issues)
 ## Development
 We have a set of tests we run against the code (courtesy of [GUT](https://github.com/bitwes/Gut)).
 
-To download GUT use this git command after cloning:
-`git submodule update --init --recursive`
-
 If making a merge request, please ensure that the tests pass. If the tests have been updated appropriately to pass, please note this in the merge request.
 
 ## Discord

@@ -21,12 +21,6 @@ To set normal textures, you can create a `CanvasTexture` resource in the inspect
 
 ![Assigning Texture, Normal Map and Setting Repeat flag](img/../imgs/godot4-assign-normal-tex.png)
 
-## GUT
-
-To download GUT (unit testing plugin) use this git command after cloning:
-
-`git submodule update --init --recursive`
-
 ## Converting Projects to Godot 4.0
 
 Scene files with shapes saved in Godot 3.x should load in Godot 4 project. However, you may encounter some issues. Here is a list of expected problems:
