@@ -676,9 +676,8 @@ func generate_collision_points() -> PackedVector2Array:
 	var t_points: PackedVector2Array = get_tessellated_points()
 	if t_points.size() < 2:
 		return points
-	var indicies: Array[int] = []
-	for i in range(verts.size()):
-		indicies.push_back(i)
+	var indicies: Array[int]
+	indicies.assign(range(verts.size()))
 	var edge_data := SS2D_IndexMap.new(indicies, null)
 	var edge: SS2D_Edge = _build_edge_with_material(
 		edge_data, collision_offset - 1.0, collision_size
