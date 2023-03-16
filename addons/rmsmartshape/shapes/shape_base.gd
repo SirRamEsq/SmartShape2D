@@ -1004,7 +1004,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 	if s_mat == null:
 		return edges
 
-	var index_maps: Array[SS2D_IndexMap] = get_meta_material_index_mapping(s_mat, verts)
+	var index_maps: Array[SS2D_IndexMap] = _get_meta_material_index_mapping(s_mat, verts)
 	var overrides: Array[SS2D_IndexMap] = get_meta_material_index_mapping_for_overrides(s_mat, _points)
 
 	# Remove the override indicies from the default index_maps
@@ -1061,13 +1061,13 @@ static func get_meta_material_index_mapping_for_overrides(
 ## Will return a dictionary containing array of SS2D_IndexMap.[br]
 ## Each element in the array is a contiguous sequence of indicies that fit inside
 ## the meta_material's normalrange.[br]
-static func get_meta_material_index_mapping(
+func _get_meta_material_index_mapping(
 	s_material: SS2D_Material_Shape, verts: PackedVector2Array
 ) -> Array[SS2D_IndexMap]:
-	return _get_meta_material_index_mapping(s_material, verts, false)
+	return get_meta_material_index_mapping(s_material, verts, false)
 
 
-static func _get_meta_material_index_mapping(
+static func get_meta_material_index_mapping(
 	s_material: SS2D_Material_Shape, verts: PackedVector2Array, wrap_around: bool
 ) -> Array[SS2D_IndexMap]:
 	var final_edges: Array[SS2D_IndexMap] = []

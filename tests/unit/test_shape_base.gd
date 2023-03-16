@@ -72,7 +72,7 @@ func test_get_meta_material_index_mapping_simple_squareish_shape():
 		assert_not_null(edges)
 		assert_eq(1, edges.size())
 
-	var mappings = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts)
+	var mappings = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts, false)
 	var mappings_materials = []
 	for mapping in mappings:
 		mappings_materials.push_back(mapping.object)
@@ -110,7 +110,7 @@ func test_get_meta_material_index_mapping_complex_shape():
 	]
 	# Create shape material with 4 quadrants of normal range
 	var shape_material = create_shape_material_with_equal_normal_ranges(4)
-	var mappings = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts)
+	var mappings = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts, false)
 	var mappings_materials = []
 	for mapping in mappings:
 		mappings_materials.push_back(mapping.object)
@@ -150,7 +150,7 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 	shape.shape_material = shape_material
 	shape.set_point_array(point_array)
 
-	var index_maps = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts)
+	var index_maps = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts, false)
 	var edges = []
 
 	assert_eq(index_maps.size(), 3)

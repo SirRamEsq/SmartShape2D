@@ -203,7 +203,7 @@ func test_get_edge_meta_materials_one():
 	var points = get_clockwise_points()
 	shape.add_points(points)
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
-	var mappings = SS2D_Shape_Open.get_meta_material_index_mapping(s_m, points)
+	var mappings = SS2D_Shape_Open.get_meta_material_index_mapping(s_m, points, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
 	assert_eq(mappings.size(), 1, "Should be one EdgeData specified")
@@ -260,7 +260,7 @@ func test_get_edge_meta_materials_many():
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	assert_eq(shape.get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
-	var mappings = SS2D_Shape_Open.get_meta_material_index_mapping(s_m, points)
+	var mappings = SS2D_Shape_Open.get_meta_material_index_mapping(s_m, points, false)
 	assert_eq(mappings.size(), edge_materials_count, "Expecting %s materials" % edge_materials_count)
 	var expected_indicies = [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
 	for i in range(0, mappings.size(), 1):
