@@ -1375,8 +1375,7 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		shape.set_as_dirty()
 		update_overlays()
 
-	# TODO: should this always be false? rslt is set but unused
-	return false
+	return rslt
 
 
 func _input_motion_move_verts(delta: Vector2) -> bool:
