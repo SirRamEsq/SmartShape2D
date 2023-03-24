@@ -56,6 +56,7 @@ func generate_closed_shape() -> SS2D_Shape_Closed:
 	add_child_autofree(shape)
 	var points = generate_points()
 	shape.add_points(points)
+	shape.close_shape()
 	assert_eq(shape.get_point_count(), points.size() + 1)
 	return shape
 

@@ -1,6 +1,6 @@
 extends "res://addons/gut/test.gd"
 
-var FUNC = load("res://addons/rmsmartshape/plugin-functionality.gd")
+var FUNC = load("res://addons/rmsmartshape/plugin_functionality.gd")
 
 signal yield_complete(number)
 

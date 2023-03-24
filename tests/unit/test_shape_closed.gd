@@ -11,6 +11,7 @@ func test_adjust_point_index():
 	for i in range(0, points.size(), 1):
 		var p = points[i]
 		keys.push_back(shape.add_point(p))
+	shape.close_shape()
 
 	assert_eq(shape.adjust_add_point_index(0), 1)
 	var point_count = shape.get_point_count()
@@ -37,7 +38,9 @@ func test_add_points():
 	assert_eq(shape.get_point_index(keys[1]), 1)
 
 	keys.push_back(shape.add_point(points[2]))
-	keys.push_back(shape.get_point_key_at_index(3))
+	assert_eq(shape.get_point_count(), 3)
+	assert_eq(shape.can_close(), true)
+	keys.push_back(shape.close_shape())
 	assert_eq(shape.get_point_count(), 4)
 	assert_eq(shape.get_point_index(keys[0]), 0)
 	assert_eq(shape.get_point_index(keys[1]), 1)

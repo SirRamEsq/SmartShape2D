@@ -31,4 +31,5 @@ Please read the section on [how to set repeat and use normal textures in Godot 4
 
 ## Removed Features
 
-The Godot 4.0 version of this addon does not support 1.x RMSmartShape2D nodes anymore.
+- The Godot 4.0 version of this addon does not support 1.x RMSmartShape2D nodes anymore.
+- SS2D_Shape_Meta node was removed, since its functionality is available  copy-pasted shapes by default.

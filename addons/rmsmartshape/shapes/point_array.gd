@@ -20,6 +20,8 @@ enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTI
 @export var _material_overrides: Dictionary = {} : set = set_material_overrides
 
 var _constraints_enabled: bool = true
+var _dirty := false
+var _updating := false
 
 signal constraint_removed(key1, key2)
 signal material_override_changed(tuple)
@@ -92,7 +94,7 @@ func _set_constraints(cs: Dictionary) -> void:
 				push_error("Constraints Dictionary should have the following structure: key is a tuple of point_keys and value is the CONSTRAINT enum")
 			elif tuple.get_typed_builtin() != TYPE_INT:
 				# Try to convert
-				var new_tuple: Array[int]
+				var new_tuple: Array[int] = []
 				new_tuple.assign(tuple)
 				var constraint: CONSTRAINT = _constraints[tuple]
 				_constraints.erase(tuple)
@@ -112,7 +114,7 @@ func __generate_key(next: int) -> int:
 	return next
 
 
-func _generate_key() -> int:
+func reserve_key() -> int:
 	var next: int = __generate_key(_next_key)
 	_next_key = next + 1
 	return next
@@ -132,16 +134,19 @@ func is_key_valid(k: int) -> bool:
 
 
 func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
-	var next_key: int = use_key
-	if next_key == -1 or not is_key_valid(next_key):
-		next_key = _generate_key()
+#	print("Add Point  ::  ", point, " | idx: ", idx, " | key: ", use_key, " |")
+	if use_key == -1 or not is_key_valid(use_key):
+		use_key = reserve_key()
+	if use_key == _next_key:
+		_next_key += 1
 	var new_point := SS2D_Point.new(point)
 	new_point.connect("changed", self._on_point_changed.bind(new_point))
-	_points[next_key] = new_point
-	_point_order.push_back(next_key)
+	_points[use_key] = new_point
+	_point_order.push_back(use_key)
 	if idx != -1:
-		set_point_index(next_key, idx)
-	return next_key
+		set_point_index(use_key, idx)
+	_changed()
+	return use_key
 
 
 func is_index_in_range(idx: int) -> bool:
@@ -163,6 +168,7 @@ func get_point(key: int) -> SS2D_Point:
 func set_point(key: int, value: SS2D_Point) -> void:
 	if has_point(key):
 		_points[key] = value.duplicate(true)
+		_changed()
 
 
 func get_point_count() -> int:
@@ -182,6 +188,7 @@ func get_point_index(key: int) -> int:
 
 func invert_point_order() -> void:
 	_point_order.reverse()
+	_changed()
 
 
 func set_point_index(key: int, idx: int) -> void:
@@ -207,12 +214,14 @@ func get_all_point_keys() -> Array[int]:
 
 func remove_point(key: int) -> bool:
 	if has_point(key):
+#		print("Remove Point  ::  ", get_point_position(key), " | idx: ", get_point_index(key), " | key: ", key, " |")
 		remove_constraints(key)
 		var p: SS2D_Point = _points[key]
 		if p.is_connected("changed", self._on_point_changed):
 			p.disconnect("changed", self._on_point_changed)
 		_point_order.remove_at(get_point_index(key))
 		_points.erase(key)
+		_changed()
 		return true
 	return false
 
@@ -222,12 +231,13 @@ func clear() -> void:
 	_point_order.clear()
 	_constraints.clear()
 	_next_key = 0
-	emit_changed()
+	_changed()
 
 
 func set_point_in(key: int, value: Vector2) -> void:
 	if has_point(key):
 		_points[key].point_in = value
+		_changed()
 
 
 func get_point_in(key: int) -> Vector2:
@@ -239,6 +249,7 @@ func get_point_in(key: int) -> Vector2:
 func set_point_out(key: int, value: Vector2) -> void:
 	if has_point(key):
 		_points[key].point_out = value
+		_changed()
 
 
 func get_point_out(key: int) -> Vector2:
@@ -250,6 +261,7 @@ func get_point_out(key: int) -> Vector2:
 func set_point_position(key: int, value: Vector2) -> void:
 	if has_point(key):
 		_points[key].position = value
+		_changed()
 
 
 func get_point_position(key: int) -> Vector2:
@@ -261,6 +273,7 @@ func get_point_position(key: int) -> Vector2:
 func set_point_properties(key: int, value: SS2D_VertexProperties) -> void:
 	if has_point(key):
 		_points[key].properties = value
+		_changed()
 
 
 func get_point_properties(key: int) -> SS2D_VertexProperties:
@@ -284,6 +297,29 @@ func _on_point_changed(p: SS2D_Point) -> void:
 	else:
 		update_constraints(key)
 
+
+func begin_update() -> void:
+	_updating = true
+
+
+func end_update() -> bool:
+	var was_dirty := _dirty
+	_updating = false
+	_dirty = false
+	if was_dirty:
+		emit_changed()
+	return was_dirty
+
+
+func is_updating() -> bool:
+	return _updating
+
+
+func _changed() -> void:
+	if _updating:
+		_dirty = true
+	else:
+		emit_changed()
 
 ###############
 # CONSTRAINTS #
@@ -338,7 +374,7 @@ func update_constraints(src: int) -> void:
 			_update_constraints(k)
 
 	_updating_constraints = false
-	emit_changed()
+	_changed()
 
 
 ## Will Return all constraints for a given key.
@@ -373,6 +409,7 @@ func set_constraint(key1: int, key2: int, constraint: CONSTRAINT) -> void:
 		emit_signal("constraint_removed", key1, key2)
 	else:
 		update_constraints(key1)
+	_changed()
 
 
 func remove_constraints(key1: int) -> void:
@@ -477,6 +514,11 @@ func get_material_overrides() -> Dictionary:
 
 func clear_all_material_overrides() -> void:
 	_material_overrides = {}
+
+
+func _to_string() -> String:
+	return "<SS2D_Point_Array points: %s order: %s>" % [_points.keys(), _point_order]
+
 
 func _on_material_override_changed(tuple) -> void:
 	emit_signal("material_override_changed", tuple)

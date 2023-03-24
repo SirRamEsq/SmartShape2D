@@ -37,8 +37,6 @@
  "should_maximize": false,
  "show_help": false,
  "suffix": ".gd",
- "tests": [
-
- ],
+ "tests": [],
  "unit_test_name": null
 }

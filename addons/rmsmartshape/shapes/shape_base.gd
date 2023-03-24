@@ -24,7 +24,7 @@ var _dirty: bool = true
 var _edges: Array[SS2D_Edge] = []
 var _meshes: Array[SS2D_Mesh] = []
 var _is_instantiable: bool = false
-var _curve: Curve2D = Curve2D.new()
+var _curve: Curve2D
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
 # Whether or not the plugin should allow editing this shape
@@ -40,7 +40,8 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 #-EXPORTS-#
 ###########
 
-## Execute to refresh shape rendered geometry and textures.
+# Execute to refresh shape rendered geometry and textures.
+@warning_ignore("unused_private_class_variable")
 @export_placeholder("ActionProperty") var _refresh: String = "" : set = _refresh_action
 #   ActionProperty will add a button to inspector to execute this action.
 #   When non-empty string is passed into setter, action is considerd executed.
@@ -55,13 +56,14 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
 @export_group("Geometry")
 
-## Execute to make shape point geometry unique (not materials).
+# Execute to make shape point geometry unique (not materials).
+@warning_ignore("unused_private_class_variable")
 @export_placeholder("ActionProperty") var _make_unique: String = "" : set = _make_unique_action
 #   ActionProperty will add a button to inspector to execute this action.
 #   When non-empty string is passed into setter, action is considerd executed.
 
-## Resource that holds shape point geometry.
-@export var _points := SS2D_Point_Array.new() : set = set_point_array
+## Resource that holds shape point geometry (aka point array).
+@export var _points: SS2D_Point_Array : set = set_point_array
 
 @export_group("Edges")
 
@@ -114,12 +116,15 @@ func get_point_array() -> SS2D_Point_Array:
 
 func set_point_array(a: SS2D_Point_Array) -> void:
 	if _points != null:
+		if _points.is_connected("changed", self._points_modified):
+			_points.disconnect("changed", self._points_modified)
 		if _points.is_connected("material_override_changed", self._handle_material_override_change):
 			_points.disconnect("material_override_changed", self._handle_material_override_change)
 	if a == null:
 		a = SS2D_Point_Array.new()
 	_points = a
 	_point_array_assigned()
+	_points.connect("changed", self._points_modified)
 	_points.connect("material_override_changed", self._handle_material_override_change)
 	clear_cached_data()
 	_update_curve(_points)
@@ -134,7 +139,7 @@ func _point_array_assigned() -> void:
 
 func _refresh_action(value: String) -> void:
 	if value.length() > 0:
-		set_as_dirty()
+		_points_modified()
 
 
 func _make_unique_action(value: String) -> void:
@@ -172,14 +177,13 @@ func _update_curve_no_control() -> void:
 		_curve_no_control_points.add_point(_curve.get_point_position(i))
 
 
+# FIXME: Only used by unit test.
 func set_curve(value: Curve2D) -> void:
 	_curve = value
 	_points.clear()
 	for i in range(0, _curve.get_point_count(), 1):
 		_points.add_point(_curve.get_point_position(i))
-	_update_curve_no_control()
-	set_as_dirty()
-	emit_signal("points_modified")
+	_points_modified()
 	notify_property_list_changed()
 
 
@@ -300,6 +304,9 @@ func get_vertices() -> PackedVector2Array:
 
 
 func get_tessellated_points() -> PackedVector2Array:
+	# Force update curve if point array is dirty.
+	if _points.is_updating():
+		_update_curve(_points)
 	if _curve.get_point_count() < 2:
 		return PackedVector2Array()
 	# Point 0 will be the same on both the curve points and the vertecies
@@ -311,48 +318,76 @@ func get_tessellated_points() -> PackedVector2Array:
 	return points
 
 
+## Reverse order of points in point array.[br]
+## I.e. [1, 2, 3, 4] will become [4, 3, 2, 1].[br]
 func invert_point_order() -> void:
 	_points.invert_point_order()
-	_update_curve(_points)
-	set_as_dirty()
 
 
+## Remove all points from point array.
 func clear_points() -> void:
 	_points.clear()
-	_update_curve(_points)
-	set_as_dirty()
 
 
-# Meant to override in subclasses
+# @virtual
+## Adjusts index of a new point to be added with [method add_point].
 func adjust_add_point_index(index: int) -> int:
 	return index
 
 
-# Meant to override in subclasses
+# FIXME: Only unit tests use this.
 func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
 	var keys: Array[int] = []
+	_points.begin_update()
 	for i in range(0, verts.size(), 1):
 		var v: Vector2 = verts[i]
 		if starting_index != -1:
 			keys.push_back(_points.add_point(v, starting_index + i, key))
 		else:
 			keys.push_back(_points.add_point(v, starting_index, key))
-	_add_point_update()
+	_points.end_update()
+	_points_modified()
 	return keys
 
 
-# Meant to override in subclasses
+# @virtual
+## Add a point.[br]
+## Returns key of the added point.[br]
 func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
-	key = _points.add_point(pos, index, key)
-	_add_point_update()
-	return key
+	return _points.add_point(pos, adjust_add_point_index(index), key)
 
 
+## Begin updating the shape.[br]
+## Shape mesh and curve will only be updated after [method end_update] is called.
+func begin_update() -> void:
+	_points.begin_update()
+
+
+## End updating the shape.[br]
+## Mesh and curve will be updated, if changes were made to points array after
+## [method begin_update] was called.
+func end_update() -> void:
+	_points.end_update()
+
+
+## Is shape in the middle of being updated.
+## Returns [code]true[/code] after [method begin_update] and before [method end_update].
+func is_updating() -> bool:
+	return _points.is_updating()
+
+
+## Gets next key that would be generated.[br]
+## E.g. when [method add_point] is called.[br]
 func get_next_key() -> int:
 	return _points.get_next_key()
 
 
-func _add_point_update():
+## Reserve a key. It will not be generated again.
+func reserve_key() -> int:
+	return _points.reserve_key()
+
+
+func _points_modified() -> void:
 	_update_curve(_points)
 	set_as_dirty()
 	emit_signal("points_modified")
@@ -368,21 +403,21 @@ func is_index_in_range(idx: int) -> bool:
 
 func set_point_position(key: int, pos: Vector2) -> void:
 	_points.set_point_position(key, pos)
-	_update_curve(_points)
-	set_as_dirty()
-	emit_signal("points_modified")
 
 
 func remove_point(key: int) -> void:
 	_points.remove_point(key)
-	_update_curve(_points)
-	set_as_dirty()
-	emit_signal("points_modified")
 
 
 func remove_point_at_index(idx: int) -> void:
 	remove_point(get_point_key_at_index(idx))
 
+
+# @virtual
+## Is this shape not yet closed but should be.[br]
+## Returns [code]false[/code] for open shapes.[br]
+func can_close() -> bool:
+	return false
 
 #######################
 #-POINT ARRAY WRAPPER-#
@@ -412,18 +447,11 @@ func get_point_index(key: int) -> int:
 ## point_in controls the edge leading from the previous vertex to this one
 func set_point_in(key: int, v: Vector2) -> void:
 	_points.set_point_in(key, v)
-	_update_curve(_points)
-	set_as_dirty()
-	emit_signal("points_modified")
-
 
 
 ## point_out controls the edge leading from this vertex to the next
 func set_point_out(key: int, v: Vector2) -> void:
 	_points.set_point_out(key, v)
-	_update_curve(_points)
-	set_as_dirty()
-	emit_signal("points_modified")
 
 
 func get_point_in(key: int) -> Vector2:
@@ -492,15 +520,12 @@ func set_constraint(key1: int, key2: int, c: SS2D_Point_Array.CONSTRAINT) -> voi
 
 func set_point(key: int, value: SS2D_Point) -> void:
 	_points.set_point(key, value)
-	_update_curve(_points)
-	set_as_dirty()
 
 
 func set_point_width(key: int, w: float) -> void:
 	var props: SS2D_VertexProperties = _points.get_point_properties(key)
 	props.width = w
 	_points.set_point_properties(key, props)
-	set_as_dirty()
 
 
 func get_point_width(key: int) -> float:
@@ -539,12 +564,12 @@ func set_point_properties(key: int, properties: SS2D_VertexProperties) -> void:
 #-GODOT-#
 #########
 
+func _init() -> void:
+	_curve = Curve2D.new()
+	set_point_array(SS2D_Point_Array.new())
+
+
 func _ready() -> void:
-	if not _points.is_connected("material_override_changed", self._handle_material_override_change):
-		_points.connect("material_override_changed", self._handle_material_override_change)
-	if _curve == null:
-		_curve = Curve2D.new()
-	_update_curve(_points)
 	if not _is_instantiable:
 		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
 		queue_free()
@@ -1605,6 +1630,7 @@ func _build_edge_with_material(
 			_weld_quad_array(edge.quads, edge.wrap_around)
 
 	return edge
+
 
 func _build_edge_with_material_thread_wrapper(args: Array) -> SS2D_Edge:
 	return _build_edge_with_material(args[0], args[1], args[2])

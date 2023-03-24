@@ -29,7 +29,16 @@ var ICON_SNAP: Texture2D = load("res://addons/rmsmartshape/assets/icon_editor_sn
 var ICON_IMPORT_CLOSED: Texture2D = load("res://addons/rmsmartshape/assets/closed_shape.png")
 var ICON_IMPORT_OPEN: Texture2D = load("res://addons/rmsmartshape/assets/open_shape.png")
 
-const FUNC = preload("plugin-functionality.gd")
+const FUNC = preload("plugin_functionality.gd")
+const ActionAddCollisionNodes := preload("res://addons/rmsmartshape/actions/action_add_collision_nodes.gd")
+const ActionMoveVerticies := preload("res://addons/rmsmartshape/actions/action_move_verticies.gd")
+const ActionSetPivot := preload("res://addons/rmsmartshape/actions/action_set_pivot.gd")
+const ActionMoveControlPoints := preload("res://addons/rmsmartshape/actions/action_move_control_points.gd")
+const ActionDeleteControlPoint := preload("res://addons/rmsmartshape/actions/action_delete_control_point.gd")
+const ActionDeletePoint := preload("res://addons/rmsmartshape/actions/action_delete_point.gd")
+const ActionAddPoint := preload("res://addons/rmsmartshape/actions/action_add_point.gd")
+const ActionSplitCurve := preload("res://addons/rmsmartshape/actions/action_split_curve.gd")
+const ActionMakeShapeUnique := preload("res://addons/rmsmartshape/actions/action_make_shape_unique.gd")
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
@@ -534,15 +543,11 @@ static func snap_position(
 ##########
 
 func disconnect_shape(s) -> void:
-	if s.is_connected("points_modified", self._on_shape_point_modified):
-		s.disconnect("points_modified", self._on_shape_point_modified)
 	if s.is_connected("make_unique_pressed", self._on_shape_make_unique):
 		s.disconnect("make_unique_pressed", self._on_shape_make_unique)
 
 
 func connect_shape(s) -> void:
-	if not s.is_connected("points_modified", self._on_shape_point_modified):
-		s.connect("points_modified", self._on_shape_point_modified)
 	if not s.is_connected("make_unique_pressed", self._on_shape_make_unique):
 		s.connect("make_unique_pressed", self._on_shape_make_unique)
 
@@ -618,16 +623,12 @@ static func is_shape_valid(s) -> bool:
 	return true
 
 
-func _on_shape_point_modified() -> void:
-	FUNC.action_invert_orientation(self, "update_overlays", get_undo_redo(), shape)
-
-
 func _on_shape_make_unique(_shape: SS2D_Shape_Base) -> void:
 	make_unique_dialog.popup_centered()
 
 
 func _shape_make_unique() -> void:
-	FUNC.action_make_shape_unique(shape, get_undo_redo())
+	perform_action(ActionMakeShapeUnique.new(shape))
 
 
 func get_et() -> Transform2D:
@@ -664,53 +665,18 @@ func _enter_mode(mode: int) -> void:
 	update_overlays()
 
 
-func _set_pivot(point: Vector2) -> void:
-	var np: Vector2 = point
-	var ct: Transform2D = shape.get_global_transform()
-	ct.origin = np
-
-	shape.disable_constraints()
-	for i in shape.get_point_count():
-		var key: int = shape.get_point_key_at_index(i)
-		var pt: Vector2 = shape.get_global_transform() * shape.get_point_position(key)
-		shape.set_point_position(key, ct.affine_inverse() * pt)
-	shape.enable_constraints()
-
-	shape.position = shape.get_parent().get_global_transform().affine_inverse() * np
-	_enter_mode(current_mode)
-	update_overlays()
-
-
 func _add_collision() -> void:
 	call_deferred("_add_deferred_collision")
 
 
 func _add_deferred_collision() -> void:
-	if not shape.get_parent() is StaticBody2D:
-		var static_body: StaticBody2D = StaticBody2D.new()
-		static_body.position = shape.position
-		shape.position = Vector2.ZERO
-
-		shape.get_parent().add_child(static_body, true)
-		static_body.owner = get_editor_interface().get_edited_scene_root()
-
-		shape.get_parent().remove_child(shape)
-		static_body.add_child(shape, true)
-		shape.owner = get_editor_interface().get_edited_scene_root()
-
-		var poly: CollisionPolygon2D = CollisionPolygon2D.new()
-		static_body.add_child(poly, true)
-		poly.owner = get_editor_interface().get_edited_scene_root()
-		# TODO: Make this a option at some point
-		poly.modulate.a = 0.3
-		poly.visible = false
-		shape.collision_polygon_node_path = shape.get_path_to(poly)
-		shape.set_as_dirty()
-
+	if shape and not shape.get_parent() is StaticBody2D:
+		perform_action(ActionAddCollisionNodes.new(shape))
 
 #############
 # RENDERING #
 #############
+
 func _forward_canvas_draw_over_viewport(overlay: Control):
 	# Something might force a draw which we had no control over,
 	# in this case do some updating to be sure
@@ -959,6 +925,16 @@ func select_width_handle_to_move(keys: Array[int], _mouse_starting_pos_viewport:
 	current_action = select_verticies(keys, ACTION_VERT.MOVE_WIDTH_HANDLE)
 
 
+func perform_action(action: SS2D_Action) -> void:
+	var undo := get_undo_redo()
+	undo.create_action(action.get_name(), UndoRedo.MERGE_DISABLE, shape.get_point_array())
+	undo.add_do_method(action, "do")
+	undo.add_do_method(self, "update_overlays")
+	undo.add_undo_method(action, "undo")
+	undo.add_undo_method(self, "update_overlays")
+	undo.commit_action()
+
+
 #########
 # INPUT #
 #########
@@ -968,7 +944,7 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		# Mouse over a single vertex?
 		if current_action.is_single_vert_selected():
-			FUNC.action_delete_point(self, "update_overlays", get_undo_redo(), shape, current_action.keys[0])
+			perform_action(ActionDeletePoint.new(shape, current_action.keys[0]))
 			deselect_verts()
 			return true
 		else:
@@ -981,10 +957,12 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 				shape, et, mb_position, grab_threshold
 			)
 			if not points_in.is_empty():
-				FUNC.action_delete_point_in(self, "update_overlays", get_undo_redo(), shape, points_in[0])
+				perform_action(ActionDeleteControlPoint.new(shape, points_in[0],
+						ActionDeleteControlPoint.PointType.POINT_IN))
 				return true
 			elif not points_out.is_empty():
-				FUNC.action_delete_point_out(self, "update_overlays", get_undo_redo(), shape, points_out[0])
+				perform_action(ActionDeleteControlPoint.new(shape, points_out[0],
+						ActionDeleteControlPoint.PointType.POINT_OUT))
 				return true
 	elif current_mode == MODE.EDIT_EDGE:
 		if on_edge:
@@ -1006,7 +984,7 @@ func _input_handle_left_click(
 		var local_position: Vector2 = et.affine_inverse() * mb.position
 		if use_snap():
 			local_position = snap(local_position)
-		FUNC.action_set_pivot(self, "_set_pivot", get_undo_redo(), shape, et, local_position)
+		perform_action(ActionSetPivot.new(shape, et, local_position))
 		return true
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
@@ -1042,10 +1020,9 @@ func _input_handle_left_click(
 					var copy: SS2D_Shape_Base = copy_shape(shape)
 
 					copy.set_point_array(SS2D_Point_Array.new())
-					var new_key: int = FUNC.action_add_point(
-						self, "update_overlays", get_undo_redo(), copy, local_position
-					)
-					select_vertices_to_move([new_key], vp_m_pos)
+					var add_point := ActionAddPoint.new(copy, local_position)
+					perform_action(add_point)
+					select_vertices_to_move([add_point.get_key()], vp_m_pos)
 
 					_enter_mode(MODE.CREATE_VERT)
 
@@ -1053,19 +1030,11 @@ func _input_handle_left_click(
 					selection.clear()
 					selection.add_node(copy)
 				elif Input.is_key_pressed(KEY_ALT):
-					FUNC.action_add_point(
-						self,
-						"update_overlays",
-						get_undo_redo(),
-						shape,
-						local_position,
-						shape.get_point_index(closest_edge_keys[1])
-					)
+					perform_action(ActionAddPoint.new(shape, local_position, shape.get_point_index(closest_edge_keys[1])))
 				else:
-					var new_key: int = FUNC.action_add_point(
-						self, "update_overlays", get_undo_redo(), shape, local_position
-					)
-					select_vertices_to_move([new_key], vp_m_pos)
+					var add_point := ActionAddPoint.new(shape, local_position)
+					perform_action(add_point)
+					select_vertices_to_move([add_point.get_key()], vp_m_pos)
 				return true
 	elif current_mode == MODE.EDIT_EDGE:
 		if gui_edge_info_panel.visible:
@@ -1200,12 +1169,16 @@ func _input_handle_mouse_button_event(
 		var _in := type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
 		var _out := type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_OUT
 		if type == ACTION_VERT.MOVE_VERT:
-			FUNC.action_move_verticies(self, "update_overlays", get_undo_redo(), shape, current_action)
+			perform_action(ActionMoveVerticies.new(shape, current_action.keys,
+					current_action.starting_positions))
 			rslt = true
 		elif _in or _out:
-			FUNC.action_move_control_points(
-				self, "update_overlays", get_undo_redo(), shape, current_action, _in, _out
-			)
+			perform_action(ActionMoveControlPoints.new(
+				shape,
+				current_action.keys,
+				current_action.starting_positions_control_in,
+				current_action.starting_positions_control_out
+			))
 			rslt = true
 		deselect_verts()
 		return rslt
@@ -1247,10 +1220,9 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 	if insertion_point == -1:
 		insertion_point = shape.get_point_count() - 1
 
-	var key: int = FUNC.action_split_curve(
-		self, "update_overlays", get_undo_redo(), shape, insertion_point, gpoint, t
-	)
-	select_vertices_to_move([key], vp_m_pos)
+	var split_curve := ActionSplitCurve.new(shape, insertion_point, gpoint, t)
+	perform_action(split_curve)
+	select_vertices_to_move([split_curve.get_key()], vp_m_pos)
 	on_edge = false
 
 	return true
@@ -1485,14 +1457,10 @@ func _input_handle_mouse_motion_event(
 					last_point_position = local_position
 					if use_snap():
 						local_position = snap(local_position)
-					FUNC.action_add_point(
-						self,
-						"update_overlays",
-						get_undo_redo(),
+					perform_action(ActionAddPoint.new(
 						shape,
 						local_position,
-						shape.get_point_index(closest_edge_keys[1])
-					)
+						shape.get_point_index(closest_edge_keys[1])))
 				update_overlays()
 				return true
 			else:
@@ -1506,7 +1474,7 @@ func _input_handle_mouse_motion_event(
 						delete_point = closest_key
 						on_width_handle = false
 						if delete_point != -1:
-							FUNC.action_delete_point(self, "update_overlays", get_undo_redo(), shape, delete_point)
+							perform_action(ActionDeletePoint.new(shape, delete_point))
 							last_point_position = Vector2.ZERO
 							update_overlays()
 							return true
@@ -1530,8 +1498,6 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 		copy = SS2D_Shape_Closed.new()
 	if s is SS2D_Shape_Open:
 		copy = SS2D_Shape_Open.new()
-	if s is SS2D_Shape_Meta:
-		copy = SS2D_Shape_Meta.new()
 	copy.position = s.position
 	copy.scale = s.scale
 	copy.modulate = s.modulate
@@ -1545,32 +1511,39 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 	copy.tessellation_tolerence = s.tessellation_tolerence
 	copy.curve_bake_interval = s.curve_bake_interval
 	#copy.material_overrides = s.material_overrides
+	copy.name = s.get_name().rstrip("0123456789")
 
-	s.get_parent().add_child(copy, true)
-	copy.set_owner(get_tree().get_edited_scene_root())
+	var undo := get_undo_redo()
+	undo.create_action("Add Shape Node")
 
-	if (
-		not s.collision_polygon_node_path.is_empty()
-		and s.has_node(s.collision_polygon_node_path)
-	):
+	undo.add_do_method(s.get_parent(), "add_child", copy, true)
+	undo.add_do_method(copy, "set_owner", get_tree().get_edited_scene_root())
+	undo.add_do_reference(copy)
+	undo.add_undo_method(copy, "set_owner", null)
+	undo.add_undo_method(s.get_parent(), "remove_child", copy)
+
+	if (not s.collision_polygon_node_path.is_empty() and s.has_node(s.collision_polygon_node_path)):
 		var collision_polygon_original: Node = s.get_node(s.collision_polygon_node_path)
 		var collision_polygon_new := CollisionPolygon2D.new()
 		collision_polygon_new.visible = collision_polygon_original.visible
 
-		collision_polygon_original.get_parent().add_child(collision_polygon_new, true)
-		collision_polygon_new.set_owner(get_tree().get_edited_scene_root())
+		undo.add_do_method(collision_polygon_original.get_parent(), "add_child", collision_polygon_new, true)
+		undo.add_do_method(collision_polygon_new, "set_owner", get_tree().get_edited_scene_root())
+		undo.add_do_reference(collision_polygon_new)
+
+		undo.add_undo_method(collision_polygon_original.get_parent(), "remove_child", collision_polygon_new)
+
+		undo.commit_action()
 
 		copy.collision_polygon_node_path = copy.get_path_to(collision_polygon_new)
+	else:
+		undo.commit_action()
 
 	return copy
 
 
 func is_shape_closed(s: SS2D_Shape_Base) -> bool:
-	if s is SS2D_Shape_Open:
-		return false
-	if s is SS2D_Shape_Meta:
-		return shape.treat_as_closed()
-	return true
+	return s is SS2D_Shape_Closed
 
 
 #########

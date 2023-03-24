@@ -58,3 +58,7 @@ func _set_properties(other: SS2D_VertexProperties) -> void:
 		properties = other.duplicate(true)
 		emit_changed()
 		notify_property_list_changed()
+
+
+func _to_string() -> String:
+	return "<SS2D_Point %s>" % [position]

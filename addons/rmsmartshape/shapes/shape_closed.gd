@@ -28,6 +28,7 @@ class_name SS2D_Shape_Closed
 #########
 # GODOT #
 #########
+
 func _init() -> void:
 	super._init()
 	_is_instantiable = true
@@ -36,20 +37,13 @@ func _init() -> void:
 ############
 # OVERRIDE #
 ############
-func remove_point(key: int) -> void:
-	_points.remove_point(key)
-	_close_shape()
-	_update_curve(_points)
-	set_as_dirty()
-	emit_signal("points_modified")
-
 
 func _point_array_assigned() -> void:
-	_close_shape()
+	close_shape()
 
 
 func has_minimum_point_count() -> bool:
-	return _points.get_point_count() >= 3
+	return _points.get_point_count() > 3
 
 
 func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
@@ -184,62 +178,51 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	return meshes
 
 
-# Will mutate the _points to ensure this is a closed_shape.
-# last point will be constrained to first point
-# returns true if _points is modified
-func _close_shape() -> bool:
-	if is_shape_closed():
-		return false
-	if not has_minimum_point_count():
-		return false
+## Is this shape not yet closed but should be?
+func can_close() -> bool:
+	return _points.get_point_count() > 2 and _has_closing_point() == false
+
+
+## Will mutate the _points to ensure this is a closed_shape.[br]
+## Last point will be constrained to first point.[br]
+## Returns key of a point used to close the shape.[br]
+## [param key] suggests which key to use instead of auto-generated.[br]
+func close_shape(key: int = -1) -> int:
+	if not can_close():
+		return -1
 
 	var key_first: int = _points.get_point_key_at_index(0)
-	var key_last: int = _points.get_point_key_at_index(get_point_count() - 1)
+	var key_last: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
 
-	# If points are not the same pos, add new point
 	if get_point_position(key_first) != get_point_position(key_last):
-		key_last = _points.add_point(_points.get_point_position(key_first))
-
+		key_last = _points.add_point(_points.get_point_position(key_first), -1, key)
 	_points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
-	_add_point_update()
-	return true
+
+	return key_last
 
 
 func is_shape_closed() -> bool:
-	var point_count: int = _points.get_point_count()
-	if not has_minimum_point_count():
+	if _points.get_point_count() < 4:
+		return false
+	return _has_closing_point()
+
+
+func _has_closing_point() -> bool:
+	if _points.get_point_count() < 2:
 		return false
 	var key1: int = _points.get_point_key_at_index(0)
-	var key2: int = _points.get_point_key_at_index(point_count - 1)
+	var key2: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
 	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
-
-
-func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
-	for i in range(0, verts.size(), 1):
-		print("%s | %s" % [i, verts[i]])
-	return super.add_points(verts, adjust_add_point_index(starting_index), key)
-
-
-func add_point(p_position: Vector2, index: int = -1, key: int = -1) -> int:
-	return super.add_point(p_position, adjust_add_point_index(index), key)
 
 
 func adjust_add_point_index(index: int) -> int:
 	# Don't allow a point to be added after the last point of the closed shape or before the first
-	if is_shape_closed():
+	if _has_closing_point():
 		if index < 0 or (index > get_point_count() - 1):
 			index = maxi(get_point_count() - 1, 0)
 		if index < 1:
 			index = 1
 	return index
-
-
-func _add_point_update() -> void:
-	# Return early if _close_shape() adds another point
-	# _add_point_update() will be called again by having another point added
-	if _close_shape():
-		return
-	super._add_point_update()
 
 
 func generate_collision_points() -> PackedVector2Array:
@@ -269,21 +252,6 @@ func generate_collision_points() -> PackedVector2Array:
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
 	return points
-
-
-func _on_dirty_update() -> void:
-	if _dirty:
-		update_render_nodes()
-		clear_cached_data()
-		# Close shape
-		_close_shape()
-		if has_minimum_point_count():
-			bake_collision()
-			cache_edges()
-			cache_meshes()
-		queue_redraw()
-		_dirty = false
-		emit_signal("on_dirty_update")
 
 
 func cache_edges() -> void:
