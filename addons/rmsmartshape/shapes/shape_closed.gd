@@ -290,7 +290,9 @@ func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -
 			else:
 				final_edges.erase(edge_last_idx)
 				final_edges.erase(edge_first_idx)
-				var indicies := edge_last_idx.indicies + edge_first_idx.indicies
+				var indicies: Array[int] = []
+				indicies.append_array(edge_last_idx.indicies)
+				indicies.append_array(edge_first_idx.indicies)
 				var merged_edge := SS2D_IndexMap.new(indicies, mat)
 				final_edges.push_back(merged_edge)
 
