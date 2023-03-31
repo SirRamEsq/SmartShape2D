@@ -754,13 +754,8 @@ func bake_collision() -> void:
 	if polygon == null:
 		push_error("collision_polygon_node_path should point to proper CollisionPolygon2D node.")
 		return
-	var points: PackedVector2Array = generate_collision_points()
-	var transformed_points := PackedVector2Array()
-	var poly_transform := polygon.get_global_transform()
-	var shape_transform := get_global_transform()
-	for p in points:
-		transformed_points.push_back(poly_transform.inverse() * shape_transform * p)
-	polygon.polygon = transformed_points
+	var xform := polygon.get_global_transform().inverse() * get_global_transform()
+	polygon.polygon = xform * generate_collision_points()
 
 
 func cache_edges() -> void:
