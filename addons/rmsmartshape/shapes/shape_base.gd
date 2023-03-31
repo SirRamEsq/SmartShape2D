@@ -337,6 +337,7 @@ func adjust_add_point_index(index: int) -> int:
 
 # FIXME: Only unit tests use this.
 func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
+	starting_index = adjust_add_point_index(starting_index)
 	var keys: Array[int] = []
 	_points.begin_update()
 	for i in range(0, verts.size(), 1):
