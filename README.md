@@ -6,6 +6,7 @@ SmartShape2D
 # About
 **This is the GODOT 3 version of this plugin.
 If you're looking for the GODOT 4 version, please go [here](https://github.com/SirRamEsq/SmartShape2D)**
+
 This plugin allows you to create nicely textured 2D polys.
 Simply place a few points then create / assign the shape material and you should have a good looking polygon.
 
