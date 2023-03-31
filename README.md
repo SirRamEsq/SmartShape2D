@@ -3,14 +3,6 @@ SmartShape2D
 ![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
 ![Sample Gif]( ./addons/rmsmartshape/documentation/imgs/sample.gif )
 
-SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
-
-[![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
-
-SmartShape2D tutorial can be found here (Thanks LucyLavend!):
-
-[![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
-
 # About
 **This is the GODOT 4 version of this plugin.
 If you're looking for the GODOT 3 version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest)**
@@ -28,6 +20,8 @@ Read the section below on Contributing and post an issue if one doesn't already 
 <a href="https://www.buymeacoffee.com/SirRamESQ">
   <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" align="left" height="48">
 </a>
+
+---
 
 # Support
 - Newest version is developed for Godot 4
@@ -50,6 +44,15 @@ https://github.com/SirRamEsq/SmartShape2D-DemoProject
 - [Controls and Hotkeys]( ./addons/rmsmartshape/documentation/Controls.md )
 - [FAQ]( ./addons/rmsmartshape/documentation/FAQ.md )
 - [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
+
+# Video Tutorials
+SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
+
+[![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
+
+SmartShape2D tutorial can be found here (Thanks LucyLavend!):
+
+[![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
 
 # Contibuting
 ## Issues
