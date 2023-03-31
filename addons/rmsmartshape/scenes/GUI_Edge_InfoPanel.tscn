@@ -1,134 +1,100 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=3 format=3 uid="uid://cy1l6tyadc4s3"]
 
-[ext_resource path="res://addons/rmsmartshape/assets/GUI_Theme.tres" type="Theme" id=1]
-[ext_resource path="res://addons/rmsmartshape/scenes/GUI_Edge_InfoPanel.gd" type="Script" id=2]
+[ext_resource type="Theme" uid="uid://dud4fe6fsicvm" path="res://addons/rmsmartshape/assets/gui_theme.res" id="1_pwu3l"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/scenes/GUI_Edge_InfoPanel.gd" id="2"]
 
 [node name="GUI_Edge_InfoPanel" type="PanelContainer"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-margin_right = -918.0
-margin_bottom = -486.0
-mouse_filter = 2
+anchors_preset = -1
+anchor_right = 0.203125
+anchor_bottom = 0.345679
+offset_bottom = -62.0
 size_flags_horizontal = 4
 size_flags_vertical = 4
-theme = ExtResource( 1 )
-script = ExtResource( 2 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-p_lbl_idx = NodePath("Container/Properties/IDX")
-p_btn_material_override = NodePath("Container/Functions/MaterialOverride")
-p_ctr_override = NodePath("Container/Override")
-p_chk_render = NodePath("Container/Override/Render")
-p_chk_weld = NodePath("Container/Override/Weld")
-p_int_index = NodePath("Container/Override/Z_Index/Z_index")
-p_btn_edge_material = NodePath("Container/Override/SetMaterial")
-p_btn_clear_edge_material = NodePath("Container/Override/ClearMaterial")
-p_lbl_edge_material = NodePath("Container/Override/lblMaterial")
+mouse_filter = 2
+theme = ExtResource("1_pwu3l")
+script = ExtResource("2")
+metadata/_edit_use_anchors_ = true
 
 [node name="Panel" type="Panel" parent="."]
-margin_left = 6.0
-margin_top = 4.0
-margin_right = 144.0
-margin_bottom = 180.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="Container" type="VBoxContainer" parent="."]
-margin_left = 6.0
-margin_top = 4.0
-margin_right = 144.0
-margin_bottom = 180.0
+layout_mode = 2
 
 [node name="Properties" type="VBoxContainer" parent="Container"]
-margin_right = 138.0
-margin_bottom = 29.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="IDX" type="Label" parent="Container/Properties"]
-margin_right = 138.0
-margin_bottom = 29.0
+unique_name_in_owner = true
+layout_mode = 2
 text = "IDX: [1,2]"
 
 [node name="Functions" type="VBoxContainer" parent="Container"]
-margin_top = 33.0
-margin_right = 138.0
-margin_bottom = 55.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="Make Inner Curve" type="Button" parent="Container/Functions"]
 visible = false
-margin_right = 140.0
-margin_bottom = 20.0
+layout_mode = 2
 text = "Make Inner Curve"
 
 [node name="Make Outer Curve" type="Button" parent="Container/Functions"]
 visible = false
-margin_top = 24.0
-margin_right = 140.0
-margin_bottom = 44.0
+layout_mode = 2
 text = "Make Outer Curve"
 
 [node name="MaterialOverride" type="Button" parent="Container/Functions"]
-margin_right = 138.0
-margin_bottom = 22.0
+unique_name_in_owner = true
+layout_mode = 2
 toggle_mode = true
 text = "Material Override"
 
-[node name="Override" type="VBoxContainer" parent="Container"]
-margin_top = 59.0
-margin_right = 138.0
-margin_bottom = 176.0
+[node name="OverrideContainer" type="VBoxContainer" parent="Container"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="Container/Override"]
-margin_right = 138.0
-margin_bottom = 4.0
+[node name="HSeparator" type="HSeparator" parent="Container/OverrideContainer"]
+layout_mode = 2
 
-[node name="Render" type="CheckBox" parent="Container/Override"]
-margin_top = 8.0
-margin_right = 138.0
-margin_bottom = 32.0
-pressed = true
+[node name="Render" type="CheckBox" parent="Container/OverrideContainer"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "Render"
 
-[node name="Weld" type="CheckBox" parent="Container/Override"]
+[node name="Weld" type="CheckBox" parent="Container/OverrideContainer"]
+unique_name_in_owner = true
 visible = false
-margin_top = 36.0
-margin_right = 130.0
-margin_bottom = 60.0
-pressed = true
+layout_mode = 2
 text = "Weld"
 
-[node name="Z_Index" type="HBoxContainer" parent="Container/Override"]
+[node name="ZIndexSection" type="HBoxContainer" parent="Container/OverrideContainer"]
 visible = false
-margin_top = 64.0
-margin_right = 130.0
-margin_bottom = 88.0
+layout_mode = 2
 
-[node name="lbl" type="Label" parent="Container/Override/Z_Index"]
-margin_right = 20.0
-margin_bottom = 24.0
+[node name="lbl" type="Label" parent="Container/OverrideContainer/ZIndexSection"]
+layout_mode = 2
 text = "Z:"
 
-[node name="Z_index" type="SpinBox" parent="Container/Override/Z_Index"]
-margin_left = 24.0
-margin_right = 98.0
-margin_bottom = 24.0
+[node name="ZIndex" type="SpinBox" parent="Container/OverrideContainer/ZIndexSection"]
+unique_name_in_owner = true
+layout_mode = 2
 min_value = -100.0
 
-[node name="SetMaterial" type="Button" parent="Container/Override"]
-margin_top = 36.0
-margin_right = 138.0
-margin_bottom = 58.0
+[node name="SetMaterial" type="Button" parent="Container/OverrideContainer"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "Set Material"
 
-[node name="ClearMaterial" type="Button" parent="Container/Override"]
-margin_top = 62.0
-margin_right = 138.0
-margin_bottom = 84.0
+[node name="ClearMaterial" type="Button" parent="Container/OverrideContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
 text = "Clear Material"
 
-[node name="lblMaterial" type="Label" parent="Container/Override"]
-margin_top = 88.0
-margin_right = 138.0
-margin_bottom = 117.0
+[node name="MaterialStatus" type="Label" parent="Container/OverrideContainer"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "[No Material]"

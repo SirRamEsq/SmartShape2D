@@ -1,3 +1,4 @@
+class_name GutStringUtils
 
 var _utils = load('res://addons/gut/utils.gd').get_instance()
 # Hash containing all the built in types in Godot.  This provides an English
@@ -9,37 +10,38 @@ func _init_types_dictionary():
 	types[TYPE_NIL] = 'TYPE_NIL'
 	types[TYPE_BOOL] = 'Bool'
 	types[TYPE_INT] = 'Int'
-	types[TYPE_REAL] = 'Float/Real'
+	types[TYPE_FLOAT] = 'Float/Real'
 	types[TYPE_STRING] = 'String'
 	types[TYPE_VECTOR2] = 'Vector2'
 	types[TYPE_RECT2] = 'Rect2'
 	types[TYPE_VECTOR3] = 'Vector3'
 	#types[8] = 'Matrix32'
 	types[TYPE_PLANE] = 'Plane'
-	types[TYPE_QUAT] = 'QUAT'
+	types[TYPE_QUATERNION] = 'QUAT'
 	types[TYPE_AABB] = 'AABB'
 	#types[12] = 'Matrix3'
-	types[TYPE_TRANSFORM] = 'Transform'
+	types[TYPE_TRANSFORM3D] = 'Transform3D'
 	types[TYPE_COLOR] = 'Color'
 	#types[15] = 'Image'
-	types[TYPE_NODE_PATH] = 'Node Path'
+	types[TYPE_NODE_PATH] = 'Node Path3D'
 	types[TYPE_RID] = 'RID'
 	types[TYPE_OBJECT] = 'TYPE_OBJECT'
 	#types[19] = 'TYPE_INPUT_EVENT'
 	types[TYPE_DICTIONARY] = 'Dictionary'
 	types[TYPE_ARRAY] = 'Array'
-	types[TYPE_RAW_ARRAY] = 'TYPE_RAW_ARRAY'
-	types[TYPE_INT_ARRAY] = 'TYPE_INT_ARRAY'
-	types[TYPE_REAL_ARRAY] = 'TYPE_REAL_ARRAY'
-	types[TYPE_STRING_ARRAY] = 'TYPE_STRING_ARRAY'
-	types[TYPE_VECTOR2_ARRAY] = 'TYPE_VECTOR2_ARRAY'
-	types[TYPE_VECTOR3_ARRAY] = 'TYPE_VECTOR3_ARRAY'
-	types[TYPE_COLOR_ARRAY] = 'TYPE_COLOR_ARRAY'
+	types[TYPE_PACKED_BYTE_ARRAY] = 'TYPE_PACKED_BYTE_ARRAY'
+	types[TYPE_PACKED_INT32_ARRAY] = 'TYPE_PACKED_INT32_ARRAY'
+	types[TYPE_PACKED_FLOAT32_ARRAY] = 'TYPE_PACKED_FLOAT32_ARRAY'
+	types[TYPE_PACKED_STRING_ARRAY] = 'TYPE_PACKED_STRING_ARRAY'
+	types[TYPE_PACKED_VECTOR2_ARRAY] = 'TYPE_PACKED_VECTOR2_ARRAY'
+	types[TYPE_PACKED_VECTOR3_ARRAY] = 'TYPE_PACKED_VECTOR3_ARRAY'
+	types[TYPE_PACKED_COLOR_ARRAY] = 'TYPE_PACKED_COLOR_ARRAY'
 	types[TYPE_MAX] = 'TYPE_MAX'
+	types[TYPE_STRING_NAME] = 'TYPE_STRING_NAME'
 
 # Types to not be formatted when using _str
 var _str_ignore_types = [
-	TYPE_INT, TYPE_REAL, TYPE_STRING,
+	TYPE_INT, TYPE_FLOAT, TYPE_STRING,
 	TYPE_NIL, TYPE_BOOL
 ]
 
@@ -59,10 +61,11 @@ func _get_obj_filename(thing):
 	var filename = null
 
 	if(thing == null or
+		_utils.is_native_class(thing) or
 		!is_instance_valid(thing) or
-		str(thing) == '[Object:null]' or
+		str(thing) == '<Object#null>' or
 		typeof(thing) != TYPE_OBJECT or
-		thing.has_method('__gut_instance_from_id')):
+		_utils.is_double(thing)):
 		return
 
 	if(thing.get_script() == null):
@@ -70,16 +73,12 @@ func _get_obj_filename(thing):
 			filename = _get_filename(thing.resource_path)
 		else:
 			# If it isn't a packed scene and it doesn't have a script then
-			# we do nothing.  This just read better.
+			# we do nothing.  This just reads better.
 			pass
-	elif(thing.get_script() is NativeScript):
-		# Work with GDNative scripts:
-		# inst2dict fails with "Not a script with an instance" on GDNative script instances
-		filename = _get_filename(thing.get_script().resource_path)
 	elif(!_utils.is_native_class(thing)):
-		var dict = inst2dict(thing)
+		var dict = inst_to_dict(thing)
 		filename = _get_filename(dict['@path'])
-		if(dict['@subpath'] != ''):
+		if(str(dict['@subpath']) != ''):
 			filename += str('/', dict['@subpath'])
 
 	return filename
@@ -89,7 +88,6 @@ func _get_obj_filename(thing):
 # whatever is passed in when it can/should.
 # ------------------------------------------------------------------------------
 func type2str(thing):
-	var oc = _utils.OrphanCounter.new()
 	var filename = _get_obj_filename(thing)
 	var str_thing = str(thing)
 
@@ -100,7 +98,7 @@ func type2str(thing):
 		# will pass typeof(thing) == TYPE_OBJECT check so this has to be
 		# before that.
 		str_thing = str(null)
-	elif(typeof(thing) == TYPE_REAL):
+	elif(typeof(thing) == TYPE_FLOAT):
 		if(!'.' in str_thing):
 			str_thing += '.0'
 	elif(typeof(thing) == TYPE_STRING):
@@ -110,15 +108,22 @@ func type2str(thing):
 		# to_return.  I think this just reads a little
 		# better this way.
 		pass
-	elif(typeof(thing) ==  TYPE_OBJECT):
+	elif(typeof(thing) == TYPE_OBJECT):
 		if(_utils.is_native_class(thing)):
 			str_thing = _utils.get_native_class_name(thing)
 		elif(_utils.is_double(thing)):
-			var double_path = _get_filename(thing.__gut_metadata_.path)
-			if(thing.__gut_metadata_.subpath != ''):
-				double_path += str('/', thing.__gut_metadata_.subpath)
+			var double_path = _get_filename(thing.__gutdbl.thepath)
+			if(thing.__gutdbl.subpath != ''):
+				double_path += str('/', thing.__gutdbl.subpath)
+			elif(thing.__gutdbl.from_singleton != ''):
+				double_path = thing.__gutdbl.from_singleton + " Singleton"
 
-			str_thing += '(double of ' + double_path + ')'
+			var double_type = "double"
+			if(thing.__gutdbl.is_partial):
+				double_type = "partial-double"
+
+			str_thing += str("(", double_type, " of ", double_path, ")")
+
 			filename = null
 	elif(types.has(typeof(thing))):
 		if(!str_thing.begins_with('(')):

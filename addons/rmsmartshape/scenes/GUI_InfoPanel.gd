@@ -1,19 +1,24 @@
-tool
+@tool
 extends PanelContainer
 
-export (NodePath) var p_lbl_idx
-export (NodePath) var p_lbl_tex
-export (NodePath) var p_lbl_width
-export (NodePath) var p_lbl_flip
 
-func set_idx(i:int):
-	get_node(p_lbl_idx).text = "IDX: %s" % i
+@onready var idx_label: Label = %IDX
+@onready var tex_label: Label = %Tex
+@onready var width_label: Label = %Width
+@onready var flip_label: Label = %Flip
 
-func set_texture_idx(i:int):
-	get_node(p_lbl_tex).text = "Texture: %s" % i
 
-func set_width(f:float):
-	get_node(p_lbl_width).text = "Width: %s" % f
+func set_idx(i: int) -> void:
+	idx_label.text = "IDX: %s" % i
 
-func set_flip(b:bool):
-	get_node(p_lbl_flip).text = "Flip: %s" % b
+
+func set_texture_idx(i: int) -> void:
+	tex_label.text = "Texture2D: %s" % i
+
+
+func set_width(f: float) -> void:
+	width_label.text = "Width: %s" % f
+
+
+func set_flip(b: bool) -> void:
+	flip_label.text = "Flip: %s" % b

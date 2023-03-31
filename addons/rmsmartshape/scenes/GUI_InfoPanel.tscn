@@ -1,59 +1,44 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=3 format=3 uid="uid://cxu6258urdtf1"]
 
-[ext_resource path="res://addons/rmsmartshape/assets/GUI_Theme.tres" type="Theme" id=1]
-[ext_resource path="res://addons/rmsmartshape/scenes/GUI_InfoPanel.gd" type="Script" id=2]
+[ext_resource type="Theme" uid="uid://dud4fe6fsicvm" path="res://addons/rmsmartshape/assets/gui_theme.res" id="1_byls6"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/scenes/GUI_InfoPanel.gd" id="2"]
 
 [node name="GUI_InfoPanel" type="PanelContainer"]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_right = -918.0
-margin_bottom = -486.0
-mouse_filter = 2
+offset_right = -918.0
+offset_bottom = -486.0
 size_flags_horizontal = 4
 size_flags_vertical = 4
-theme = ExtResource( 1 )
-script = ExtResource( 2 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-p_lbl_idx = NodePath("Properties/IDX")
-p_lbl_tex = NodePath("Properties/Tex")
-p_lbl_width = NodePath("Properties/Width")
-p_lbl_flip = NodePath("Properties/Flip")
+mouse_filter = 2
+theme = ExtResource("1_byls6")
+script = ExtResource("2")
 
 [node name="Panel" type="Panel" parent="."]
-margin_left = 6.0
-margin_top = 4.0
-margin_right = 114.0
-margin_bottom = 132.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="Properties" type="VBoxContainer" parent="."]
-margin_left = 6.0
-margin_top = 4.0
-margin_right = 114.0
-margin_bottom = 132.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="IDX" type="Label" parent="Properties"]
-margin_right = 108.0
-margin_bottom = 29.0
+unique_name_in_owner = true
+layout_mode = 2
 text = "IDX: 13"
 
 [node name="Tex" type="Label" parent="Properties"]
-margin_top = 33.0
-margin_right = 108.0
-margin_bottom = 62.0
+unique_name_in_owner = true
+layout_mode = 2
 text = "Tex: 1"
 
 [node name="Width" type="Label" parent="Properties"]
-margin_top = 66.0
-margin_right = 108.0
-margin_bottom = 95.0
+unique_name_in_owner = true
+layout_mode = 2
 text = "Width: 1.0"
 
 [node name="Flip" type="Label" parent="Properties"]
-margin_top = 99.0
-margin_right = 108.0
-margin_bottom = 128.0
+unique_name_in_owner = true
+layout_mode = 2
 text = "Flip: N"

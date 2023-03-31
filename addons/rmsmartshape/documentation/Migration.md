@@ -1,7 +1,9 @@
 SmartShape2D - Migration
 ---
 
-You can continue to use the Deprecated 1.x RMSmartShape2D nodes in your projects, but you cannot edit them with
+The Godot 4.0 version of this addon does not support 1.x RMSmartShape2D nodes anymore.
+
+On older Godot versions, you can continue to use the deprecated 1.x RMSmartShape2D nodes in your projects, but you cannot edit them with
 the 2.x version of the plugin.
 
 If you want to migrate them to a 2.x SmartShape2D node then you can:
