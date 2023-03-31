@@ -3,22 +3,15 @@ SmartShape2D
 ![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
 ![Sample Gif]( ./addons/rmsmartshape/documentation/imgs/sample.gif )
 
-SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
-
-[![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
-
-SmartShape2D tutorial can be found here (Thanks LucyLavend!):
-
-[![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
-
 # About
+**This is the GODOT 3 version of this plugin.
+If you're looking for the GODOT 4 version, please go [here](https://github.com/SirRamEsq/SmartShape2D)**
 This plugin allows you to create nicely textured 2D polys.
 Simply place a few points then create / assign the shape material and you should have a good looking polygon.
 
 The textures used are similar to what you would use if making terrain using TileMaps/TileSets
 
-
-**This plugin is under ACTIVE DEVELOPMENT! If you find any issues, by all means let us know.
+**If you find any issues, by all means let us know.
 Read the section below on Contributing and post an issue if one doesn't already exist**
 
 **If you enjoy this tool and want to support its development, [I'd appreciate a coffee ](https://www.buymeacoffee.com/SirRamESQ) :)**
@@ -27,12 +20,11 @@ Read the section below on Contributing and post an issue if one doesn't already 
 </a>
 
 # Support
-- Supported and Tested on Godot 3.2
-- Should work with later versions of Godot 3.x
+- Supported and Tested on Godot 3.x
 
 # Demo
-A Sample Godot Project can be found here:
-https://github.com/SirRamEsq/SmartShape2D-DemoProject
+A Sample Godot 3 Project using SmartShape2D can be found here:
+https://github.com/SirRamEsq/SmartShape2D-DemoProject/tree/Godot3-latest
 
 # Documentation
 - [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
@@ -45,6 +37,16 @@ https://github.com/SirRamEsq/SmartShape2D-DemoProject
 - [Controls and Hotkeys]( ./addons/rmsmartshape/documentation/Controls.md )
 - [FAQ]( ./addons/rmsmartshape/documentation/FAQ.md )
 - [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
+
+# Video tutorials
+SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
+
+[![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
+
+SmartShape2D tutorial can be found here (Thanks LucyLavend!):
+
+[![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
+
 
 # Contibuting
 ## Issues
