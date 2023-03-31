@@ -12,13 +12,16 @@ SmartShape2D tutorial can be found here (Thanks LucyLavend!):
 [![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
 
 # About
+**This is the GODOT 4 version of this plugin.
+If you're looking for the GODOT 3 version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest)**
+
 This plugin allows you to create nicely textured 2D polys.
 Simply place a few points then create / assign the shape material and you should have a good looking polygon.
 
 The textures used are similar to what you would use if making terrain using TileMaps/TileSets
 
 
-**This plugin is under ACTIVE DEVELOPMENT! If you find any issues, by all means let us know.
+**If you find any issues, by all means let us know.
 Read the section below on Contributing and post an issue if one doesn't already exist**
 
 **If you enjoy this tool and want to support its development, [I'd appreciate a coffee ](https://www.buymeacoffee.com/SirRamESQ) :)**
