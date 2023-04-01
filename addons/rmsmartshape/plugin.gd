@@ -1512,8 +1512,9 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 	undo.add_undo_method(copy, "set_owner", null)
 	undo.add_undo_method(s.get_parent(), "remove_child", copy)
 
-	if (not s.collision_polygon_node_path.is_empty() and s.has_node(s.collision_polygon_node_path)):
-		var collision_polygon_original: Node = s.get_node(s.collision_polygon_node_path)
+	var collision_polygon_original := s.get_collision_polygon_node()
+
+	if collision_polygon_original:
 		var collision_polygon_new := CollisionPolygon2D.new()
 		collision_polygon_new.visible = collision_polygon_original.visible
 

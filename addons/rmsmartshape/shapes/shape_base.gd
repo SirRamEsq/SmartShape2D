@@ -27,6 +27,7 @@ var _is_instantiable: bool = false
 var _curve: Curve2D
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
+var _collision_polygon_node: CollisionPolygon2D
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 
@@ -104,11 +105,32 @@ var collision_size: float = 32 : set = set_collision_size
 var collision_offset: float = 0.0 : set = set_collision_offset
 
 ## NodePath to CollisionPolygon2D node for which polygon data will be generated.
-@export var collision_polygon_node_path: NodePath = ""
+@export_node_path("CollisionPolygon2D") var collision_polygon_node_path: NodePath : set = set_collision_polygon_node_path
 
 #####################
 #-SETTERS / GETTERS-#
 #####################
+
+func set_collision_polygon_node_path(value: NodePath) -> void:
+	collision_polygon_node_path = value
+	set_as_dirty()
+
+	if not is_inside_tree():
+		return
+
+	if collision_polygon_node_path.is_empty():
+		_collision_polygon_node = null
+		return
+
+	_collision_polygon_node = get_node(collision_polygon_node_path) as CollisionPolygon2D
+
+	if not _collision_polygon_node:
+		push_error("collision_polygon_node_path should point to proper CollisionPolygon2D node.")
+
+
+func get_collision_polygon_node() -> CollisionPolygon2D:
+	return _collision_polygon_node
+
 
 func get_point_array() -> SS2D_Point_Array:
 	return _points
@@ -570,6 +592,11 @@ func _init() -> void:
 	set_point_array(SS2D_Point_Array.new())
 
 
+func _enter_tree() -> void:
+	# Call this again because get_node() only works when the node is inside the tree
+	set_collision_polygon_node_path(collision_polygon_node_path)
+
+
 func _ready() -> void:
 	if not _is_instantiable:
 		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
@@ -748,14 +775,10 @@ func generate_collision_points() -> PackedVector2Array:
 
 
 func bake_collision() -> void:
-	if not has_node(collision_polygon_node_path):
+	if not _collision_polygon_node:
 		return
-	var polygon := get_node(collision_polygon_node_path) as CollisionPolygon2D
-	if polygon == null:
-		push_error("collision_polygon_node_path should point to proper CollisionPolygon2D node.")
-		return
-	var xform := polygon.get_global_transform().inverse() * get_global_transform()
-	polygon.polygon = xform * generate_collision_points()
+	var xform := _collision_polygon_node.get_global_transform().inverse() * get_global_transform()
+	_collision_polygon_node.polygon = xform * generate_collision_points()
 
 
 func cache_edges() -> void:
@@ -1146,14 +1169,6 @@ func _handle_material_override_change(_tuple) -> void:
 
 func set_as_dirty() -> void:
 	_dirty = true
-
-
-func get_collision_polygon_node() -> Node:
-	if collision_polygon_node_path == null:
-		return null
-	if not has_node(collision_polygon_node_path):
-		return null
-	return get_node(collision_polygon_node_path)
 
 
 static func sort_by_z_index(a: Array) -> Array:

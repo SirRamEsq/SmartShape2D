@@ -39,7 +39,6 @@ func do() -> void:
 	poly.modulate.a = 0.3
 	poly.visible = false
 	_shape.collision_polygon_node_path = _shape.get_path_to(poly)
-	_shape.set_as_dirty()
 
 
 func undo() -> void:
