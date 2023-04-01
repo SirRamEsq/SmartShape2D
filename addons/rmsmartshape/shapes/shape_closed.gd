@@ -248,13 +248,6 @@ func generate_collision_points() -> PackedVector2Array:
 	return points
 
 
-func cache_edges() -> void:
-	if shape_material != null and render_edges:
-		_edges = _build_edges(shape_material, get_vertices())
-	else:
-		_edges = []
-
-
 ## Differs from the main get_meta_material_index_mapping
 ## in that the points wrap around.
 func _get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
