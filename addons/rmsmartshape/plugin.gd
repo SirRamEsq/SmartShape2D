@@ -284,6 +284,23 @@ func _gui_update_vert_info_panel() -> void:
 	gui_point_info_panel.set_flip(properties.flip)
 
 
+func _load_config() -> void:
+	var conf := ConfigFile.new()
+	conf.load(get_editor_interface().get_editor_paths().get_project_settings_dir().path_join("ss2d.cfg"))
+	_defer_mesh_updates = conf.get_value("options", "defer_mesh_updates", false)
+	tb_options_popup.set_item_checked(OPTIONS_MENU.ID_DEFER_MESH_UPDATES, _defer_mesh_updates)
+	tb_snap_popup.set_item_checked(SNAP_MENU.ID_USE_GRID_SNAP, conf.get_value("options", "use_grid_snap", false))
+	tb_snap_popup.set_item_checked(SNAP_MENU.ID_SNAP_RELATIVE, conf.get_value("options", "snap_relative", false))
+
+
+func _save_config() -> void:
+	var conf := ConfigFile.new()
+	conf.set_value("options", "defer_mesh_updates", _defer_mesh_updates)
+	conf.set_value("options", "use_grid_snap", tb_snap_popup.is_item_checked(SNAP_MENU.ID_USE_GRID_SNAP))
+	conf.set_value("options", "snap_relative", tb_snap_popup.is_item_checked(SNAP_MENU.ID_SNAP_RELATIVE))
+	conf.save(get_editor_interface().get_editor_paths().get_project_settings_dir().path_join("ss2d.cfg"))
+
+
 func _process(_delta: float) -> void:
 	if current_mode == MODE.FREEHAND:
 		current_zoom_level = get_canvas_scale()
@@ -370,6 +387,7 @@ func _init() -> void:
 func _ready() -> void:
 	# Support the undo-redo actions
 	_gui_build_toolbar()
+	_load_config()
 	add_child(gui_point_info_panel)
 	gui_point_info_panel.visible = false
 	add_child(gui_edge_info_panel)
@@ -406,6 +424,8 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	if (plugin != null):
 		remove_inspector_plugin(plugin)
+
+	_save_config()
 
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
