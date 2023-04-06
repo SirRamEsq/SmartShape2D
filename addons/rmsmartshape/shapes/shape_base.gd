@@ -232,7 +232,7 @@ func set_render_node_owners(v: bool) -> void:
 
 
 func update_render_nodes() -> void:
-	set_render_node_owners(editor_debug)
+#	set_render_node_owners(editor_debug)
 	set_render_node_light_masks(light_mask)
 
 
