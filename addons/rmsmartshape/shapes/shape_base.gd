@@ -20,7 +20,7 @@ const TUP = preload("../lib/tuple.gd")
 #-DECLARATIONS-#
 ################
 
-var _dirty: bool = true
+var _dirty: bool = false
 var _edges: Array[SS2D_Edge] = []
 var _meshes: Array[SS2D_Mesh] = []
 var _is_instantiable: bool = false
@@ -31,7 +31,6 @@ var _curve_no_control_points: Curve2D = Curve2D.new()
 var can_edit: bool = true
 
 signal points_modified
-signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape_Base)
 
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
@@ -676,10 +675,6 @@ func _draw_debug(edges: Array[SS2D_Edge]) -> void:
 			q.render_points(1, 1.0, self)
 
 
-func _process(_delta: float) -> void:
-	_on_dirty_update()
-
-
 func _exit_tree() -> void:
 	if shape_material != null:
 		if shape_material.is_connected("changed", self._handle_material_change):
@@ -1141,6 +1136,8 @@ func _handle_material_override_change(_tuple) -> void:
 
 
 func set_as_dirty() -> void:
+	if not _dirty:
+		call_deferred("_on_dirty_update")
 	_dirty = true
 
 
@@ -1181,7 +1178,6 @@ func _on_dirty_update() -> void:
 			cache_meshes()
 		queue_redraw()
 		_dirty = false
-		emit_signal("on_dirty_update")
 
 
 # TODO, Migrate these 'point index' functions to a helper library and make static?
