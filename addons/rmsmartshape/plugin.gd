@@ -707,8 +707,6 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 			draw_freehand_circle(overlay)
 			draw_mode_edit_vert(overlay, false)
 
-	shape.queue_redraw()
-
 
 func draw_freehand_circle(overlay: Control) -> void:
 	var mouse: Vector2 = overlay.get_local_mouse_position()
@@ -1085,7 +1083,6 @@ func _input_handle_mouse_wheel(btn: int) -> bool:
 			var tex_idx: int = shape.get_point_texture_index(key) + texture_idx_step
 			shape.set_point_texture_index(key, tex_idx)
 
-		shape.set_as_dirty()
 		update_overlays()
 		_gui_update_info_panels()
 		return true
@@ -1102,8 +1099,6 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 			if kb.pressed and kb.keycode == KEY_SPACE:
 				var key: int = current_action.current_point_key()
 				shape.set_point_texture_flip(key, not shape.get_point_texture_flip(key))
-				shape.set_as_dirty()
-				shape.queue_redraw()
 				_gui_update_info_panels()
 
 		if kb.pressed and kb.keycode == KEY_ESCAPE:
@@ -1344,7 +1339,6 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		if _out:
 			shape.set_point_out(key, new_position_out)
 			rslt = true
-		shape.set_as_dirty()
 		update_overlays()
 
 	return rslt

@@ -544,8 +544,9 @@ func get_point_texture_index(key: int) -> int:
 
 func set_point_texture_flip(key: int, flip: bool) -> void:
 	var props: SS2D_VertexProperties = _points.get_point_properties(key)
-	props.flip = flip
-	_points.set_point_properties(key, props)
+	if props.flip != flip:
+		props.flip = flip
+		_points.set_point_properties(key, props)
 
 
 func get_point_texture_flip(key: int) -> bool:
