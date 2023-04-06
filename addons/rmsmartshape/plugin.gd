@@ -42,6 +42,9 @@ const ActionMakeShapeUnique := preload("res://addons/rmsmartshape/actions/action
 
 enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
+enum SNAP_MENU { ID_USE_GRID_SNAP, ID_SNAP_RELATIVE, ID_CONFIGURE_SNAP }
+enum OPTIONS_MENU { ID_DEFER_MESH_UPDATES }
+
 enum ACTION_VERT {
 	NONE = 0,
 	MOVE_VERT = 1,
@@ -128,6 +131,9 @@ var tb_snap: MenuButton = null
 # The PopupMenu that belongs to tb_snap
 var tb_snap_popup: PopupMenu = null
 
+var tb_options: MenuButton = null
+var tb_options_popup: PopupMenu = null
+
 var make_unique_dialog: AcceptDialog
 
 # Edge Stuff
@@ -168,6 +174,8 @@ var plugin: EditorInspectorPlugin
 
 var is_2d_screen_active := false
 
+var _defer_mesh_updates := false
+
 #######
 # GUI #
 #######
@@ -181,12 +189,18 @@ func gui_display_snap_settings() -> void:
 
 
 func _snapping_item_selected(id: int) -> void:
-	if id == 0:
+	if id == SNAP_MENU.ID_USE_GRID_SNAP:
 		tb_snap_popup.set_item_checked(id, not tb_snap_popup.is_item_checked(id))
-	if id == 1:
+	if id == SNAP_MENU.ID_SNAP_RELATIVE:
 		tb_snap_popup.set_item_checked(id, not tb_snap_popup.is_item_checked(id))
-	elif id == 3:
+	elif id == SNAP_MENU.ID_CONFIGURE_SNAP:
 		gui_display_snap_settings()
+
+
+func _options_item_selected(id: int) -> void:
+	if id == OPTIONS_MENU.ID_DEFER_MESH_UPDATES:
+		tb_options_popup.set_item_checked(id, not tb_options_popup.is_item_checked(id))
+		_defer_mesh_updates = tb_options_popup.is_item_checked(id)
 
 
 func _gui_build_toolbar() -> void:
@@ -217,18 +231,26 @@ func _gui_build_toolbar() -> void:
 	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION)
 	tb_collision.connect("pressed", self._add_collision)
 
-
 	tb_snap = MenuButton.new()
 	tb_snap.tooltip_text = SS2D_Strings.EN_TOOLTIP_SNAP
 	tb_snap_popup = tb_snap.get_popup()
 	tb_snap.icon = ICON_SNAP
-	tb_snap_popup.add_check_item("Use Grid Snap")
-	tb_snap_popup.add_check_item("Snap Relative")
+	tb_snap_popup.add_check_item("Use Grid Snap", SNAP_MENU.ID_USE_GRID_SNAP)
+	tb_snap_popup.add_check_item("Snap Relative", SNAP_MENU.ID_SNAP_RELATIVE)
 	tb_snap_popup.add_separator()
-	tb_snap_popup.add_item("Configure Snap...")
+	tb_snap_popup.add_item("Configure Snap...", SNAP_MENU.ID_CONFIGURE_SNAP)
 	tb_snap_popup.hide_on_checkable_item_selection = false
 	tb_hb.add_child(tb_snap)
 	tb_snap_popup.connect("id_pressed", self._snapping_item_selected)
+
+	tb_options = MenuButton.new()
+	tb_options.tooltip_text = SS2D_Strings.EN_TOOLTIP_MORE_OPTIONS
+	tb_options.icon = get_editor_interface().get_base_control().get_theme_icon("GuiTabMenuHl", "EditorIcons")
+	tb_options_popup = tb_options.get_popup()
+	tb_options_popup.add_check_item(SS2D_Strings.EN_OPTIONS_DEFER_MESH_UPDATES, OPTIONS_MENU.ID_DEFER_MESH_UPDATES)
+	tb_options_popup.hide_on_checkable_item_selection = false
+	tb_hb.add_child(tb_options)
+	tb_options_popup.connect("id_pressed", self._options_item_selected)
 
 	tb_hb.hide()
 
@@ -480,11 +502,11 @@ func _on_main_screen_changed(screen_name: String) -> void:
 # SNAPPING #
 ############
 func use_global_snap() -> bool:
-	return ! tb_snap_popup.is_item_checked(1)
+	return not tb_snap_popup.is_item_checked(SNAP_MENU.ID_SNAP_RELATIVE)
 
 
 func use_snap() -> bool:
-	return tb_snap_popup.is_item_checked(0)
+	return tb_snap_popup.is_item_checked(SNAP_MENU.ID_USE_GRID_SNAP)
 
 
 func get_snap_offset() -> Vector2:
@@ -986,7 +1008,8 @@ func _input_handle_left_click(
 		return true
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
-
+		if _defer_mesh_updates:
+			shape.begin_update()
 		# Any nearby control points to move?
 		if not Input.is_key_pressed(KEY_ALT):
 			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
@@ -1018,7 +1041,7 @@ func _input_handle_left_click(
 					var copy: SS2D_Shape_Base = copy_shape(shape)
 
 					copy.set_point_array(SS2D_Point_Array.new())
-					var add_point := ActionAddPoint.new(copy, local_position)
+					var add_point := ActionAddPoint.new(copy, local_position, -1, not _defer_mesh_updates)
 					perform_action(add_point)
 					select_vertices_to_move([add_point.get_key()], vp_m_pos)
 
@@ -1030,7 +1053,7 @@ func _input_handle_left_click(
 				elif Input.is_key_pressed(KEY_ALT):
 					perform_action(ActionAddPoint.new(shape, local_position, shape.get_point_index(closest_edge_keys[1])))
 				else:
-					var add_point := ActionAddPoint.new(shape, local_position)
+					var add_point := ActionAddPoint.new(shape, local_position, -1, not _defer_mesh_updates)
 					perform_action(add_point)
 					select_vertices_to_move([add_point.get_key()], vp_m_pos)
 				return true
@@ -1045,6 +1068,8 @@ func _input_handle_left_click(
 			)
 			var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
 			select_vertices_to_move([edge_point_keys[0], edge_point_keys[1]], vp_m_pos)
+			if _defer_mesh_updates:
+				shape.begin_update()
 		return true
 	elif current_mode == MODE.FREEHAND:
 		return true
@@ -1175,6 +1200,9 @@ func _input_handle_mouse_button_event(
 				current_action.starting_positions_control_out
 			))
 			rslt = true
+		elif current_mode == MODE.FREEHAND:
+			if _defer_mesh_updates:
+				shape.end_update()
 		deselect_verts()
 		return rslt
 
@@ -1215,10 +1243,13 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 	if insertion_point == -1:
 		insertion_point = shape.get_point_count() - 1
 
-	var split_curve := ActionSplitCurve.new(shape, insertion_point, gpoint, t)
+	var split_curve := ActionSplitCurve.new(shape, insertion_point, gpoint, t, not _defer_mesh_updates)
 	perform_action(split_curve)
 	select_vertices_to_move([split_curve.get_key()], vp_m_pos)
 	on_edge = false
+
+	if _defer_mesh_updates:
+		shape.begin_update()
 
 	return true
 
@@ -1454,7 +1485,9 @@ func _input_handle_mouse_motion_event(
 					perform_action(ActionAddPoint.new(
 						shape,
 						local_position,
-						shape.get_point_index(closest_edge_keys[1])))
+						shape.get_point_index(closest_edge_keys[1]),
+						not _defer_mesh_updates
+					))
 				update_overlays()
 				return true
 			else:
@@ -1468,7 +1501,7 @@ func _input_handle_mouse_motion_event(
 						delete_point = closest_key
 						on_width_handle = false
 						if delete_point != -1:
-							perform_action(ActionDeletePoint.new(shape, delete_point))
+							perform_action(ActionDeletePoint.new(shape, delete_point, not _defer_mesh_updates))
 							last_point_position = Vector2.ZERO
 							update_overlays()
 							return true

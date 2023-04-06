@@ -18,10 +18,12 @@ var _points_in: PackedVector2Array
 var _points_out: PackedVector2Array
 var _properties: Array[SS2D_VertexProperties]
 var _constraints: Dictionary
+var _commit_update: bool
 
 
-func _init(shape: SS2D_Shape_Base, key: int) -> void:
+func _init(shape: SS2D_Shape_Base, key: int, commit_update: bool = true) -> void:
 	_shape = shape
+	_commit_update = commit_update
 	_invert_orientation = ActionInvertOrientation.new(shape)
 	_close_shape = ActionCloseShape.new(shape)
 
@@ -48,7 +50,8 @@ func do() -> void:
 		_shape.remove_point(k)
 	_close_shape.do()
 	_invert_orientation.do()
-	_shape.end_update()
+	if _commit_update:
+		_shape.end_update()
 
 
 func undo() -> void:
