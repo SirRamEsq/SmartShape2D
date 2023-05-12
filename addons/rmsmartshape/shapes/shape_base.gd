@@ -1496,6 +1496,7 @@ func _build_edge_with_material(
 
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
+	var should_flip := should_flip_edges()
 
 	var i := 0
 	while i < tess_point_count:
@@ -1551,7 +1552,7 @@ func _build_edge_with_material(
 			tex,
 			width_scale * c_scale * tex_size.y,
 			flip_x,
-			should_flip_edges(),
+			should_flip,
 			is_first_point,
 			is_last_point,
 			c_offset,
