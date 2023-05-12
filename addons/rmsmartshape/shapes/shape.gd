@@ -3,7 +3,6 @@
 extends Node2D
 class_name SS2D_Shape
 
-
 ## Represents the base functionality for all smart shapes.
 
 # Functions consist of the following categories:[br]
@@ -28,6 +27,7 @@ var _curve: Curve2D
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
 var _collision_polygon_node: CollisionPolygon2D
+var _vertex_cache := PackedVector2Array()
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 
@@ -317,10 +317,7 @@ func _update_curve(p_array: SS2D_Point_Array) -> void:
 
 
 func get_vertices() -> PackedVector2Array:
-	var positions: PackedVector2Array = []
-	for p_key in _points.get_all_point_keys():
-		positions.push_back(_points.get_point_position(p_key))
-	return positions
+	return _vertex_cache
 
 
 func get_tessellated_points() -> PackedVector2Array:
@@ -849,6 +846,14 @@ func bake_collision() -> void:
 		return
 	var xform := _collision_polygon_node.get_global_transform().affine_inverse() * get_global_transform()
 	_collision_polygon_node.polygon = xform * generate_collision_points()
+
+
+func _cache_vertices() -> void:
+	var keys := _points.get_all_point_keys()
+	_vertex_cache.resize(keys.size())
+
+	for i in keys.size():
+		_vertex_cache[i] = _points.get_point_position(keys[i])
 
 
 func cache_edges() -> void:
@@ -1398,7 +1403,8 @@ func force_update() -> void:
 	update_render_nodes()
 	clear_cached_data()
 
-	# TODO: Cache tesselated points and vertices
+	# TODO: Cache tesselated points
+	_cache_vertices()
 	_build_tess_point_to_vertex_index_map(get_tessellated_points(), get_vertices())
 
 	bake_collision()
@@ -1407,7 +1413,6 @@ func force_update() -> void:
 		cache_meshes()
 	queue_redraw()
 	_dirty = false
-
 
 
 # TODO, Migrate these 'point index' functions to a helper library and make static?
