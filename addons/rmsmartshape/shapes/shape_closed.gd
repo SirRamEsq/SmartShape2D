@@ -39,14 +39,14 @@ func _init() -> void:
 ############
 
 func _point_array_assigned() -> void:
-	close_shape()
-
-
-func has_minimum_point_count() -> bool:
-	return _points.get_point_count() > 3
+#	close_shape()
+	pass
 
 
 func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
+	if not is_shape_closed():
+		return super(edges)
+
 	var meshes: Array[SS2D_Mesh] = []
 
 	var produced_fill_mesh := false
@@ -226,6 +226,8 @@ func adjust_add_point_index(index: int) -> int:
 
 
 func generate_collision_points() -> PackedVector2Array:
+	if not is_shape_closed():
+		return super()
 	var points := PackedVector2Array()
 	var edge := _prepare_generate_collision_points(1.0)
 	# size of 1, has no meaning in a closed shape
@@ -251,10 +253,13 @@ func generate_collision_points() -> PackedVector2Array:
 ## Differs from the main get_meta_material_index_mapping
 ## in that the points wrap around.
 func _get_meta_material_index_mapping(s_material: SS2D_Material_Shape, verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
-	return get_meta_material_index_mapping(s_material, verts, true)
+#	return get_meta_material_index_mapping(s_material, verts, true)
+	return get_meta_material_index_mapping(s_material, verts, is_shape_closed())
 
 
 func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
+	if not is_shape_closed():
+		return super._merge_index_maps(imaps, verts)
 	# See if any edges have both the first (0) and last idx (size)
 	# Merge them into one if so
 	var final_edges: Array[SS2D_IndexMap] = imaps.duplicate()
@@ -291,4 +296,6 @@ func _imap_contains_all_points(imap: SS2D_IndexMap, verts: PackedVector2Array) -
 
 
 func _is_edge_contiguous(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
+	if not is_shape_closed():
+		return false
 	return _imap_contains_all_points(imap, verts)

@@ -28,6 +28,6 @@ func undo() -> void:
 func should_invert_orientation(s: SS2D_Shape_Base) -> bool:
 	if s == null:
 		return false
-	if s is SS2D_Shape_Open:
+	if not s.is_shape_closed():
 		return false
 	return not s.are_points_clockwise() and s.get_point_count() >= 3

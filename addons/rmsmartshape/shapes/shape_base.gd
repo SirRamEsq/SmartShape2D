@@ -379,6 +379,37 @@ func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
 	return _points.add_point(pos, adjust_add_point_index(index), key)
 
 
+func cut_edge(from_idx: int) -> void:
+	var last_idx: int = get_point_count() - 1
+	if is_shape_closed():
+		remove_point(get_point_key_at_index(last_idx))
+		if from_idx < last_idx:
+			for i in range(from_idx+1):
+				_points.set_point_index(_points.get_point_key_at_index(0), last_idx)
+	else:
+		push_warning("Can't cut edge of an open shape.")
+
+
+func undo_cut_edge(from_idx: int, closing_index: int) -> void:
+	var last_idx := get_point_count() - 1
+	if from_idx < last_idx:
+		for i in range(from_idx+1):
+			_points.set_point_index(_points.get_point_key_at_index(last_idx), 0)
+	if can_close():
+		close_shape(closing_index)
+
+
+# @virtual
+func is_shape_closed() -> bool:
+	return false
+
+
+# @virtual
+func close_shape(key: int = -1) -> int:
+	push_error("Implementation error: Cannot close base shape.")
+	return 0
+
+
 ## Begin updating the shape.[br]
 ## Shape mesh and curve will only be updated after [method end_update] is called.
 func begin_update() -> void:
@@ -715,8 +746,10 @@ func _exit_tree() -> void:
 
 
 func should_flip_edges() -> bool:
-	# XOR operator
-	return not (are_points_clockwise() != flip_edges)
+	if is_shape_closed():
+		return (are_points_clockwise() == flip_edges)
+	else:
+		return flip_edges
 
 
 func _prepare_generate_collision_points(default_quad_width: float) -> SS2D_Edge:
@@ -1192,8 +1225,8 @@ func _on_dirty_update() -> void:
 	if _dirty:
 		update_render_nodes()
 		clear_cached_data()
+		bake_collision()
 		if has_minimum_point_count():
-			bake_collision()
 			cache_edges()
 			cache_meshes()
 		queue_redraw()

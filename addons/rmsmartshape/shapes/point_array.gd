@@ -201,6 +201,7 @@ func set_point_index(key: int, idx: int) -> void:
 		return
 	_point_order.remove_at(old_idx)
 	_point_order.insert(idx, key)
+	_changed()
 
 
 func has_point(key: int) -> bool:
