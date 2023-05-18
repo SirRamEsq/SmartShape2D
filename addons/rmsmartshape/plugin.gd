@@ -1054,17 +1054,25 @@ func _input_handle_left_click(
 			local_position = snap(local_position)
 		perform_action(ActionSetPivot.new(shape, et, local_position))
 		return true
-	if current_mode == MODE.CREATE_VERT:
-		if current_action.is_single_vert_selected() and shape.can_close() and (
-				not Input.is_key_pressed(KEY_ALT) and not Input.is_key_pressed(KEY_CTRL)):
-			if shape.get_point_key_at_index(0) == current_action.keys[0]:
-				# Close shape when first point is clicked
-				perform_action(ActionCloseShape.new(shape))
-				return true
+
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
+		var can_add_point: bool = Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT
+		var is_first_selected: bool = current_action.is_single_vert_selected() and current_action.current_point_key() == shape.get_point_key_at_index(0)
+
 		if _defer_mesh_updates:
 			shape.begin_update()
+
+		# Close the shape if the first point is clicked
+		if can_add_point and is_first_selected and shape.can_close():
+			var close_action := ActionCloseShape.new(shape)
+			perform_action(close_action)
+			if Input.is_key_pressed(KEY_SHIFT):
+				select_control_points_to_move([close_action.get_key()], vp_m_pos)
+			else:
+				select_vertices_to_move([close_action.get_key()], vp_m_pos)
+			return true
+
 		# Any nearby control points to move?
 		if not Input.is_key_pressed(KEY_ALT):
 			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
@@ -1085,33 +1093,32 @@ func _input_handle_left_click(
 		if _input_split_edge(mb, vp_m_pos, t):
 			return true
 
-		if not on_edge:
+		if not on_edge and can_add_point:
 			# Create new point
-			if Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT:
-				var local_position: Vector2 = t.affine_inverse() * mb.position
-				if use_snap():
-					local_position = snap(local_position)
-				if Input.is_key_pressed(KEY_SHIFT) and Input.is_key_pressed(KEY_ALT):
-					# Copy shape with a new single point
-					var copy: SS2D_Shape_Base = copy_shape(shape)
+			var local_position: Vector2 = t.affine_inverse() * mb.position
+			if use_snap():
+				local_position = snap(local_position)
 
-					copy.set_point_array(SS2D_Point_Array.new())
-					var add_point := ActionAddPoint.new(copy, local_position, -1, not _defer_mesh_updates)
-					perform_action(add_point)
-					select_vertices_to_move([add_point.get_key()], vp_m_pos)
-
-					_enter_mode(MODE.CREATE_VERT)
-
-					var selection := get_editor_interface().get_selection()
-					selection.clear()
-					selection.add_node(copy)
-				elif Input.is_key_pressed(KEY_ALT):
-					perform_action(ActionAddPoint.new(shape, local_position, shape.get_point_index(closest_edge_keys[1])))
-				else:
-					var add_point := ActionAddPoint.new(shape, local_position, -1, not _defer_mesh_updates)
-					perform_action(add_point)
-					select_vertices_to_move([add_point.get_key()], vp_m_pos)
-				return true
+			var idx: int = -1
+			if Input.is_key_pressed(KEY_SHIFT) and Input.is_key_pressed(KEY_ALT):
+				# Copy shape with a new single point
+				var copy: SS2D_Shape_Base = copy_shape(shape)
+				copy.set_point_array(SS2D_Point_Array.new())
+				_enter_mode(MODE.CREATE_VERT)
+				var selection := get_editor_interface().get_selection()
+				selection.clear()
+				selection.add_node(copy)
+				shape = copy
+			elif Input.is_key_pressed(KEY_ALT):
+				# Add point between start and end points of the closest edge
+				idx = shape.get_point_index(closest_edge_keys[1])
+			var add_point := ActionAddPoint.new(shape, local_position, -1, not _defer_mesh_updates)
+			perform_action(add_point)
+			if Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_ALT):
+				select_control_points_to_move([add_point.get_key()], vp_m_pos)
+			else:
+				select_vertices_to_move([add_point.get_key()], vp_m_pos)
+			return true
 	elif current_mode == MODE.EDIT_EDGE:
 		if gui_edge_info_panel.visible:
 			gui_edge_info_panel.visible = false

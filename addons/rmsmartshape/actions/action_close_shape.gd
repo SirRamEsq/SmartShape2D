@@ -35,3 +35,6 @@ func undo() -> void:
 		_shape.remove_point(_key)
 		_shape.end_update()
 
+
+func get_key() -> int:
+	return _key
