@@ -41,6 +41,7 @@ const ActionSplitCurve := preload("res://addons/rmsmartshape/actions/action_spli
 const ActionMakeShapeUnique := preload("res://addons/rmsmartshape/actions/action_make_shape_unique.gd")
 const ActionCutEdge := preload("res://addons/rmsmartshape/actions/action_cut_edge.gd")
 const ActionCloseShape := preload("res://addons/rmsmartshape/actions/action_close_shape.gd")
+const ActionSplitShape := preload("res://addons/rmsmartshape/actions/action_split_shape.gd")
 
 enum MODE { EDIT_VERT, EDIT_EDGE, CUT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
@@ -1138,18 +1139,7 @@ func _input_handle_left_click(
 			return true
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		if not shape.is_shape_closed():
-			var first_key: int = shape.get_point_key_at_index(0)
-			var last_key: int = shape.get_point_key_at_index(shape.get_point_count()-1)
-			if edge_keys[0] == first_key:
-				perform_action(ActionDeletePoint.new(shape, edge_keys[0]))
-			if edge_keys[1] == last_key:
-				perform_action(ActionDeletePoint.new(shape, edge_keys[1]))
-			if edge_keys[0] != first_key and edge_keys[1] != last_key:
-				# TODO: Implement splitting the shape into two shapes
-				push_warning("Currently, the Cut Edge Tool can't remove inner edges of an open shape.")
-			return true
-		perform_action(ActionCutEdge.new(shape, edge_keys[0]))
+		perform_action(ActionCutEdge.new(shape, edge_keys[0], edge_keys[1]))
 		return true
 	elif current_mode == MODE.FREEHAND:
 		return true
@@ -1596,22 +1586,7 @@ func _get_vert_normal(t: Transform2D, verts, i: int) -> Vector2:
 
 
 func copy_shape(s: SS2D_Shape) -> SS2D_Shape:
-	var copy: SS2D_Shape
-	copy = SS2D_Shape.new()
-	copy.position = s.position
-	copy.scale = s.scale
-	copy.modulate = s.modulate
-	copy.shape_material = s.shape_material
-	copy.editor_debug = s.editor_debug
-	copy.flip_edges = s.flip_edges
-	copy.editor_debug = s.editor_debug
-	copy.collision_size = s.collision_size
-	copy.collision_offset = s.collision_offset
-	copy.tessellation_stages = s.tessellation_stages
-	copy.tessellation_tolerence = s.tessellation_tolerence
-	copy.curve_bake_interval = s.curve_bake_interval
-	#copy.material_overrides = s.material_overrides
-	copy.name = s.get_name().rstrip("0123456789")
+	var copy: SS2D_Shape = s.clone(false)
 
 	var undo := get_undo_redo()
 	undo.create_action("Add Shape Node")

@@ -1,31 +1,42 @@
 extends SS2D_Action
 
 ## ActionCutEdge
+##
+## A delegate action that selects an action to perform based on the edge
+## location and shape state.
+
+var ActionOpenShape := preload("res://addons/rmsmartshape/actions/action_open_shape.gd")
+var ActionDeletePoint := preload("res://addons/rmsmartshape/actions/action_delete_point.gd")
+var ActionSplitShape := preload("res://addons/rmsmartshape/actions/action_split_shape.gd")
 
 var _shape: SS2D_Shape
-var _idx: int
-var _closing_key: int
+var _key: int
+var _action: SS2D_Action
 
 
-func _init(shape: SS2D_Shape, key: int) -> void:
+func _init(shape: SS2D_Shape, key_edge_start: int, key_edge_end: int) -> void:
 	_shape = shape
-	_idx = shape.get_point_index(key)
+
+	var key_first: int = shape.get_point_key_at_index(0)
+	var key_last: int = shape.get_point_key_at_index(shape.get_point_count()-1)
+	if _shape.is_shape_closed():
+		_action = ActionOpenShape.new(shape, key_edge_start)
+	elif key_edge_start == key_first:
+		_action = ActionDeletePoint.new(shape, key_edge_start)
+	elif  key_edge_end == key_last:
+		_action = ActionDeletePoint.new(shape, key_edge_end)
+	else:
+		_action = ActionSplitShape.new(shape, key_edge_start)
 
 
 func get_name() -> String:
-	return "Cut Edge"
+	return _action.get_name()
 
 
 func do() -> void:
-	_shape.begin_update()
-	var last_idx: int = _shape.get_point_count() - 1
-	_closing_key = _shape.get_point_key_at_index(last_idx)
-	_shape.cut_edge(_idx)
-	_shape.end_update()
+	_action.do()
 
 
 func undo() -> void:
-	_shape.begin_update()
-	_shape.undo_cut_edge(_idx, _closing_key)
-	_shape.end_update()
+	_action.undo()
 

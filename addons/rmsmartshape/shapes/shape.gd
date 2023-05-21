@@ -377,30 +377,17 @@ func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
 	return _points.add_point(pos, adjust_add_point_index(index), key)
 
 
-func cut_edge(from_idx: int) -> void:
-	var last_idx: int = get_point_count() - 1
-	if is_shape_closed():
-		remove_point(get_point_key_at_index(last_idx))
-		if from_idx < last_idx:
-			for i in range(from_idx+1):
-				_points.set_point_index(_points.get_point_key_at_index(0), last_idx)
-	else:
-		push_warning("Can't cut edge of an open shape.")
-
-
-func undo_cut_edge(from_idx: int, closing_index: int) -> void:
-	var last_idx := get_point_count() - 1
-	if from_idx < last_idx:
-		for i in range(from_idx+1):
-			_points.set_point_index(_points.get_point_key_at_index(last_idx), 0)
-	if can_close():
-		close_shape(closing_index)
-
-
+## Is this shape closed, i.e. last point is constrained to the first point.
 func is_shape_closed() -> bool:
 	if _points.get_point_count() < 4:
 		return false
 	return _has_closing_point()
+
+
+## Is this shape not yet closed but should be.[br]
+## Returns [code]false[/code] for open shapes.[br]
+func can_close() -> bool:
+	return _points.get_point_count() > 2 and _has_closing_point() == false
 
 
 ## Will mutate the _points to ensure this is a closed_shape.[br]
@@ -421,10 +408,26 @@ func close_shape(key: int = -1) -> int:
 	return key_last
 
 
-## Is this shape not yet closed but should be.[br]
-## Returns [code]false[/code] for open shapes.[br]
-func can_close() -> bool:
-	return _points.get_point_count() > 2 and _has_closing_point() == false
+## Open shape by removing edge that starts at specified point index.
+func open_shape_at_edge(edge_start_idx: int) -> void:
+	var last_idx: int = get_point_count() - 1
+	if is_shape_closed():
+		remove_point(get_point_key_at_index(last_idx))
+		if edge_start_idx < last_idx:
+			for i in range(edge_start_idx + 1):
+				_points.set_point_index(_points.get_point_key_at_index(0), last_idx)
+	else:
+		push_warning("Can't open a shape that is not a closed shape.")
+
+
+## Undo shape opening done by [method open_shape_at_edge].
+func undo_open_shape_at_edge(edge_start_idx: int, closing_index: int) -> void:
+	var last_idx := get_point_count() - 1
+	if edge_start_idx < last_idx:
+		for i in range(edge_start_idx + 1):
+			_points.set_point_index(_points.get_point_key_at_index(last_idx), 0)
+	if can_close():
+		close_shape(closing_index)
 
 
 func _has_closing_point() -> bool:
@@ -489,6 +492,27 @@ func remove_point(key: int) -> void:
 
 func remove_point_at_index(idx: int) -> void:
 	remove_point(get_point_key_at_index(idx))
+
+
+func clone(clone_point_array: bool = true) -> SS2D_Shape:
+	var copy := SS2D_Shape.new()
+	copy.position = position
+	copy.scale = scale
+	copy.modulate = modulate
+	copy.shape_material = shape_material
+	copy.editor_debug = editor_debug
+	copy.flip_edges = flip_edges
+	copy.editor_debug = editor_debug
+	copy.collision_size = collision_size
+	copy.collision_offset = collision_offset
+	copy.tessellation_stages = tessellation_stages
+	copy.tessellation_tolerence = tessellation_tolerence
+	copy.curve_bake_interval = curve_bake_interval
+	#copy.material_overrides = s.material_overrides
+	copy.name = get_name().rstrip("0123456789")
+	if clone_point_array:
+		copy.set_point_array(_points.clone(true))
+	return copy
 
 
 #######################
