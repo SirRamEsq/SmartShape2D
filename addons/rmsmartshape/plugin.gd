@@ -1562,12 +1562,8 @@ func _input_handle_mouse_motion_event(
 					last_point_position = local_position
 					if use_snap():
 						local_position = snap(local_position)
-					perform_action(ActionAddPoint.new(
-						shape,
-						local_position,
-						shape.get_point_index(closest_edge_keys[1]),
-						not _defer_mesh_updates
-					))
+					var idx: int = shape.get_point_index(closest_edge_keys[1]) if shape.is_shape_closed() else -1
+					perform_action(ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates))
 				update_overlays()
 				return true
 			else:
