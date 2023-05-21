@@ -931,12 +931,17 @@ static func build_quad_corner(
 	return new_quad
 
 
-func _get_width_for_tessellated_point(points: PackedVector2Array, t_points: PackedVector2Array, t_idx) -> float:
-	var v_idx: int = get_vertex_idx_from_tessellated_point(points, t_points, t_idx)
+func _get_width_for_tessellated_point(
+	points: PackedVector2Array, 
+	t_idx: int,
+	t_point_idx_to_point_idx: Array[int],
+	point_idx_to_t_points_idx: Array[Array]
+) -> float:
+	var v_idx = t_point_idx_to_point_idx[t_idx]
 	var v_idx_next: int = _get_next_point_index(v_idx, points)
 	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
 	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
-	var ratio: float = get_ratio_from_tessellated_point_to_vertex(points, t_points, t_idx)
+	var ratio: float = get_ratio_from_tessellated_point_to_vertex(t_idx, t_point_idx_to_point_idx, point_idx_to_t_points_idx)
 	return lerp(w1, w2, ratio)
 
 
@@ -1236,76 +1241,19 @@ static func _get_previous_point_index_wrap_around(idx: int, points: PackedVector
 ## 0.999 means that this tessellated point is basically at the next vertex.[br]
 ## 1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0.[br]
 func get_ratio_from_tessellated_point_to_vertex(
-		points: PackedVector2Array, t_points: PackedVector2Array, t_point_idx: int
+	t_point_idx: int,
+	t_point_idx_to_point_idx: Array[int],
+	point_idx_to_t_points_idx: Array[Array]
 ) -> float:
-	if t_point_idx == 0:
-		return 0.0
-
-	var vertex_idx := 0
-	# The total tessellated points betwen two verts
-	var tess_point_count := 0
+	# Index of the starting vertex
+	var point_idx = t_point_idx_to_point_idx[t_point_idx]
+	# Index of the first tesselated point with the same vertex
+	var tess_point_first_idx = point_idx_to_t_points_idx[point_idx][0]
+	# The total tessellated points with the same vertex
+	var tess_point_count = point_idx_to_t_points_idx[point_idx].size()
 	# The index of the passed t_point_idx relative to the starting vert
-	var tess_index_count := 0
-	for i in range(0, t_points.size(), 1):
-		var tp: Vector2 = t_points[i]
-		var p: Vector2 = points[vertex_idx]
-		tess_point_count += 1
-
-		if i <= t_point_idx:
-			tess_index_count += 1
-
-		if tp == p:
-			if i < t_point_idx:
-				vertex_idx += 1
-				tess_point_count = 0
-				tess_index_count = 0
-			else:
-				break
-
-	var result: float = fmod(float(tess_index_count) / float(tess_point_count), 1.0)
-	return result
-
-
-static func get_vertex_idx_from_tessellated_point(
-		points: PackedVector2Array, t_points: PackedVector2Array, t_point_idx: int
-) -> int:
-	# if idx is 0 or negative
-	if t_point_idx < 1:
-		return 0
-	if t_point_idx >= t_points.size():
-		push_error("get_vertex_idx_from_tessellated_point:: Out of Bounds point_idx; size is %s; idx is %s" % [t_points.size(), t_point_idx])
-		return points.size() - 1
-
-	var vertex_idx := -1
-	for i in range(0, t_point_idx + 1, 1):
-		var tp: Vector2 = t_points[i]
-		var p: Vector2 = points[vertex_idx + 1]
-		if tp == p:
-			vertex_idx += 1
-	return vertex_idx
-
-
-static func get_tessellated_idx_from_point(
-		points: PackedVector2Array, t_points: PackedVector2Array, point_idx: int
-) -> int:
-	# if idx is 0 or negative
-	if point_idx < 1:
-		return 0
-	if point_idx >= points.size():
-		push_error("get_tessellated_idx_from_point:: Out of Bounds point_idx; size is %s; idx is %s" % [points.size(), point_idx])
-		return t_points.size() - 1
-
-	var vertex_idx := -1
-	var tess_idx := 0
-	for i in range(0, t_points.size(), 1):
-		tess_idx = i
-		var tp: Vector2 = t_points[i]
-		var p: Vector2 = points[vertex_idx + 1]
-		if tp == p:
-			vertex_idx += 1
-		if vertex_idx == point_idx:
-			break
-	return tess_idx
+	var tess_index_count = t_point_idx - tess_point_first_idx
+	return tess_index_count / float(tess_point_count)
 
 
 func debug_print_points():
@@ -1317,7 +1265,7 @@ func debug_print_points():
 ###################
 
 ## Get Number of TessPoints from the start and end indicies of the index_map parameter.
-func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
+func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap, point_idx_to_t_points_idx: Array[Array]) -> int:
 	## TODO Test this function
 	var count: int = 0
 	var points: PackedVector2Array = get_vertices()
@@ -1328,8 +1276,8 @@ func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 		if this_idx > next_idx:
 			count += 1
 			continue
-		var this_t_idx: int = get_tessellated_idx_from_point(points, t_points, this_idx)
-		var next_t_idx: int = get_tessellated_idx_from_point(points, t_points, next_idx)
+		var this_t_idx: int = point_idx_to_t_points_idx[this_idx][0]
+		var next_t_idx: int = point_idx_to_t_points_idx[next_idx][0]
 		var delta: int = next_t_idx - this_t_idx
 		count += delta
 	return count
@@ -1450,6 +1398,21 @@ func _build_edge_with_material(
 	var c_scale := 1.0
 	var c_extends := 0.0
 
+	# Cache points index maps
+	# Map of all tesselated point index to its corresponding vertex index
+	var t_point_idx_to_point_idx: Array[int] = []
+	# Map of all vertex index to their corresponding tesselated points indices
+	var point_idx_to_t_points_idx: Array[Array] = []
+	var point_idx = -1
+	for t_point_idx in verts_t.size():
+		var next_point_idx = _get_next_point_index_wrap_around(point_idx, verts)
+		if verts_t[t_point_idx] == verts[next_point_idx]:
+			point_idx = next_point_idx
+			point_idx_to_t_points_idx.push_back([])
+		
+		t_point_idx_to_point_idx.push_back(point_idx)
+		point_idx_to_t_points_idx[point_idx].push_back(t_point_idx)
+
 	var edge_material_meta: SS2D_Material_Edge_Metadata = null
 	var edge_material: SS2D_Material_Edge = null
 	if index_map.object != null:
@@ -1469,14 +1432,16 @@ func _build_edge_with_material(
 
 	var first_idx: int = index_map.indicies[0]
 	var last_idx: int = index_map.indicies[-1]
-	var first_idx_t: int = get_tessellated_idx_from_point(verts, verts_t, first_idx)
-	var last_idx_t: int = get_tessellated_idx_from_point(verts, verts_t, last_idx)
+	var first_idx_t: int = point_idx_to_t_points_idx[first_idx][0]
+	var last_idx_t: int = point_idx_to_t_points_idx[last_idx].back()
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
+	var flip_edges := should_flip_edges()
+	
 	# How many tessellated points are contained within this index map?
-	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
-
+	var tess_point_count: int = _edge_data_get_tess_point_count(index_map, point_idx_to_t_points_idx)
+	
 	var i := 0
 	while i < tess_point_count:
 		var tess_idx: int = (first_idx_t + i) % verts_t.size()
@@ -1492,9 +1457,8 @@ func _build_edge_with_material(
 			if ((tess_idx + j) % verts_t.size()) == tess_idx_next:
 				next_point_delta = j
 				break
-
-		var vert_idx: int = get_vertex_idx_from_tessellated_point(
-				verts, verts_t, tess_idx)
+		
+		var vert_idx: int = t_point_idx_to_point_idx[tess_idx]
 		var vert_key: int = get_point_key_at_index(vert_idx)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
@@ -1503,7 +1467,7 @@ func _build_edge_with_material(
 		var texture_idx := 0
 		var flip_x: bool = get_point_texture_flip(vert_key)
 
-		var width_scale: float = _get_width_for_tessellated_point(verts, verts_t, tess_idx)
+		var width_scale: float = _get_width_for_tessellated_point(verts, tess_idx, t_point_idx_to_point_idx, point_idx_to_t_points_idx)
 		var is_first_point: bool = (vert_idx == first_idx) and not is_edge_contiguous
 		var is_last_point: bool = (vert_idx == last_idx - 1) and not is_edge_contiguous
 		var is_first_tess_point: bool = (tess_idx == first_idx_t) and not is_edge_contiguous
@@ -1531,7 +1495,7 @@ func _build_edge_with_material(
 			tex,
 			width_scale * c_scale * tex_size.y,
 			flip_x,
-			should_flip_edges(),
+			flip_edges,
 			is_first_point,
 			is_last_point,
 			c_offset,
@@ -1544,7 +1508,7 @@ func _build_edge_with_material(
 		# Corner Quad
 		if edge_material != null and edge_material.use_corner_texture:
 			if tess_idx != first_idx_t or is_edge_contiguous:
-				var prev_width: float = _get_width_for_tessellated_point(verts, verts_t, tess_idx_prev)
+				var prev_width: float = _get_width_for_tessellated_point(verts, tess_idx_prev, t_point_idx_to_point_idx, point_idx_to_t_points_idx)
 				var q: SS2D_Quad = _edge_generate_corner(
 					pt_prev,
 					pt,
@@ -1613,8 +1577,8 @@ func _build_edge_with_material(
 			var p_p: Vector2 = verts_t[idx_prev]
 			var p_m: Vector2 = verts_t[idx_mid]
 			var p_n: Vector2 = verts_t[idx_next]
-			var w_p: float = _get_width_for_tessellated_point(verts, verts_t, idx_prev)
-			var w_m: float = _get_width_for_tessellated_point(verts, verts_t, idx_mid)
+			var w_p: float = _get_width_for_tessellated_point(verts, idx_prev, t_point_idx_to_point_idx, point_idx_to_t_points_idx)
+			var w_m: float = _get_width_for_tessellated_point(verts, idx_mid, t_point_idx_to_point_idx, point_idx_to_t_points_idx)
 			var q: SS2D_Quad = _edge_generate_corner(
 				p_p, p_m, p_n, w_p, w_m, tex_size.y, edge_material, texture_idx, c_scale, c_offset
 			)
@@ -1625,6 +1589,7 @@ func _build_edge_with_material(
 		for q in new_quads:
 			edge.quads.push_back(q)
 		i += next_point_delta
+	
 	if edge_material_meta != null:
 		if edge_material_meta.weld:
 			_weld_quad_array(edge.quads, edge.wrap_around)
