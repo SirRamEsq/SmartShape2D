@@ -1136,12 +1136,20 @@ func _input_handle_left_click(
 	elif current_mode == MODE.CUT_EDGE:
 		if not on_edge:
 			return true
-		if not shape.is_shape_closed():
-			push_warning("Currently, the Cut Edge Tool can't remove edges of an open shape.")
-			return true
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
-		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		perform_action(ActionCutEdge.new(shape, edge_point_keys[0]))
+		var edge_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
+		if not shape.is_shape_closed():
+			var first_key: int = shape.get_point_key_at_index(0)
+			var last_key: int = shape.get_point_key_at_index(shape.get_point_count()-1)
+			if edge_keys[0] == first_key:
+				perform_action(ActionDeletePoint.new(shape, edge_keys[0]))
+			if edge_keys[1] == last_key:
+				perform_action(ActionDeletePoint.new(shape, edge_keys[1]))
+			if edge_keys[0] != first_key and edge_keys[1] != last_key:
+				# TODO: Implement splitting the shape into two shapes
+				push_warning("Currently, the Cut Edge Tool can't remove inner edges of an open shape.")
+			return true
+		perform_action(ActionCutEdge.new(shape, edge_keys[0]))
 		return true
 	elif current_mode == MODE.FREEHAND:
 		return true
