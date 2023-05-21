@@ -146,7 +146,6 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 	var shape_material = create_shape_material_with_equal_normal_ranges(4, tex)
 	var shape = SS2D_Shape.new()
 	add_child_autofree(shape)
-	shape._is_instantiable = true
 	shape.shape_material = shape_material
 	shape.set_point_array(point_array)
 
