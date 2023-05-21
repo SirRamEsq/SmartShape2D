@@ -1,7 +1,7 @@
 extends EditorInspectorPlugin
 
 ## This inspector plugin will show an Execute button for action properties in
-## SS2D_Shape_Base.
+## SS2D_Shape.
 ##
 ## To add an action property export it with:
 ##
@@ -33,7 +33,7 @@ class ActionPropertyEditor:
 
 
 func _can_handle(object: Object) -> bool:
-	if object is SS2D_Shape_Base:
+	if object is SS2D_Shape:
 		return true
 	return false
 

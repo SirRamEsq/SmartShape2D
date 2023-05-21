@@ -1,6 +1,7 @@
 @tool
+@icon("../assets/closed_shape.png")
 extends Node2D
-class_name SS2D_Shape_Base
+class_name SS2D_Shape
 
 
 ## Represents the base functionality for all smart shapes.
@@ -23,7 +24,6 @@ const TUP = preload("../lib/tuple.gd")
 var _dirty: bool = false
 var _edges: Array[SS2D_Edge] = []
 var _meshes: Array[SS2D_Mesh] = []
-var _is_instantiable: bool = false
 var _curve: Curve2D
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
@@ -32,7 +32,8 @@ var _collision_polygon_node: CollisionPolygon2D
 var can_edit: bool = true
 
 signal points_modified
-signal make_unique_pressed(shape: SS2D_Shape_Base)
+signal on_dirty_update
+signal make_unique_pressed(shape: SS2D_Shape)
 
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
@@ -144,18 +145,12 @@ func set_point_array(a: SS2D_Point_Array) -> void:
 	if a == null:
 		a = SS2D_Point_Array.new()
 	_points = a
-	_point_array_assigned()
 	_points.connect("changed", self._points_modified)
 	_points.connect("material_override_changed", self._handle_material_override_change)
 	clear_cached_data()
 	_update_curve(_points)
 	set_as_dirty()
 	notify_property_list_changed()
-
-
-# @virtual
-func _point_array_assigned() -> void:
-	pass
 
 
 func _refresh_action(value: String) -> void:
@@ -350,9 +345,13 @@ func clear_points() -> void:
 	_points.clear()
 
 
-# @virtual
-## Adjusts index of a new point to be added with [method add_point].
 func adjust_add_point_index(index: int) -> int:
+	# Don't allow a point to be added after the last point of the closed shape or before the first
+	if _has_closing_point():
+		if index < 0 or (index > get_point_count() - 1):
+			index = maxi(get_point_count() - 1, 0)
+		if index < 1:
+			index = 1
 	return index
 
 
@@ -372,7 +371,6 @@ func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = 
 	return keys
 
 
-# @virtual
 ## Add a point.[br]
 ## Returns key of the added point.[br]
 func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
@@ -399,15 +397,42 @@ func undo_cut_edge(from_idx: int, closing_index: int) -> void:
 		close_shape(closing_index)
 
 
-# @virtual
 func is_shape_closed() -> bool:
-	return false
+	if _points.get_point_count() < 4:
+		return false
+	return _has_closing_point()
 
 
-# @virtual
+## Will mutate the _points to ensure this is a closed_shape.[br]
+## Last point will be constrained to first point.[br]
+## Returns key of a point used to close the shape.[br]
+## [param key] suggests which key to use instead of auto-generated.[br]
 func close_shape(key: int = -1) -> int:
-	push_error("Implementation error: Cannot close base shape.")
-	return 0
+	if not can_close():
+		return -1
+
+	var key_first: int = _points.get_point_key_at_index(0)
+	var key_last: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
+
+	if get_point_position(key_first) != get_point_position(key_last):
+		key_last = _points.add_point(_points.get_point_position(key_first), -1, key)
+	_points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
+
+	return key_last
+
+
+## Is this shape not yet closed but should be.[br]
+## Returns [code]false[/code] for open shapes.[br]
+func can_close() -> bool:
+	return _points.get_point_count() > 2 and _has_closing_point() == false
+
+
+func _has_closing_point() -> bool:
+	if _points.get_point_count() < 2:
+		return false
+	var key1: int = _points.get_point_key_at_index(0)
+	var key2: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
+	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
 
 
 ## Begin updating the shape.[br]
@@ -465,12 +490,6 @@ func remove_point(key: int) -> void:
 func remove_point_at_index(idx: int) -> void:
 	remove_point(get_point_key_at_index(idx))
 
-
-# @virtual
-## Is this shape not yet closed but should be.[br]
-## Returns [code]false[/code] for open shapes.[br]
-func can_close() -> bool:
-	return false
 
 #######################
 #-POINT ARRAY WRAPPER-#
@@ -628,12 +647,6 @@ func _enter_tree() -> void:
 	set_collision_polygon_node_path(collision_polygon_node_path)
 
 
-func _ready() -> void:
-	if not _is_instantiable:
-		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
-		queue_free()
-
-
 func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 	var render_parent_name := "_SS2D_RENDER"
 	var render_parent: SS2D_Shape_Render = null
@@ -769,10 +782,16 @@ func _prepare_generate_collision_points(default_quad_width: float) -> SS2D_Edge:
 
 func generate_collision_points() -> PackedVector2Array:
 	var points := PackedVector2Array()
-	var edge := _prepare_generate_collision_points(collision_size)
+	var csize: float = 1.0 if is_shape_closed() else collision_size
+	var edge: SS2D_Edge = _prepare_generate_collision_points(csize)
 
 	if not edge:
 		return points
+
+	if is_shape_closed():
+		var first_quad: SS2D_Quad = edge.quads[0]
+		var last_quad: SS2D_Quad = edge.quads.back()
+		weld_quads(last_quad, first_quad)
 
 	if not edge.quads.is_empty():
 		# Top edge (typically point A unless corner quad)
@@ -784,22 +803,22 @@ func generate_collision_points() -> PackedVector2Array:
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
 
-		# Right Edge (point d, the first or final quad will never be a corner)
-		points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
+		if not is_shape_closed():
+			# Right Edge (point d, the first or final quad will never be a corner)
+			points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
 
-		# Bottom Edge (typically point c)
-		for quad_index in edge.quads.size():
-			var quad: SS2D_Quad = edge.quads[edge.quads.size() - 1 - quad_index]
-			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(quad.pt_c)
-			elif quad.corner == SS2D_Quad.CORNER.OUTER:
-				pass
-			elif quad.corner == SS2D_Quad.CORNER.INNER:
-				points.push_back(quad.pt_b)
+			# Bottom Edge (typically point c)
+			for quad_index in edge.quads.size():
+				var quad: SS2D_Quad = edge.quads[edge.quads.size() - 1 - quad_index]
+				if quad.corner == SS2D_Quad.CORNER.NONE:
+					points.push_back(quad.pt_c)
+				elif quad.corner == SS2D_Quad.CORNER.OUTER:
+					pass
+				elif quad.corner == SS2D_Quad.CORNER.INNER:
+					points.push_back(quad.pt_b)
 
-		# Left Edge (point b)
-		points.push_back(edge.quads[0].pt_b)
-
+			# Left Edge (point b)
+			points.push_back(edge.quads[0].pt_b)
 	return points
 
 
@@ -825,10 +844,82 @@ func cache_meshes() -> void:
 func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
 	var meshes: Array[SS2D_Mesh] = []
 
-	# Produce edge Meshes
+	var produced_fill_mesh := false
 	for e in edges:
+		if not produced_fill_mesh and is_shape_closed():
+			if e.z_index > shape_material.fill_texture_z_index:
+				# Produce Fill Meshes
+				for m in _build_fill_mesh(get_tessellated_points(), shape_material):
+					meshes.push_back(m)
+				produced_fill_mesh = true
+
+		# Produce edge Meshes
 		for m in e.get_meshes(color_encoding):
 			meshes.push_back(m)
+	if not produced_fill_mesh and is_shape_closed():
+		for m in _build_fill_mesh(get_tessellated_points(), shape_material):
+			meshes.push_back(m)
+		produced_fill_mesh = true
+	return meshes
+
+
+func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) -> Array[SS2D_Mesh]:
+	var meshes: Array[SS2D_Mesh] = []
+	if s_mat == null:
+		return meshes
+	if s_mat.fill_textures.is_empty():
+		return meshes
+	if points.size() < 3:
+		return meshes
+
+	var tex: Texture2D = null
+	if s_mat.fill_textures.is_empty():
+		return meshes
+	tex = s_mat.fill_textures[0]
+	var tex_size: Vector2 = tex.get_size()
+
+	# Points to produce the fill mesh
+	var fill_points: PackedVector2Array = PackedVector2Array()
+	var polygons: Array[PackedVector2Array] = Geometry2D.offset_polygon(
+		PackedVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
+	)
+	points = polygons[0]
+	fill_points.resize(points.size())
+	for i in range(points.size()):
+		fill_points[i] = points[i]
+
+	# Produce the fill mesh
+	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(fill_points)
+	if fill_tris.is_empty():
+		push_error("'%s': Couldn't Triangulate shape" % name)
+		return []
+
+	var st: SurfaceTool
+	st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	for i in range(0, fill_tris.size() - 1, 3):
+		st.set_color(Color.WHITE)
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
+		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
+		st.set_color(Color.WHITE)
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
+		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
+		st.set_color(Color.WHITE)
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
+		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
+	st.index()
+	st.generate_normals()
+	st.generate_tangents()
+	var array_mesh := st.commit()
+	var flip := false
+	var trans := Transform2D()
+	var mesh_data := SS2D_Mesh.new(tex, flip, trans, [array_mesh])
+	mesh_data.material = s_mat.fill_mesh_material
+	mesh_data.z_index = s_mat.fill_texture_z_index
+	mesh_data.z_as_relative = true
+	mesh_data.show_behind_parent = s_mat.fill_texture_show_behind_parent
+	meshes.push_back(mesh_data)
 
 	return meshes
 
@@ -1054,7 +1145,7 @@ func _weld_quad_array(
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		SS2D_Shape_Base.weld_quads(this_quad, next_quad)
+		SS2D_Shape.weld_quads(this_quad, next_quad)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
@@ -1074,10 +1165,37 @@ func _weld_quad_array(
 		weld_quads(quads[-1], quads[0])
 
 
-# Note: Meant to be overridden.
-func _merge_index_maps(
-		imaps: Array[SS2D_IndexMap], _verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
-	return imaps
+func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
+	if not is_shape_closed():
+		return imaps
+	# See if any edges have both the first (0) and last idx (size)
+	# Merge them into one if so
+	var final_edges: Array[SS2D_IndexMap] = imaps.duplicate()
+	var edges_by_material: Dictionary = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
+	# Erase any with null material
+	edges_by_material.erase(null)
+	for mat in edges_by_material:
+		var edge_first_idx: SS2D_IndexMap = null
+		var edge_last_idx: SS2D_IndexMap = null
+		for e in edges_by_material[mat]:
+			if e.indicies.has(0):
+				edge_first_idx = e
+			if e.indicies.has(verts.size()-1):
+				edge_last_idx = e
+			if edge_first_idx != null and edge_last_idx != null:
+				break
+		if edge_first_idx != null and edge_last_idx != null:
+			if edge_first_idx == edge_last_idx:
+				pass
+			else:
+				final_edges.erase(edge_last_idx)
+				final_edges.erase(edge_first_idx)
+				var indicies: Array[int] = []
+				indicies.append_array(edge_last_idx.indicies)
+				indicies.append_array(edge_first_idx.indicies)
+				var merged_edge := SS2D_IndexMap.new(indicies, mat)
+				final_edges.push_back(merged_edge)
+	return final_edges
 
 
 func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Array[SS2D_Edge]:
@@ -1145,7 +1263,7 @@ static func get_meta_material_index_mapping_for_overrides(
 func _get_meta_material_index_mapping(
 	s_material: SS2D_Material_Shape, verts: PackedVector2Array
 ) -> Array[SS2D_IndexMap]:
-	return get_meta_material_index_mapping(s_material, verts, false)
+	return get_meta_material_index_mapping(s_material, verts, is_shape_closed())
 
 
 static func get_meta_material_index_mapping(
@@ -1475,8 +1593,14 @@ func _get_previous_unique_point_idx(idx: int, pts: PackedVector2Array, wrap_arou
 	return previous_idx
 
 
-func _is_edge_contiguous(_index_amp: SS2D_IndexMap, _verts: PackedVector2Array) -> bool:
-	return false
+func _imap_contains_all_points(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
+	return imap.indicies[0] == 0 and imap.indicies.back() == verts.size()-1
+
+
+func _is_edge_contiguous(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
+	if not is_shape_closed():
+		return false
+	return _imap_contains_all_points(imap, verts)
 
 
 # Will construct an SS2D_Edge from the passed parameters.

@@ -11,19 +11,19 @@ extends RefCounted
 # --- VERTS
 
 static func get_intersecting_control_point_in(
-	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
+	s: SS2D_Shape, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
 ) -> Array[int]:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, true)
 
 
 static func get_intersecting_control_point_out(
-	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
+	s: SS2D_Shape, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
 ) -> Array[int]:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, false)
 
 
 static func _get_intersecting_control_point(
-	s: SS2D_Shape_Base, et: Transform2D, mouse_pos: Vector2, grab_threshold: float, _in: bool
+	s: SS2D_Shape, et: Transform2D, mouse_pos: Vector2, grab_threshold: float, _in: bool
 ) -> Array[int]:
 	var points: Array[int] = []
 	var xform: Transform2D = et * s.get_global_transform()

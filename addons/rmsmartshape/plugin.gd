@@ -100,7 +100,7 @@ class ActionDataVert:
 			return -1
 		return keys[0]
 
-	func current_point_index(s: SS2D_Shape_Base) -> int:
+	func current_point_index(s: SS2D_Shape) -> int:
 		if not is_single_vert_selected():
 			return -1
 		return s.get_point_index(keys[0])
@@ -117,7 +117,7 @@ var gui_snap_settings = GUI_SNAP_POPUP.instantiate()
 const GUI_POINT_INFO_PANEL_OFFSET := Vector2(256, 130)
 
 # This is the shape node being edited
-var shape: SS2D_Shape_Base = null
+var shape: SS2D_Shape = null
 
 # Toolbar Stuff
 var tb_hb: HBoxContainer = null
@@ -485,7 +485,7 @@ func _handles(object: Object) -> bool:
 	var selection: EditorSelection = get_editor_interface().get_selection()
 	if selection != null:
 		if selection.get_selected_nodes().size() == 1:
-			if selection.get_selected_nodes()[0] is SS2D_Shape_Base:
+			if selection.get_selected_nodes()[0] is SS2D_Shape:
 				hideToolbar = false
 
 	if hideToolbar == true:
@@ -494,7 +494,7 @@ func _handles(object: Object) -> bool:
 	if object is Resource:
 		return false
 
-	return object is SS2D_Shape_Base
+	return object is SS2D_Shape
 
 
 func _edit(object: Object) -> void:
@@ -606,7 +606,7 @@ func connect_shape(s) -> void:
 
 
 static func get_material_override_from_indicies(
-	s: SS2D_Shape_Base, indicies: Array
+	s: SS2D_Shape, indicies: Array
 ) -> SS2D_Material_Edge_Metadata:
 	var keys: Array[int] = []
 	for i in indicies:
@@ -676,7 +676,7 @@ static func is_shape_valid(s) -> bool:
 	return true
 
 
-func _on_shape_make_unique(_shape: SS2D_Shape_Base) -> void:
+func _on_shape_make_unique(_shape: SS2D_Shape) -> void:
 	make_unique_dialog.popup_centered()
 
 
@@ -688,7 +688,7 @@ func get_et() -> Transform2D:
 	return get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 
 
-static func is_key_valid(s: SS2D_Shape_Base, key: int) -> bool:
+static func is_key_valid(s: SS2D_Shape, key: int) -> bool:
 	if not is_shape_valid(s):
 		return false
 	return s.has_point(key)
@@ -1102,7 +1102,7 @@ func _input_handle_left_click(
 			var idx: int = -1
 			if Input.is_key_pressed(KEY_SHIFT) and Input.is_key_pressed(KEY_ALT):
 				# Copy shape with a new single point
-				var copy: SS2D_Shape_Base = copy_shape(shape)
+				var copy: SS2D_Shape = copy_shape(shape)
 				copy.set_point_array(SS2D_Point_Array.new())
 				_enter_mode(MODE.CREATE_VERT)
 				var selection := get_editor_interface().get_selection()
@@ -1479,7 +1479,7 @@ func _input_motion_move_width_handle(mouse_position: Vector2, scale: Vector2) ->
 
 
 ## Will return index of closest vert to point.
-func get_closest_vert_to_point(s: SS2D_Shape_Base, p: Vector2) -> int:
+func get_closest_vert_to_point(s: SS2D_Shape, p: Vector2) -> int:
 	var gt: Transform2D = shape.get_global_transform()
 	var verts: PackedVector2Array = s.get_vertices()
 	var transformed_point: Vector2 = gt.affine_inverse() * p
@@ -1572,7 +1572,7 @@ func _input_handle_mouse_motion_event(
 				return true
 			else:
 				var xform: Transform2D = get_et() * shape.get_global_transform()
-				var closest_ss2d_point: SS2D_Point = (shape as SS2D_Shape_Base).get_point(closest_key)
+				var closest_ss2d_point: SS2D_Point = (shape as SS2D_Shape).get_point(closest_key)
 				if closest_ss2d_point != null:
 					var closest_point: Vector2 = closest_ss2d_point.position
 					closest_point = xform * closest_point
@@ -1599,12 +1599,9 @@ func _get_vert_normal(t: Transform2D, verts, i: int) -> Vector2:
 	return ((prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2)).normalized()
 
 
-func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
-	var copy: SS2D_Shape_Base
-	if s is SS2D_Shape_Closed:
-		copy = SS2D_Shape_Closed.new()
-	if s is SS2D_Shape_Open:
-		copy = SS2D_Shape_Open.new()
+func copy_shape(s: SS2D_Shape) -> SS2D_Shape:
+	var copy: SS2D_Shape
+	copy = SS2D_Shape.new()
 	copy.position = s.position
 	copy.scale = s.scale
 	copy.modulate = s.modulate

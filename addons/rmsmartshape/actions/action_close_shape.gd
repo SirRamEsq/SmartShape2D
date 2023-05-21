@@ -5,12 +5,12 @@ extends SS2D_Action
 const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
 var _invert_orientation: ActionInvertOrientation
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _key: int
 var _performed: bool
 
 
-func _init(shape: SS2D_Shape_Base) -> void:
+func _init(shape: SS2D_Shape) -> void:
 	_shape = shape
 	_invert_orientation = ActionInvertOrientation.new(shape)
 

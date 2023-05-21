@@ -266,7 +266,7 @@ func test_action_split_curve() -> void:
 	validate_positions(s, [Vector2(0, 0), Vector2(50, 50), Vector2(100, 100)])
 
 
-func validate_positions(s: SS2D_Shape_Base, positions: PackedVector2Array) -> void:
+func validate_positions(s: SS2D_Shape, positions: PackedVector2Array) -> void:
 	assert_eq(s.get_point_count(), positions.size())
 	if s.get_point_count() != positions.size():
 		return

@@ -2,12 +2,12 @@ extends SS2D_Action
 
 ## ActionMakeShapeUnique
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _old_array: SS2D_Point_Array
 var _new_array: SS2D_Point_Array
 
 
-func _init(shape: SS2D_Shape_Base) -> void:
+func _init(shape: SS2D_Shape) -> void:
 	_shape = shape
 	_old_array = shape.get_point_array()
 	_new_array = _shape.get_point_array().clone(true)

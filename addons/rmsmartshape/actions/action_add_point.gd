@@ -6,13 +6,13 @@ const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/acti
 var _invert_orientation: ActionInvertOrientation
 
 var _commit_update: bool
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _key: int
 var _position: Vector2
 var _idx: int
 
 
-func _init(shape: SS2D_Shape_Base, position: Vector2, idx: int = -1, commit_update: bool = true) -> void:
+func _init(shape: SS2D_Shape, position: Vector2, idx: int = -1, commit_update: bool = true) -> void:
 	_shape = shape
 	_position = position
 	_commit_update = commit_update

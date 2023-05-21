@@ -2,7 +2,7 @@ extends SS2D_Action
 
 ## ActionMoveControlPoints
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _keys: PackedInt64Array
 var _old_points_in: PackedVector2Array
 var _old_points_out: PackedVector2Array
@@ -10,7 +10,7 @@ var _new_points_in: PackedVector2Array
 var _new_points_out: PackedVector2Array
 
 
-func _init(s: SS2D_Shape_Base, keys: PackedInt64Array,
+func _init(s: SS2D_Shape, keys: PackedInt64Array,
 		old_points_in: PackedVector2Array, old_points_out: PackedVector2Array) -> void:
 	_shape = s
 	_keys = keys

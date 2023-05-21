@@ -2,12 +2,12 @@ extends SS2D_Action
 
 ## ActionSetPivot
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _old_pos: Vector2
 var _new_pos: Vector2
 
 
-func _init(s: SS2D_Shape_Base, et: Transform2D, pos: Vector2) -> void:
+func _init(s: SS2D_Shape, et: Transform2D, pos: Vector2) -> void:
 	_shape = s
 	_new_pos = pos
 	_old_pos = et * s.get_parent().get_global_transform() * s.position

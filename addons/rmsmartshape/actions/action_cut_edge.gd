@@ -2,12 +2,12 @@ extends SS2D_Action
 
 ## ActionCutEdge
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _idx: int
 var _closing_key: int
 
 
-func _init(shape: SS2D_Shape_Base, key: int) -> void:
+func _init(shape: SS2D_Shape, key: int) -> void:
 	_shape = shape
 	_idx = shape.get_point_index(key)
 
