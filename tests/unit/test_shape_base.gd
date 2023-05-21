@@ -34,23 +34,23 @@ func test_tessellated_idx_and_point_idx():
 		Vector2(0, 12), # 5 (2)
 		Vector2(-10, 10) # 6 (3)
 	]
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 0), 0)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 1), 2)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 2), 4)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 3), 6)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 400), 6)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, -1), 0)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, -100), 0)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, 0), 0)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, 1), 2)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, 2), 4)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, 3), 6)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, 400), 6)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, -1), 0)
+	assert_eq(get_tessellated_idx_from_point(verts, t_verts, -100), 0)
 
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 0), 0)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 1), 0)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 2), 1)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 3), 1)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 4), 2)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 5), 2)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 6), 3)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 600), 3)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, -600), 0)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 0), 0)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 1), 0)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 2), 1)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 3), 1)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 4), 2)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 5), 2)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 6), 3)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, 600), 3)
+	assert_eq(get_vertex_idx_from_tessellated_point(verts, t_verts, -600), 0)
 
 func test_get_meta_material_index_mapping_simple_squareish_shape():
 	var verts = [
@@ -381,3 +381,45 @@ func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, 
 	var s_m := SS2D_Material_Shape.new()
 	s_m.set_edge_meta_materials(edge_materials_meta)
 	return s_m
+
+
+func get_vertex_idx_from_tessellated_point(
+		points: PackedVector2Array, t_points: PackedVector2Array, t_point_idx: int
+) -> int:
+	# if idx is 0 or negative
+	if t_point_idx < 1:
+		return 0
+	if t_point_idx >= t_points.size():
+		push_error("get_vertex_idx_from_tessellated_point:: Out of Bounds point_idx; size is %s; idx is %s" % [t_points.size(), t_point_idx])
+		return points.size() - 1
+
+	var vertex_idx := -1
+	for i in range(0, t_point_idx + 1, 1):
+		var tp: Vector2 = t_points[i]
+		var p: Vector2 = points[vertex_idx + 1]
+		if tp == p:
+			vertex_idx += 1
+	return vertex_idx
+
+
+func get_tessellated_idx_from_point(
+		points: PackedVector2Array, t_points: PackedVector2Array, point_idx: int
+) -> int:
+	# if idx is 0 or negative
+	if point_idx < 1:
+		return 0
+	if point_idx >= points.size():
+		push_error("get_tessellated_idx_from_point:: Out of Bounds point_idx; size is %s; idx is %s" % [points.size(), point_idx])
+		return t_points.size() - 1
+
+	var vertex_idx := -1
+	var tess_idx := 0
+	for i in range(0, t_points.size(), 1):
+		tess_idx = i
+		var tp: Vector2 = t_points[i]
+		var p: Vector2 = points[vertex_idx + 1]
+		if tp == p:
+			vertex_idx += 1
+		if vertex_idx == point_idx:
+			break
+	return tess_idx
