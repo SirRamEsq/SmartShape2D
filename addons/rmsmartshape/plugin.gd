@@ -793,36 +793,37 @@ func draw_mode_edit_edge(overlay: Control) -> void:
 		var edge_point_keys: Array[int] = current_action.keys
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
 	elif on_edge:
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
 
 
 func draw_mode_cut_edge(overlay: Control) -> void:
-	var t: Transform2D = get_et() * shape.get_global_transform()
-	var verts: PackedVector2Array = shape.get_vertices()
+	draw_mode_edit_edge(overlay)
 
-	var color_highlight := Color(1.0, 0.75, 0.75, 1.0)
-	var color_normal := Color(1.0, 0.25, 0.25, 0.8)
-
-	draw_shape_outline(overlay, t, verts, color_normal, 3.0)
-	draw_vert_handles(overlay, t, verts, false)
-
-	if current_action.type == ACTION_VERT.MOVE_VERT:
-		var edge_point_keys: Array[int] = current_action.keys
-		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
-		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
-	elif on_edge:
+	if on_edge:
+		# Draw "X" marks along the edge that is selected
+		var t: Transform2D = get_et() * shape.get_global_transform()
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
-		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
+		var from: Vector2 = t * shape.get_point_position(edge_point_keys[0])
+		var to: Vector2 = t * shape.get_point_position(edge_point_keys[1])
+		var dir: Vector2 = (to - from).normalized()
+		var angle: float = dir.angle()
+		var length: float = (to - from).length()
+		var num_crosses = remap(length, 0.0, 2000.0, 0.0, 10.0)
+		num_crosses = snappedi(num_crosses, 2.0) + 1
+		var fraction = 1.0 / (num_crosses + 1)
+		for i in num_crosses:
+			var pos: Vector2 = from + dir * length * fraction * (i + 1)
+			overlay.draw_line(Vector2(8.0, 8.0).rotated(angle) + pos,
+					Vector2(-8.0, -8.0).rotated(angle) + pos, Color.RED, 3.0, true)
+			overlay.draw_line(Vector2(-8.0, 8.0).rotated(angle) + pos,
+					Vector2(8.0, -8.0).rotated(angle) + pos, Color.RED, 3.0, true)
 
 
 func draw_mode_edit_vert(overlay: Control, show_vert_handles: bool = true) -> void:
@@ -848,7 +849,7 @@ func draw_shape_outline(
 ) -> void:
 	if color == null:
 		color = shape.modulate
-	overlay.draw_polyline(t * points, color, width)
+	overlay.draw_polyline(t * points, color, width, true)
 
 
 func draw_vert_handles(
@@ -1140,6 +1141,7 @@ func _input_handle_left_click(
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
 		perform_action(ActionCutEdge.new(shape, edge_keys[0], edge_keys[1]))
+		on_edge = false
 		return true
 	elif current_mode == MODE.FREEHAND:
 		return true
