@@ -44,7 +44,7 @@ func _parse_property(
 	name: String,
 	_hint_type: PropertyHint,
 	hint_string: String,
-	_usage_flags: PropertyUsageFlags,
+	_usage_flags,
 	_wide: bool
 ) -> bool:
 	if hint_string == "ActionProperty":
