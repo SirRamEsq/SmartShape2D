@@ -48,6 +48,7 @@ There are three kinds of shapes:
 - Is Autoset when pressing the generate collision button.
 ## Shape Material
 - The material that this shape will use to render itself.
+- For backwards compatibility `fill_texture_z_index` defaults to `-10`. Set this to `0` and enable `fill_texture_show_behind_parent` in order to preserve Godot's normal z-sorting when layering with other nodes.
 ## Points
 - **There is no need to edit this property by hand, but you can if you'd like.**
 - Contains all of the points and meta-data for the points contained in this shape.
