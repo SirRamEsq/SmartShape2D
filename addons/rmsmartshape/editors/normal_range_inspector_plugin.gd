@@ -35,7 +35,7 @@ func _parse_property(
 	name: String,
 	_hint_type: PropertyHint,
 	_hint_string: String,
-	_usage_flags: PropertyUsageFlags,
+	_usage_flags,
 	_wide: bool
 ) -> bool:
 	if name == "edgeRendering":

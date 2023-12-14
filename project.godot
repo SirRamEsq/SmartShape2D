@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="SmartShape2D"
-config/features=PackedStringArray("4.0")
+config/features=PackedStringArray("4.1")
 config/icon="res://icon.png"
 
 [editor_plugins]

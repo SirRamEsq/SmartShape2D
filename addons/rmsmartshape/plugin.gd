@@ -405,6 +405,7 @@ func _ready() -> void:
 	make_unique_dialog.get_label().text = "Make shape point geometry unique (not materials). Proceed?"
 	make_unique_dialog.get_ok_button().text = "Proceed"
 	make_unique_dialog.add_cancel_button("Cancel")
+	make_unique_dialog.theme = get_editor_interface().get_base_control().theme
 	make_unique_dialog.connect("confirmed", self._shape_make_unique)
 	add_child(make_unique_dialog)
 
