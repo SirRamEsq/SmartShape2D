@@ -10,3 +10,6 @@ const EN_TOOLTIP_PIVOT := "Sets the origin of the shape"
 const EN_TOOLTIP_COLLISION := "Add static body parent and collision polygon sibling\nUse this to auto generate collision Nodes"
 const EN_TOOLTIP_SNAP := "Snapping Options"
 const EN_TOOLTIP_IMPORT := "Convert old Smartshape to new Smartshape"
+const EN_TOOLTIP_MORE_OPTIONS := "More Options"
+
+const EN_OPTIONS_DEFER_MESH_UPDATES := "Defer Mesh Updates"

@@ -2,8 +2,8 @@ extends "res://addons/rmsmartshape/actions/action_add_point.gd"
 
 ## ActionSplitCurve
 
-func _init(shape: SS2D_Shape_Base, idx: int, gpoint: Vector2, xform: Transform2D) -> void:
-	super._init(shape, xform.affine_inverse() * gpoint, idx)
+func _init(shape: SS2D_Shape_Base, idx: int, gpoint: Vector2, xform: Transform2D, commit_update: bool = true) -> void:
+	super._init(shape, xform.affine_inverse() * gpoint, idx, commit_update)
 
 
 func get_name() -> String:

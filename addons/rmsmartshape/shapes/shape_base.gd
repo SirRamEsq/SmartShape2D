@@ -20,7 +20,7 @@ const TUP = preload("../lib/tuple.gd")
 #-DECLARATIONS-#
 ################
 
-var _dirty: bool = true
+var _dirty: bool = false
 var _edges: Array[SS2D_Edge] = []
 var _meshes: Array[SS2D_Mesh] = []
 var _is_instantiable: bool = false
@@ -31,7 +31,6 @@ var _curve_no_control_points: Curve2D = Curve2D.new()
 var can_edit: bool = true
 
 signal points_modified
-signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape_Base)
 
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
@@ -232,7 +231,7 @@ func set_render_node_owners(v: bool) -> void:
 
 
 func update_render_nodes() -> void:
-	set_render_node_owners(editor_debug)
+#	set_render_node_owners(editor_debug)
 	set_render_node_light_masks(light_mask)
 
 
@@ -544,8 +543,9 @@ func get_point_texture_index(key: int) -> int:
 
 func set_point_texture_flip(key: int, flip: bool) -> void:
 	var props: SS2D_VertexProperties = _points.get_point_properties(key)
-	props.flip = flip
-	_points.set_point_properties(key, props)
+	if props.flip != flip:
+		props.flip = flip
+		_points.set_point_properties(key, props)
 
 
 func get_point_texture_flip(key: int) -> bool:
@@ -673,10 +673,6 @@ func _draw_debug(edges: Array[SS2D_Edge]) -> void:
 			if not ((i + 2) % 3 == 0):
 				continue
 			q.render_points(1, 1.0, self)
-
-
-func _process(_delta: float) -> void:
-	_on_dirty_update()
 
 
 func _exit_tree() -> void:
@@ -1140,6 +1136,8 @@ func _handle_material_override_change(_tuple) -> void:
 
 
 func set_as_dirty() -> void:
+	if not _dirty:
+		call_deferred("_on_dirty_update")
 	_dirty = true
 
 
@@ -1180,7 +1178,6 @@ func _on_dirty_update() -> void:
 			cache_meshes()
 		queue_redraw()
 		_dirty = false
-		emit_signal("on_dirty_update")
 
 
 # TODO, Migrate these 'point index' functions to a helper library and make static?
