@@ -19,12 +19,14 @@ var _points_out: PackedVector2Array
 var _properties: Array[SS2D_VertexProperties]
 var _constraints: Array[Dictionary]
 var _was_closed: bool
+var _commit_update: bool
 
 
-func _init(shape: SS2D_Shape, keys: PackedInt64Array) -> void:
+func _init(shape: SS2D_Shape, keys: PackedInt64Array, commit_update: bool = true) -> void:
 	_shape = shape
 	_invert_orientation = ActionInvertOrientation.new(shape)
 	_close_shape = ActionCloseShape.new(shape)
+	_commit_update = commit_update
 
 	for k in keys:
 		add_point_to_delete(k)
@@ -50,7 +52,8 @@ func do() -> void:
 	if _was_closed:
 		_close_shape.do()
 	_invert_orientation.do()
-	_shape.end_update()
+	if _commit_update:
+		_shape.end_update()
 
 
 func undo() -> void:
