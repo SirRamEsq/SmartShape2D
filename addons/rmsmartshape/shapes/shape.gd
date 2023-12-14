@@ -789,28 +789,18 @@ func should_flip_edges() -> bool:
 		return flip_edges
 
 
-func _prepare_generate_collision_points(default_quad_width: float) -> SS2D_Edge:
-	var num_points := get_point_count()
-	if num_points < 2:
-		return null
-
-	var indicies: Array[int] = []
-	indicies.assign(range(num_points))  # assign() also type casts the array
-
-	var edge_data := SS2D_IndexMap.new(indicies, null)
-	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, default_quad_width)
-	_weld_quad_array(edge.quads, false)
-
-	return edge
-
-
 func generate_collision_points() -> PackedVector2Array:
 	var points := PackedVector2Array()
-	var csize: float = 1.0 if is_shape_closed() else collision_size
-	var edge: SS2D_Edge = _prepare_generate_collision_points(csize)
-
-	if not edge:
+	var num_points: int = _points.get_point_count()
+	if num_points < 2:
 		return points
+
+	var csize: float = 1.0 if is_shape_closed() else collision_size
+	var indicies: Array[int] = []
+	indicies.assign(range(num_points))  # assign() also type casts the array
+	var edge_data := SS2D_IndexMap.new(indicies, null)
+	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, csize)
+	_weld_quad_array(edge.quads, false)
 
 	if is_shape_closed():
 		var first_quad: SS2D_Quad = edge.quads[0]
@@ -867,6 +857,8 @@ func cache_meshes() -> void:
 
 func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
 	var meshes: Array[SS2D_Mesh] = []
+	if _points == null or _points.get_point_count() < 2:
+		return meshes
 
 	var produced_fill_mesh := false
 	for e in edges:
@@ -1359,16 +1351,12 @@ func clear_cached_data() -> void:
 	_meshes = []
 
 
-func has_minimum_point_count() -> bool:
-	return get_point_count() >= 2
-
-
 func _on_dirty_update() -> void:
 	if _dirty:
 		update_render_nodes()
 		clear_cached_data()
 		bake_collision()
-		if has_minimum_point_count():
+		if get_point_count() >= 2:
 			cache_edges()
 			cache_meshes()
 		queue_redraw()
