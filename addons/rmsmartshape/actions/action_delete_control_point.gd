@@ -7,13 +7,13 @@ enum PointType {POINT_IN, POINT_OUT}
 const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
 var _invert_orientation: ActionInvertOrientation
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 var _key: int
 var _point_type: PointType
 var _old_value: Vector2
 
 
-func _init(shape: SS2D_Shape_Base, key: int, point_type: PointType) -> void:
+func _init(shape: SS2D_Shape, key: int, point_type: PointType) -> void:
 	_shape = shape
 	_key = key
 	_point_type = point_type

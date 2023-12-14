@@ -39,8 +39,11 @@ const ActionDeletePoint := preload("res://addons/rmsmartshape/actions/action_del
 const ActionAddPoint := preload("res://addons/rmsmartshape/actions/action_add_point.gd")
 const ActionSplitCurve := preload("res://addons/rmsmartshape/actions/action_split_curve.gd")
 const ActionMakeShapeUnique := preload("res://addons/rmsmartshape/actions/action_make_shape_unique.gd")
+const ActionCutEdge := preload("res://addons/rmsmartshape/actions/action_cut_edge.gd")
+const ActionCloseShape := preload("res://addons/rmsmartshape/actions/action_close_shape.gd")
+const ActionSplitShape := preload("res://addons/rmsmartshape/actions/action_split_shape.gd")
 
-enum MODE { EDIT_VERT, EDIT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
+enum MODE { EDIT_VERT, EDIT_EDGE, CUT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
 enum SNAP_MENU { ID_USE_GRID_SNAP, ID_SNAP_RELATIVE, ID_CONFIGURE_SNAP }
 enum OPTIONS_MENU { ID_DEFER_MESH_UPDATES }
@@ -98,7 +101,7 @@ class ActionDataVert:
 			return -1
 		return keys[0]
 
-	func current_point_index(s: SS2D_Shape_Base) -> int:
+	func current_point_index(s: SS2D_Shape) -> int:
 		if not is_single_vert_selected():
 			return -1
 		return s.get_point_index(keys[0])
@@ -115,13 +118,14 @@ var gui_snap_settings = GUI_SNAP_POPUP.instantiate()
 const GUI_POINT_INFO_PANEL_OFFSET := Vector2(256, 130)
 
 # This is the shape node being edited
-var shape: SS2D_Shape_Base = null
+var shape: SS2D_Shape = null
 
 # Toolbar Stuff
 var tb_hb: HBoxContainer = null
 var tb_vert_create: Button = null
 var tb_vert_edit: Button = null
 var tb_edge_edit: Button = null
+var tb_edge_cut: Button = null
 var tb_pivot: Button = null
 var tb_collision: Button = null
 var tb_freehand: Button = null
@@ -213,23 +217,27 @@ func _gui_build_toolbar() -> void:
 	tb_button_group = ButtonGroup.new()
 
 	tb_vert_create = create_tool_button(ICON_CURVE_CREATE, SS2D_Strings.EN_TOOLTIP_CREATE_VERT)
-	tb_vert_create.connect("pressed", self._enter_mode.bind(MODE.CREATE_VERT))
+	tb_vert_create.connect(&"pressed", self._enter_mode.bind(MODE.CREATE_VERT))
 	tb_vert_create.button_pressed = true
 
 	tb_vert_edit = create_tool_button(ICON_CURVE_EDIT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
-	tb_vert_edit.connect("pressed", self._enter_mode.bind(MODE.EDIT_VERT))
+	tb_vert_edit.connect(&"pressed", self._enter_mode.bind(MODE.EDIT_VERT))
 
 	tb_edge_edit = create_tool_button(ICON_INTERP_LINEAR, SS2D_Strings.EN_TOOLTIP_EDIT_EDGE)
-	tb_edge_edit.connect("pressed", self._enter_mode.bind(MODE.EDIT_EDGE))
+	tb_edge_edit.connect(&"pressed", self._enter_mode.bind(MODE.EDIT_EDGE))
 
-	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_EDIT_VERT)
-	tb_pivot.connect("pressed", self._enter_mode.bind(MODE.SET_PIVOT))
+	var edge_cut_icon: Texture2D = get_editor_interface().get_base_control().get_theme_icon(&"ActionCut", &"EditorIcons")
+	tb_edge_cut = create_tool_button(edge_cut_icon, SS2D_Strings.EN_TOOLTIP_CUT_EDGE)
+	tb_edge_cut.connect(&"pressed", _enter_mode.bind(MODE.CUT_EDGE))
+
+	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_PIVOT)
+	tb_pivot.connect(&"pressed", self._enter_mode.bind(MODE.SET_PIVOT))
 
 	tb_freehand = create_tool_button(ICON_FREEHAND_MODE, SS2D_Strings.EN_TOOLTIP_FREEHAND)
-	tb_freehand.connect("pressed", self._enter_mode.bind(MODE.FREEHAND))
+	tb_freehand.connect(&"pressed", self._enter_mode.bind(MODE.FREEHAND))
 
 	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION)
-	tb_collision.connect("pressed", self._add_collision)
+	tb_collision.connect(&"pressed", self._add_collision)
 
 	tb_snap = MenuButton.new()
 	tb_snap.tooltip_text = SS2D_Strings.EN_TOOLTIP_SNAP
@@ -362,6 +370,9 @@ func _gui_update_info_panels() -> void:
 		MODE.EDIT_EDGE:
 			_gui_update_edge_info_panel()
 			gui_point_info_panel.visible = false
+		_:
+			gui_point_info_panel.visible = false
+			gui_edge_info_panel.visible = false
 
 
 func _gui_hide_info_panels() -> void:
@@ -475,7 +486,7 @@ func _handles(object: Object) -> bool:
 	var selection: EditorSelection = get_editor_interface().get_selection()
 	if selection != null:
 		if selection.get_selected_nodes().size() == 1:
-			if selection.get_selected_nodes()[0] is SS2D_Shape_Base:
+			if selection.get_selected_nodes()[0] is SS2D_Shape:
 				hideToolbar = false
 
 	if hideToolbar == true:
@@ -484,7 +495,7 @@ func _handles(object: Object) -> bool:
 	if object is Resource:
 		return false
 
-	return object is SS2D_Shape_Base
+	return object is SS2D_Shape
 
 
 func _edit(object: Object) -> void:
@@ -596,7 +607,7 @@ func connect_shape(s) -> void:
 
 
 static func get_material_override_from_indicies(
-	s: SS2D_Shape_Base, indicies: Array
+	s: SS2D_Shape, indicies: Array
 ) -> SS2D_Material_Edge_Metadata:
 	var keys: Array[int] = []
 	for i in indicies:
@@ -666,7 +677,7 @@ static func is_shape_valid(s) -> bool:
 	return true
 
 
-func _on_shape_make_unique(_shape: SS2D_Shape_Base) -> void:
+func _on_shape_make_unique(_shape: SS2D_Shape) -> void:
 	make_unique_dialog.popup_centered()
 
 
@@ -678,7 +689,7 @@ func get_et() -> Transform2D:
 	return get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
 
 
-static func is_key_valid(s: SS2D_Shape_Base, key: int) -> bool:
+static func is_key_valid(s: SS2D_Shape, key: int) -> bool:
 	if not is_shape_valid(s):
 		return false
 	return s.has_point(key)
@@ -699,6 +710,8 @@ func _enter_mode(mode: int) -> void:
 			tb_vert_edit.button_pressed = true
 		MODE.EDIT_EDGE:
 			tb_edge_edit.button_pressed = true
+		MODE.CUT_EDGE:
+			tb_edge_cut.button_pressed = true
 		MODE.SET_PIVOT:
 			tb_pivot.button_pressed = true
 		MODE.FREEHAND:
@@ -744,6 +757,8 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 					draw_new_point_close_preview(overlay)
 		MODE.EDIT_EDGE:
 			draw_mode_edit_edge(overlay)
+		MODE.CUT_EDGE:
+			draw_mode_cut_edge(overlay)
 		MODE.FREEHAND:
 			if not _mouse_lmb_pressed:
 				draw_new_point_close_preview(overlay)
@@ -778,13 +793,37 @@ func draw_mode_edit_edge(overlay: Control) -> void:
 		var edge_point_keys: Array[int] = current_action.keys
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
 	elif on_edge:
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 5.0)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
+
+
+func draw_mode_cut_edge(overlay: Control) -> void:
+	draw_mode_edit_edge(overlay)
+
+	if on_edge:
+		# Draw "X" marks along the edge that is selected
+		var t: Transform2D = get_et() * shape.get_global_transform()
+		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
+		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
+		var from: Vector2 = t * shape.get_point_position(edge_point_keys[0])
+		var to: Vector2 = t * shape.get_point_position(edge_point_keys[1])
+		var dir: Vector2 = (to - from).normalized()
+		var angle: float = dir.angle()
+		var length: float = (to - from).length()
+		var num_crosses = remap(length, 0.0, 2000.0, 0.0, 10.0)
+		num_crosses = snappedi(num_crosses, 2.0) + 1
+		var fraction = 1.0 / (num_crosses + 1)
+		for i in num_crosses:
+			var pos: Vector2 = from + dir * length * fraction * (i + 1)
+			overlay.draw_line(Vector2(8.0, 8.0).rotated(angle) + pos,
+					Vector2(-8.0, -8.0).rotated(angle) + pos, Color.RED, 3.0, true)
+			overlay.draw_line(Vector2(-8.0, 8.0).rotated(angle) + pos,
+					Vector2(8.0, -8.0).rotated(angle) + pos, Color.RED, 3.0, true)
 
 
 func draw_mode_edit_vert(overlay: Control, show_vert_handles: bool = true) -> void:
@@ -810,7 +849,8 @@ func draw_shape_outline(
 ) -> void:
 	if color == null:
 		color = shape.modulate
-	overlay.draw_polyline(t * points, color, width)
+	if points.size() >= 2:
+		overlay.draw_polyline(t * points, color, width, true)
 
 
 func draw_vert_handles(
@@ -886,7 +926,7 @@ func draw_new_point_preview(overlay: Control) -> void:
 
 	if verts.size() > 0:
 		var a: Vector2
-		if is_shape_closed(shape) and verts.size() > 1:
+		if shape.is_shape_closed() and verts.size() > 1:
 			a = t * verts[verts.size() - 2]
 			overlay.draw_line(mouse, t * verts[0], color,width * .5)
 		else:
@@ -1017,10 +1057,25 @@ func _input_handle_left_click(
 			local_position = snap(local_position)
 		perform_action(ActionSetPivot.new(shape, et, local_position))
 		return true
+
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
+		var can_add_point: bool = Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT
+		var is_first_selected: bool = current_action.is_single_vert_selected() and current_action.current_point_key() == shape.get_point_key_at_index(0)
+
 		if _defer_mesh_updates:
 			shape.begin_update()
+
+		# Close the shape if the first point is clicked
+		if can_add_point and is_first_selected and shape.can_close():
+			var close_action := ActionCloseShape.new(shape)
+			perform_action(close_action)
+			if Input.is_key_pressed(KEY_SHIFT):
+				select_control_points_to_move([close_action.get_key()], vp_m_pos)
+			else:
+				select_vertices_to_move([close_action.get_key()], vp_m_pos)
+			return true
+
 		# Any nearby control points to move?
 		if not Input.is_key_pressed(KEY_ALT):
 			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
@@ -1041,33 +1096,32 @@ func _input_handle_left_click(
 		if _input_split_edge(mb, vp_m_pos, t):
 			return true
 
-		if not on_edge:
+		if not on_edge and can_add_point:
 			# Create new point
-			if Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT:
-				var local_position: Vector2 = t.affine_inverse() * mb.position
-				if use_snap():
-					local_position = snap(local_position)
-				if Input.is_key_pressed(KEY_SHIFT) and Input.is_key_pressed(KEY_ALT):
-					# Copy shape with a new single point
-					var copy: SS2D_Shape_Base = copy_shape(shape)
+			var local_position: Vector2 = t.affine_inverse() * mb.position
+			if use_snap():
+				local_position = snap(local_position)
 
-					copy.set_point_array(SS2D_Point_Array.new())
-					var add_point := ActionAddPoint.new(copy, local_position, -1, not _defer_mesh_updates)
-					perform_action(add_point)
-					select_vertices_to_move([add_point.get_key()], vp_m_pos)
-
-					_enter_mode(MODE.CREATE_VERT)
-
-					var selection := get_editor_interface().get_selection()
-					selection.clear()
-					selection.add_node(copy)
-				elif Input.is_key_pressed(KEY_ALT):
-					perform_action(ActionAddPoint.new(shape, local_position, shape.get_point_index(closest_edge_keys[1])))
-				else:
-					var add_point := ActionAddPoint.new(shape, local_position, -1, not _defer_mesh_updates)
-					perform_action(add_point)
-					select_vertices_to_move([add_point.get_key()], vp_m_pos)
-				return true
+			var idx: int = -1
+			if Input.is_key_pressed(KEY_SHIFT) and Input.is_key_pressed(KEY_ALT):
+				# Copy shape with a new single point
+				var copy: SS2D_Shape = copy_shape(shape)
+				copy.set_point_array(SS2D_Point_Array.new())
+				_enter_mode(MODE.CREATE_VERT)
+				var selection := get_editor_interface().get_selection()
+				selection.clear()
+				selection.add_node(copy)
+				shape = copy
+			elif Input.is_key_pressed(KEY_ALT):
+				# Add point between start and end points of the closest edge
+				idx = shape.get_point_index(closest_edge_keys[1])
+			var add_point := ActionAddPoint.new(shape, local_position, -1, not _defer_mesh_updates)
+			perform_action(add_point)
+			if Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_ALT):
+				select_control_points_to_move([add_point.get_key()], vp_m_pos)
+			else:
+				select_vertices_to_move([add_point.get_key()], vp_m_pos)
+			return true
 	elif current_mode == MODE.EDIT_EDGE:
 		if gui_edge_info_panel.visible:
 			gui_edge_info_panel.visible = false
@@ -1081,6 +1135,14 @@ func _input_handle_left_click(
 			select_vertices_to_move([edge_point_keys[0], edge_point_keys[1]], vp_m_pos)
 			if _defer_mesh_updates:
 				shape.begin_update()
+		return true
+	elif current_mode == MODE.CUT_EDGE:
+		if not on_edge:
+			return true
+		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
+		var edge_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
+		perform_action(ActionCutEdge.new(shape, edge_keys[0], edge_keys[1]))
+		on_edge = false
 		return true
 	elif current_mode == MODE.FREEHAND:
 		return true
@@ -1311,7 +1373,7 @@ func _input_motion_is_on_edge(mm: InputEventMouseMotion, grab_threshold: float) 
 
 	# Find edge
 	var closest_point: Vector2
-	if current_mode == MODE.EDIT_EDGE:
+	if current_mode == MODE.EDIT_EDGE or current_mode == MODE.CUT_EDGE:
 		closest_point = shape.get_closest_point_straight_edge(
 			xform.affine_inverse() * mm.position
 		)
@@ -1410,7 +1472,7 @@ func _input_motion_move_width_handle(mouse_position: Vector2, scale: Vector2) ->
 
 
 ## Will return index of closest vert to point.
-func get_closest_vert_to_point(s: SS2D_Shape_Base, p: Vector2) -> int:
+func get_closest_vert_to_point(s: SS2D_Shape, p: Vector2) -> int:
 	var gt: Transform2D = shape.get_global_transform()
 	var verts: PackedVector2Array = s.get_vertices()
 	var transformed_point: Vector2 = gt.affine_inverse() * p
@@ -1474,7 +1536,7 @@ func _input_handle_mouse_motion_event(
 			deselect_verts()
 			on_edge = _input_motion_is_on_edge(mm, grab_threshold)
 
-	elif current_mode == MODE.EDIT_EDGE:
+	elif current_mode == MODE.EDIT_EDGE or current_mode == MODE.CUT_EDGE:
 		# Don't update if edge panel is visible
 		if gui_edge_info_panel.visible:
 			return false
@@ -1493,17 +1555,13 @@ func _input_handle_mouse_motion_event(
 					last_point_position = local_position
 					if use_snap():
 						local_position = snap(local_position)
-					perform_action(ActionAddPoint.new(
-						shape,
-						local_position,
-						shape.get_point_index(closest_edge_keys[1]),
-						not _defer_mesh_updates
-					))
+					var idx: int = shape.get_point_index(closest_edge_keys[1]) if shape.is_shape_closed() else -1
+					perform_action(ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates))
 				update_overlays()
 				return true
 			else:
 				var xform: Transform2D = get_et() * shape.get_global_transform()
-				var closest_ss2d_point: SS2D_Point = (shape as SS2D_Shape_Base).get_point(closest_key)
+				var closest_ss2d_point: SS2D_Point = (shape as SS2D_Shape).get_point(closest_key)
 				if closest_ss2d_point != null:
 					var closest_point: Vector2 = closest_ss2d_point.position
 					closest_point = xform * closest_point
@@ -1530,26 +1588,8 @@ func _get_vert_normal(t: Transform2D, verts, i: int) -> Vector2:
 	return ((prev_point - point).normalized().rotated(PI / 2) + (point - next_point).normalized().rotated(PI / 2)).normalized()
 
 
-func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
-	var copy: SS2D_Shape_Base
-	if s is SS2D_Shape_Closed:
-		copy = SS2D_Shape_Closed.new()
-	if s is SS2D_Shape_Open:
-		copy = SS2D_Shape_Open.new()
-	copy.position = s.position
-	copy.scale = s.scale
-	copy.modulate = s.modulate
-	copy.shape_material = s.shape_material
-	copy.editor_debug = s.editor_debug
-	copy.flip_edges = s.flip_edges
-	copy.editor_debug = s.editor_debug
-	copy.collision_size = s.collision_size
-	copy.collision_offset = s.collision_offset
-	copy.tessellation_stages = s.tessellation_stages
-	copy.tessellation_tolerence = s.tessellation_tolerence
-	copy.curve_bake_interval = s.curve_bake_interval
-	#copy.material_overrides = s.material_overrides
-	copy.name = s.get_name().rstrip("0123456789")
+func copy_shape(s: SS2D_Shape) -> SS2D_Shape:
+	var copy: SS2D_Shape = s.clone(false)
 
 	var undo := get_undo_redo()
 	undo.create_action("Add Shape Node")
@@ -1579,10 +1619,6 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 		undo.commit_action()
 
 	return copy
-
-
-func is_shape_closed(s: SS2D_Shape_Base) -> bool:
-	return s is SS2D_Shape_Closed
 
 
 #########

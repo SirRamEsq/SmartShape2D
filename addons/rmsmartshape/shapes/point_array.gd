@@ -140,7 +140,7 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 	if use_key == _next_key:
 		_next_key += 1
 	var new_point := SS2D_Point.new(point)
-	new_point.connect("changed", self._on_point_changed.bind(new_point))
+	new_point.connect(&"changed", self._on_point_changed.bind(new_point))
 	_points[use_key] = new_point
 	_point_order.push_back(use_key)
 	if idx != -1:
@@ -187,7 +187,22 @@ func get_point_index(key: int) -> int:
 
 
 func invert_point_order() -> void:
+	# Postpone `changed` and disable constraints.
+	var was_updating: bool = _updating
+	_updating = true
+	disable_constraints()
+
 	_point_order.reverse()
+	# Swap Bezier points.
+	for p in _points.values():
+		if p.point_out != p.point_in:
+			var tmp: Vector2 = p.point_out
+			p.point_out = p.point_in
+			p.point_in = tmp
+
+	# Re-enable contraits and emit `changed`.
+	enable_constraints()
+	_updating = was_updating
 	_changed()
 
 
@@ -201,6 +216,7 @@ func set_point_index(key: int, idx: int) -> void:
 		return
 	_point_order.remove_at(old_idx)
 	_point_order.insert(idx, key)
+	_changed()
 
 
 func has_point(key: int) -> bool:

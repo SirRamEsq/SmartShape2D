@@ -61,8 +61,8 @@ func generate_closed_shape() -> SS2D_Shape_Closed:
 	return shape
 
 
-func generate_open_shape() -> SS2D_Shape_Open:
-	var shape = SS2D_Shape_Open.new()
+func generate_open_shape() -> SS2D_Shape:
+	var shape = SS2D_Shape.new()
 	shape.name = "Open"
 	add_child_autofree(shape)
 	var points = generate_points()

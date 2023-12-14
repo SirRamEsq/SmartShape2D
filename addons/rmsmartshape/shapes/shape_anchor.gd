@@ -14,7 +14,7 @@ const DEBUG_DRAW_LINE_LENGTH := 128.0
 @export var debug_draw: bool = false : set = set_debug_draw
 
 var cached_shape_transform: Transform2D = Transform2D.IDENTITY
-var shape: SS2D_Shape_Base = null
+var shape: SS2D_Shape = null
 
 
 ###########
@@ -39,15 +39,15 @@ func set_shape() -> void:
 	shape = null
 	if has_node(shape_path):
 		var new_node: Node = get_node(shape_path)
-		if not new_node is SS2D_Shape_Base:
-			push_error("Shape Path isn't a valid subtype of SS2D_Shape_Base! Aborting...")
+		if not new_node is SS2D_Shape:
+			push_error("Shape Path isn't a valid subtype of SS2D_Shape! Aborting...")
 			return
 		shape = new_node
 		connect_shape(shape)
 		shape_point_index = get_shape_index_range(shape, shape_point_index)
 
 
-func get_shape_index_range(s: SS2D_Shape_Base, idx: int) -> int:
+func get_shape_index_range(s: SS2D_Shape, idx: int) -> int:
 	var point_count: int = s.get_point_count()
 	# Subtract 2;
 	#   'point_count' is out of bounds; subtract 1
@@ -133,12 +133,12 @@ func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float)
 	return s
 
 
-func disconnect_shape(s: SS2D_Shape_Base) -> void:
+func disconnect_shape(s: SS2D_Shape) -> void:
 	s.disconnect("points_modified", self._handle_point_change)
 	s.disconnect("tree_exiting", self._monitored_node_leaving)
 
 
-func connect_shape(s: SS2D_Shape_Base) -> void:
+func connect_shape(s: SS2D_Shape) -> void:
 	s.connect("points_modified", self._handle_point_change)
 	s.connect("tree_exiting", self._monitored_node_leaving)
 

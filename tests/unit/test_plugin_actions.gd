@@ -9,8 +9,10 @@ const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/acti
 const ActionMakeShapeUnique := preload("res://addons/rmsmartshape/actions/action_make_shape_unique.gd")
 const ActionMoveControlPoints := preload("res://addons/rmsmartshape/actions/action_move_control_points.gd")
 const ActionMoveVerticies := preload("res://addons/rmsmartshape/actions/action_move_verticies.gd")
+const ActionOpenShape := preload("res://addons/rmsmartshape/actions/action_open_shape.gd")
 const ActionSetPivot := preload("res://addons/rmsmartshape/actions/action_set_pivot.gd")
 const ActionSplitCurve := preload("res://addons/rmsmartshape/actions/action_split_curve.gd")
+const ActionSplitShape := preload("res://addons/rmsmartshape/actions/action_split_shape.gd")
 
 
 func test_action_add_collision_nodes() -> void:
@@ -30,7 +32,7 @@ func test_action_add_collision_nodes() -> void:
 
 
 func test_action_add_point() -> void:
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	s.add_point(Vector2(0.0, 0.0))
@@ -48,17 +50,17 @@ func test_action_add_point() -> void:
 	validate_positions(s, [Vector2(0.0, 0.0), Vector2(100.0, 0.0)])
 
 	assert_false(s.is_shape_closed())
+
 	var add_point_2 := ActionAddPoint.new(s, Vector2(100.0, 100.0))
 	add_point_2.do()
-	assert_eq(s.get_point_count(), 4)  ## shape should be closed by this action - so 4 points
-	assert_true(s.is_shape_closed())
+	assert_eq(s.get_point_count(), 3)
+	assert_false(s.is_shape_closed())
 	add_point_2.undo()
 	assert_eq(s.get_point_count(), 2)
 	add_point_2.do()
-	assert_eq(s.get_point_count(), 4)
+	assert_eq(s.get_point_count(), 3)
 
-	validate_positions(s, [Vector2(0.0, 0.0), Vector2(100.0, 0.0), Vector2(100.0, 100.0),
-			Vector2(0.0, 0.0)])
+	validate_positions(s, [Vector2(0.0, 0.0), Vector2(100.0, 0.0), Vector2(100.0, 100.0)])
 
 
 func test_action_close_shape() -> void:
@@ -108,7 +110,7 @@ func test_action_delete_control_point() -> void:
 
 
 func test_action_delete_point() -> void:
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	s.add_points([Vector2.UP, Vector2.RIGHT])
@@ -146,15 +148,17 @@ func test_action_delete_point() -> void:
 
 
 func test_action_invert_orientation() -> void:
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	var a := ActionInvertOrientation.new(s)
 	var cw_sequence := [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]
-	var ccw_sequence := [Vector2.LEFT, Vector2.DOWN, Vector2.RIGHT, Vector2.UP]
+	var ccw_sequence := [Vector2.UP, Vector2.LEFT, Vector2.DOWN, Vector2.RIGHT]
 
 	# Test with clockwise sequence.
 	s.add_points(cw_sequence)
+	s.close_shape()
+	cw_sequence.push_back(cw_sequence.front())
 	validate_positions(s, cw_sequence)
 	a.do()
 	validate_positions(s, cw_sequence)
@@ -164,6 +168,8 @@ func test_action_invert_orientation() -> void:
 	# Test with counter-clockwise sequence.
 	s.clear_points()
 	s.add_points(ccw_sequence)
+	ccw_sequence.push_back(ccw_sequence.front())
+	s.close_shape()
 	validate_positions(s, ccw_sequence)
 	a.do()
 	validate_positions(s, cw_sequence)
@@ -172,7 +178,7 @@ func test_action_invert_orientation() -> void:
 
 
 func test_action_make_shape_unique() -> void:
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	var original_array := SS2D_Point_Array.new()
@@ -194,7 +200,7 @@ func test_action_make_shape_unique() -> void:
 
 
 func test_action_move_control_points() -> void:
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	# Setup.
@@ -218,7 +224,7 @@ func test_action_move_control_points() -> void:
 
 
 func test_action_move_verticies() -> void:
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	var new_positions := [Vector2.UP, Vector2.RIGHT, Vector2.DOWN]
@@ -236,7 +242,7 @@ func test_action_move_verticies() -> void:
 
 func test_action_set_pivot() -> void:
 	var parent := Node2D.new()
-	var s := SS2D_Shape_Closed.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(parent)
 	parent.add_child(s)
 
@@ -251,7 +257,7 @@ func test_action_set_pivot() -> void:
 
 
 func test_action_split_curve() -> void:
-	var s := SS2D_Shape_Open.new()
+	var s := SS2D_Shape.new()
 	add_child_autofree(s)
 
 	var t := Transform2D()
@@ -266,7 +272,43 @@ func test_action_split_curve() -> void:
 	validate_positions(s, [Vector2(0, 0), Vector2(50, 50), Vector2(100, 100)])
 
 
-func validate_positions(s: SS2D_Shape_Base, positions: PackedVector2Array) -> void:
+func test_action_open_shape() -> void:
+	var s := SS2D_Shape.new()
+	add_child_autofree(s)
+
+	s.add_points([Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT])
+	s.close_shape()
+
+	var action := ActionOpenShape.new(s, s.get_point_key_at_index(1))
+	action.do()
+	validate_positions(s, [Vector2.DOWN, Vector2.LEFT, Vector2.UP, Vector2.RIGHT])
+	action.undo()
+	validate_positions(s, [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT, Vector2.UP])
+
+
+func test_action_split_shape() -> void:
+	var s := SS2D_Shape.new()
+	s.name = "Shape"
+	add_child_autofree(s, true)
+
+	s.add_points([Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT])
+	validate_positions(s, [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT])
+
+	var action := ActionSplitShape.new(s, s.get_point_key_at_index(1))
+	action.do()
+	assert_eq(s.get_parent().get_child_count(), 2)
+	validate_positions(s, [Vector2.UP, Vector2.RIGHT])
+	var s2: SS2D_Shape = s.get_parent().get_node(^"Shape2")
+	assert_not_null(s2)
+	add_child_autofree(s2, true)
+	validate_positions(s2, [Vector2.DOWN, Vector2.LEFT])
+
+	action.undo()
+	assert_eq(s.get_parent().get_child_count(), 1)
+	validate_positions(s, [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT])
+
+
+func validate_positions(s: SS2D_Shape, positions: PackedVector2Array) -> void:
 	assert_eq(s.get_point_count(), positions.size())
 	if s.get_point_count() != positions.size():
 		return

@@ -34,23 +34,23 @@ func test_tessellated_idx_and_point_idx():
 		Vector2(0, 12), # 5 (2)
 		Vector2(-10, 10) # 6 (3)
 	]
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 0), 0)
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 1), 2)
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 2), 4)
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 3), 6)
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, 400), 6)
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, -1), 0)
-	assert_eq(SS2D_Shape_Base.get_tessellated_idx_from_point(verts, t_verts, -100), 0)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 0), 0)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 1), 2)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 2), 4)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 3), 6)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 400), 6)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, -1), 0)
+	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, -100), 0)
 
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 0), 0)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 1), 0)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 2), 1)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 3), 1)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 4), 2)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 5), 2)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 6), 3)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, 600), 3)
-	assert_eq(SS2D_Shape_Base.get_vertex_idx_from_tessellated_point(verts, t_verts, -600), 0)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 0), 0)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 1), 0)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 2), 1)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 3), 1)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 4), 2)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 5), 2)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 6), 3)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 600), 3)
+	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, -600), 0)
 
 func test_get_meta_material_index_mapping_simple_squareish_shape():
 	var verts = [
@@ -72,7 +72,7 @@ func test_get_meta_material_index_mapping_simple_squareish_shape():
 		assert_not_null(edges)
 		assert_eq(1, edges.size())
 
-	var mappings = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts, false)
+	var mappings = SS2D_Shape.get_meta_material_index_mapping(shape_material, verts, false)
 	var mappings_materials = []
 	for mapping in mappings:
 		mappings_materials.push_back(mapping.object)
@@ -110,7 +110,7 @@ func test_get_meta_material_index_mapping_complex_shape():
 	]
 	# Create shape material with 4 quadrants of normal range
 	var shape_material = create_shape_material_with_equal_normal_ranges(4)
-	var mappings = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts, false)
+	var mappings = SS2D_Shape.get_meta_material_index_mapping(shape_material, verts, false)
 	var mappings_materials = []
 	for mapping in mappings:
 		mappings_materials.push_back(mapping.object)
@@ -144,13 +144,12 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 	var tex = TEST_TEXTURE
 	var tex_size = tex.get_size()
 	var shape_material = create_shape_material_with_equal_normal_ranges(4, tex)
-	var shape = SS2D_Shape_Base.new()
+	var shape = SS2D_Shape.new()
 	add_child_autofree(shape)
-	shape._is_instantiable = true
 	shape.shape_material = shape_material
 	shape.set_point_array(point_array)
 
-	var index_maps = SS2D_Shape_Base.get_meta_material_index_mapping(shape_material, verts, false)
+	var index_maps = SS2D_Shape.get_meta_material_index_mapping(shape_material, verts, false)
 	var edges = []
 
 	assert_eq(index_maps.size(), 3)
@@ -185,7 +184,7 @@ func test_build_quad_no_texture(width: float = use_parameters(width_params)):
 	var custom_offset: float = 0.0
 	var custom_extends: float = 0.0
 	var fit_texture := SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
-	var q: SS2D_Quad = SS2D_Shape_Base.build_quad_from_two_points(
+	var q: SS2D_Quad = SS2D_Shape.build_quad_from_two_points(
 		pt, pt_next,
 		tex,
 		width,
@@ -216,7 +215,7 @@ func test_build_quad_with_texture(width_scale = use_parameters(width_params)):
 	var custom_offset: float = 0.0
 	var custom_extends: float = 0.0
 	var fit_texture := SS2D_Material_Edge.FITMODE.SQUISH_AND_STRETCH
-	var q = SS2D_Shape_Base.build_quad_from_two_points(
+	var q = SS2D_Shape.build_quad_from_two_points(
 		pt, pt_next,
 		tex,
 		width_scale * tex_height,
@@ -240,18 +239,18 @@ func test_should_edge_generate_corner():
 	var pt_prev: Vector2 = Vector2(-16, 00)
 	var pt: Vector2 =      Vector2(000, 00)
 	var pt_next: Vector2 = Vector2(000, 16)
-	var corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, false)
+	var corner = SS2D_Shape.edge_should_generate_corner(pt_prev, pt, pt_next, false)
 	assert_eq(corner, SS2D_Quad.CORNER.OUTER)
-	corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, true)
+	corner = SS2D_Shape.edge_should_generate_corner(pt_prev, pt, pt_next, true)
 	assert_eq(corner, SS2D_Quad.CORNER.INNER)
 
 	# V Shape
 	pt_prev = Vector2(-8, -8)
 	pt =      Vector2(00, 00)
 	pt_next = Vector2(-8, 08)
-	corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, false)
+	corner = SS2D_Shape.edge_should_generate_corner(pt_prev, pt, pt_next, false)
 	assert_eq(corner, SS2D_Quad.CORNER.OUTER)
-	corner = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, true)
+	corner = SS2D_Shape.edge_should_generate_corner(pt_prev, pt, pt_next, true)
 	assert_eq(corner, SS2D_Quad.CORNER.INNER)
 
 func test_build_corner_quad():
@@ -266,8 +265,8 @@ func test_build_corner_quad():
 	var custom_scale: float = 1.0
 	var custom_offset: float = 0.0
 
-	var corner_status = SS2D_Shape_Base.edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
-	var q = SS2D_Shape_Base.build_quad_corner(
+	var corner_status = SS2D_Shape.edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
+	var q = SS2D_Shape.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width, width_prev,
 		flip_edges,
@@ -278,7 +277,7 @@ func test_build_corner_quad():
 	)
 	gut.p("Test custom_scale")
 	assert_quad_point_eq(gut,q, Vector2(-4,-4),Vector2(-4,4),Vector2(4,4),Vector2(4,-4),Vector2(0,0))
-	q = SS2D_Shape_Base.build_quad_corner(
+	q = SS2D_Shape.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width, width_prev,
 		flip_edges,
@@ -290,7 +289,7 @@ func test_build_corner_quad():
 	assert_quad_point_eq(gut,q, Vector2(-8,-8),Vector2(-8,8),Vector2(8,8),Vector2(8,-8),Vector2(0,0))
 
 	gut.p("Test width")
-	q = SS2D_Shape_Base.build_quad_corner(
+	q = SS2D_Shape.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width*2, width_prev,
 		flip_edges,
@@ -302,7 +301,7 @@ func test_build_corner_quad():
 	assert_quad_point_eq(gut,q, Vector2(-8,-4),Vector2(-8,4),Vector2(8,4),Vector2(8,-4),Vector2(0,0))
 
 	gut.p("Test width + custom_scale")
-	q = SS2D_Shape_Base.build_quad_corner(
+	q = SS2D_Shape.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width*2, width_prev*2,
 		flip_edges,
@@ -313,7 +312,7 @@ func test_build_corner_quad():
 	)
 	assert_quad_point_eq(gut,q, Vector2(-16,-16),Vector2(-16,16),Vector2(16,16),Vector2(16,-16),Vector2(0,0))
 	gut.p("Test width_prev")
-	q = SS2D_Shape_Base.build_quad_corner(
+	q = SS2D_Shape.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width, width_prev*2,
 		flip_edges,
@@ -327,7 +326,7 @@ func test_build_corner_quad():
 	gut.p("Test custom_offset")
 	gut.p("For this shape, shoud offset up and to the right (postivie x, negative y)")
 	custom_offset = 1.0
-	q = SS2D_Shape_Base.build_quad_corner(
+	q = SS2D_Shape.build_quad_corner(
 		pt_next, pt, pt_prev,
 		width, width_prev,
 		flip_edges,
@@ -352,7 +351,7 @@ func test_weld_quads():
 	var left = SS2D_Quad.new(Vector2(-4, -4), Vector2(-4, 4), Vector2(4, 4), Vector2(4, -4), null, false)
 	var right = SS2D_Quad.new(Vector2(-8, -8), Vector2(-8, 8), Vector2(8, 8), Vector2(8, -8), null, false)
 	var custom_scale:float=1.0
-	SS2D_Shape_Base.weld_quads(left, right, custom_scale)
+	SS2D_Shape.weld_quads(left, right, custom_scale)
 	var pt_top = (left.pt_d + right.pt_a)/2.0
 	var pt_bottom = (left.pt_c + right.pt_b)/2.0
 	assert_quad_point_eq(gut,left, left.pt_a, left.pt_b, pt_bottom, pt_top)

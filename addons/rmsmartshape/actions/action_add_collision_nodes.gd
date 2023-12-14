@@ -2,13 +2,13 @@ extends SS2D_Action
 
 ## ActionAddCollisionNodes
 
-var _shape: SS2D_Shape_Base
+var _shape: SS2D_Shape
 
 var _saved_index: int
 var _saved_pos: Vector2
 
 
-func _init(shape: SS2D_Shape_Base) -> void:
+func _init(shape: SS2D_Shape) -> void:
 	_shape = shape
 
 
