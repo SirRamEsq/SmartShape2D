@@ -849,7 +849,8 @@ func draw_shape_outline(
 ) -> void:
 	if color == null:
 		color = shape.modulate
-	overlay.draw_polyline(t * points, color, width, true)
+	if points.size() >= 2:
+		overlay.draw_polyline(t * points, color, width, true)
 
 
 func draw_vert_handles(
