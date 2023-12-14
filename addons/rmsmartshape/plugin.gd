@@ -807,30 +807,20 @@ func draw_mode_edit_vert(overlay: Control, show_vert_handles: bool = true) -> vo
 func draw_shape_outline(
 	overlay: Control, t: Transform2D, points: PackedVector2Array, color = null, width = 2.0
 ) -> void:
-	# Draw Outline
-	var prev_pt: Vector2
 	if color == null:
 		color = shape.modulate
-	for i in range(0, points.size(), 1):
-		var pt: Vector2 = points[i]
-		if i > 0:
-			overlay.draw_line(prev_pt, t * pt, color, width)
-		prev_pt = t * pt
+	overlay.draw_polyline(t * points, color, width)
 
 
 func draw_vert_handles(
 	overlay: Control, t: Transform2D, verts: PackedVector2Array, control_points: bool
 ) -> void:
-	for i in range(0, verts.size(), 1):
+	var transformed_verts := t * verts
+	for i in verts.size():
 		# Draw Vert handles
-		var hp: Vector2 = t * verts[i]
+		var hp: Vector2 = transformed_verts[i]
 		var icon: Texture2D = ICON_HANDLE_BEZIER if (Input.is_key_pressed(KEY_SHIFT) and not current_mode == MODE.FREEHAND) else ICON_HANDLE
 		overlay.draw_texture(icon, hp - icon.get_size() * 0.5)
-
-		# Draw Width handles
-#		var normal = _get_vert_normal(t, verts, i)
-#		var width_handle_icon = WIDTH_HANDLES[int((normal.angle() + PI / 8 + TAU) / PI * 4) % 4]
-#		overlay.draw_texture(width_handle_icon, hp - width_handle_icon.get_size() * 0.5 + normal * WIDTH_HANDLE_OFFSET)
 
 	# Draw Width handle
 	var offset: float = WIDTH_HANDLE_OFFSET
@@ -858,9 +848,9 @@ func draw_vert_handles(
 
 	# Draw Control point handles
 	if control_points:
-		for i in range(0, verts.size(), 1):
+		for i in verts.size():
 			var key: int = shape.get_point_key_at_index(i)
-			var hp: Vector2 = t * verts[i]
+			var hp: Vector2 = transformed_verts[i]
 
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
 			if i < verts.size() - 1:
@@ -1569,8 +1559,9 @@ func copy_shape(s: SS2D_Shape_Base) -> SS2D_Shape_Base:
 	undo.add_undo_method(copy, "set_owner", null)
 	undo.add_undo_method(s.get_parent(), "remove_child", copy)
 
-	if (not s.collision_polygon_node_path.is_empty() and s.has_node(s.collision_polygon_node_path)):
-		var collision_polygon_original: Node = s.get_node(s.collision_polygon_node_path)
+	var collision_polygon_original := s.get_collision_polygon_node()
+
+	if collision_polygon_original:
 		var collision_polygon_new := CollisionPolygon2D.new()
 		collision_polygon_new.visible = collision_polygon_original.visible
 

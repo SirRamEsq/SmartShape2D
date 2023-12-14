@@ -29,13 +29,13 @@ func _set_pivot(point: Vector2) -> void:
 	var np: Vector2 = point
 	var ct: Transform2D = _shape.get_global_transform()
 	ct.origin = np
+	var xform := ct.affine_inverse() * _shape.get_global_transform()
 
 	_shape.begin_update()
 	_shape.disable_constraints()
 	for i in _shape.get_point_count():
 		var key: int = _shape.get_point_key_at_index(i)
-		var pt: Vector2 = _shape.get_global_transform() * _shape.get_point_position(key)
-		_shape.set_point_position(key, ct.affine_inverse() * pt)
+		_shape.set_point_position(key, xform * _shape.get_point_position(key))
 	_shape.enable_constraints()
 	_shape.end_update()
 

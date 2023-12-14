@@ -27,6 +27,7 @@ var _is_instantiable: bool = false
 var _curve: Curve2D
 # Used for calculating straight edges
 var _curve_no_control_points: Curve2D = Curve2D.new()
+var _collision_polygon_node: CollisionPolygon2D
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 
@@ -103,11 +104,32 @@ var collision_size: float = 32 : set = set_collision_size
 var collision_offset: float = 0.0 : set = set_collision_offset
 
 ## NodePath to CollisionPolygon2D node for which polygon data will be generated.
-@export var collision_polygon_node_path: NodePath = ""
+@export_node_path("CollisionPolygon2D") var collision_polygon_node_path: NodePath : set = set_collision_polygon_node_path
 
 #####################
 #-SETTERS / GETTERS-#
 #####################
+
+func set_collision_polygon_node_path(value: NodePath) -> void:
+	collision_polygon_node_path = value
+	set_as_dirty()
+
+	if not is_inside_tree():
+		return
+
+	if collision_polygon_node_path.is_empty():
+		_collision_polygon_node = null
+		return
+
+	_collision_polygon_node = get_node(collision_polygon_node_path) as CollisionPolygon2D
+
+	if not _collision_polygon_node:
+		push_error("collision_polygon_node_path should point to proper CollisionPolygon2D node.")
+
+
+func get_collision_polygon_node() -> CollisionPolygon2D:
+	return _collision_polygon_node
+
 
 func get_point_array() -> SS2D_Point_Array:
 	return _points
@@ -336,6 +358,7 @@ func adjust_add_point_index(index: int) -> int:
 
 # FIXME: Only unit tests use this.
 func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
+	starting_index = adjust_add_point_index(starting_index)
 	var keys: Array[int] = []
 	_points.begin_update()
 	for i in range(0, verts.size(), 1):
@@ -569,6 +592,11 @@ func _init() -> void:
 	set_point_array(SS2D_Point_Array.new())
 
 
+func _enter_tree() -> void:
+	# Call this again because get_node() only works when the node is inside the tree
+	set_collision_polygon_node_path(collision_polygon_node_path)
+
+
 func _ready() -> void:
 	if not _is_instantiable:
 		push_error("'%s': SS2D_Shape_Base should not be instantiated! Use a Sub-Class!" % name)
@@ -691,19 +719,28 @@ func should_flip_edges() -> bool:
 	return not (are_points_clockwise() != flip_edges)
 
 
-func generate_collision_points() -> PackedVector2Array:
-	var points: PackedVector2Array = PackedVector2Array()
-	var verts: PackedVector2Array = get_vertices()
-	var t_points: PackedVector2Array = get_tessellated_points()
-	if t_points.size() < 2:
-		return points
-	var indicies: Array[int]
-	indicies.assign(range(verts.size()))
+func _prepare_generate_collision_points(default_quad_width: float) -> SS2D_Edge:
+	var num_points := get_point_count()
+	if num_points < 2:
+		return null
+
+	var indicies: Array[int] = []
+	indicies.assign(range(num_points))  # assign() also type casts the array
+
 	var edge_data := SS2D_IndexMap.new(indicies, null)
-	var edge: SS2D_Edge = _build_edge_with_material(
-		edge_data, collision_offset - 1.0, collision_size
-	)
+	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, default_quad_width)
 	_weld_quad_array(edge.quads, false)
+
+	return edge
+
+
+func generate_collision_points() -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var edge := _prepare_generate_collision_points(collision_size)
+
+	if not edge:
+		return points
+
 	if not edge.quads.is_empty():
 		# Top edge (typically point A unless corner quad)
 		for quad in edge.quads:
@@ -734,19 +771,10 @@ func generate_collision_points() -> PackedVector2Array:
 
 
 func bake_collision() -> void:
-	if not has_node(collision_polygon_node_path):
+	if not _collision_polygon_node:
 		return
-	var polygon := get_node(collision_polygon_node_path) as CollisionPolygon2D
-	if polygon == null:
-		push_error("collision_polygon_node_path should point to proper CollisionPolygon2D node.")
-		return
-	var points: PackedVector2Array = generate_collision_points()
-	var transformed_points := PackedVector2Array()
-	var poly_transform := polygon.get_global_transform()
-	var shape_transform := get_global_transform()
-	for p in points:
-		transformed_points.push_back(poly_transform.inverse() * shape_transform * p)
-	polygon.polygon = transformed_points
+	var xform := _collision_polygon_node.get_global_transform().inverse() * get_global_transform()
+	_collision_polygon_node.polygon = xform * generate_collision_points()
 
 
 func cache_edges() -> void:
@@ -1141,14 +1169,6 @@ func set_as_dirty() -> void:
 	_dirty = true
 
 
-func get_collision_polygon_node() -> Node:
-	if collision_polygon_node_path == null:
-		return null
-	if not has_node(collision_polygon_node_path):
-		return null
-	return get_node(collision_polygon_node_path)
-
-
 static func sort_by_z_index(a: Array) -> Array:
 	a.sort_custom(Callable(SS2D_Common_Functions, "sort_z"))
 	return a
@@ -1473,6 +1493,7 @@ func _build_edge_with_material(
 
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
+	var should_flip := should_flip_edges()
 
 	var i := 0
 	while i < tess_point_count:
@@ -1528,7 +1549,7 @@ func _build_edge_with_material(
 			tex,
 			width_scale * c_scale * tex_size.y,
 			flip_x,
-			should_flip_edges(),
+			should_flip,
 			is_first_point,
 			is_last_point,
 			c_offset,
