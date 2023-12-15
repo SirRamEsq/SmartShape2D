@@ -916,13 +916,13 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 
 	for i in range(0, fill_tris.size() - 1, 3):
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(_transform_point_for_uv(points[fill_tris[i]], s_mat), tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(_transform_point_for_uv(points[fill_tris[i + 1]], s_mat), tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
+		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(_transform_point_for_uv(points[fill_tris[i + 2]], s_mat), tex_size))
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
 	st.generate_normals()
@@ -938,6 +938,27 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	meshes.push_back(mesh_data)
 
 	return meshes
+
+
+func _transform_point_for_uv(point:Vector2, s_material: SS2D_Material_Shape) -> Vector2:
+	var new_point := point
+
+	# If absolute position ... cancel out the node's position (adjusted due to rotation)
+	if s_material.fill_texture_absolute_position:
+		new_point += global_position.rotated(-global_rotation)
+
+	# Scale
+	new_point /= s_material.fill_texture_scale
+
+	# If absolute rotation ... cancel out the node's rotation
+	if s_material.fill_texture_absolute_rotation: 
+		new_point = new_point.rotated(global_rotation)
+	
+	# Rotate and shift the desired extra amount
+	new_point = new_point.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
+	new_point -= s_material.fill_texture_offset
+
+	return new_point
 
 
 func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
