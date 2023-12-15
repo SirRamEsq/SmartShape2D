@@ -26,17 +26,24 @@ func undo() -> void:
 
 
 func _set_pivot(point: Vector2) -> void:
-	var np: Vector2 = point
-	var ct: Transform2D = _shape.get_global_transform()
-	ct.origin = np
-	var xform := ct.affine_inverse() * _shape.get_global_transform()
+	var parent = _shape.get_parent()
+	var shape_transform = _shape.get_global_transform()
+	var ct: Transform2D = shape_transform
+	ct.origin = point
 
 	_shape.begin_update()
 	_shape.disable_constraints()
+	
 	for i in _shape.get_point_count():
 		var key: int = _shape.get_point_key_at_index(i)
-		_shape.set_point_position(key, xform * _shape.get_point_position(key))
+		var pt: Vector2 = shape_transform * _shape.get_point_position(key)
+		_shape.set_point_position(key, ct.affine_inverse() * pt)
+		
 	_shape.enable_constraints()
 	_shape.end_update()
 
-	_shape.position = _shape.get_parent().get_global_transform().affine_inverse() * np
+	if parent is PhysicsBody2D:
+		parent.position = parent.get_parent().get_global_transform().affine_inverse() * point
+		_shape.position = Vector2.ZERO
+	else:
+		_shape.position = parent.get_global_transform().affine_inverse() * point
