@@ -23,6 +23,7 @@ var ICON_CURVE_EDIT: Texture2D = load("res://addons/rmsmartshape/assets/icon_cur
 var ICON_CURVE_CREATE: Texture2D = load("res://addons/rmsmartshape/assets/icon_curve_create.svg")
 var ICON_CURVE_DELETE: Texture2D = load("res://addons/rmsmartshape/assets/icon_curve_delete.svg")
 var ICON_PIVOT_POINT: Texture2D = load("res://addons/rmsmartshape/assets/icon_editor_position.svg")
+var ICON_CENTER_PIVOT: Texture2D = load("res://addons/rmsmartshape/assets/CenterView.svg")
 var ICON_COLLISION: Texture2D = load("res://addons/rmsmartshape/assets/icon_collision_polygon_2d.svg")
 var ICON_INTERP_LINEAR: Texture2D = load("res://addons/rmsmartshape/assets/InterpLinear.svg")
 var ICON_SNAP: Texture2D = load("res://addons/rmsmartshape/assets/icon_editor_snap.svg")
@@ -127,6 +128,7 @@ var tb_vert_edit: Button = null
 var tb_edge_edit: Button = null
 var tb_edge_cut: Button = null
 var tb_pivot: Button = null
+var tb_center_pivot: Button = null
 var tb_collision: Button = null
 var tb_freehand: Button = null
 var tb_button_group: ButtonGroup = null
@@ -226,17 +228,20 @@ func _gui_build_toolbar() -> void:
 	tb_edge_edit = create_tool_button(ICON_INTERP_LINEAR, SS2D_Strings.EN_TOOLTIP_EDIT_EDGE)
 	tb_edge_edit.connect(&"pressed", self._enter_mode.bind(MODE.EDIT_EDGE))
 
-	var edge_cut_icon: Texture2D = get_editor_interface().get_base_control().get_theme_icon(&"ActionCut", &"EditorIcons")
+	var edge_cut_icon: Texture2D = EditorInterface.get_base_control().get_theme_icon(&"ActionCut", &"EditorIcons")
 	tb_edge_cut = create_tool_button(edge_cut_icon, SS2D_Strings.EN_TOOLTIP_CUT_EDGE)
 	tb_edge_cut.connect(&"pressed", _enter_mode.bind(MODE.CUT_EDGE))
 
 	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_PIVOT)
 	tb_pivot.connect(&"pressed", self._enter_mode.bind(MODE.SET_PIVOT))
+	
+	tb_center_pivot = create_tool_button(ICON_CENTER_PIVOT, SS2D_Strings.EN_TOOLTIP_CENTER_PIVOT, false)
+	tb_center_pivot.connect(&"pressed", self._center_pivot)
 
 	tb_freehand = create_tool_button(ICON_FREEHAND_MODE, SS2D_Strings.EN_TOOLTIP_FREEHAND)
 	tb_freehand.connect(&"pressed", self._enter_mode.bind(MODE.FREEHAND))
 
-	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION)
+	tb_collision = create_tool_button(ICON_COLLISION, SS2D_Strings.EN_TOOLTIP_COLLISION, false)
 	tb_collision.connect(&"pressed", self._add_collision)
 
 	tb_snap = MenuButton.new()
@@ -253,7 +258,7 @@ func _gui_build_toolbar() -> void:
 
 	tb_options = MenuButton.new()
 	tb_options.tooltip_text = SS2D_Strings.EN_TOOLTIP_MORE_OPTIONS
-	tb_options.icon = get_editor_interface().get_base_control().get_theme_icon("GuiTabMenuHl", "EditorIcons")
+	tb_options.icon = EditorInterface.get_base_control().get_theme_icon("GuiTabMenuHl", "EditorIcons")
 	tb_options_popup = tb_options.get_popup()
 	tb_options_popup.add_check_item(SS2D_Strings.EN_OPTIONS_DEFER_MESH_UPDATES, OPTIONS_MENU.ID_DEFER_MESH_UPDATES)
 	tb_options_popup.hide_on_checkable_item_selection = false
@@ -263,12 +268,12 @@ func _gui_build_toolbar() -> void:
 	tb_hb.hide()
 
 
-func create_tool_button(icon: Texture2D, tooltip: String) -> Button:
+func create_tool_button(icon: Texture2D, tooltip: String, toggle: bool = true) -> Button:
 	var tb := Button.new()
-	tb.toggle_mode = true
-	tb.button_group =  tb_button_group
-	tb.focus_mode = Control.FOCUS_NONE
-	tb.flat = true
+	tb.toggle_mode = toggle
+	tb.button_group = tb_button_group
+	tb.theme_type_variation = "FlatButton"
+	tb.focus_mode = Control.FocusMode.FOCUS_NONE
 	tb.icon = icon
 	tb.tooltip_text = tooltip
 	tb_hb.add_child(tb)
@@ -294,7 +299,7 @@ func _gui_update_vert_info_panel() -> void:
 
 func _load_config() -> void:
 	var conf := ConfigFile.new()
-	conf.load(get_editor_interface().get_editor_paths().get_project_settings_dir().path_join("ss2d.cfg"))
+	conf.load(EditorInterface.get_editor_paths().get_project_settings_dir().path_join("ss2d.cfg"))
 	_defer_mesh_updates = conf.get_value("options", "defer_mesh_updates", false)
 	tb_options_popup.set_item_checked(OPTIONS_MENU.ID_DEFER_MESH_UPDATES, _defer_mesh_updates)
 	tb_snap_popup.set_item_checked(SNAP_MENU.ID_USE_GRID_SNAP, conf.get_value("options", "use_grid_snap", false))
@@ -306,7 +311,7 @@ func _save_config() -> void:
 	conf.set_value("options", "defer_mesh_updates", _defer_mesh_updates)
 	conf.set_value("options", "use_grid_snap", tb_snap_popup.is_item_checked(SNAP_MENU.ID_USE_GRID_SNAP))
 	conf.set_value("options", "snap_relative", tb_snap_popup.is_item_checked(SNAP_MENU.ID_SNAP_RELATIVE))
-	conf.save(get_editor_interface().get_editor_paths().get_project_settings_dir().path_join("ss2d.cfg"))
+	conf.save(EditorInterface.get_editor_paths().get_project_settings_dir().path_join("ss2d.cfg"))
 
 
 func _process(_delta: float) -> void:
@@ -416,7 +421,7 @@ func _ready() -> void:
 	make_unique_dialog.get_label().text = "Make shape point geometry unique (not materials). Proceed?"
 	make_unique_dialog.get_ok_button().text = "Proceed"
 	make_unique_dialog.add_cancel_button("Cancel")
-	make_unique_dialog.theme = get_editor_interface().get_base_control().theme
+	make_unique_dialog.theme = EditorInterface.get_base_control().theme
 	make_unique_dialog.connect("confirmed", self._shape_make_unique)
 	add_child(make_unique_dialog)
 
@@ -455,7 +460,7 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 		cached_shape_global_transform = shape.get_global_transform()
 
 	var et: Transform2D = get_et()
-	var grab_threshold: float = get_editor_interface().get_editor_settings().get(
+	var grab_threshold: float = EditorInterface.get_editor_settings().get(
 		"editors/polygon_editor/point_grab_radius"
 	)
 
@@ -483,7 +488,7 @@ func _handles(object: Object) -> bool:
 	gui_point_info_panel.visible = false
 	gui_edge_info_panel.visible = false
 
-	var selection: EditorSelection = get_editor_interface().get_selection()
+	var selection: EditorSelection = EditorInterface.get_selection()
 	if selection != null:
 		if selection.get_selected_nodes().size() == 1:
 			if selection.get_selected_nodes()[0] is SS2D_Shape:
@@ -686,7 +691,7 @@ func _shape_make_unique() -> void:
 
 
 func get_et() -> Transform2D:
-	return get_editor_interface().get_edited_scene_root().get_viewport().global_canvas_transform
+	return EditorInterface.get_edited_scene_root().get_viewport().global_canvas_transform
 
 
 static func is_key_valid(s: SS2D_Shape, key: int) -> bool:
@@ -698,7 +703,8 @@ static func is_key_valid(s: SS2D_Shape, key: int) -> bool:
 func _enter_mode(mode: int) -> void:
 	if current_mode == mode:
 		return
-	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_vert_create, tb_freehand]:
+		
+	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_center_pivot, tb_vert_create, tb_freehand]:
 		tb.button_pressed = false
 
 	previous_mode = current_mode
@@ -718,6 +724,7 @@ func _enter_mode(mode: int) -> void:
 			tb_freehand.button_pressed = true
 		_:
 			tb_vert_edit.button_pressed = true
+			
 	update_overlays()
 
 
@@ -726,8 +733,33 @@ func _add_collision() -> void:
 
 
 func _add_deferred_collision() -> void:
-	if shape and not shape.get_parent() is StaticBody2D:
+	if shape and not shape.get_parent() is PhysicsBody2D:
 		perform_action(ActionAddCollisionNodes.new(shape))
+		
+		
+func _center_pivot() -> void:
+	if shape and shape.is_shape_closed():
+		# Calculate centroid
+		var point_count = shape.get_point_count()
+		var total_area: float = 0.0
+		var center: Vector2 = Vector2.ZERO
+		for i in range(point_count):
+			var key: int = shape.get_point_key_at_index(i)
+			var pt1: Vector2 = shape.get_point_position(key)
+			var pt2: Vector2
+			if i == point_count - 1:
+				pt2 = shape.get_point_position(shape.get_point_key_at_index(0))
+			else:
+				pt2 = shape.get_point_position(shape.get_point_key_at_index(i + 1))
+
+			var triangle_area: float = pt1.cross(pt2)
+			total_area += triangle_area
+			center += (pt1 + pt2) * triangle_area
+			
+		if total_area != 0.0:
+			center /= 3 * total_area
+
+		perform_action(ActionSetPivot.new(shape, Transform2D.IDENTITY, shape.to_global(center)))
 
 #############
 # RENDERING #
@@ -1108,7 +1140,7 @@ func _input_handle_left_click(
 				var copy: SS2D_Shape = copy_shape(shape)
 				copy.set_point_array(SS2D_Point_Array.new())
 				_enter_mode(MODE.CREATE_VERT)
-				var selection := get_editor_interface().get_selection()
+				var selection := EditorInterface.get_selection()
 				selection.clear()
 				selection.add_node(copy)
 				shape = copy
