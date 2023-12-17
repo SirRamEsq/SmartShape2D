@@ -265,8 +265,6 @@ func _gui_build_toolbar() -> void:
 	tb_hb.add_child(tb_options)
 	tb_options_popup.connect("id_pressed", self._options_item_selected)
 
-	tb_hb.hide()
-
 
 func create_tool_button(icon: Texture2D, tooltip: String, toggle: bool = true) -> Button:
 	var tb := Button.new()
@@ -493,7 +491,7 @@ func _handles(object: Object) -> bool:
 		if selection.get_selected_nodes().size() == 1:
 			if selection.get_selected_nodes()[0] is SS2D_Shape:
 				hideToolbar = false
-
+				
 	if hideToolbar == true:
 		tb_hb.hide()
 
@@ -511,8 +509,6 @@ func _edit(object: Object) -> void:
 
 	shape = null
 
-	tb_hb.show()
-
 	shape = object
 
 	if not is_shape_valid(shape):
@@ -526,7 +522,8 @@ func _edit(object: Object) -> void:
 
 
 func _make_visible(_visible: bool) -> void:
-	pass
+	if _visible:
+		tb_hb.show()
 
 
 func _on_main_screen_changed(screen_name: String) -> void:
@@ -759,7 +756,7 @@ func _center_pivot() -> void:
 		if total_area != 0.0:
 			center /= 3 * total_area
 
-		perform_action(ActionSetPivot.new(shape, Transform2D.IDENTITY, shape.to_global(center)))
+		perform_action(ActionSetPivot.new(shape, shape.to_global(center)))
 
 #############
 # RENDERING #
@@ -1087,7 +1084,7 @@ func _input_handle_left_click(
 		var local_position: Vector2 = et.affine_inverse() * mb.position
 		if use_snap():
 			local_position = snap(local_position)
-		perform_action(ActionSetPivot.new(shape, et, local_position))
+		perform_action(ActionSetPivot.new(shape, local_position))
 		return true
 
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
