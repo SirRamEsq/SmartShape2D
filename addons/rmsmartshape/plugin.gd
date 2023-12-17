@@ -1458,11 +1458,15 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		# Invert the delta for position_out if moving both at once
 		if _out and _in:
 			out_multiplier = -1
+
 		var new_position_in: Vector2 = delta + current_action.starting_positions_control_in[i]
-		var new_position_out: Vector2 = (
+		
+		var from_out: Vector2 = shape.to_global(current_action.starting_positions_control_out[i])
+		var new_position_out: Vector2 = shape.global_transform.affine_inverse() * (
 			(delta * out_multiplier)
-			+ current_action.starting_positions_control_out[i]
+			+ from_out
 		)
+
 		if use_snap():
 			new_position_in = snap(new_position_in)
 			new_position_out = snap(new_position_out)
@@ -1480,8 +1484,8 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 func _input_motion_move_verts(delta: Vector2) -> bool:
 	for i in range(0, current_action.keys.size(), 1):
 		var key: int = current_action.keys[i]
-		var from: Vector2 = current_action.starting_positions[i]
-		var new_position: Vector2 = from + delta
+		var from: Vector2 = shape.to_global(current_action.starting_positions[i])
+		var new_position: Vector2 = shape.global_transform.affine_inverse() * (from + delta)
 		if use_snap():
 			new_position = snap(new_position)
 		shape.set_point_position(key, new_position)

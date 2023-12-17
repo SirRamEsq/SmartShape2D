@@ -34,7 +34,7 @@ func undo() -> void:
 
 
 func _set_pivot(shape_position: Vector2, parent_body_position: Vector2) -> void:
-	var xform: Transform2D = _shape.get_global_transform()
+	var shape_gt: Transform2D = _shape.get_global_transform()
 	
 	if _shape.get_parent() == _parent_body:
 		_parent_body.global_position = parent_body_position
@@ -46,7 +46,7 @@ func _set_pivot(shape_position: Vector2, parent_body_position: Vector2) -> void:
 	for i in _shape.get_point_count():
 		var key: int = _shape.get_point_key_at_index(i)
 		var point: Vector2 = _shape.get_point_position(key)
-		_shape.set_point_position(key, _shape.to_local(xform * point))
+		_shape.set_point_position(key, _shape.to_local(shape_gt * point))
 		
 	_shape.enable_constraints()
 	_shape.end_update()

@@ -249,7 +249,7 @@ func test_action_set_pivot() -> void:
 	var key := s.add_point(Vector2.ZERO)
 
 	var t := Transform2D()
-	var action := ActionSetPivot.new(s, t, Vector2(100.0, 100.0))
+	var action := ActionSetPivot.new(s, Vector2(100.0, 100.0))
 	action.do()
 	assert_eq(s.get_point_position(key), Vector2(-100.0, -100.0))
 	action.undo()
