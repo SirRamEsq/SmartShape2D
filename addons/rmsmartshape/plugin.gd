@@ -1459,7 +1459,10 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		if _out and _in:
 			out_multiplier = -1
 
-		var new_position_in: Vector2 = delta + current_action.starting_positions_control_in[i]
+		var from_in: Vector2 = shape.to_global(current_action.starting_positions_control_in[i])
+		var new_position_in: Vector2 = shape.global_transform.affine_inverse() * (
+			delta + from_in
+		)
 		
 		var from_out: Vector2 = shape.to_global(current_action.starting_positions_control_out[i])
 		var new_position_out: Vector2 = shape.global_transform.affine_inverse() * (
