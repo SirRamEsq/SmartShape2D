@@ -737,17 +737,17 @@ func _add_deferred_collision() -> void:
 func _center_pivot() -> void:
 	if shape and shape.is_shape_closed():
 		# Calculate centroid
-		var point_count = shape.get_point_count()
+		var points: PackedVector2Array = shape.get_tessellated_points()
+		var point_count: int = points.size()
 		var total_area: float = 0.0
 		var center: Vector2 = Vector2.ZERO
 		for i in range(point_count):
-			var key: int = shape.get_point_key_at_index(i)
-			var pt1: Vector2 = shape.get_point_position(key)
+			var pt1: Vector2 = points[i]
 			var pt2: Vector2
 			if i == point_count - 1:
-				pt2 = shape.get_point_position(shape.get_point_key_at_index(0))
+				pt2 = points[0]
 			else:
-				pt2 = shape.get_point_position(shape.get_point_key_at_index(i + 1))
+				pt2 = points[i + 1]
 
 			var triangle_area: float = pt1.cross(pt2)
 			total_area += triangle_area
@@ -785,7 +785,7 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 				elif not on_edge:
 					draw_new_point_close_preview(overlay)
 		MODE.EDIT_EDGE:
-			draw_mode_edit_edge(overlay)
+			draw_mode_edit_edge(overlay, Color.WHITE, Color.YELLOW)
 		MODE.CUT_EDGE:
 			draw_mode_cut_edge(overlay)
 		MODE.FREEHAND:
@@ -808,31 +808,30 @@ func draw_freehand_circle(overlay: Control) -> void:
 	overlay.draw_circle(mouse, size * 2 * current_zoom_level, color)
 
 
-func draw_mode_edit_edge(overlay: Control) -> void:
+func draw_mode_edit_edge(overlay: Control, color_normal: Color, color_highlight: Color) -> void:
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var verts: PackedVector2Array = shape.get_vertices()
 
-	var color_highlight := Color(1.0, 0.75, 0.75, 1.0)
-	var color_normal := Color(1.0, 0.25, 0.25, 0.8)
-
-	draw_shape_outline(overlay, t, verts, color_normal, 3.0)
+	draw_shape_outline(overlay, t, verts, color_normal)
 	draw_vert_handles(overlay, t, verts, false)
 
 	if current_action.type == ACTION_VERT.MOVE_VERT:
 		var edge_point_keys: Array[int] = current_action.keys
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
+		overlay.draw_line(t * p1, t * p2, Color.BLACK, 8.0, true)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 4.0, true)
 	elif on_edge:
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
+		overlay.draw_line(t * p1, t * p2, Color.BLACK, 8.0, true)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 4.0, true)
 
 
 func draw_mode_cut_edge(overlay: Control) -> void:
-	draw_mode_edit_edge(overlay)
+	draw_mode_edit_edge(overlay, Color(1.0, 0.25, 0.25, 0.8), Color(1.0, 0.75, 0.75, 1.0))
 
 	if on_edge:
 		# Draw "X" marks along the edge that is selected
@@ -879,6 +878,7 @@ func draw_shape_outline(
 	if color == null:
 		color = shape.modulate
 	if points.size() >= 2:
+		overlay.draw_polyline(t * points, Color.BLACK, width * 1.5, true)
 		overlay.draw_polyline(t * points, color, width, true)
 
 
