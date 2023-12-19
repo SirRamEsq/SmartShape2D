@@ -524,6 +524,9 @@ func _edit(object: Object) -> void:
 func _make_visible(_visible: bool) -> void:
 	if _visible:
 		tb_hb.show()
+	else:
+		tb_hb.hide()
+		
 
 
 func _on_main_screen_changed(screen_name: String) -> void:
