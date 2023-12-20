@@ -953,10 +953,12 @@ func _transform_point_for_uv(point:Vector2, s_material: SS2D_Material_Shape) -> 
 	# If absolute rotation ... cancel out the node's rotation
 	if s_material.fill_texture_absolute_rotation: 
 		new_point = new_point.rotated(global_rotation)
-	
-	# Rotate and shift the desired extra amount
+
+	# Rotate the desired extra amount
 	new_point = new_point.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
-	new_point -= s_material.fill_texture_offset
+
+	# Shift the desired amount (adjusted so it's scale independent)
+	new_point -= s_material.fill_texture_offset / s_material.fill_texture_scale
 
 	return new_point
 
