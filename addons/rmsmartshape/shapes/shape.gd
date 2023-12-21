@@ -670,6 +670,11 @@ func _enter_tree() -> void:
 	# Call this again because get_node() only works when the node is inside the tree
 	set_collision_polygon_node_path(collision_polygon_node_path)
 
+	# Handle material changes if scene is (re-)entered (e.g. after switching to another)
+	if shape_material != null:
+		if not shape_material.is_connected("changed", self._handle_material_change):
+			shape_material.connect("changed", self._handle_material_change)
+
 
 func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 	var render_parent_name := "_SS2D_RENDER"
