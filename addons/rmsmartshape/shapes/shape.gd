@@ -947,43 +947,35 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	return meshes
 
 
-func _get_uv_points(points: PackedVector2Array, s_material: SS2D_Material_Shape, tex_size: Vector2) -> PackedVector2Array:
-	var uv_points:PackedVector2Array = []
-	for point in points:
-		var uv_point:Vector2 = point
-		uv_point = _transform_point_for_uv(uv_point, s_material)
-		uv_point = _convert_local_space_to_uv(uv_point, tex_size)
-		uv_points.append(uv_point)
-	return uv_points
+func _get_uv_points(
+	points: PackedVector2Array, 
+	s_material: SS2D_Material_Shape, 
+	tex_size: Vector2
+) -> PackedVector2Array:
+	var transformation: Transform2D = global_transform
 
-
-func _transform_point_for_uv(point:Vector2, s_material: SS2D_Material_Shape) -> Vector2:
-	var transformed_point := global_transform * point
-
-	# If relative position ... remove the translation from global_transform
+	# If relative position ... undo translation from global_transform
 	if not s_material.fill_texture_absolute_position:
-		transformed_point -= global_position
+		transformation = transformation.translated(-global_position)
 
 	# Scale
-	transformed_point /= s_material.fill_texture_scale
+	var tex_scale := 1.0 / s_material.fill_texture_scale
+	transformation = transformation.scaled(Vector2(tex_scale, tex_scale))
 
-	# If relative rotation ... remove the rotation from global_transform
+	# If relative rotation ... undo rotation from global_transform
 	if not s_material.fill_texture_absolute_rotation: 
-		transformed_point = transformed_point.rotated(-global_rotation)
+		transformation = transformation.rotated(-global_rotation)
 
 	# Rotate the desired extra amount
-	transformed_point = transformed_point.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
+	transformation = transformation.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
 
 	# Shift the desired amount (adjusted so it's scale independent)
-	transformed_point -= s_material.fill_texture_offset / s_material.fill_texture_scale
-
-	return transformed_point
-
-
-func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
-	var pt: Vector2 = point
-	var rslt := Vector2(pt.x / size.x, pt.y / size.y)
-	return rslt
+	transformation = transformation.translated(-s_material.fill_texture_offset / s_material.fill_texture_scale)
+	
+	# Convert local space to UV
+	transformation = transformation.scaled(Vector2(1 / tex_size.x, 1 / tex_size.y))
+	
+	return transformation * points
 
 
 ## Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'.[br]
