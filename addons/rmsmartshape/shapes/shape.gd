@@ -923,7 +923,7 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 
 	for i in range(0, fill_tris.size() - 1, 3):
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 0]])
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i]])
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
 		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 1]])
