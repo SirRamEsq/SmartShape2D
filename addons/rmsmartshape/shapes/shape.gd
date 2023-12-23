@@ -919,15 +919,17 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
+	var uv_points := _get_uv_points(points, s_mat, tex_size)
+
 	for i in range(0, fill_tris.size() - 1, 3):
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(_transform_point_for_uv(points[fill_tris[i]], s_mat), tex_size))
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 0]])
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(_transform_point_for_uv(points[fill_tris[i + 1]], s_mat), tex_size))
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 1]])
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(_transform_point_for_uv(points[fill_tris[i + 2]], s_mat), tex_size))
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 2]])
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
 	st.generate_normals()
@@ -945,27 +947,37 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	return meshes
 
 
-func _transform_point_for_uv(point:Vector2, s_material: SS2D_Material_Shape) -> Vector2:
-	var new_point := point
+func _get_uv_points(points: PackedVector2Array, s_material: SS2D_Material_Shape, tex_size: Vector2) -> PackedVector2Array:
+	var uv_points:PackedVector2Array = []
+	for point in points:
+		var uv_point:Vector2 = point
+		uv_point = _transform_point_for_uv(uv_point, s_material)
+		uv_point = _convert_local_space_to_uv(uv_point, tex_size)
+		uv_points.append(uv_point)
+	return uv_points
 
-	# If absolute position ... cancel out the node's position (adjusted due to rotation)
-	if s_material.fill_texture_absolute_position:
-		new_point += global_position.rotated(-global_rotation)
+
+func _transform_point_for_uv(point:Vector2, s_material: SS2D_Material_Shape) -> Vector2:
+	var transformed_point := global_transform * point
+
+	# If relative position ... remove the translation from global_transform
+	if not s_material.fill_texture_absolute_position:
+		transformed_point -= global_position
 
 	# Scale
-	new_point /= s_material.fill_texture_scale
+	transformed_point /= s_material.fill_texture_scale
 
-	# If absolute rotation ... cancel out the node's rotation
-	if s_material.fill_texture_absolute_rotation: 
-		new_point = new_point.rotated(global_rotation)
+	# If relative rotation ... remove the rotation from global_transform
+	if not s_material.fill_texture_absolute_rotation: 
+		transformed_point = transformed_point.rotated(-global_rotation)
 
 	# Rotate the desired extra amount
-	new_point = new_point.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
+	transformed_point = transformed_point.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
 
 	# Shift the desired amount (adjusted so it's scale independent)
-	new_point -= s_material.fill_texture_offset / s_material.fill_texture_scale
+	transformed_point -= s_material.fill_texture_offset / s_material.fill_texture_scale
 
-	return new_point
+	return transformed_point
 
 
 func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
