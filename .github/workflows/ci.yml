@@ -1,0 +1,27 @@
+name: ⚙️ CI
+on:
+  push:
+    # branches: [ master ]
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - "addons/rmssmartshape/documentation/"
+      - "scripts/"
+      - "**/*.png"
+
+  pull_request:
+    # branches: [ master ]
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - "addons/rmssmartshape/documentation/"
+      - "scripts/"
+      - "**/*.png"
+
+jobs:
+  ci-unit-tests:
+    name: "⚙️ CI: Unit tests"
+    uses: ./.github/workflows/unit_tests.yml
+    with:
+      ss2d-ref: ${{ github.ref }}
+
