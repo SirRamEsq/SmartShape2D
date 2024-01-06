@@ -6,6 +6,7 @@ extends Node2D
 # ##############################################################################
 @onready var _normal_gui = $Normal
 @onready var _compact_gui = $Compact
+
 var gut = null :
 	set(val):
 		gut = val
@@ -23,17 +24,20 @@ func _ready():
 	_compact_gui.to_bottom_right()
 
 	use_compact_mode(false)
-	
+
 	if(get_parent() == get_tree().root):
 		_test_running_setup()
 
 func _test_running_setup():
+	set_font_size(100)
 	_normal_gui.get_textbox().text = "hello world, how are you doing?"
 
 # ------------------------
 # Private
 # ------------------------
 func _set_gut(val):
+	if(_normal_gui.get_gut() == val):
+		return
 	_normal_gui.set_gut(val)
 	_compact_gui.set_gut(val)
 
@@ -71,13 +75,12 @@ func get_textbox():
 
 
 func set_font_size(new_size):
-	return
 	var rtl = _normal_gui.get_textbox()
-	if(rtl.get('custom_fonts/normal_font') != null):
-		rtl.get('custom_fonts/bold_italics_font').size = new_size
-		rtl.get('custom_fonts/bold_font').size = new_size
-		rtl.get('custom_fonts/italics_font').size = new_size
-		rtl.get('custom_fonts/normal_font').size = new_size
+
+	rtl.set('theme_override_font_sizes/bold_italics_font_size', new_size)
+	rtl.set('theme_override_font_sizes/bold_font_size', new_size)
+	rtl.set('theme_override_font_sizes/italics_font_size', new_size)
+	rtl.set('theme_override_font_sizes/normal_font_size', new_size)
 
 
 func set_font(font_name):

@@ -150,14 +150,11 @@ func get_return(obj, method, parameters=null):
 	if(stub_info != null):
 		return stub_info.return_val
 	else:
-		_lgr.warn(str('Call to [', method, '] was not stubbed for the supplied parameters ', parameters, '.  Null was returned.'))
+		_lgr.info(str('Call to [', method, '] was not stubbed for the supplied parameters ', parameters, '.  Null was returned.'))
 		return null
 
 
 func should_call_super(obj, method, parameters=null):
-	if(_utils.non_super_methods.has(method)):
-		return false
-
 	var stub_info = _find_stub(obj, method, parameters)
 
 	var is_partial = false

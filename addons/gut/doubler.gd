@@ -99,7 +99,10 @@ var _strategy = null
 func get_strategy():
 	return _strategy
 func set_strategy(strategy):
-	_strategy = strategy
+	if(GutUtils.DOUBLE_STRATEGY.values().has(strategy)):
+		_strategy = strategy
+	else:
+		_lgr.error(str('doubler.gd:  invalid double strategy ', strategy))
 
 
 var _method_maker = _utils.MethodMaker.new()
@@ -126,7 +129,7 @@ func _get_indented_line(indents, text):
 
 
 func _stub_to_call_super(parsed, method_name):
-	if(_utils.non_super_methods.has(method_name)):
+	if(!parsed.get_method(method_name).is_eligible_for_doubling()):
 		return
 
 	var params = _utils.StubParams.new(parsed.script_path, method_name, parsed.subpath)
@@ -134,7 +137,7 @@ func _stub_to_call_super(parsed, method_name):
 	_stubber.add_stub(params)
 
 
-func _get_base_script_text(parsed, override_path, partial):
+func _get_base_script_text(parsed, override_path, partial, included_methods):
 	var path = parsed.script_path
 	if(override_path != null):
 		path = override_path
@@ -161,48 +164,73 @@ func _get_base_script_text(parsed, override_path, partial):
 
 		# metadata values
 		"path":path,
-		"subpath":_utils.nvl(parsed.subpath, ''),
+		"subpath":GutUtils.nvl(parsed.subpath, ''),
 		"stubber_id":stubber_id,
 		"spy_id":spy_id,
 		"gut_id":gut_id,
-		"singleton_name":'',#_utils.nvl(obj_info.get_singleton_name(), ''),
+		"singleton_name":'',#GutUtils.nvl(obj_info.get_singleton_name(), ''),
 		"is_partial":partial,
+		"doubled_methods":included_methods,
 	}
 
 	return _base_script_text.format(values)
 
 
+func _is_method_eligible_for_doubling(parsed_script, parsed_method):
+	return !parsed_method.is_accessor() and \
+		parsed_method.is_eligible_for_doubling() and \
+		!_ignored_methods.has(parsed_script.resource, parsed_method.meta.name)
+
+
+# Disable the native_method_override setting so that doubles do not generate
+# errors or warnings when doubling with INCLUDE_NATIVE or when a method has
+# been added because of param_count stub.
+func _create_script_no_warnings(src):
+	var prev_native_override_value = null
+	var native_method_override = 'debug/gdscript/warnings/native_method_override'
+	prev_native_override_value = ProjectSettings.get_setting(native_method_override)
+	ProjectSettings.set_setting(native_method_override, 0)
+
+	var DblClass = _utils.create_script_from_source(src)
+
+	ProjectSettings.set_setting(native_method_override, prev_native_override_value)
+	return DblClass
+
 
 func _create_double(parsed, strategy, override_path, partial):
-	var base_script = _get_base_script_text(parsed, override_path, partial)
-	var super_name = ""
 	var path = ""
 
 	path = parsed.script_path
 	var dbl_src = ""
-	dbl_src += base_script
+	var included_methods = []
 
 	for method in parsed.get_local_methods():
-		if(!method.is_black_listed() && !_ignored_methods.has(parsed.resource, method.meta.name)):
+		if(_is_method_eligible_for_doubling(parsed, method)):
+			included_methods.append(method.meta.name)
 			var mthd = parsed.get_local_method(method.meta.name)
 			if(parsed.is_native):
-				dbl_src += _get_func_text(method.meta, parsed.resource, super_name)
+				dbl_src += _get_func_text(method.meta, parsed.resource)
 			else:
-				dbl_src += _get_func_text(method.meta, path, super_name)
+				dbl_src += _get_func_text(method.meta, path)
 
-	if(strategy == _utils.DOUBLE_STRATEGY.INCLUDE_SUPER):
+	if(strategy == _utils.DOUBLE_STRATEGY.INCLUDE_NATIVE):
 		for method in parsed.get_super_methods():
-			if(!method.is_black_listed() && !_ignored_methods.has(parsed.resource, method.meta.name)):
+			if(_is_method_eligible_for_doubling(parsed, method)):
+				included_methods.append(method.meta.name)
 				_stub_to_call_super(parsed, method.meta.name)
 				if(parsed.is_native):
-					dbl_src += _get_func_text(method.meta, parsed.resource, super_name)
+					dbl_src += _get_func_text(method.meta, parsed.resource)
 				else:
-					dbl_src += _get_func_text(method.meta, path, super_name)
+					dbl_src += _get_func_text(method.meta, path)
+
+	var base_script = _get_base_script_text(parsed, override_path, partial, included_methods)
+	dbl_src = base_script + "\n\n" + dbl_src
+
 
 	if(print_source):
 		print(_utils.add_line_numbers(dbl_src))
 
-	var DblClass = _utils.create_script_from_source(dbl_src)
+	var DblClass = _create_script_no_warnings(dbl_src)
 	if(_stubber != null):
 		_stub_method_default_values(DblClass, parsed, strategy)
 
@@ -211,7 +239,7 @@ func _create_double(parsed, strategy, override_path, partial):
 
 func _stub_method_default_values(which, parsed, strategy):
 	for method in parsed.get_local_methods():
-		if(!method.is_black_listed() && !_ignored_methods.has(parsed.resource, method.meta.name)):
+		if(method.is_eligible_for_doubling() && !_ignored_methods.has(parsed.resource, method.meta.name)):
 			_stubber.stub_defaults_from_meta(parsed.script_path, method.meta)
 
 
@@ -220,7 +248,7 @@ func _double_scene_and_script(scene, strategy, partial):
 	var to_return = PackedSceneDouble.new()
 	to_return.load_scene(scene.get_path())
 
-	var script_obj = _utils.get_scene_script_object(scene)
+	var script_obj = GutUtils.get_scene_script_object(scene)
 	if(script_obj != null):
 		var script_dbl = null
 		if(partial):
@@ -239,12 +267,12 @@ func _get_inst_id_ref_str(inst):
 	return ref_str
 
 
-func _get_func_text(method_hash, path, super_=""):
+func _get_func_text(method_hash, path):
 	var override_count = null;
 	if(_stubber != null):
 		override_count = _stubber.get_parameter_count(path, method_hash.name)
 
-	var text = _method_maker.get_function_text(method_hash, path, override_count, super_) + "\n"
+	var text = _method_maker.get_function_text(method_hash, override_count) + "\n"
 
 	return text
 
@@ -297,10 +325,10 @@ func partial_double_scene(scene, strategy=_strategy):
 
 
 func double_gdnative(which):
-	return _double(which, _utils.DOUBLE_STRATEGY.INCLUDE_SUPER)
+	return _double(which, _utils.DOUBLE_STRATEGY.INCLUDE_NATIVE)
 
 func partial_double_gdnative(which):
-	return _partial_double(which, _utils.DOUBLE_STRATEGY.INCLUDE_SUPER)
+	return _partial_double(which, _utils.DOUBLE_STRATEGY.INCLUDE_NATIVE)
 
 
 func double_inner(parent, inner, strategy=_strategy):
