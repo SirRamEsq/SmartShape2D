@@ -670,6 +670,11 @@ func _enter_tree() -> void:
 	# Call this again because get_node() only works when the node is inside the tree
 	set_collision_polygon_node_path(collision_polygon_node_path)
 
+	# Handle material changes if scene is (re-)entered (e.g. after switching to another)
+	if shape_material != null:
+		if not shape_material.is_connected("changed", self._handle_material_change):
+			shape_material.connect("changed", self._handle_material_change)
+
 
 func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
 	var render_parent_name := "_SS2D_RENDER"
@@ -914,15 +919,17 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
+	var uv_points := _get_uv_points(points, s_mat, tex_size)
+
 	for i in range(0, fill_tris.size() - 1, 3):
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i]], tex_size))
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i]])
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 1]], tex_size))
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 1]])
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
 		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, _convert_local_space_to_uv(points[fill_tris[i + 2]], tex_size))
+		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 2]])
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
 	st.index()
 	st.generate_normals()
@@ -940,10 +947,35 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	return meshes
 
 
-func _convert_local_space_to_uv(point: Vector2, size: Vector2) -> Vector2:
-	var pt: Vector2 = point
-	var rslt := Vector2(pt.x / size.x, pt.y / size.y)
-	return rslt
+func _get_uv_points(
+	points: PackedVector2Array, 
+	s_material: SS2D_Material_Shape, 
+	tex_size: Vector2
+) -> PackedVector2Array:
+	var transformation: Transform2D = global_transform
+
+	# If relative position ... undo translation from global_transform
+	if not s_material.fill_texture_absolute_position:
+		transformation = transformation.translated(-global_position)
+
+	# Scale
+	var tex_scale := 1.0 / s_material.fill_texture_scale
+	transformation = transformation.scaled(Vector2(tex_scale, tex_scale))
+
+	# If relative rotation ... undo rotation from global_transform
+	if not s_material.fill_texture_absolute_rotation: 
+		transformation = transformation.rotated(-global_rotation)
+
+	# Rotate the desired extra amount
+	transformation = transformation.rotated(-deg_to_rad(s_material.fill_texture_angle_offset))
+
+	# Shift the desired amount (adjusted so it's scale independent)
+	transformation = transformation.translated(-s_material.fill_texture_offset / s_material.fill_texture_scale)
+	
+	# Convert local space to UV
+	transformation = transformation.scaled(Vector2(1 / tex_size.x, 1 / tex_size.y))
+	
+	return transformation * points
 
 
 ## Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'.[br]
