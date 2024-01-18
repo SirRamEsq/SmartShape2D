@@ -1,43 +1,47 @@
-# ##############################################################################
-#(G)odot (U)nit (T)est class
-#
-# ##############################################################################
-# The MIT License (MIT)
-# =====================
-#
-# Copyright (c) 2020 Tom "Butch" Wesley
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-# ##############################################################################
+class_name GutUtils
+# ------------------------------------------------------------------------------
 # Description
 # -----------
 # This class is a PSUEDO SINGLETON.  You should not make instances of it but use
 # the get_instance static method.
-# ##############################################################################
-extends Node
+# ------------------------------------------------------------------------------
+# NOTE:  I think this can become completely static now that we have static
+#		 variables.  A lot would have to change though.  But it would be good
+#		 to do.
+# ------------------------------------------------------------------------------
+const GUT_METADATA = '__gutdbl'
 
-# ------------------------------------------------------------------------------
-# The instance name as a function since you can't have static variables.
-# ------------------------------------------------------------------------------
-static func INSTANCE_NAME():
-	return '__GutUtilsInstName__'
+
+# Note, these cannot change since places are checking for TYPE_INT to determine
+# how to process parameters.
+enum DOUBLE_STRATEGY{
+	INCLUDE_NATIVE,
+	SCRIPT_ONLY,
+}
+
+
+enum DIFF {
+	DEEP,
+	SIMPLE
+}
+
+const TEST_STATUSES = {
+	NO_ASSERTS = 'no asserts',
+	SKIPPED = 'skipped',
+	NOT_RUN = 'not run',
+	PENDING = 'pending',
+	# These two got the "ed" b/c pass is a reserved word and I could not
+	# think of better words.
+	FAILED = 'fail',
+	PASSED = 'pass'
+}
+
+# This is a holdover from when GUT was making a psuedo autoload.  It would add
+# an instance of this class to the tree with a name and retrieve it when
+# get_instance was called.  We now have static variables so this var is now
+# used instead of a node.
+static var _the_instance = null
+
 
 # ------------------------------------------------------------------------------
 # Gets the root node without having to be in the tree and pushing out an error
@@ -51,6 +55,7 @@ static func get_root_node():
 		push_error('No Main Loop Yet')
 		return null
 
+
 # ------------------------------------------------------------------------------
 # Get the ONE instance of utils
 # Since we can't have static variables we have to store the instance in the
@@ -58,16 +63,92 @@ static func get_root_node():
 # running.
 # ------------------------------------------------------------------------------
 static func get_instance():
-	var the_root = get_root_node()
-	var inst = null
-	if(the_root.has_node(INSTANCE_NAME())):
-		inst = the_root.get_node(INSTANCE_NAME())
-	else:
-		inst = load('res://addons/gut/utils.gd').new()
-		inst.set_name(INSTANCE_NAME())
-		the_root.add_child(inst)
-	return inst
+	if(_the_instance == null):
+		_the_instance = GutUtils.new()
 
+	return _the_instance
+
+
+# ------------------------------------------------------------------------------
+# Gets the value from an enum.  If passed an int it will return it if the enum
+# contains it.  If passed a string it will convert it to upper case and replace
+# spaces with underscores.  If the enum contains the key, it will return the
+# value for they key.  When keys or ints are not found, the default is returned.
+# ------------------------------------------------------------------------------
+static func get_enum_value(thing, e, default=null):
+	var to_return = default
+
+	if(typeof(thing) == TYPE_STRING):
+		var converted = thing.to_upper().replace(' ', '_')
+		if(e.keys().has(converted)):
+			to_return = e[converted]
+	else:
+		if(e.values().has(thing)):
+			to_return = thing
+
+	return to_return
+
+
+# ------------------------------------------------------------------------------
+# return if_null if value is null otherwise return value
+# ------------------------------------------------------------------------------
+static func nvl(value, if_null):
+	if(value == null):
+		return if_null
+	else:
+		return value
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+static func pretty_print(dict):
+	print(JSON.stringify(dict, ' '))
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+static func print_properties(props, thing, print_all_meta=false):
+	for i in range(props.size()):
+		var prop_name = props[i].name
+		var prop_value = thing.get(props[i].name)
+		var print_value = str(prop_value)
+		if(print_value.length() > 100):
+			print_value = print_value.substr(0, 97) + '...'
+		elif(print_value == ''):
+			print_value = 'EMPTY'
+
+		print(prop_name, ' = ', print_value)
+		if(print_all_meta):
+			print('  ', props[i])
+
+
+
+# ------------------------------------------------------------------------------
+# Gets the value of the node_property 'script' from a PackedScene's root node.
+# This does not assume the location of the root node in the PackedScene's node
+# list.  This also does not assume the index of the 'script' node property in
+# a nodes's property list.
+# ------------------------------------------------------------------------------
+static func get_scene_script_object(scene):
+	var state = scene.get_state()
+	var to_return = null
+	var root_node_path = NodePath(".")
+	var node_idx = 0
+
+	while(node_idx < state.get_node_count() and to_return == null):
+		if(state.get_node_path(node_idx) == root_node_path):
+			for i in range(state.get_node_property_count(node_idx)):
+				if(state.get_node_property_name(node_idx, i) == 'script'):
+					to_return = state.get_node_property_value(node_idx, i)
+
+		node_idx += 1
+
+	return to_return
+
+
+# ##############################################################################
+# Start Class
+# ##############################################################################
 var Logger = load('res://addons/gut/logger.gd') # everything should use get_logger
 var _lgr = null
 var json = JSON.new()
@@ -81,6 +162,7 @@ var CompareResult = load('res://addons/gut/compare_result.gd')
 var DiffTool = load('res://addons/gut/diff_tool.gd')
 var Doubler = load('res://addons/gut/doubler.gd')
 var Gut = load('res://addons/gut/gut.gd')
+var GutConfig = load('res://addons/gut/gut_config.gd')
 var HookScript = load('res://addons/gut/hook_script.gd')
 var InnerClassRegistry = load('res://addons/gut/inner_class_registry.gd')
 var InputFactory = load("res://addons/gut/input_factory.gd")
@@ -102,41 +184,16 @@ var Summary = load('res://addons/gut/summary.gd')
 var Test = load('res://addons/gut/test.gd')
 var TestCollector = load('res://addons/gut/test_collector.gd')
 var ThingCounter = load('res://addons/gut/thing_counter.gd')
+var CollectedTest = load('res://addons/gut/collected_test.gd')
+var CollectedScript = load('res://addons/gut/collected_test.gd')
 
 var GutScene = load('res://addons/gut/GutScene.tscn')
 
 # Source of truth for the GUT version
-var version = '9.0.0'
+var version = '9.1.1'
 # The required Godot version as an array.
-var req_godot = [4, 0, 0]
+var req_godot = [4, 1, 0]
 
-# These methods all call super implicitly.  Stubbing them to call super causes
-# super to be called twice.
-var non_super_methods = [
-	"_init",
-	"_ready",
-	"_notification",
-	"_enter_world",
-	"_exit_world",
-	"_process",
-	"_physics_process",
-	"_exit_tree",
-	"_gui_input	",
-]
-
-const GUT_METADATA = '__gutdbl'
-
-# Note, these cannot change since places are checking for TYPE_INT to determine
-# how to process parameters.
-enum DOUBLE_STRATEGY{
-	SCRIPT_ONLY,
-	INCLUDE_SUPER
-}
-
-enum DIFF {
-	DEEP,
-	SIMPLE
-}
 
 # ------------------------------------------------------------------------------
 # Blurb of text with GUT and Godot versions.
@@ -217,17 +274,6 @@ func get_logger():
 		if(_lgr == null):
 			_lgr = Logger.new()
 		return _lgr
-
-
-
-# ------------------------------------------------------------------------------
-# return if_null if value is null otherwise return value
-# ------------------------------------------------------------------------------
-func nvl(value, if_null):
-	if(value == null):
-		return if_null
-	else:
-		return value
 
 
 # ------------------------------------------------------------------------------
@@ -398,10 +444,6 @@ func are_datatypes_same(got, expected):
 	return !(typeof(got) != typeof(expected) and got != null and expected != null)
 
 
-func pretty_print(dict):
-	print(json.stringify(dict, ' '))
-
-
 func get_script_text(obj):
 	return obj.get_script().get_source_code()
 
@@ -466,20 +508,37 @@ func create_script_from_source(source, override_path=null):
 	return DynamicScript
 
 
-func get_scene_script_object(scene):
-	var state = scene.get_state()
-	var to_return = null
-	var root_node_path = NodePath(".")
-	var node_idx = 0
+func get_display_size():
+	return Engine.get_main_loop().get_viewport().get_visible_rect()
 
-	while(node_idx < state.get_node_count() and to_return == null):
-		# Assumes that the first node we encounter that has a root node path, one
-		# property, and that property is named 'script' is the GDScript for the
-		# scene.  This could be flawed.
-		if(state.get_node_path(node_idx) == root_node_path and state.get_node_property_count(node_idx) == 1):
-			if(state.get_node_property_name(node_idx, 0) == 'script'):
-				to_return = state.get_node_property_value(node_idx, 0)
 
-		node_idx += 1
 
-	return to_return
+# ##############################################################################
+#(G)odot (U)nit (T)est class
+#
+# ##############################################################################
+# The MIT License (MIT)
+# =====================
+#
+# Copyright (c) 2023 Tom "Butch" Wesley
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+# ##############################################################################
+

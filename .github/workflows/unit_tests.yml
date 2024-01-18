@@ -1,0 +1,72 @@
+name: 🔎 Unit tests
+on:
+  workflow_call:
+    inputs:
+      godot-version:
+        description: Godot Engine version to use for testing.
+        type: string
+        default: 4.2.1-stable
+      ss2d-ref:
+        description: A commit, branch or tag to use for testing.
+        type: string
+        required: true
+
+  workflow_dispatch:
+    inputs:
+      godot-version:
+        description: Godot Engine version to use for testing.
+        type: string
+        default: 4.2.1-stable
+      ss2d-ref:
+        description: A commit, branch or tag to use for testing.
+        type: string
+        required: true
+
+jobs:
+  unit-tests:
+    name: 🔎 Unit tests
+    runs-on: "ubuntu-latest"
+
+    env:
+      DONWLOAD_URL: https://github.com/godotengine/godot/releases/download/${{inputs.godot-version}}/Godot_v${{inputs.godot-version}}_linux.x86_64.zip
+      BIN: Godot_v${{inputs.godot-version}}_linux.x86_64
+
+    steps:
+      - name: Download Godot
+        shell: bash
+        run: |
+          echo "Godot version: ${{ github.event.inputs.godot-version }}"
+          mkdir -p bin
+          cd bin
+          wget "${DONWLOAD_URL}" -O godot.zip
+          unzip godot.zip
+          chmod u+x ${BIN}
+          rm godot.zip
+          ls -l
+
+      - name: Verify Godot binary
+        shell: bash
+        run: |
+          ls -l ./bin/
+          ./bin/${BIN} --version
+
+      - name: Clone SS2D repository
+        uses: actions/checkout@v4
+        with:
+          path: ss2d
+          ref: ${{ inputs.ss2d-ref }}
+
+      - name: Import assets
+        shell: bash
+        run: |
+          timeout 20s ./bin/${BIN} --headless --editor --path ./ss2d/ || /bin/true
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          ./bin/${BIN} --headless --debug --path ./ss2d/ --script addons/gut/gut_cmdln.gd -gdir=res://tests/unit/ -gexit
+
+      - name: Run integration tests
+        shell: bash
+        run: |
+          ./bin/${BIN} --headless --debug --path ./ss2d/ --script addons/gut/gut_cmdln.gd -gdir=res://tests/integration/ -gexit

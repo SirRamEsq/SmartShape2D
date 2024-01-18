@@ -40,7 +40,7 @@ func _init(target=null,method=null,subpath=null):
 			_lgr.warn(str(target, ' is not a valid path'))
 
 	if(stub_target is PackedScene):
-		stub_target = _utils.get_scene_script_object(stub_target)
+		stub_target = GutUtils.get_scene_script_object(stub_target)
 
 	# this is used internally to stub default parameters for everything that is
 	# doubled...or something.  Look for stub_defaults_from_meta for usage.  This
@@ -72,11 +72,8 @@ func to_do_nothing():
 
 
 func to_call_super():
-	if(stub_method == '_init'):
-		_lgr.error("You cannot stub _init to call super.  Super's _init is always called.")
-	else:
-		call_super = true
-		_parameter_override_only = false
+	call_super = true
+	_parameter_override_only = false
 	return self
 
 

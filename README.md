@@ -3,6 +3,8 @@ SmartShape2D
 ![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
 ![Sample Gif]( ./addons/rmsmartshape/documentation/imgs/sample.gif )
 
+[![🔎 Unit Tests](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/unit_tests.yml)
+
 # About
 **This is the GODOT 4 version of this plugin.
 If you're looking for the GODOT 3 version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest)**
