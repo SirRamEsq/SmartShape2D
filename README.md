@@ -1,11 +1,13 @@
-SmartShape2D
----
-![Sample Image]( ./addons/rmsmartshape/documentation/imgs/sample.png )
-![Sample Gif]( ./addons/rmsmartshape/documentation/imgs/sample.gif )
+# SmartShape2D
 
-[![🔎 Unit Tests](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/unit_tests.yml)
+![Sample Image](./addons/rmsmartshape/documentation/imgs/sample.png)
+![Sample Gif](./addons/rmsmartshape/documentation/imgs/sample.gif)
 
-# About
+## About
+
+![Godot 4.2](https://img.shields.io/badge/Godot-v4.2.x-%23478cbf?logo=godot-engine&logoColor=white)
+[![⚙️ CI](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/ci.yml/badge.svg)](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/ci.yml)
+
 **This is the GODOT 4 version of this plugin.
 If you're looking for the GODOT 3 version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest)**
 
@@ -25,29 +27,36 @@ Read the section below on Contributing and post an issue if one doesn't already 
 
 ---
 
-# Support
+## Support
+
 - Newest version is developed for Godot 4
 - Older version is supported and tested on Godot 3.2
   - Should work with later versions of Godot 3.x
 
-# Demo
+## Demo
+
 A Sample Godot Project can be found here:
 https://github.com/SirRamEsq/SmartShape2D-DemoProject
 
-# Documentation
-- [How To Install]( ./addons/rmsmartshape/documentation/Install.md )
-- [Quick Start]( ./addons/rmsmartshape/documentation/Quickstart.md )
-- [Using SmartShape2D with Godot 4.0](./addons/rmsmartshape/documentation/Godot4.md)
-- [Migrating from 1.x]( ./addons/rmsmartshape/documentation/Migration.md )
-- [Shapes]( ./addons/rmsmartshape/documentation/Shapes.md )
-- [Toolbar]( ./addons/rmsmartshape/documentation/Toolbar.md )
-- [Resources]( ./addons/rmsmartshape/documentation/Resources.md )
-- [Normals]( ./addons/rmsmartshape/documentation/Normals.md )
-- [Controls and Hotkeys]( ./addons/rmsmartshape/documentation/Controls.md )
-- [FAQ]( ./addons/rmsmartshape/documentation/FAQ.md )
-- [Version History]( ./addons/rmsmartshape/documentation/VersionHistory.md )
+## Documentation
+> 🛈 Some documentation is outdated.
 
-# Video Tutorials
+- [How To Install](./addons/rmsmartshape/documentation/Install.md)
+- [Quick Start](./addons/rmsmartshape/documentation/Quickstart.md)
+- [Using SmartShape2D with Godot 4](./addons/rmsmartshape/documentation/Godot4.md)
+- [Shapes](./addons/rmsmartshape/documentation/Shapes.md)
+- [Toolbar](./addons/rmsmartshape/documentation/Toolbar.md)
+- [Resources](./addons/rmsmartshape/documentation/Resources.md)
+- [Normals](./addons/rmsmartshape/documentation/Normals.md)
+- [Controls and Hotkeys](./addons/rmsmartshape/documentation/Controls.md)
+- [FAQ](./addons/rmsmartshape/documentation/FAQ.md)
+- [Version History](./addons/rmsmartshape/documentation/VersionHistory.md)
+
+## Video Tutorials
+
+> 🛈 These tutorials are for Godot 3, and some things are different now.
+> Please, check [using SmartShape2D with Godot 4](./addons/rmsmartshape/documentation/Godot4.md).
+
 SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
 
 [![VideoTutorial](https://img.youtube.com/vi/r-pd2yuNPvA/0.jpg)](http://www.youtube.com/watch?v=r-pd2yuNPvA)
@@ -56,8 +65,10 @@ SmartShape2D tutorial can be found here (Thanks LucyLavend!):
 
 [![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
 
-# Contibuting
-## Issues
+## Contibuting
+
+### Issues
+
 If you have any suggestions or find any bugs, feel free to add an issue.
 
 Please include the following three bits of information in each issue posted:
@@ -72,12 +83,14 @@ Some Guidelines for Issues:
 
 Issues can be added [here](https://github.com/SirRamEsq/SmartShape2D/issues)
 
-## Development
+### Development
+
 We have a set of tests we run against the code (courtesy of [GUT](https://github.com/bitwes/Gut)).
 
 If making a merge request, please ensure that the tests pass. If the tests have been updated appropriately to pass, please note this in the merge request.
 
-## Discord
+### Discord
+
 We have a Discord server for the plugin. https://discord.gg/mHWDPBD3vu
 
 Here, you can:

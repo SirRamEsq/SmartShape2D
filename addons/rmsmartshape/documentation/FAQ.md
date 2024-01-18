@@ -1,16 +1,19 @@
-SmartShape2D - FAQ
----
+# SmartShape2D - FAQ
 
-# Why aren't my textures repeating?
+<!-- TODO: Outdated. -->
+
+## Why aren't my textures repeating?
+
 If your textures aren't repeating and look something like this:
 
-![Non-Repeating-Texture-IMG]( ./imgs/faq-texture-repeat.png )
+![Non-Repeating-Texture-IMG](./imgs/faq-texture-repeat.png)
 
 The issue is most likely that you need to set the texture's import options in Godot:
 
-![Import-Texture-Settings]( ./imgs/faq-texture-repeat-import.png )
+![Import-Texture-Settings](./imgs/faq-texture-repeat-import.png)
 
-# Why isn't my shape updaing when I change the Light Mask?
+## Why isn't my shape updaing when I change the Light Mask?
+
 Each shape is currently rendered by multiple-subnodes (Children Node2Ds).
 Their owner isn't set, making them invisible in the editor (unless you have debug mode on).
 
@@ -30,7 +33,8 @@ If you need to manually tell the shape to update its rendering, call the set\_as
 If anyone has any insights on this issue, please feel free to open an issue on this subject
 and let us know how we might be able to fix it
 
-# Why does changing the width look so ugly?
+## Why does changing the width look so ugly?
+
 Changing the width of the quads generally looks best with welding turned off.
 
 If welding is on, you can still change the width of the quads, but you may need to play with it a bit.

@@ -1,14 +1,17 @@
-SmartShape2D - Controls and Hotkeys
----
+# SmartShape2D - Controls and Hotkeys
 
-# Controls - Point Create
+<!-- TODO: Likely, outdated. Should this even be covered in such detail? -->
+
+## Controls - Point Create
+
 - Add Point
   - Left Click Anywhere in the viewport
 
 - Leave Point Create Mode
   - ESCAPE
 
-# Controls - Point Edit
+## Controls - Point Edit
+
 - Add Point
   - Either:
     - Hold ALT and Left Click Anywhere in the viewport
@@ -33,7 +36,8 @@ SmartShape2D - Controls and Hotkeys
   - Hold SHFT + ALT and click
     - The location of the click will be the the first point of a newly created Shape Node
 
-## Overlap
+### Overlap
+
 When multiple points and edges overlap, it can be ambiguous what clicking will do.
 SmartShape adheres the following rules:
 - If a control point overlaps a vertex, the control point takes priority
