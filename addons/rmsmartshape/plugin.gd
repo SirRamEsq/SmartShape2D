@@ -234,7 +234,7 @@ func _gui_build_toolbar() -> void:
 
 	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_PIVOT)
 	tb_pivot.connect(&"pressed", self._enter_mode.bind(MODE.SET_PIVOT))
-	
+
 	tb_center_pivot = create_tool_button(ICON_CENTER_PIVOT, SS2D_Strings.EN_TOOLTIP_CENTER_PIVOT, false)
 	tb_center_pivot.connect(&"pressed", self._center_pivot)
 
@@ -264,8 +264,6 @@ func _gui_build_toolbar() -> void:
 	tb_options_popup.hide_on_checkable_item_selection = false
 	tb_hb.add_child(tb_options)
 	tb_options_popup.connect("id_pressed", self._options_item_selected)
-
-	tb_hb.hide()
 
 
 func create_tool_button(icon: Texture2D, tooltip: String, toggle: bool = true) -> Button:
@@ -511,8 +509,6 @@ func _edit(object: Object) -> void:
 
 	shape = null
 
-	tb_hb.show()
-
 	shape = object
 
 	if not is_shape_valid(shape):
@@ -525,8 +521,12 @@ func _edit(object: Object) -> void:
 	update_overlays()
 
 
-func _make_visible(_visible: bool) -> void:
-	pass
+func _make_visible(visible: bool) -> void:
+	if visible:
+		tb_hb.show()
+	else:
+		tb_hb.hide()
+
 
 
 func _on_main_screen_changed(screen_name: String) -> void:
@@ -703,7 +703,7 @@ static func is_key_valid(s: SS2D_Shape, key: int) -> bool:
 func _enter_mode(mode: int) -> void:
 	if current_mode == mode:
 		return
-		
+
 	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_center_pivot, tb_vert_create, tb_freehand]:
 		tb.button_pressed = false
 
@@ -724,7 +724,7 @@ func _enter_mode(mode: int) -> void:
 			tb_freehand.button_pressed = true
 		_:
 			tb_vert_edit.button_pressed = true
-			
+
 	update_overlays()
 
 
@@ -735,31 +735,31 @@ func _add_collision() -> void:
 func _add_deferred_collision() -> void:
 	if shape and not shape.get_parent() is PhysicsBody2D:
 		perform_action(ActionAddCollisionNodes.new(shape))
-		
-		
+
+
 func _center_pivot() -> void:
 	if shape and shape.is_shape_closed():
 		# Calculate centroid
-		var point_count = shape.get_point_count()
+		var points: PackedVector2Array = shape.get_tessellated_points()
+		var point_count: int = points.size()
 		var total_area: float = 0.0
 		var center: Vector2 = Vector2.ZERO
 		for i in range(point_count):
-			var key: int = shape.get_point_key_at_index(i)
-			var pt1: Vector2 = shape.get_point_position(key)
+			var pt1: Vector2 = points[i]
 			var pt2: Vector2
 			if i == point_count - 1:
-				pt2 = shape.get_point_position(shape.get_point_key_at_index(0))
+				pt2 = points[0]
 			else:
-				pt2 = shape.get_point_position(shape.get_point_key_at_index(i + 1))
+				pt2 = points[i + 1]
 
 			var triangle_area: float = pt1.cross(pt2)
 			total_area += triangle_area
 			center += (pt1 + pt2) * triangle_area
-			
+
 		if total_area != 0.0:
 			center /= 3 * total_area
 
-		perform_action(ActionSetPivot.new(shape, Transform2D.IDENTITY, shape.to_global(center)))
+		perform_action(ActionSetPivot.new(shape, shape.to_global(center)))
 
 #############
 # RENDERING #
@@ -788,7 +788,7 @@ func _forward_canvas_draw_over_viewport(overlay: Control):
 				elif not on_edge:
 					draw_new_point_close_preview(overlay)
 		MODE.EDIT_EDGE:
-			draw_mode_edit_edge(overlay)
+			draw_mode_edit_edge(overlay, Color.WHITE, Color.YELLOW)
 		MODE.CUT_EDGE:
 			draw_mode_cut_edge(overlay)
 		MODE.FREEHAND:
@@ -811,31 +811,30 @@ func draw_freehand_circle(overlay: Control) -> void:
 	overlay.draw_circle(mouse, size * 2 * current_zoom_level, color)
 
 
-func draw_mode_edit_edge(overlay: Control) -> void:
+func draw_mode_edit_edge(overlay: Control, color_normal: Color, color_highlight: Color) -> void:
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var verts: PackedVector2Array = shape.get_vertices()
 
-	var color_highlight := Color(1.0, 0.75, 0.75, 1.0)
-	var color_normal := Color(1.0, 0.25, 0.25, 0.8)
-
-	draw_shape_outline(overlay, t, verts, color_normal, 3.0)
+	draw_shape_outline(overlay, t, verts, color_normal)
 	draw_vert_handles(overlay, t, verts, false)
 
 	if current_action.type == ACTION_VERT.MOVE_VERT:
 		var edge_point_keys: Array[int] = current_action.keys
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
+		overlay.draw_line(t * p1, t * p2, Color.BLACK, 8.0, true)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 4.0, true)
 	elif on_edge:
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
-		overlay.draw_line(t * p1, t * p2, color_highlight, 3.0, true)
+		overlay.draw_line(t * p1, t * p2, Color.BLACK, 8.0, true)
+		overlay.draw_line(t * p1, t * p2, color_highlight, 4.0, true)
 
 
 func draw_mode_cut_edge(overlay: Control) -> void:
-	draw_mode_edit_edge(overlay)
+	draw_mode_edit_edge(overlay, Color(1.0, 0.25, 0.25, 0.8), Color(1.0, 0.75, 0.75, 1.0))
 
 	if on_edge:
 		# Draw "X" marks along the edge that is selected
@@ -882,6 +881,7 @@ func draw_shape_outline(
 	if color == null:
 		color = shape.modulate
 	if points.size() >= 2:
+		overlay.draw_polyline(t * points, Color.BLACK, width * 1.5, true)
 		overlay.draw_polyline(t * points, color, width, true)
 
 
@@ -1087,7 +1087,7 @@ func _input_handle_left_click(
 		var local_position: Vector2 = et.affine_inverse() * mb.position
 		if use_snap():
 			local_position = snap(local_position)
-		perform_action(ActionSetPivot.new(shape, et, local_position))
+		perform_action(ActionSetPivot.new(shape, local_position))
 		return true
 
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
@@ -1461,11 +1461,18 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		# Invert the delta for position_out if moving both at once
 		if _out and _in:
 			out_multiplier = -1
-		var new_position_in: Vector2 = delta + current_action.starting_positions_control_in[i]
-		var new_position_out: Vector2 = (
-			(delta * out_multiplier)
-			+ current_action.starting_positions_control_out[i]
+
+		var from_in: Vector2 = shape.to_global(current_action.starting_positions_control_in[i])
+		var new_position_in: Vector2 = shape.global_transform.affine_inverse() * (
+			delta + from_in
 		)
+
+		var from_out: Vector2 = shape.to_global(current_action.starting_positions_control_out[i])
+		var new_position_out: Vector2 = shape.global_transform.affine_inverse() * (
+			(delta * out_multiplier)
+			+ from_out
+		)
+
 		if use_snap():
 			new_position_in = snap(new_position_in)
 			new_position_out = snap(new_position_out)
@@ -1483,8 +1490,8 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 func _input_motion_move_verts(delta: Vector2) -> bool:
 	for i in range(0, current_action.keys.size(), 1):
 		var key: int = current_action.keys[i]
-		var from: Vector2 = current_action.starting_positions[i]
-		var new_position: Vector2 = from + delta
+		var from: Vector2 = shape.to_global(current_action.starting_positions[i])
+		var new_position: Vector2 = shape.global_transform.affine_inverse() * (from + delta)
 		if use_snap():
 			new_position = snap(new_position)
 		shape.set_point_position(key, new_position)

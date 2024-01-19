@@ -496,8 +496,7 @@ func remove_point_at_index(idx: int) -> void:
 
 func clone(clone_point_array: bool = true) -> SS2D_Shape:
 	var copy := SS2D_Shape.new()
-	copy.position = position
-	copy.scale = scale
+	copy.transform = transform
 	copy.modulate = modulate
 	copy.shape_material = shape_material
 	copy.editor_debug = editor_debug
