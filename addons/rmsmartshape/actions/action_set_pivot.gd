@@ -3,7 +3,6 @@ extends SS2D_Action
 ## ActionSetPivot
 
 var _shape: SS2D_Shape
-var _parent_body: PhysicsBody2D
 
 var _new_pos: Vector2
 var _old_pos: Vector2
@@ -39,7 +38,7 @@ func _set_pivot(shape_position: Vector2) -> void:
 		var key: int = _shape.get_point_key_at_index(i)
 		var point: Vector2 = _shape.get_point_position(key)
 		_shape.set_point_position(key, _shape.to_local(shape_gt * point))
-		
+
 	_shape.enable_constraints()
 	_shape.end_update()
 

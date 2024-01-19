@@ -234,7 +234,7 @@ func _gui_build_toolbar() -> void:
 
 	tb_pivot = create_tool_button(ICON_PIVOT_POINT, SS2D_Strings.EN_TOOLTIP_PIVOT)
 	tb_pivot.connect(&"pressed", self._enter_mode.bind(MODE.SET_PIVOT))
-	
+
 	tb_center_pivot = create_tool_button(ICON_CENTER_PIVOT, SS2D_Strings.EN_TOOLTIP_CENTER_PIVOT, false)
 	tb_center_pivot.connect(&"pressed", self._center_pivot)
 
@@ -491,7 +491,7 @@ func _handles(object: Object) -> bool:
 		if selection.get_selected_nodes().size() == 1:
 			if selection.get_selected_nodes()[0] is SS2D_Shape:
 				hideToolbar = false
-				
+
 	if hideToolbar == true:
 		tb_hb.hide()
 
@@ -521,12 +521,12 @@ func _edit(object: Object) -> void:
 	update_overlays()
 
 
-func _make_visible(_visible: bool) -> void:
-	if _visible:
+func _make_visible(visible: bool) -> void:
+	if visible:
 		tb_hb.show()
 	else:
 		tb_hb.hide()
-		
+
 
 
 func _on_main_screen_changed(screen_name: String) -> void:
@@ -703,7 +703,7 @@ static func is_key_valid(s: SS2D_Shape, key: int) -> bool:
 func _enter_mode(mode: int) -> void:
 	if current_mode == mode:
 		return
-		
+
 	for tb in [tb_vert_edit, tb_edge_edit, tb_pivot, tb_center_pivot, tb_vert_create, tb_freehand]:
 		tb.button_pressed = false
 
@@ -724,7 +724,7 @@ func _enter_mode(mode: int) -> void:
 			tb_freehand.button_pressed = true
 		_:
 			tb_vert_edit.button_pressed = true
-			
+
 	update_overlays()
 
 
@@ -735,8 +735,8 @@ func _add_collision() -> void:
 func _add_deferred_collision() -> void:
 	if shape and not shape.get_parent() is PhysicsBody2D:
 		perform_action(ActionAddCollisionNodes.new(shape))
-		
-		
+
+
 func _center_pivot() -> void:
 	if shape and shape.is_shape_closed():
 		# Calculate centroid
@@ -755,7 +755,7 @@ func _center_pivot() -> void:
 			var triangle_area: float = pt1.cross(pt2)
 			total_area += triangle_area
 			center += (pt1 + pt2) * triangle_area
-			
+
 		if total_area != 0.0:
 			center /= 3 * total_area
 
@@ -1466,7 +1466,7 @@ func _input_motion_move_control_points(delta: Vector2, _in: bool, _out: bool) ->
 		var new_position_in: Vector2 = shape.global_transform.affine_inverse() * (
 			delta + from_in
 		)
-		
+
 		var from_out: Vector2 = shape.to_global(current_action.starting_positions_control_out[i])
 		var new_position_out: Vector2 = shape.global_transform.affine_inverse() * (
 			(delta * out_multiplier)
