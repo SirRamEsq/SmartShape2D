@@ -1,19 +1,20 @@
-SmartShape2D - Install
----
+# SmartShape2D - Install
 
+## Asset Library
 
-# Asset Library
 - After installing the plugin, you may encounter an error, this is normal.
-- You need to restart Godot before using the plugin
+- You need to restart Godot before using the plugin.
 
-# Manual Install
-- Clone the repository at https://github.com/SirRamEsq/SmartShape2D/tree/godot-release
-- Move the "addons/rmsmartshape" folder to your project's "addons" folder
-- Open your project in Godot to have the addon install
+## Manual Install
+
+- Clone the repository at https://github.com/SirRamEsq/SmartShape2D.
+- Move the "addons/rmsmartshape" folder to your project's "addons" folder.
+- Open your project in Godot to have the addon install.
 - After installing the plugin, you may encounter an error, this is normal.
-- Restart Godot
+- Restart Godot.
 
-# Activate Plugin
-- After Installing the plugin, activate the plugin by navigating to Project -> Plugins
+## Activate Plugin
 
-![Activate Plugin]( ./imgs/PluginActivate.png )
+- After Installing the plugin, activate the plugin by navigating to `Project -> Project Settings... -> Plugins`
+
+![Activate Plugin](./imgs/PluginActivate.png)
