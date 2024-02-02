@@ -29,14 +29,8 @@ Read the section below on Contributing and post an issue if one doesn't already 
 
 ## Support
 
-- Newest version is developed for Godot 4
-- Older version is supported and tested on Godot 3.2
-  - Should work with later versions of Godot 3.x
-
-## Demo
-
-A Sample Godot Project can be found here:
-https://github.com/SirRamEsq/SmartShape2D-DemoProject
+- Newest version is developed and supported for Godot 4.x
+- For Godot 3.x version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest)
 
 ## Documentation
 > 🛈 Some documentation is outdated.
