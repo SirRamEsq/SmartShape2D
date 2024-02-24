@@ -51,22 +51,24 @@ func test_setters():
 
 
 func generate_closed_shape() -> SS2D_Shape_Closed:
-	var shape = SS2D_Shape_Closed.new()
+	var shape := SS2D_Shape_Closed.new()
 	shape.name = "Closed"
 	add_child_autofree(shape)
-	var points = generate_points()
+	var points := generate_points()
 	shape.add_points(points)
 	shape.close_shape()
+	shape.force_update()
 	assert_eq(shape.get_point_count(), points.size() + 1)
 	return shape
 
 
 func generate_open_shape() -> SS2D_Shape:
-	var shape = SS2D_Shape.new()
+	var shape := SS2D_Shape.new()
 	shape.name = "Open"
 	add_child_autofree(shape)
-	var points = generate_points()
+	var points := generate_points()
 	shape.add_points(points)
+	shape.force_update()
 	assert_eq(shape.get_point_count(), points.size())
 	return shape
 

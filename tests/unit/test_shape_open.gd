@@ -214,6 +214,8 @@ func test_get_edge_meta_materials_many():
 
 	var points = get_square_points()
 	shape.add_points(points)
+	shape.force_update()
+
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	assert_eq(shape.get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
