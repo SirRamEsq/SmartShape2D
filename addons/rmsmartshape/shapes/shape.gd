@@ -843,7 +843,7 @@ func generate_collision_points() -> PackedVector2Array:
 func bake_collision() -> void:
 	if not _collision_polygon_node:
 		return
-	var xform := _collision_polygon_node.get_global_transform().inverse() * get_global_transform()
+	var xform := _collision_polygon_node.get_global_transform().affine_inverse() * get_global_transform()
 	_collision_polygon_node.polygon = xform * generate_collision_points()
 
 
