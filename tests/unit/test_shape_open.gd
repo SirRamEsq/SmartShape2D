@@ -288,31 +288,18 @@ func test_get_width_for_tessellated_point():
 	shape.set_point_in(k2, point_in)
 	shape.set_point_out(k2, point_out)
 
+	shape.force_update()
+
 	var t_points = shape.get_tessellated_points()
 	points = shape.get_vertices()
 	var t_idx_1 = get_tessellated_idx_from_point(points, t_points, idx1)
 	var t_idx_2 = get_tessellated_idx_from_point(points, t_points, idx2)
 	var test_t_idx = int(floor((t_idx_1 + t_idx_2) / 2.0))
-	
-	# Cache points index maps
-	# Map of all tesselated point index to its corresponding vertex index
-	var t_point_idx_to_point_idx: Array[int] = []
-	# Map of all vertex index to their corresponding tesselated points indices
-	var point_idx_to_t_points_idx: Array[Array] = []
-	var point_idx = -1
-	for t_point_idx in t_points.size():
-		var next_point_idx = shape._get_next_point_index_wrap_around(point_idx, points)
-		if t_points[t_point_idx] == points[next_point_idx]:
-			point_idx = next_point_idx
-			point_idx_to_t_points_idx.push_back([])
-		
-		t_point_idx_to_point_idx.push_back(point_idx)
-		point_idx_to_t_points_idx[point_idx].push_back(t_point_idx)
-	
+
 	assert_ne(t_idx_1, t_idx_2)
 	assert_ne(test_t_idx, t_idx_1)
 	assert_ne(test_t_idx, t_idx_2)
-	var test_width = shape._get_width_for_tessellated_point(points, test_t_idx, t_point_idx_to_point_idx, point_idx_to_t_points_idx)
+	var test_width := shape._get_width_for_tessellated_point(points, test_t_idx)
 	assert_almost_eq(test_width, w_average, 0.1)
 
 

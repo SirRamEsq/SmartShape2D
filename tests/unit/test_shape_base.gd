@@ -149,6 +149,8 @@ func test_build_edge_with_material_basic_square(offset = use_parameters(offset_p
 	shape.shape_material = shape_material
 	shape.set_point_array(point_array)
 
+	shape.force_update()
+
 	var index_maps = SS2D_Shape.get_meta_material_index_mapping(shape_material, verts, false)
 	var edges = []
 
