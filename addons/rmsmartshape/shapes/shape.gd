@@ -32,8 +32,7 @@ var _vertex_cache := PackedVector2Array()
 var can_edit: bool = true
 
 # Mapping between vertices and tesselated points
-var _t_point_idx_to_point_idx: Array[int] = []
-var _point_idx_to_t_points_idx: Array[Array] = []  # Array[Array[int]]
+var _tess_vertex_mapping = SS2D_TesselationVertexMapping.new()
 
 signal points_modified
 signal on_dirty_update
@@ -318,6 +317,10 @@ func _update_curve(p_array: SS2D_Point_Array) -> void:
 
 func get_vertices() -> PackedVector2Array:
 	return _vertex_cache
+
+
+func get_tesselation_vertex_mapping() -> SS2D_TesselationVertexMapping:
+	return _tess_vertex_mapping
 
 
 func get_tessellated_points() -> PackedVector2Array:
@@ -1139,7 +1142,7 @@ func _get_width_for_tessellated_point(
 	points: PackedVector2Array,
 	t_idx: int
 ) -> float:
-	var v_idx := _t_point_idx_to_point_idx[t_idx]
+	var v_idx := _tess_vertex_mapping.tess_to_vertex_index(t_idx)
 	var v_idx_next := SS2D_Shape._get_next_point_index(v_idx, points)
 	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
 	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
@@ -1405,7 +1408,7 @@ func force_update() -> void:
 
 	# TODO: Cache tesselated points
 	_cache_vertices()
-	_build_tess_point_to_vertex_index_map(get_tessellated_points(), get_vertices())
+	_tess_vertex_mapping.build(get_tessellated_points(), get_vertices())
 
 	bake_collision()
 	if get_point_count() >= 2:
@@ -1469,11 +1472,11 @@ static func _get_previous_point_index_wrap_around(idx: int, points: PackedVector
 ## 1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0.[br]
 func get_ratio_from_tessellated_point_to_vertex(t_point_idx: int) -> float:
 	# Index of the starting vertex
-	var point_idx := _t_point_idx_to_point_idx[t_point_idx]
+	var point_idx := _tess_vertex_mapping.tess_to_vertex_index(t_point_idx)
 	# Index of the first tesselated point with the same vertex
-	var tess_point_first_idx: int = _point_idx_to_t_points_idx[point_idx][0]
+	var tess_point_first_idx: int = _tess_vertex_mapping.vertex_to_tess_indices(point_idx)[0]
 	# The total tessellated points with the same vertex
-	var tess_point_count := _point_idx_to_t_points_idx[point_idx].size()
+	var tess_point_count := _tess_vertex_mapping.vertex_to_tess_indices(point_idx).size()
 	# The index of the passed t_point_idx relative to the starting vert
 	var tess_index_count := t_point_idx - tess_point_first_idx
 	return tess_index_count / float(tess_point_count)
@@ -1497,8 +1500,8 @@ func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 		if this_idx > next_idx:
 			count += 1
 			continue
-		var this_t_idx: int = _point_idx_to_t_points_idx[this_idx][0]
-		var next_t_idx: int = _point_idx_to_t_points_idx[next_idx][0]
+		var this_t_idx: int = _tess_vertex_mapping.vertex_to_tess_indices(this_idx)[0]
+		var next_t_idx: int = _tess_vertex_mapping.vertex_to_tess_indices(next_idx)[0]
 		var delta: int = next_t_idx - this_t_idx
 		count += delta
 	return count
@@ -1644,8 +1647,8 @@ func _build_edge_with_material(
 
 	var first_idx: int = index_map.indicies[0]
 	var last_idx: int = index_map.indicies[-1]
-	var first_idx_t: int = _point_idx_to_t_points_idx[first_idx][0]
-	var last_idx_t: int = _point_idx_to_t_points_idx[last_idx].back()
+	var first_idx_t: int = _tess_vertex_mapping.vertex_to_tess_indices(first_idx)[0]
+	var last_idx_t: int = _tess_vertex_mapping.vertex_to_tess_indices(last_idx)[-1]
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
@@ -1670,7 +1673,7 @@ func _build_edge_with_material(
 				next_point_delta = j
 				break
 
-		var vert_idx: int = _t_point_idx_to_point_idx[tess_idx]
+		var vert_idx: int = _tess_vertex_mapping.tess_to_vertex_index(tess_idx)
 		var vert_key: int = get_point_key_at_index(vert_idx)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
@@ -1811,21 +1814,3 @@ func _build_edge_with_material(
 
 func _build_edge_with_material_thread_wrapper(args: Array) -> SS2D_Edge:
 	return _build_edge_with_material(args[0], args[1], args[2])
-
-
-## Create a mapping of all tesselated point indices to their corresponding vertex indices in vice-versa.
-func _build_tess_point_to_vertex_index_map(tesselated_points: PackedVector2Array, vertices: PackedVector2Array) -> void:
-	_t_point_idx_to_point_idx = []
-	_point_idx_to_t_points_idx = []
-
-	var point_idx := -1
-
-	for t_point_idx in tesselated_points.size():
-		var next_point_idx := SS2D_Shape._get_next_point_index_wrap_around(point_idx, vertices)
-
-		if tesselated_points[t_point_idx] == vertices[next_point_idx]:
-			point_idx = next_point_idx
-			_point_idx_to_t_points_idx.push_back([])
-
-		_t_point_idx_to_point_idx.push_back(point_idx)
-		_point_idx_to_t_points_idx[point_idx].push_back(t_point_idx)
