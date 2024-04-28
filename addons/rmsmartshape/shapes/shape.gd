@@ -28,6 +28,7 @@ var _curve: Curve2D
 var _curve_no_control_points: Curve2D = Curve2D.new()
 var _collision_polygon_node: CollisionPolygon2D
 var _vertex_cache := PackedVector2Array()
+var _tesselation_cache := PackedVector2Array()
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 
@@ -324,18 +325,7 @@ func get_tesselation_vertex_mapping() -> SS2D_TesselationVertexMapping:
 
 
 func get_tessellated_points() -> PackedVector2Array:
-	# Force update curve if point array is dirty.
-	if _points.is_updating():
-		_update_curve(_points)
-	if _curve.get_point_count() < 2:
-		return PackedVector2Array()
-	# Point 0 will be the same on both the curve points and the vertecies
-	# Point size - 1 will be the same on both the curve points and the vertecies
-	# TODO cache this result
-	var points: PackedVector2Array = _curve.tessellate(tessellation_stages, tessellation_tolerence)
-	points[0] = _curve.get_point_position(0)
-	points[points.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
-	return points
+	return _tesselation_cache
 
 
 ## Reverse order of points in point array.[br]
@@ -857,6 +847,20 @@ func _cache_vertices() -> void:
 
 	for i in keys.size():
 		_vertex_cache[i] = _points.get_point_position(keys[i])
+
+
+func _cache_tesselation() -> void:
+	# Force update curve if point array is dirty.
+	if _points.is_updating():
+		_update_curve(_points)
+	if _curve.get_point_count() < 2:
+		return PackedVector2Array()
+	# Point 0 will be the same on both the curve points and the vertecies
+	# Point size - 1 will be the same on both the curve points and the vertecies
+	# TODO cache this result
+	_tesselation_cache = _curve.tessellate(tessellation_stages, tessellation_tolerence)
+	_tesselation_cache[0] = _curve.get_point_position(0)
+	_tesselation_cache[_tesselation_cache.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
 
 
 func cache_edges() -> void:
@@ -1406,8 +1410,8 @@ func force_update() -> void:
 	update_render_nodes()
 	clear_cached_data()
 
-	# TODO: Cache tesselated points
 	_cache_vertices()
+	_cache_tesselation()
 	_tess_vertex_mapping.build(get_tessellated_points(), get_vertices())
 
 	bake_collision()

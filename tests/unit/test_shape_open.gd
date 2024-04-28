@@ -46,10 +46,13 @@ func test_are_points_clockwise():
 	points_c_clockwise.reverse()
 
 	shape.add_points(points_clockwise)
+	shape.force_update()
+
 	assert_true(shape.are_points_clockwise())
 
 	shape.clear_points()
 	shape.add_points(points_c_clockwise)
+	shape.force_update()
 	assert_false(shape.are_points_clockwise())
 
 
