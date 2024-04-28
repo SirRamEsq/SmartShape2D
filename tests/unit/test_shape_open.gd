@@ -269,22 +269,22 @@ func test_build_quad_from_point_width(width = use_parameters(width_params)):
 	assert_eq(quad.pt_d, expected_points[3])
 
 
-func test_get_width_for_tessellated_point():
-	var shape = SS2D_Shape.new()
+func test_get_width_for_tessellated_point() -> void:
+	var shape := SS2D_Shape.new()
 	add_child_autofree(shape)
-	var points = get_clockwise_points()
+	var points := get_clockwise_points()
 	shape.add_points(points)
-	var idx1 = 1
-	var idx2 = 2
-	var k1 = shape.get_point_key_at_index(idx1)
-	var k2 = shape.get_point_key_at_index(idx2)
-	var w1 = 5.3
-	var w2 = 3.15
-	var w_average = (w1 + w2) / 2.0
+	var idx1 := 1
+	var idx2 := 2
+	var k1 := shape.get_point_key_at_index(idx1)
+	var k2 := shape.get_point_key_at_index(idx2)
+	var w1 := 5.3
+	var w2 := 3.15
+	var w_average := (w1 + w2) / 2.0
 	shape.set_point_width(k1, w1)
 	shape.set_point_width(k2, w2)
-	var point_in = Vector2(-16, 0)
-	var point_out = point_in * -1
+	var point_in := Vector2(-16, 0)
+	var point_out := point_in * -1
 	shape.set_point_in(k1, point_in)
 	shape.set_point_out(k1, point_out)
 	shape.set_point_in(k2, point_in)
@@ -292,11 +292,10 @@ func test_get_width_for_tessellated_point():
 
 	shape.force_update()
 
-	var t_points = shape.get_tessellated_points()
-	points = shape.get_vertices()
-	var t_idx_1 = get_tessellated_idx_from_point(points, t_points, idx1)
-	var t_idx_2 = get_tessellated_idx_from_point(points, t_points, idx2)
-	var test_t_idx = int(floor((t_idx_1 + t_idx_2) / 2.0))
+	var tmapping := shape.get_tesselation_vertex_mapping()
+	var t_idx_1 := tmapping.vertex_to_tess_indices(idx1)[0]
+	var t_idx_2 := tmapping.vertex_to_tess_indices(idx2)[0]
+	var test_t_idx := int(floor((t_idx_1 + t_idx_2) / 2.0))
 
 	assert_ne(t_idx_1, t_idx_2)
 	assert_ne(test_t_idx, t_idx_1)
@@ -325,26 +324,3 @@ func get_square_points() -> Array:
 		Vector2(-100, 100),
 		Vector2(-100, -100)
 	]
-
-
-func get_tessellated_idx_from_point(
-		points: PackedVector2Array, t_points: PackedVector2Array, point_idx: int
-) -> int:
-	# if idx is 0 or negative
-	if point_idx < 1:
-		return 0
-	if point_idx >= points.size():
-		push_error("get_tessellated_idx_from_point:: Out of Bounds point_idx; size is %s; idx is %s" % [points.size(), point_idx])
-		return t_points.size() - 1
-
-	var vertex_idx := -1
-	var tess_idx := 0
-	for i in range(0, t_points.size(), 1):
-		tess_idx = i
-		var tp: Vector2 = t_points[i]
-		var p: Vector2 = points[vertex_idx + 1]
-		if tp == p:
-			vertex_idx += 1
-		if vertex_idx == point_idx:
-			break
-	return tess_idx
