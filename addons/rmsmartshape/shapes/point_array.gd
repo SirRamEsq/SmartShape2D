@@ -19,9 +19,28 @@ enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTI
 # Value is material
 @export var _material_overrides: Dictionary = {} : set = set_material_overrides
 
+## Controls how many subdivisions a curve segment may face before it is considered
+## approximate enough.
+@export_range(0, 8, 1)
+var tessellation_stages: int = 5 : set = set_tessellation_stages
+
+## Controls how many degrees the midpoint of a segment may deviate from the real
+## curve, before the segment has to be subdivided.
+@export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
+var tessellation_tolerence: float = 4.0 : set = set_tessellation_tolerence
+
+@export_range(1, 512) var curve_bake_interval: float = 20.0 : set = set_curve_bake_interval
+
 var _constraints_enabled: bool = true
-var _dirty := false
+var _changed_during_update := false
 var _updating := false
+
+# Point caches
+var _point_cache_dirty := true
+var _vertex_cache := PackedVector2Array()
+var _curve := Curve2D.new()
+var _curve_no_control_points := Curve2D.new()
+var _tesselation_cache := PackedVector2Array()
 
 signal constraint_removed(key1, key2)
 signal material_override_changed(tuple)
@@ -48,6 +67,10 @@ func _init() -> void:
 func clone(deep: bool = false) -> SS2D_Point_Array:
 	var copy := SS2D_Point_Array.new()
 	copy._next_key = _next_key
+	copy.tessellation_stages = tessellation_stages
+	copy.tessellation_tolerence = tessellation_tolerence
+	copy.curve_bake_interval = curve_bake_interval
+
 	if deep:
 		var new_point_dict := {}
 		for k in _points:
@@ -67,6 +90,7 @@ func clone(deep: bool = false) -> SS2D_Point_Array:
 		copy._point_order = _point_order
 		copy._constraints = _constraints
 		copy._material_overrides = _material_overrides
+
 	return copy
 
 
@@ -114,13 +138,14 @@ func __generate_key(next: int) -> int:
 	return next
 
 
+## Reserve a key. It will not be generated again.
 func reserve_key() -> int:
 	var next: int = __generate_key(_next_key)
 	_next_key = next + 1
 	return next
 
 
-## Will return the next key that will be used when adding a point.
+## Returns next key that would be generated when adding a new point, e.g. when [method add_point] is called.
 func get_next_key() -> int:
 	return __generate_key(_next_key)
 
@@ -133,6 +158,8 @@ func is_key_valid(k: int) -> bool:
 	return true
 
 
+## Add a point.[br]
+## Returns key of the added point.[br]
 func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 #	print("Add Point  ::  ", point, " | idx: ", idx, " | key: ", use_key, " |")
 	if use_key == -1 or not is_key_valid(use_key):
@@ -186,6 +213,8 @@ func get_point_index(key: int) -> int:
 	return -1
 
 
+## Reverse order of points in point array.[br]
+## I.e. [1, 2, 3, 4] will become [4, 3, 2, 1].[br]
 func invert_point_order() -> void:
 	# Postpone `changed` and disable constraints.
 	var was_updating: bool = _updating
@@ -242,6 +271,11 @@ func remove_point(key: int) -> bool:
 	return false
 
 
+func remove_point_at_index(idx: int) -> void:
+	remove_point(get_point_key_at_index(idx))
+
+
+## Remove all points from point array.
 func clear() -> void:
 	_points.clear()
 	_point_order.clear()
@@ -250,6 +284,7 @@ func clear() -> void:
 	_changed()
 
 
+## point_in controls the edge leading from the previous vertex to this one
 func set_point_in(key: int, value: Vector2) -> void:
 	if has_point(key):
 		_points[key].point_in = value
@@ -262,6 +297,7 @@ func get_point_in(key: int) -> Vector2:
 	return Vector2(0, 0)
 
 
+## point_out controls the edge leading from this vertex to the next
 func set_point_out(key: int, value: Vector2) -> void:
 	if has_point(key):
 		_points[key].point_out = value
@@ -314,26 +350,35 @@ func _on_point_changed(p: SS2D_Point) -> void:
 		update_constraints(key)
 
 
+## Begin updating the shape.[br]
+## Shape mesh and curve will only be updated after [method end_update] is called.
 func begin_update() -> void:
 	_updating = true
 
 
+## End updating the shape.[br]
+## Mesh and curve will be updated, if changes were made to points array after
+## [method begin_update] was called.
 func end_update() -> bool:
-	var was_dirty := _dirty
+	var was_dirty := _changed_during_update
 	_updating = false
-	_dirty = false
+	_changed_during_update = false
 	if was_dirty:
 		emit_changed()
 	return was_dirty
 
 
+## Is shape in the middle of being updated.
+## Returns [code]true[/code] after [method begin_update] and before [method end_update].
 func is_updating() -> bool:
 	return _updating
 
 
 func _changed() -> void:
+	_point_cache_dirty = true
+
 	if _updating:
-		_dirty = true
+		_changed_during_update = true
 	else:
 		emit_changed()
 
@@ -532,9 +577,86 @@ func clear_all_material_overrides() -> void:
 	_material_overrides = {}
 
 
+
+## Returns a PackedVector2Array with all points of the shape.
+func get_vertices() -> PackedVector2Array:
+	_update_cache()
+	return _vertex_cache
+
+
+## Returns a Curve2D representing the shape including bezier handles.
+func get_curve() -> Curve2D:
+	_update_cache()
+	return _curve
+
+
+## Returns a Curve2D representing the shape, disregarding bezier handles.
+func get_curve_no_control_points() -> Curve2D:
+	_update_cache()
+	return _curve_no_control_points
+
+
+## Returns a PackedVector2Array with all points
+func get_tessellated_points() -> PackedVector2Array:
+	_update_cache()
+	return _tesselation_cache
+
+
+func set_tessellation_stages(value: int) -> void:
+	tessellation_stages = value
+	_changed()
+
+
+func set_tessellation_tolerence(value: float) -> void:
+	tessellation_tolerence = value
+	_changed()
+
+
+func set_curve_bake_interval(f: float) -> void:
+	curve_bake_interval = f
+	_curve.bake_interval = f
+	_changed()
+
+
+func _update_cache() -> void:
+	# NOTE: Theoretically one could differentiate between vertex list dirty, curve dirty and
+	# tesselation dirty to never waste any computation time.
+	# However, 99% of the time, the cache will be dirty due to vertex updates, so we don't bother.
+
+	if not _point_cache_dirty:
+		return
+
+	var keys := get_all_point_keys()
+
+	_vertex_cache.resize(keys.size())
+	_curve.clear_points()
+	_curve_no_control_points.clear_points()
+
+	for i in keys.size():
+		var key := keys[i]
+		var pos := get_point_position(keys[i])
+
+		# Vertex cache
+		_vertex_cache[i] = pos
+
+		# Curves
+		_curve.add_point(pos, get_point_in(key), get_point_out(key))
+		_curve_no_control_points.add_point(pos)
+
+	# Tesselation
+	# Point 0 will be the same on both the curve points and the vertices
+	# Point size - 1 will be the same on both the curve points and the vertices
+	_tesselation_cache = _curve.tessellate(tessellation_stages, tessellation_tolerence)
+	_tesselation_cache[0] = _curve.get_point_position(0)
+	_tesselation_cache[_tesselation_cache.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
+
+	_point_cache_dirty = false
+
+
 func _to_string() -> String:
 	return "<SS2D_Point_Array points: %s order: %s>" % [_points.keys(), _point_order]
 
 
 func _on_material_override_changed(tuple) -> void:
 	emit_signal("material_override_changed", tuple)
+
