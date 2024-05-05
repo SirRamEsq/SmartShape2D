@@ -295,7 +295,7 @@ func test_get_width_for_tessellated_point() -> void:
 
 	shape.force_update()
 
-	var tmapping := shape.get_tesselation_vertex_mapping()
+	var tmapping := shape.get_point_array().get_tesselation_vertex_mapping()
 	var t_idx_1 := tmapping.vertex_to_tess_indices(idx1)[0]
 	var t_idx_2 := tmapping.vertex_to_tess_indices(idx2)[0]
 	var test_t_idx := int(floor((t_idx_1 + t_idx_2) / 2.0))

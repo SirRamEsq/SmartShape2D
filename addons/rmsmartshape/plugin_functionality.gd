@@ -1,4 +1,5 @@
 @tool
+class_name SS2D_PluginFunctionality
 extends RefCounted
 
 ## - Everything in this script should be static
@@ -43,3 +44,60 @@ static func _get_intersecting_control_point(
 			points.push_back(key)
 
 	return points
+
+
+static func get_next_point_index(idx: int, points: PackedVector2Array, wrap_around: bool = false) -> int:
+	if wrap_around:
+		return get_next_point_index_wrap_around(idx, points)
+	return get_next_point_index_no_wrap_around(idx, points)
+
+
+static func get_previous_point_index(idx: int, points: PackedVector2Array, wrap_around: bool = false) -> int:
+	if wrap_around:
+		return get_previous_point_index_wrap_around(idx, points)
+	return get_previous_point_index_no_wrap_around(idx, points)
+
+
+static func get_next_point_index_no_wrap_around(idx: int, points: PackedVector2Array) -> int:
+	return mini(idx + 1, points.size() - 1)
+
+
+static func get_previous_point_index_no_wrap_around(idx: int, _points_: PackedVector2Array) -> int:
+	return maxi(idx - 1, 0)
+
+
+static func get_next_point_index_wrap_around(idx: int, points: PackedVector2Array) -> int:
+	return (idx + 1) % points.size()
+
+
+static func get_previous_point_index_wrap_around(idx: int, points: PackedVector2Array) -> int:
+	var temp := idx - 1
+	while temp < 0:
+		temp += points.size()
+	return temp
+
+
+## Get the next point that doesn't share the same position with the current point.[br]
+## In other words, get the next point in the array with a unique position.[br]
+static func get_next_unique_point_idx(idx: int, pts: PackedVector2Array, wrap_around: bool) -> int:
+	var next_idx: int = get_next_point_index(idx, pts, wrap_around)
+	if next_idx == idx:
+		return idx
+	var pt1: Vector2 = pts[idx]
+	var pt2: Vector2 = pts[next_idx]
+	if pt1 == pt2:
+		return get_next_unique_point_idx(next_idx, pts, wrap_around)
+	return next_idx
+
+
+static func get_previous_unique_point_idx(idx: int, pts: PackedVector2Array, wrap_around: bool) -> int:
+	var previous_idx: int = get_previous_point_index(idx, pts, wrap_around)
+	if previous_idx == idx:
+		return idx
+	var pt1: Vector2 = pts[idx]
+	var pt2: Vector2 = pts[previous_idx]
+	if pt1 == pt2:
+		return get_previous_unique_point_idx(previous_idx, pts, wrap_around)
+	return previous_idx
+
+

@@ -41,6 +41,7 @@ var _vertex_cache := PackedVector2Array()
 var _curve := Curve2D.new()
 var _curve_no_control_points := Curve2D.new()
 var _tesselation_cache := PackedVector2Array()
+var _tess_vertex_mapping := SS2D_TesselationVertexMapping.new()
 
 signal constraint_removed(key1, key2)
 signal material_override_changed(tuple)
@@ -618,6 +619,11 @@ func set_curve_bake_interval(f: float) -> void:
 	_changed()
 
 
+func get_tesselation_vertex_mapping() -> SS2D_TesselationVertexMapping:
+	_update_cache()
+	return _tess_vertex_mapping
+
+
 func _update_cache() -> void:
 	# NOTE: Theoretically one could differentiate between vertex list dirty, curve dirty and
 	# tesselation dirty to never waste any computation time.
@@ -650,6 +656,8 @@ func _update_cache() -> void:
 	_tesselation_cache[0] = _curve.get_point_position(0)
 	_tesselation_cache[_tesselation_cache.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
 
+	_tess_vertex_mapping.build(_tesselation_cache, _vertex_cache)
+
 	_point_cache_dirty = false
 
 
@@ -659,4 +667,3 @@ func _to_string() -> String:
 
 func _on_material_override_changed(tuple) -> void:
 	emit_signal("material_override_changed", tuple)
-

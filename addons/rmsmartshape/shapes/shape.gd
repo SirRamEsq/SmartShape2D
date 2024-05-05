@@ -27,9 +27,6 @@ var _collision_polygon_node: CollisionPolygon2D
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 
-# Mapping between vertices and tesselated points
-var _tess_vertex_mapping := SS2D_TesselationVertexMapping.new()
-
 signal points_modified
 signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape)
@@ -311,10 +308,6 @@ func set_material_overrides(dict: Dictionary) -> void:
 ## @deprecated
 func get_vertices() -> PackedVector2Array:
 	return _points.get_vertices()
-
-
-func get_tesselation_vertex_mapping() -> SS2D_TesselationVertexMapping:
-	return _tess_vertex_mapping
 
 
 ## Deprecated. Use get_point_array().get_tessellated_points() instead.
@@ -1155,8 +1148,8 @@ func _get_width_for_tessellated_point(
 	points: PackedVector2Array,
 	t_idx: int
 ) -> float:
-	var v_idx := _tess_vertex_mapping.tess_to_vertex_index(t_idx)
-	var v_idx_next := SS2D_Shape._get_next_point_index(v_idx, points)
+	var v_idx := _points.get_tesselation_vertex_mapping().tess_to_vertex_index(t_idx)
+	var v_idx_next := SS2D_PluginFunctionality.get_next_point_index(v_idx, points)
 	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
 	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
 	var ratio: float = get_ratio_from_tessellated_point_to_vertex(t_idx)
@@ -1347,7 +1340,7 @@ static func get_meta_material_index_mapping(
 	var final_edges: Array[SS2D_IndexMap] = []
 	var edge_building: Dictionary = {}
 	for idx in range(0, verts.size() - 1, 1):
-		var idx_next: int = _get_next_point_index(idx, verts, wrap_around)
+		var idx_next: int = SS2D_PluginFunctionality.get_next_point_index(idx, verts, wrap_around)
 		var pt: Vector2 = verts[idx]
 		var pt_next: Vector2 = verts[idx_next]
 		var delta: Vector2 = pt_next - pt
@@ -1419,61 +1412,12 @@ func force_update() -> void:
 	update_render_nodes()
 	clear_cached_data()
 
-	_tess_vertex_mapping.build(_points.get_tessellated_points(), _points.get_vertices())
-
 	bake_collision()
 	if get_point_count() >= 2:
 		cache_edges()
 		cache_meshes()
 	queue_redraw()
 	_dirty = false
-
-
-# TODO, Migrate these 'point index' functions to a helper library and make static?
-
-# FIXME: unused function
-#static func get_first_point_index(_points_: Variant) -> int:
-#	return 0
-
-
-# FIXME: unused function
-#static func get_last_point_index(points: Variant) -> int:
-#	return points.size() - 1
-
-
-static func _get_next_point_index(
-		idx: int, points: PackedVector2Array, wrap_around: bool = false
-) -> int:
-	if wrap_around:
-		return _get_next_point_index_wrap_around(idx, points)
-	return _get_next_point_index_no_wrap_around(idx, points)
-
-
-static func _get_previous_point_index(
-		idx: int, points: PackedVector2Array, wrap_around: bool = false
-) -> int:
-	if wrap_around:
-		return _get_previous_point_index_wrap_around(idx, points)
-	return _get_previous_point_index_no_wrap_around(idx, points)
-
-
-static func _get_next_point_index_no_wrap_around(idx: int, points: PackedVector2Array) -> int:
-	return mini(idx + 1, points.size() - 1)
-
-
-static func _get_previous_point_index_no_wrap_around(idx: int, _points_: PackedVector2Array) -> int:
-	return maxi(idx - 1, 0)
-
-
-static func _get_next_point_index_wrap_around(idx: int, points: PackedVector2Array) -> int:
-	return (idx + 1) % points.size()
-
-
-static func _get_previous_point_index_wrap_around(idx: int, points: PackedVector2Array) -> int:
-	var temp := idx - 1
-	while temp < 0:
-		temp += points.size()
-	return temp
 
 
 ## Returns a float between 0.0 and 1.0.[br]
@@ -1483,11 +1427,11 @@ static func _get_previous_point_index_wrap_around(idx: int, points: PackedVector
 ## 1.0 isn't going to happen; If a tess point is at the same position as a vert, it gets a ratio of 0.0.[br]
 func get_ratio_from_tessellated_point_to_vertex(t_point_idx: int) -> float:
 	# Index of the starting vertex
-	var point_idx := _tess_vertex_mapping.tess_to_vertex_index(t_point_idx)
+	var point_idx := _points.get_tesselation_vertex_mapping().tess_to_vertex_index(t_point_idx)
 	# Index of the first tesselated point with the same vertex
-	var tess_point_first_idx: int = _tess_vertex_mapping.vertex_to_tess_indices(point_idx)[0]
+	var tess_point_first_idx: int = _points.get_tesselation_vertex_mapping().vertex_to_tess_indices(point_idx)[0]
 	# The total tessellated points with the same vertex
-	var tess_point_count := _tess_vertex_mapping.vertex_to_tess_indices(point_idx).size()
+	var tess_point_count := _points.get_tesselation_vertex_mapping().vertex_to_tess_indices(point_idx).size()
 	# The index of the passed t_point_idx relative to the starting vert
 	var tess_index_count := t_point_idx - tess_point_first_idx
 	return tess_index_count / float(tess_point_count)
@@ -1511,8 +1455,8 @@ func _edge_data_get_tess_point_count(index_map: SS2D_IndexMap) -> int:
 		if this_idx > next_idx:
 			count += 1
 			continue
-		var this_t_idx: int = _tess_vertex_mapping.vertex_to_tess_indices(this_idx)[0]
-		var next_t_idx: int = _tess_vertex_mapping.vertex_to_tess_indices(next_idx)[0]
+		var this_t_idx: int = _points.get_tesselation_vertex_mapping().vertex_to_tess_indices(this_idx)[0]
+		var next_t_idx: int = _points.get_tesselation_vertex_mapping().vertex_to_tess_indices(next_idx)[0]
 		var delta: int = next_t_idx - this_t_idx
 		count += delta
 	return count
@@ -1584,30 +1528,6 @@ func _edge_generate_corner(
 	return corner_quad
 
 
-## Get the next point that doesn't share the same position with the current point.[br]
-## In other words, get the next point in the array with a unique position.[br]
-func _get_next_unique_point_idx(idx: int, pts: PackedVector2Array, wrap_around: bool) -> int:
-	var next_idx: int = _get_next_point_index(idx, pts, wrap_around)
-	if next_idx == idx:
-		return idx
-	var pt1: Vector2 = pts[idx]
-	var pt2: Vector2 = pts[next_idx]
-	if pt1 == pt2:
-		return _get_next_unique_point_idx(next_idx, pts, wrap_around)
-	return next_idx
-
-
-func _get_previous_unique_point_idx(idx: int, pts: PackedVector2Array, wrap_around: bool) -> int:
-	var previous_idx: int = _get_previous_point_index(idx, pts, wrap_around)
-	if previous_idx == idx:
-		return idx
-	var pt1: Vector2 = pts[idx]
-	var pt2: Vector2 = pts[previous_idx]
-	if pt1 == pt2:
-		return _get_previous_unique_point_idx(previous_idx, pts, wrap_around)
-	return previous_idx
-
-
 func _imap_contains_all_points(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
 	return imap.indicies[0] == 0 and imap.indicies.back() == verts.size()-1
 
@@ -1658,8 +1578,8 @@ func _build_edge_with_material(
 
 	var first_idx: int = index_map.indicies[0]
 	var last_idx: int = index_map.indicies[-1]
-	var first_idx_t: int = _tess_vertex_mapping.vertex_to_tess_indices(first_idx)[0]
-	var last_idx_t: int = _tess_vertex_mapping.vertex_to_tess_indices(last_idx)[-1]
+	var first_idx_t: int = _points.get_tesselation_vertex_mapping().vertex_to_tess_indices(first_idx)[0]
+	var last_idx_t: int = _points.get_tesselation_vertex_mapping().vertex_to_tess_indices(last_idx)[-1]
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
@@ -1671,8 +1591,8 @@ func _build_edge_with_material(
 	var i := 0
 	while i < tess_point_count:
 		var tess_idx: int = (first_idx_t + i) % verts_t.size()
-		var tess_idx_next: int = _get_next_unique_point_idx(tess_idx, verts_t, true)
-		var tess_idx_prev: int = _get_previous_unique_point_idx(tess_idx, verts_t, true)
+		var tess_idx_next: int = SS2D_PluginFunctionality.get_next_unique_point_idx(tess_idx, verts_t, true)
+		var tess_idx_prev: int = SS2D_PluginFunctionality.get_previous_unique_point_idx(tess_idx, verts_t, true)
 
 		# set next_point_delta
 		# next_point_delta is the number of tess_pts from
@@ -1684,7 +1604,7 @@ func _build_edge_with_material(
 				next_point_delta = j
 				break
 
-		var vert_idx: int = _tess_vertex_mapping.tess_to_vertex_index(tess_idx)
+		var vert_idx: int = _points.get_tesselation_vertex_mapping().tess_to_vertex_index(tess_idx)
 		var vert_key: int = get_point_key_at_index(vert_idx)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
@@ -1798,8 +1718,8 @@ func _build_edge_with_material(
 		# Corner quads aren't always correctly when the corner is between final and first pt
 		if is_last_point and is_edge_contiguous:
 			var idx_mid: int = verts_t.size() - 1
-			var idx_next: int = _get_next_unique_point_idx(idx_mid, verts_t, true)
-			var idx_prev: int = _get_previous_unique_point_idx(idx_mid, verts_t, true)
+			var idx_next: int = SS2D_PluginFunctionality.get_next_unique_point_idx(idx_mid, verts_t, true)
+			var idx_prev: int = SS2D_PluginFunctionality.get_previous_unique_point_idx(idx_mid, verts_t, true)
 			var p_p: Vector2 = verts_t[idx_prev]
 			var p_m: Vector2 = verts_t[idx_mid]
 			var p_n: Vector2 = verts_t[idx_next]
