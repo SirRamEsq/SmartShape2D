@@ -46,13 +46,11 @@ func test_are_points_clockwise():
 	points_c_clockwise.reverse()
 
 	shape.add_points(points_clockwise)
-	shape.force_update()
 
 	assert_true(shape.are_points_clockwise())
 
 	shape.clear_points()
 	shape.add_points(points_c_clockwise)
-	shape.force_update()
 	assert_false(shape.are_points_clockwise())
 
 
@@ -217,7 +215,6 @@ func test_get_edge_meta_materials_many():
 
 	var points = get_square_points()
 	shape.add_points(points)
-	shape.force_update()
 
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
 	assert_eq(shape.get_vertices().size(), 6)
@@ -292,8 +289,6 @@ func test_get_width_for_tessellated_point() -> void:
 	shape.set_point_out(k1, point_out)
 	shape.set_point_in(k2, point_in)
 	shape.set_point_out(k2, point_out)
-
-	shape.force_update()
 
 	var tmapping := shape.get_point_array().get_tesselation_vertex_mapping()
 	var t_idx_1 := tmapping.vertex_to_tess_indices(idx1)[0]
