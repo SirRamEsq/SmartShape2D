@@ -1,14 +1,14 @@
 extends "res://addons/gut/test.gd"
 
 
-func test_point_order():
-	var p_array = SS2D_Point_Array.new()
-	var points = {}
+func test_point_order() -> void:
+	var p_array := SS2D_Point_Array.new()
+	var points := {}
 	for p in generate_points():
-		var new_key = p_array.add_point(p)
+		var new_key := p_array.add_point(p)
 		assert_false(points.has(new_key), "Key: '%s' shouldn't exist" % new_key)
 		points[new_key] = p
-	var keys = points.keys()
+	var keys := points.keys()
 	for i in range(0, keys.size(), 1):
 		assert_eq(p_array.get_point_index(keys[i]), i)
 	p_array.set_point_index(keys[5], 7)
@@ -43,12 +43,12 @@ func test_point_order():
 	assert_eq(p_array.get_point_index(keys[0]), 0)
 
 
-func test_point_constraints():
-	var p_array = SS2D_Point_Array.new()
-	var points = {}
+func test_point_constraints() -> void:
+	var p_array := SS2D_Point_Array.new()
+	var points := {}
 	for p in generate_points():
 		points[p_array.add_point(p)] = p
-	var keys = points.keys()
+	var keys := points.keys()
 
 	assert_eq(p_array.get_point_position(keys[1]), Vector2(10, 10))
 	assert_eq(p_array.get_point_position(keys[2]), Vector2(20, 20))
@@ -96,7 +96,7 @@ func test_point_constraints():
 	assert_eq(p_array.get_point_properties(keys[4]).flip, false)
 	p_array.set_point_in(keys[3], Vector2(33, 44))
 	p_array.set_point_out(keys[3], Vector2(11, 22))
-	var props = p_array.get_point_properties(keys[3])
+	var props := p_array.get_point_properties(keys[3])
 	props.flip = true
 	p_array.set_point_properties(keys[3], props)
 
@@ -115,7 +115,7 @@ func test_point_constraints():
 
 
 # TODO Test that material overrides are correctly handled when duplicating
-func test_clone():
+func test_clone() -> void:
 	var p_array := SS2D_Point_Array.new()
 	for p in generate_points():
 		p_array.add_point(p)
@@ -139,8 +139,8 @@ func test_clone():
 	assert_eq(p_array._constraints.size(), other._constraints.size())
 	assert_eq(p_array._points.size(), other._points.size())
 	for i in range(0, p_array._point_order.size(), 1):
-		var key1 = p_array._point_order[i]
-		var key2 = other._point_order[i]
+		var key1 := p_array._point_order[i]
+		var key2 := other._point_order[i]
 		assert_eq(key1, key2, "Same Point Order")
 
 	for k in p_array._points:
@@ -175,10 +175,10 @@ func test_clone():
 		assert_eq(p1.properties.flip, p2.properties.flip, "flip Same Values")
 		assert_eq(p1.properties.width, p2.properties.width, "width Same Values")
 
-func test_material_override_add_delete():
-	var mmat1 = SS2D_Material_Edge_Metadata.new()
-	var mmat2 = SS2D_Material_Edge_Metadata.new()
-	var pa = SS2D_Point_Array.new()
+func test_material_override_add_delete() -> void:
+	var mmat1 := SS2D_Material_Edge_Metadata.new()
+	var mmat2 := SS2D_Material_Edge_Metadata.new()
+	var pa := SS2D_Point_Array.new()
 
 	# Add
 	assert_eq(0, pa.get_material_overrides().size())
@@ -222,7 +222,27 @@ func test_material_override_add_delete():
 	assert_false(mmat1.is_connected("changed", pa._on_material_override_changed))
 	assert_false(mmat2.is_connected("changed", pa._on_material_override_changed))
 
-func generate_points() -> Array:
+
+func test_changed_signals() -> void:
+	var points := SS2D_Point_Array.new()
+	watch_signals(points)
+
+	points.add_point(Vector2.ZERO)
+	assert_signal_emit_count(points, "changed", 1)
+	assert_signal_emit_count(points, "update_finished", 1)
+
+
+	points.begin_update()
+	points.add_point(Vector2.ZERO)
+	points.add_point(Vector2.ZERO)
+	points.add_point(Vector2.ZERO)
+	points.end_update()
+
+	assert_signal_emit_count(points, "changed", 4)
+	assert_signal_emit_count(points, "update_finished", 2)
+
+
+func generate_points() -> Array[Vector2]:
 	return [
 		Vector2(0, 0),
 		Vector2(10, 10),
