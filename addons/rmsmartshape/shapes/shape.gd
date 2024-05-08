@@ -97,8 +97,8 @@ var tessellation_stages: int = 5 :
 ## @deprecated
 @export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
 var tessellation_tolerence: float = 4.0 :
-	set(value): _points.tessellation_tolerence = value
-	get: return _points.tessellation_tolerence
+	set(value): _points.tessellation_tolerance = value
+	get: return _points.tessellation_tolerance
 
 @export_group("Collision")
 
@@ -261,10 +261,10 @@ func set_tessellation_stages(value: int) -> void:
 	_points.tessellation_stages = value
 
 
-## Deprecated. Use get_point_array().tessellation_tolerence instead.
+## Deprecated. Use get_point_array().tessellation_tolerance instead.
 ## @deprecated
 func set_tessellation_tolerence(value: float) -> void:
-	_points.tessellation_tolerence = value
+	_points.tessellation_tolerance = value
 
 
 ## Deprecated. Use get_point_array().curve_bake_interval instead.

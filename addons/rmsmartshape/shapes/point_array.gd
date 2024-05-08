@@ -27,7 +27,7 @@ var tessellation_stages: int = 5 : set = set_tessellation_stages
 ## Controls how many degrees the midpoint of a segment may deviate from the real
 ## curve, before the segment has to be subdivided.
 @export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
-var tessellation_tolerence: float = 4.0 : set = set_tessellation_tolerence
+var tessellation_tolerance: float = 4.0 : set = set_tessellation_tolerance
 
 @export_range(1, 512) var curve_bake_interval: float = 20.0 : set = set_curve_bake_interval
 
@@ -75,7 +75,7 @@ func clone(deep: bool = false) -> SS2D_Point_Array:
 	var copy := SS2D_Point_Array.new()
 	copy._next_key = _next_key
 	copy.tessellation_stages = tessellation_stages
-	copy.tessellation_tolerence = tessellation_tolerence
+	copy.tessellation_tolerance = tessellation_tolerance
 	copy.curve_bake_interval = curve_bake_interval
 
 	if deep:
@@ -617,8 +617,8 @@ func set_tessellation_stages(value: int) -> void:
 	_changed()
 
 
-func set_tessellation_tolerence(value: float) -> void:
-	tessellation_tolerence = value
+func set_tessellation_tolerance(value: float) -> void:
+	tessellation_tolerance = value
 	_changed()
 
 
@@ -661,7 +661,7 @@ func _update_cache() -> void:
 	# Tesselation
 	# Point 0 will be the same on both the curve points and the vertices
 	# Point size - 1 will be the same on both the curve points and the vertices
-	_tesselation_cache = _curve.tessellate(tessellation_stages, tessellation_tolerence)
+	_tesselation_cache = _curve.tessellate(tessellation_stages, tessellation_tolerance)
 	_tesselation_cache[0] = _curve.get_point_position(0)
 	_tesselation_cache[_tesselation_cache.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
 
