@@ -43,6 +43,12 @@ var _curve_no_control_points := Curve2D.new()
 var _tesselation_cache := PackedVector2Array()
 var _tess_vertex_mapping := SS2D_TesselationVertexMapping.new()
 
+## Gets called when points were modified.
+## In comparison to the "changed" signal, "update_finished" will only be called once after
+## begin/end_update() blocks, while "changed" will be called for every singular change.
+## Hence, this signal is usually better suited to react to point updates.
+signal update_finished()
+
 signal constraint_removed(key1, key2)
 signal material_override_changed(tuple)
 
@@ -106,6 +112,7 @@ func set_points(ps: Dictionary) -> void:
 
 func set_point_order(po: Array[int]) -> void:
 	_point_order = po
+	_changed()
 	notify_property_list_changed()
 
 
@@ -365,7 +372,7 @@ func end_update() -> bool:
 	_updating = false
 	_changed_during_update = false
 	if was_dirty:
-		emit_changed()
+		update_finished.emit()
 	return was_dirty
 
 
@@ -378,10 +385,12 @@ func is_updating() -> bool:
 func _changed() -> void:
 	_point_cache_dirty = true
 
+	emit_changed()
+
 	if _updating:
 		_changed_during_update = true
 	else:
-		emit_changed()
+		update_finished.emit()
 
 ###############
 # CONSTRAINTS #

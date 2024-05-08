@@ -144,14 +144,14 @@ func get_point_array() -> SS2D_Point_Array:
 
 func set_point_array(a: SS2D_Point_Array) -> void:
 	if _points != null:
-		if _points.is_connected("changed", self._points_modified):
-			_points.disconnect("changed", self._points_modified)
+		if _points.is_connected("update_finished", self._points_modified):
+			_points.disconnect("update_finished", self._points_modified)
 		if _points.is_connected("material_override_changed", self._handle_material_override_change):
 			_points.disconnect("material_override_changed", self._handle_material_override_change)
 	if a == null:
 		a = SS2D_Point_Array.new()
 	_points = a
-	_points.connect("changed", self._points_modified)
+	_points.connect("update_finished", self._points_modified)
 	_points.connect("material_override_changed", self._handle_material_override_change)
 	clear_cached_data()
 	set_as_dirty()
