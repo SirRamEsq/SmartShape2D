@@ -71,10 +71,7 @@ static func get_next_point_index_wrap_around(idx: int, points: PackedVector2Arra
 
 
 static func get_previous_point_index_wrap_around(idx: int, points: PackedVector2Array) -> int:
-	var temp := idx - 1
-	while temp < 0:
-		temp += points.size()
-	return temp
+	return posmod(idx - 1, points.size())
 
 
 ## Get the next point that doesn't share the same position with the current point.[br]
