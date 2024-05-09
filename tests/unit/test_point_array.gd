@@ -96,10 +96,10 @@ func test_point_constraints() -> void:
 	assert_eq(p_array.get_point_properties(keys[4]).flip, false)
 	p_array.set_point_in(keys[3], Vector2(33, 44))
 	p_array.set_point_out(keys[3], Vector2(11, 22))
-	var props := p_array.get_point_properties(keys[3])
-	props.flip = true
-	p_array.set_point_properties(keys[3], props)
 
+	p_array.get_point_properties(keys[3]).flip = true
+
+	# Other points with CONSTRAINT.PROPERTIES should also be flipped now
 	assert_eq(p_array.get_point_in(keys[3]), Vector2(33, 44))
 	assert_eq(p_array.get_point_out(keys[3]), Vector2(11, 22))
 	assert_eq(p_array.get_point_properties(keys[3]).flip, true)
