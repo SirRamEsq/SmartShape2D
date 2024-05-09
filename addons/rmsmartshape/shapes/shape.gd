@@ -206,8 +206,7 @@ func set_curve(curve: Curve2D) -> void:
 ## Deprecated. Use get_point_array().get_curve() instead.
 ## @deprecated
 func get_curve() -> Curve2D:
-	# NOTE: It doesn't seem necessary to duplicate() the curve, but keep if for now for compatibility.
-	return _points.get_curve().duplicate()
+	return _points.get_curve()
 
 
 func _set_editor_debug(value: bool) -> void:
@@ -632,33 +631,38 @@ func set_point(key: int, value: SS2D_Point) -> void:
 	_points.set_point(key, value)
 
 
+## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## @deprecated
 func set_point_width(key: int, w: float) -> void:
-	var props: SS2D_VertexProperties = _points.get_point_properties(key)
-	props.width = w
-	_points.set_point_properties(key, props)
+	_points.get_point_properties(key).width = w
 
 
+## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## @deprecated
 func get_point_width(key: int) -> float:
 	return _points.get_point_properties(key).width
 
 
+## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## @deprecated
 func set_point_texture_index(key: int, tex_idx: int) -> void:
-	var props: SS2D_VertexProperties = _points.get_point_properties(key)
-	props.texture_idx = tex_idx
-	_points.set_point_properties(key, props)
+	_points.get_point_properties(key).texture_idx = tex_idx
 
 
+## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## @deprecated
 func get_point_texture_index(key: int) -> int:
 	return _points.get_point_properties(key).texture_idx
 
 
+## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## @deprecated
 func set_point_texture_flip(key: int, flip: bool) -> void:
-	var props: SS2D_VertexProperties = _points.get_point_properties(key)
-	if props.flip != flip:
-		props.flip = flip
-		_points.set_point_properties(key, props)
+	_points.get_point_properties(key).flip = flip
 
 
+## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## @deprecated
 func get_point_texture_flip(key: int) -> bool:
 	return _points.get_point_properties(key).flip
 

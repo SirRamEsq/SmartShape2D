@@ -143,10 +143,10 @@ func test_clone() -> void:
 		var key2 := other._point_order[i]
 		assert_eq(key1, key2, "Same Point Order")
 
-	for k in p_array._points:
-		var p1 = p_array._points[k]
+	for k: int in p_array._points:
+		var p1: SS2D_Point = p_array._points[k]
 		print("p1: ", p1.get_instance_id())
-		var p2 = other._points[k]
+		var p2: SS2D_Point = other._points[k]
 		print("p2: ", p2.get_instance_id())
 		assert_ne(p1, p2, "Unique Point with key %s" % k)
 		assert_ne(p1.properties, p2.properties)
