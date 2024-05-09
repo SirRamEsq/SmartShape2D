@@ -7,7 +7,7 @@ const TUP = preload("../lib/tuple.gd")
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
 # Maps a key to each point: Dict[int, SS2D_Point]
-@export var _points: Dictionary = {} : set = set_points
+@export var _points: Dictionary = {} : set = _set_points
 # Contains all keys; the order of the keys determines the order of the points
 @export var _point_order: Array[int] = [] : set = set_point_order
 # Key is tuple of point_keys; Value is the CONSTRAINT enum: Dict[Array[int], CONSTRAINT]
@@ -101,12 +101,11 @@ func clone(deep: bool = false) -> SS2D_Point_Array:
 	return copy
 
 
-func set_points(ps: Dictionary) -> void:
-	# Called by Godot when loading from a saved scene
-	for k: int in ps:
-		var p: SS2D_Point = ps[k]
-		p.changed.connect(_on_point_changed.bind(p))
+## Called by Godot when loading from a saved scene
+func _set_points(ps: Dictionary) -> void:
 	_points = ps
+	for k: int in _points:
+		_hook_point(k)
 	_changed()
 
 
@@ -170,14 +169,38 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 		use_key = reserve_key()
 	if use_key == _next_key:
 		_next_key += 1
-	var new_point := SS2D_Point.new(point)
-	new_point.connect(&"changed", self._on_point_changed.bind(new_point))
-	_points[use_key] = new_point
+	_points[use_key] = SS2D_Point.new(point)
+	_hook_point(use_key)
 	_point_order.push_back(use_key)
 	if idx != -1:
 		set_point_index(use_key, idx)
 	_changed()
 	return use_key
+
+
+## Deprecated. There is no reason to use this function, points can be modified directly.
+## @deprecated
+func set_point(key: int, value: SS2D_Point) -> void:
+	if has_point(key):
+		# FIXME: Should there be a call to remove_constraints() like in remove_point()? Because
+		# we're technically deleting a point and replacing it with another.
+		_unhook_point(get_point(key))
+		_points[key] = value
+		_hook_point(key)
+		_changed()
+
+
+## Connects the changed signal of the given point. Requires that the point exists in _points.
+func _hook_point(key: int) -> void:
+	var p := get_point(key)
+	if not p.changed.is_connected(_on_point_changed):
+		p.changed.connect(_on_point_changed.bind(key))
+
+
+## Disconnects the changed signal of the given point. See also _hook_point().
+func _unhook_point(p: SS2D_Point) -> void:
+	if not p.changed.is_connected(_on_point_changed):
+		p.changed.disconnect(_on_point_changed)
 
 
 func is_index_in_range(idx: int) -> bool:
@@ -195,12 +218,6 @@ func get_point_at_index(idx: int) -> SS2D_Point:
 ## Returns the point with the given key as reference or null if it does not exist.
 func get_point(key: int) -> SS2D_Point:
 	return _points.get(key)
-
-
-func set_point(key: int, value: SS2D_Point) -> void:
-	if has_point(key):
-		_points[key] = value
-		_changed()
 
 
 func get_point_count() -> int:
@@ -265,9 +282,7 @@ func remove_point(key: int) -> bool:
 	if has_point(key):
 #		print("Remove Point  ::  ", get_point_position(key), " | idx: ", get_point_index(key), " | key: ", key, " |")
 		remove_constraints(key)
-		var p: SS2D_Point = _points[key]
-		if p.is_connected("changed", self._on_point_changed):
-			p.disconnect("changed", self._on_point_changed)
+		_unhook_point(get_point(key))
 		_point_order.remove_at(get_point_index(key))
 		_points.erase(key)
 		_changed()
@@ -345,8 +360,7 @@ func get_key_from_point(p: SS2D_Point) -> int:
 	return -1
 
 
-func _on_point_changed(p: SS2D_Point) -> void:
-	var key: int = get_key_from_point(p)
+func _on_point_changed(key: int) -> void:
 	if _updating_constraints:
 		_keys_to_update_constraints.push_back(key)
 	else:
