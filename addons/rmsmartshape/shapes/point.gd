@@ -36,29 +36,37 @@ func _set_position(v: Vector2) -> void:
 	if position != v:
 		position = v
 		emit_changed()
-	notify_property_list_changed()
 
 
 func _set_point_in(v: Vector2) -> void:
 	if point_in != v:
 		point_in = v
 		emit_changed()
-	notify_property_list_changed()
 
 
 func _set_point_out(v: Vector2) -> void:
 	if point_out != v:
 		point_out = v
 		emit_changed()
-	notify_property_list_changed()
 
 
 func _set_properties(other: SS2D_VertexProperties) -> void:
+	# FIXME: What if other is null?
 	if properties == null or not properties.equals(other):
-		properties = other.duplicate(true)
+		if properties:
+			properties.changed.disconnect(_on_properties_changed)
+
+		properties = other
+
+		if properties:
+			properties.changed.connect(_on_properties_changed)
+
 		emit_changed()
-		notify_property_list_changed()
 
 
 func _to_string() -> String:
 	return "<SS2D_Point %s>" % [position]
+
+
+func _on_properties_changed() -> void:
+	emit_changed()
