@@ -509,8 +509,6 @@ func _edit(object: Object) -> void:
 	if is_shape_valid():
 		disconnect_shape(shape)
 
-	shape = null
-
 	shape = object
 
 	if not is_shape_valid():
@@ -519,6 +517,11 @@ func _edit(object: Object) -> void:
 		shape = null
 	else:
 		connect_shape(shape)
+
+		if shape.get_point_array().get_point_count() == 0:
+			_enter_mode(MODE.CREATE_VERT)
+		elif current_mode == MODE.CREATE_VERT:
+			_enter_mode(MODE.EDIT_VERT)
 
 	update_overlays()
 
