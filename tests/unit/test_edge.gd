@@ -3,7 +3,7 @@ extends "res://addons/gut/test.gd"
 var TEST_TEXTURE: Texture2D = preload("res://tests/unit/test.png")
 
 
-func test_consecutive_quads():
+func test_consecutive_quads() -> void:
 	var big_exclude: Array[int] = [2, 8, 34, 56, 78, 99, 123, 154, 198, 234]
 	assert_eq(SS2D_Edge.get_consecutive_quads_for_mesh(generate_quads(256)).size(), 1)
 	assert_eq(
@@ -11,11 +11,11 @@ func test_consecutive_quads():
 		big_exclude.size() + 1
 	)
 
-	var quads = generate_quads(16, null, [4, 8])
-	var quad_arrays = SS2D_Edge.get_consecutive_quads_for_mesh(quads)
+	var quads := generate_quads(16, null, [4, 8])
+	var quad_arrays := SS2D_Edge.get_consecutive_quads_for_mesh(quads)
 	assert_eq(quad_arrays.size(), 3)
-	var total_quad_count = 0
-	for quad_array in quad_arrays:
+	var total_quad_count := 0
+	for quad_array: Array[SS2D_Quad] in quad_arrays:
 		for quad in quad_array:
 			total_quad_count += 1
 	assert_eq(quads.size(), total_quad_count)
@@ -24,21 +24,21 @@ func test_consecutive_quads():
 	assert_eq(quad_arrays[2].size(), 8)
 
 
-func test_generate_mesh_from_quad_sequence():
-	var quad_extent = Vector2(6.0, 6.0)
-	var quads = generate_quads(16, TEST_TEXTURE, [4, 8], quad_extent)
-	var quad_arrays = SS2D_Edge.get_consecutive_quads_for_mesh(quads)
+func test_generate_mesh_from_quad_sequence() -> void:
+	var quad_extent := Vector2(6.0, 6.0)
+	var quads := generate_quads(16, TEST_TEXTURE, [4, 8], quad_extent)
+	var quad_arrays := SS2D_Edge.get_consecutive_quads_for_mesh(quads)
 
-	for quad_array in quad_arrays:
-		var am = SS2D_Edge.generate_array_mesh_from_quad_sequence(quad_array, false, 0)
+	for quad_array: Array[SS2D_Quad] in quad_arrays:
+		var am := SS2D_Edge.generate_array_mesh_from_quad_sequence(quad_array, false, 0)
 		assert_eq(am.get_surface_count(), 1)
-		var arrays = am.surface_get_arrays(0)
-		var verts = arrays[Mesh.ARRAY_VERTEX]
-		var uvs = arrays[Mesh.ARRAY_TEX_UV]
-		var indicies = arrays[Mesh.ARRAY_INDEX]
-		var normals = arrays[Mesh.ARRAY_NORMAL]
-		var first_q = quad_array[0]
-		var last_q = quad_array[quad_array.size() - 1]
+		var arrays := am.surface_get_arrays(0)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+		var indicies: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var first_q := quad_array[0]
+		var last_q := quad_array[quad_array.size() - 1]
 		assert_ne(indicies.size(), 0)
 		assert_eq(verts[0], SS2D_Common_Functions.to_vector3(first_q.pt_a))
 		assert_eq(verts[verts.size() - 1], SS2D_Common_Functions.to_vector3(last_q.pt_d))
@@ -61,15 +61,15 @@ func generate_quads(
 	extents: Vector2 = Vector2(16.0, 16.0)
 ) -> Array[SS2D_Quad]:
 	var quads: Array[SS2D_Quad] = []
-	var a = Vector2(-extents.x, -extents.y)
-	var b = Vector2(-extents.x, extents.y)
-	var c = Vector2(extents.x, extents.y)
-	var d = Vector2(extents.x, -extents.y)
-	var t = tex
-	var f = false
+	var a := Vector2(-extents.x, -extents.y)
+	var b := Vector2(-extents.x, extents.y)
+	var c := Vector2(extents.x, extents.y)
+	var d := Vector2(extents.x, -extents.y)
+	var t := tex
+	var f := false
 
 	for i in range(0, amnt, 1):
-		var offset = Vector2(extents.x * 2 * i, 0)
+		var offset := Vector2(extents.x * 2 * i, 0)
 		if indicies_to_change.has(i):
 			f = not f
 		quads.push_back(SS2D_Quad.new(a + offset, b + offset, c + offset, d + offset, t, f))

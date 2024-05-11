@@ -33,7 +33,6 @@ func _init(shape: SS2D_Shape, keys: PackedInt64Array, commit_update: bool = true
 
 
 func get_name() -> String:
-	var pos := _shape.get_point_position(_keys[0])
 	return "Delete Points %s" % [_keys]
 
 
@@ -68,7 +67,7 @@ func undo() -> void:
 		_shape.set_point_properties(_keys[i], _properties[i])
 	# Restore point constraints.
 	for i in range(_keys.size()-1, -1, -1):
-		for tuple in _constraints[i]:
+		for tuple: Array[int] in _constraints[i]:
 			_shape.set_constraint(tuple[0], tuple[1], _constraints[i][tuple])
 	_shape.end_update()
 
@@ -78,7 +77,7 @@ func add_point_to_delete(key: int) -> void:
 	var constraints: Dictionary = _shape.get_point_constraints(key)
 	# Save point constraints.
 	_constraints.append(_shape.get_point_constraints(key))
-	for tuple in constraints:
+	for tuple: Array[int] in constraints:
 		var constraint: SS2D_Point_Array.CONSTRAINT = constraints[tuple]
 		if constraint == SS2D_Point_Array.CONSTRAINT.NONE:
 			continue

@@ -98,3 +98,35 @@ static func get_previous_unique_point_idx(idx: int, pts: PackedVector2Array, wra
 	return previous_idx
 
 
+static func snap_position(
+	pos_global: Vector2, snap_offset: Vector2, snap_step: Vector2, local_t: Transform2D
+) -> Vector2:
+	# Move global position to local position to snap in local space
+	var pos_local: Vector2 = local_t * pos_global
+
+	# Snap in local space
+	var x: float = pos_local.x
+	if snap_step.x != 0:
+		var delta: float = fmod(pos_local.x, snap_step.x)
+		# Round up
+		if delta >= (snap_step.x / 2.0):
+			x = pos_local.x + (snap_step.x - delta)
+		# Round down
+		else:
+			x = pos_local.x - delta
+	var y: float = pos_local.y
+	if snap_step.y != 0:
+		var delta: float = fmod(pos_local.y, snap_step.y)
+		# Round up
+		if delta >= (snap_step.y / 2.0):
+			y = pos_local.y + (snap_step.y - delta)
+		# Round down
+		else:
+			y = pos_local.y - delta
+
+	# Transform3D local position to global position
+	var pos_global_snapped := (local_t.affine_inverse() * Vector2(x, y)) + snap_offset
+	#print ("%s | %s | %s | %s" % [pos_global, pos_local, Vector2(x,y), pos_global_snapped])
+	return pos_global_snapped
+
+

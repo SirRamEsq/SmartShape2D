@@ -40,7 +40,7 @@ func do() -> void:
 	_splitted.set_owner(_shape.get_tree().get_edited_scene_root())
 	# Add a collision shape node if the original shape has one.
 	if (not _shape.collision_polygon_node_path.is_empty() and _shape.has_node(_shape.collision_polygon_node_path)):
-		var collision_polygon_original: Node = _shape.get_node(_shape.collision_polygon_node_path)
+		var collision_polygon_original := _shape.get_node(_shape.collision_polygon_node_path) as CollisionPolygon2D
 		if not is_instance_valid(_splitted_collision):
 			_splitted_collision = CollisionPolygon2D.new()
 			_splitted_collision.visible = collision_polygon_original.visible
@@ -50,7 +50,7 @@ func do() -> void:
 		_splitted.collision_polygon_node_path = _splitted.get_path_to(_splitted_collision)
 
 	if _delete_points_from_original == null:
-		var delete_keys: PackedInt64Array
+		var delete_keys := PackedInt64Array()
 		for i in range(_shape.get_point_count() - 1, _split_idx, -1):
 			delete_keys.append(_shape.get_point_key_at_index(i))
 		_delete_points_from_original = ActionDeletePoints.new(_shape, delete_keys)

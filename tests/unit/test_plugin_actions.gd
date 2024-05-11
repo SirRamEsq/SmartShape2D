@@ -23,6 +23,7 @@ func test_action_add_collision_nodes() -> void:
 	var action := ActionAddCollisionNodes.new(s)
 	action.do()
 	assert_true(s.get_parent() is StaticBody2D)
+	@warning_ignore("unsafe_property_access")
 	assert_eq(s.get_parent().position, Vector2(777, 777))
 	assert_true(s.get_parent().has_node("CollisionPolygon2D"))
 	assert_eq(s.collision_polygon_node_path, NodePath("../CollisionPolygon2D"))
@@ -257,7 +258,6 @@ func test_action_set_pivot() -> void:
 
 	var key := s.add_point(Vector2.ZERO)
 
-	var t := Transform2D()
 	var action := ActionSetPivot.new(s, Vector2(100.0, 100.0))
 	action.do()
 	assert_eq(s.get_point_position(key), Vector2(-100.0, -100.0))

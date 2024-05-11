@@ -1,6 +1,6 @@
 extends EditorInspectorPlugin
 
-var control: Control = null
+var control: SS2D_NormalRangeEditorProperty = null
 
 
 func _can_handle(object: Object) -> bool:
@@ -8,9 +8,8 @@ func _can_handle(object: Object) -> bool:
 	#	return true
 	if object is SS2D_NormalRange:
 		#Connect
-		var parms = [object]
 		if not object.is_connected("changed", self._changed):
-			object.connect("changed", self._changed.bind(parms))
+			object.connect("changed", self._changed.bind(object))
 		return true
 	else:
 		#Disconnect
@@ -25,7 +24,7 @@ func _can_handle(object: Object) -> bool:
 	return false
 
 
-func _changed(_object) -> void:
+func _changed(_object: Object) -> void:
 	control._value_changed()
 
 
@@ -35,7 +34,7 @@ func _parse_property(
 	name: String,
 	_hint_type: PropertyHint,
 	_hint_string: String,
-	_usage_flags,
+	_usage_flags: int,
 	_wide: bool
 ) -> bool:
 	if name == "edgeRendering":

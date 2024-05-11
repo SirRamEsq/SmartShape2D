@@ -218,7 +218,7 @@ func _set_editor_debug(value: bool) -> void:
 func set_render_node_light_masks(value: int) -> void:
 	# TODO: This method should be called when user changes mask in the inspector.
 	var render_parent: SS2D_Shape_Render = _get_rendering_nodes_parent()
-	for c in render_parent.get_children():
+	for c: CanvasItem in render_parent.get_children():
 		c.light_mask = value
 	render_parent.light_mask = value
 
@@ -769,7 +769,7 @@ func _draw() -> void:
 		render_node.set_mesh(m)
 
 	if editor_debug and Engine.is_editor_hint():
-		_draw_debug(sort_by_z_index(_edges))
+		_draw_debug(SS2D_Shape.sort_by_z_index(_edges))
 
 
 func _draw_debug(edges: Array[SS2D_Edge]) -> void:
@@ -778,19 +778,19 @@ func _draw_debug(edges: Array[SS2D_Edge]) -> void:
 			q.render_lines(self)
 
 		var _range := range(0, e.quads.size(), 1)
-		for i in _range:
+		for i: int in _range:
 			var q := e.quads[i]
 			if not (i % 3 == 0):
 				continue
 			q.render_points(3, 0.5, self)
 
-		for i in _range:
-			var q = e.quads[i]
+		for i: int in _range:
+			var q := e.quads[i]
 			if not ((i + 1) % 3 == 0):
 				continue
 			q.render_points(2, 0.75, self)
 
-		for i in _range:
+		for i: int in _range:
 			var q := e.quads[i]
 			if not ((i + 2) % 3 == 0):
 				continue
@@ -831,7 +831,7 @@ func generate_collision_points() -> PackedVector2Array:
 	if is_shape_closed():
 		var first_quad: SS2D_Quad = edge.quads[0]
 		var last_quad: SS2D_Quad = edge.quads.back()
-		weld_quads(last_quad, first_quad)
+		SS2D_Shape.weld_quads(last_quad, first_quad)
 
 	if not edge.quads.is_empty():
 		# Top edge (typically point A unless corner quad)
@@ -878,7 +878,7 @@ func cache_edges() -> void:
 
 func cache_meshes() -> void:
 	if shape_material != null:
-		_meshes = _build_meshes(sort_by_z_index(_edges))
+		_meshes = _build_meshes(SS2D_Shape.sort_by_z_index(_edges))
 
 
 func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
@@ -1033,7 +1033,7 @@ static func get_points_orientation(points: PackedVector2Array) -> ORIENTATION:
 
 func are_points_clockwise() -> bool:
 	var points: PackedVector2Array = _points.get_tessellated_points()
-	var orient: ORIENTATION = get_points_orientation(points)
+	var orient: ORIENTATION = SS2D_Shape.get_points_orientation(points)
 	return orient == ORIENTATION.CLOCKWISE
 
 
@@ -1234,7 +1234,7 @@ func _weld_quad_array(
 				return
 
 	if weld_first_and_last:
-		weld_quads(quads[-1], quads[0])
+		SS2D_Shape.weld_quads(quads[-1], quads[0])
 
 
 func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
@@ -1246,10 +1246,10 @@ func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -
 	var edges_by_material: Dictionary = SS2D_IndexMap.index_map_array_sort_by_object(final_edges)
 	# Erase any with null material
 	edges_by_material.erase(null)
-	for mat in edges_by_material:
+	for mat: Variant in edges_by_material:
 		var edge_first_idx: SS2D_IndexMap = null
 		var edge_last_idx: SS2D_IndexMap = null
-		for e in edges_by_material[mat]:
+		for e: SS2D_IndexMap in edges_by_material[mat]:
 			if e.indicies.has(0):
 				edge_first_idx = e
 			if e.indicies.has(verts.size()-1):
@@ -1276,7 +1276,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 		return edges
 
 	var index_maps: Array[SS2D_IndexMap] = _get_meta_material_index_mapping(s_mat, verts)
-	var overrides: Array[SS2D_IndexMap] = get_meta_material_index_mapping_for_overrides(s_mat, _points)
+	var overrides: Array[SS2D_IndexMap] = SS2D_Shape.get_meta_material_index_mapping_for_overrides(s_mat, _points)
 
 	# Remove the override indicies from the default index_maps
 	for override in overrides:
@@ -1284,9 +1284,9 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 		for index_map in index_maps:
 			var new_imaps: Array[SS2D_IndexMap] = index_map.remove_edges(override.indicies)
 			old_to_new_imaps[index_map] = new_imaps
-		for k in old_to_new_imaps:
+		for k: SS2D_IndexMap in old_to_new_imaps:
 			index_maps.erase(k)
-			for new_imap in old_to_new_imaps[k]:
+			for new_imap: SS2D_IndexMap in old_to_new_imaps[k]:
 				index_maps.push_back(new_imap)
 
 	# Merge index maps
@@ -1319,7 +1319,7 @@ static func get_meta_material_index_mapping_for_overrides(
 ) -> Array[SS2D_IndexMap]:
 	var mappings: Array[SS2D_IndexMap] = []
 	var overrides: Dictionary = pa.get_material_overrides()
-	for key_tuple in overrides:
+	for key_tuple: Array[int] in overrides:
 		var indicies: Array[int] = [pa.get_point_index(key_tuple[0]), pa.get_point_index(key_tuple[1])]
 		indicies = sort_by_int_ascending(indicies)
 		var m: SS2D_Material_Edge_Metadata = pa.get_material_override(key_tuple)
@@ -1335,14 +1335,14 @@ static func get_meta_material_index_mapping_for_overrides(
 func _get_meta_material_index_mapping(
 	s_material: SS2D_Material_Shape, verts: PackedVector2Array
 ) -> Array[SS2D_IndexMap]:
-	return get_meta_material_index_mapping(s_material, verts, is_shape_closed())
+	return SS2D_Shape.get_meta_material_index_mapping(s_material, verts, is_shape_closed())
 
 
 static func get_meta_material_index_mapping(
 	s_material: SS2D_Material_Shape, verts: PackedVector2Array, wrap_around: bool
 ) -> Array[SS2D_IndexMap]:
 	var final_edges: Array[SS2D_IndexMap] = []
-	var edge_building: Dictionary = {}
+	var edge_building: Dictionary = {}  # Dict[SS2D_Material_Edge_Metadata, SS2D_IndexMap]
 	for idx in range(0, verts.size() - 1, 1):
 		var idx_next: int = SS2D_PluginFunctionality.get_next_point_index(idx, verts, wrap_around)
 		var pt: Vector2 = verts[idx]
@@ -1355,22 +1355,24 @@ static func get_meta_material_index_mapping(
 
 		# Append to existing edges being built. Add new ones if needed
 		for e in edge_meta_materials:
+			var imap: SS2D_IndexMap = edge_building.get(e)
+
 			# Is exsiting, append
-			if edge_building.has(e):
-				if not idx_next in edge_building[e].indicies:
-					edge_building[e].indicies.push_back(idx_next)
+			if imap:
+				if not idx_next in imap.indicies:
+					imap.indicies.push_back(idx_next)
 			# Isn't existing, make a new mapping
 			else:
 				edge_building[e] = SS2D_IndexMap.new([idx, idx_next], e)
 
 		# Closeout and stop building edges that are no longer viable
-		for e in edge_building.keys():
+		for e: SS2D_Material_Edge_Metadata in edge_building.keys():
 			if not edge_meta_materials.has(e):
 				final_edges.push_back(edge_building[e])
 				edge_building.erase(e)
 
 	# Closeout all edge building
-	for e in edge_building.keys():
+	for e: SS2D_Material_Edge_Metadata in edge_building.keys():
 		final_edges.push_back(edge_building[e])
 
 	return final_edges
@@ -1382,7 +1384,7 @@ func _handle_material_change() -> void:
 	set_as_dirty()
 
 
-func _handle_material_override_change(_tuple) -> void:
+func _handle_material_override_change(_tuple: Array[int]) -> void:
 	set_as_dirty()
 
 
@@ -1441,7 +1443,7 @@ func get_ratio_from_tessellated_point_to_vertex(t_point_idx: int) -> float:
 	return tess_index_count / float(tess_point_count)
 
 
-func debug_print_points():
+func debug_print_points() -> void:
 	_points.debug_print()
 
 
@@ -1507,7 +1509,7 @@ func _edge_generate_corner(
 	c_scale: float,
 	c_offset: float
 ) -> SS2D_Quad:
-	var generate_corner := edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
+	var generate_corner := SS2D_Shape.edge_should_generate_corner(pt_prev, pt, pt_next, flip_edges)
 	if generate_corner == SS2D_Quad.CORNER.NONE:
 		return null
 	var corner_texture: Texture2D = null
@@ -1516,7 +1518,7 @@ func _edge_generate_corner(
 			corner_texture = edge_material.get_texture_corner_outer(texture_idx)
 		elif generate_corner == SS2D_Quad.CORNER.INNER:
 			corner_texture = edge_material.get_texture_corner_inner(texture_idx)
-	var corner_quad: SS2D_Quad = build_quad_corner(
+	var corner_quad: SS2D_Quad = SS2D_Shape.build_quad_corner(
 		pt_next,
 		pt,
 		pt_prev,
@@ -1587,7 +1589,7 @@ func _build_edge_with_material(
 	edge.first_point_key = _points.get_point_key_at_index(first_idx)
 	edge.last_point_key = _points.get_point_key_at_index(last_idx)
 
-	var flip_edges := should_flip_edges()
+	var should_flip := should_flip_edges()
 
 	# How many tessellated points are contained within this index map?
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
@@ -1639,13 +1641,13 @@ func _build_edge_with_material(
 				i += next_point_delta
 				continue
 
-		var new_quad: SS2D_Quad = build_quad_from_two_points(
+		var new_quad: SS2D_Quad = SS2D_Shape.build_quad_from_two_points(
 			pt,
 			pt_next,
 			tex,
 			width_scale * c_scale * tex_size.y,
 			flip_x,
-			flip_edges,
+			should_flip,
 			is_first_point,
 			is_last_point,
 			c_offset,

@@ -225,12 +225,12 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 
 	new_edges = SS2D_IndexMap.join_segments(new_edges)
 	var new_index_mappings: Array[SS2D_IndexMap] = []
-	for e in new_edges:
+	for e: Array[int] in new_edges:
 		new_index_mappings.push_back(SS2D_IndexMap.new(e, object))
 	return new_index_mappings
 
 
-static func indicies_to_edges(p_indicies: Array[int]) -> Array:
+static func indicies_to_edges(p_indicies: Array[int]) -> Array:  # Array[Array[int]]
 	var edges: Array = []
 	for i in range(0, p_indicies.size()-1, 1):
 		var edge: Array[int] = [i, i+1]
@@ -239,11 +239,13 @@ static func indicies_to_edges(p_indicies: Array[int]) -> Array:
 	return edges
 
 
+## Returns a Dict[Variant, Array[SS2D_IndexMap]]
 static func index_map_array_sort_by_object(imaps: Array) -> Dictionary:
 	var dict := {}
-	for imap in imaps:
-		if not dict.has(imap.object):
-			var arr: Array[SS2D_IndexMap] = []
+	for imap: SS2D_IndexMap in imaps:
+		var arr: Array[SS2D_IndexMap] = dict.get(imap.object)
+		if not arr:
+			arr = []
 			dict[imap.object] = arr
-		dict[imap.object].push_back(imap)
+		arr.push_back(imap)
 	return dict

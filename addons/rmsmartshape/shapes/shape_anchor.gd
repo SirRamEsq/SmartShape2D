@@ -143,7 +143,7 @@ func connect_shape(s: SS2D_Shape) -> void:
 	s.connect("tree_exiting", self._monitored_node_leaving)
 
 
-func refresh():
+func refresh() -> void:
 	if shape == null:
 		return
 	if not is_instance_valid(shape):
