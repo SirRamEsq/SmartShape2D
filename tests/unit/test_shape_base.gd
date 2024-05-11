@@ -18,14 +18,14 @@ var n_up = Vector2(0, -1)
 #      pt_b -> O--------O <- pt_c  ▼         #
 ##############################################
 
-func test_tessellated_idx_and_point_idx():
-	var verts = [
+func test_tessellated_idx_and_point_idx() -> void:
+	var verts := [
 		Vector2(-10, -10), # 0
 		Vector2(10, -10), # 1
 		Vector2(10, 10), # 2
 		Vector2(-10, 10) # 3
 	]
-	var t_verts = [
+	var t_verts := [
 		Vector2(-10, -10), # 0 (0)
 		Vector2(0, -11), # 1 (0)
 		Vector2(10, -10), # 2 (1)
@@ -34,23 +34,30 @@ func test_tessellated_idx_and_point_idx():
 		Vector2(0, 12), # 5 (2)
 		Vector2(-10, 10) # 6 (3)
 	]
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 0), 0)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 1), 2)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 2), 4)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 3), 6)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, 400), 6)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, -1), 0)
-	assert_eq(SS2D_Shape.get_tessellated_idx_from_point(verts, t_verts, -100), 0)
 
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 0), 0)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 1), 0)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 2), 1)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 3), 1)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 4), 2)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 5), 2)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 6), 3)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, 600), 3)
-	assert_eq(SS2D_Shape.get_vertex_idx_from_tessellated_point(verts, t_verts, -600), 0)
+	var mapping := SS2D_TesselationVertexMapping.new()
+	mapping.build(t_verts, verts)
+
+	assert_eq(mapping.vertex_to_tess_indices(0)[0], 0)
+	assert_eq(mapping.vertex_to_tess_indices(1)[0], 2)
+	assert_eq(mapping.vertex_to_tess_indices(2)[0], 4)
+	assert_eq(mapping.vertex_to_tess_indices(3)[0], 6)
+
+	assert_eq(mapping.tess_to_vertex_index(0), 0)
+	assert_eq(mapping.tess_to_vertex_index(1), 0)
+	assert_eq(mapping.tess_to_vertex_index(2), 1)
+	assert_eq(mapping.tess_to_vertex_index(3), 1)
+	assert_eq(mapping.tess_to_vertex_index(4), 2)
+	assert_eq(mapping.tess_to_vertex_index(5), 2)
+	assert_eq(mapping.tess_to_vertex_index(6), 3)
+
+	# Out of bound access previously emitted an error message and then clamped the index to 0 or Array.size().
+	# TOOD: Find out if retaining this behavior is desirable.
+	# assert_eq(mapping.vertex_to_tess_indices(400)[0], 6)
+	# assert_eq(mapping.vertex_to_tess_indices(-1)[0], 0)
+	# assert_eq(mapping.vertex_to_tess_indices(-100)[0], 0)
+	# assert_eq(mapping.tess_to_vertex_index(600), 3)
+	# assert_eq(mapping.tess_to_vertex_index(-600), 0)
 
 func test_get_meta_material_index_mapping_simple_squareish_shape():
 	var verts = [

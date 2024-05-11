@@ -68,14 +68,17 @@ func test_action_close_shape() -> void:
 	add_child_autofree(s)
 
 	s.add_points([Vector2.UP, Vector2.RIGHT, Vector2.DOWN])
+
 	assert_false(s.is_shape_closed())
 	assert_true(s.can_close())
 
 	var a := ActionCloseShape.new(s)
+
 	a.do()
 	assert_true(s.is_shape_closed())
 	assert_false(s.can_close())
 	validate_positions(s, [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.UP])
+
 	a.undo()
 	assert_false(s.is_shape_closed())
 	assert_true(s.can_close())
@@ -158,10 +161,13 @@ func test_action_invert_orientation() -> void:
 	# Test with clockwise sequence.
 	s.add_points(cw_sequence)
 	s.close_shape()
+
 	cw_sequence.push_back(cw_sequence.front())
 	validate_positions(s, cw_sequence)
+
 	a.do()
 	validate_positions(s, cw_sequence)
+
 	a.undo()
 	validate_positions(s, cw_sequence)
 
@@ -170,9 +176,12 @@ func test_action_invert_orientation() -> void:
 	s.add_points(ccw_sequence)
 	ccw_sequence.push_back(ccw_sequence.front())
 	s.close_shape()
+
 	validate_positions(s, ccw_sequence)
+
 	a.do()
 	validate_positions(s, cw_sequence)
+
 	a.undo()
 	validate_positions(s, ccw_sequence)
 

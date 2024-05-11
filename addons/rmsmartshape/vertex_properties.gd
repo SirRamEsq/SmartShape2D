@@ -2,27 +2,24 @@
 extends Resource
 class_name SS2D_VertexProperties
 
-@export var texture_idx: int # : set = set_texture_idx
-@export var flip: bool #: set = set_flip
-@export var width: float #: set = set_width
+@export var texture_idx: int : set = set_texture_idx
+@export var flip: bool : set = set_flip
+@export var width: float : set = set_width
 
 
 func set_texture_idx(i: int) -> void:
 	texture_idx = i
 	emit_changed()
-	notify_property_list_changed()
 
 
 func set_flip(b: bool) -> void:
 	flip = b
 	emit_changed()
-	notify_property_list_changed()
 
 
 func set_width(w: float) -> void:
 	width = w
 	emit_changed()
-	notify_property_list_changed()
 
 
 func _init() -> void:
