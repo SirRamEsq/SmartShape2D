@@ -26,7 +26,7 @@ class ActionPropertyEditor:
 		button = Button.new()
 		button.text = "Execute"
 		add_child(button)
-		button.connect("pressed", func(): emit_signal("action_pressed"))
+		button.connect("pressed", func() -> void: emit_signal("action_pressed"))
 
 	func _ready() -> void:
 		button.icon = get_theme_icon("TextEditorPlay", "EditorIcons")

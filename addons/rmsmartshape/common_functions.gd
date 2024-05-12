@@ -27,7 +27,7 @@ static func to_vector3(vector: Vector2) -> Vector3:
 
 static func merge_arrays(arrays: Array) -> Array:
 	var new_array := []
-	for array in arrays:
-		for v in array:
+	for array: Array in arrays:
+		for v: Variant in array:
 			new_array.push_back(v)
 	return new_array

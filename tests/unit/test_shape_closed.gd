@@ -3,29 +3,29 @@ extends "res://addons/gut/test.gd"
 var TEST_TEXTURE: Texture2D = preload("res://tests/unit/test.png")
 
 
-func test_adjust_point_index():
-	var shape = SS2D_Shape_Closed.new()
+func test_adjust_point_index() -> void:
+	var shape := SS2D_Shape_Closed.new()
 	add_child_autofree(shape)
-	var points = get_clockwise_points()
-	var keys = []
+	var points := get_clockwise_points()
+	var keys := []
 	for i in range(0, points.size(), 1):
-		var p = points[i]
+		var p := points[i]
 		keys.push_back(shape.add_point(p))
 	shape.close_shape()
 
 	assert_eq(shape.adjust_add_point_index(0), 1)
-	var point_count = shape.get_point_count()
+	var point_count := shape.get_point_count()
 	assert_eq(shape.adjust_add_point_index(-1), point_count - 1)
 	assert_eq(shape.adjust_add_point_index(point_count - 1), point_count - 1)
 	assert_eq(shape.adjust_add_point_index(80), point_count - 1)
 
 
-func test_add_points():
-	var shape = SS2D_Shape_Closed.new()
+func test_add_points() -> void:
+	var shape := SS2D_Shape_Closed.new()
 	add_child_autofree(shape)
-	var points = get_clockwise_points()
+	var points := get_clockwise_points()
 
-	var keys = []
+	var keys := []
 	assert_eq(shape.get_point_count(), 0)
 
 	keys.push_back(shape.add_point(points[0]))
@@ -94,7 +94,7 @@ func test_add_points():
 	assert_eq(shape.get_point_index(keys[keys.size() - 1]), 3)
 
 
-func get_clockwise_points() -> Array:
+func get_clockwise_points() -> Array[Vector2]:
 	return [
 		Vector2(0, 0),
 		Vector2(50, -50),

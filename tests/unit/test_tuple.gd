@@ -3,12 +3,12 @@ extends "res://addons/gut/test.gd"
 const TUP = preload("res://addons/rmsmartshape/lib/tuple.gd")
 
 
-func test_equality():
-	var t1 = TUP.create_tuple(5, 3)
-	var t2 = TUP.create_tuple(5, 3)
-	var t3 = TUP.create_tuple(3, 5)
-	var t4 = TUP.create_tuple(3, 7)
-	var t5 = TUP.create_tuple(0, 5)
+func test_equality() -> void:
+	var t1 := TUP.create_tuple(5, 3)
+	var t2 := TUP.create_tuple(5, 3)
+	var t3 := TUP.create_tuple(3, 5)
+	var t4 := TUP.create_tuple(3, 7)
+	var t5 := TUP.create_tuple(0, 5)
 	assert_true(TUP.tuples_are_equal(t1, t2))
 	assert_true(TUP.tuples_are_equal(t1, t3))
 	assert_true(TUP.tuples_are_equal(t2, t3))
@@ -16,12 +16,12 @@ func test_equality():
 	assert_false(TUP.tuples_are_equal(t2, t5))
 
 
-func test_find():
-	var t1 = TUP.create_tuple(5, 3)
-	var t2 = TUP.create_tuple(5, 3)
-	var t3 = TUP.create_tuple(3, 5)
-	var t4 = TUP.create_tuple(1, 0)
-	var ta = [t1, t2, t3, t4]
+func test_find() -> void:
+	var t1 := TUP.create_tuple(5, 3)
+	var t2 := TUP.create_tuple(5, 3)
+	var t3 := TUP.create_tuple(3, 5)
+	var t4 := TUP.create_tuple(1, 0)
+	var ta := [t1, t2, t3, t4]
 	assert_eq(0, TUP.find_tuple_in_array_of_tuples(ta, t1))
 	assert_eq(0, TUP.find_tuple_in_array_of_tuples(ta, t2))
 	assert_eq(0, TUP.find_tuple_in_array_of_tuples(ta, t3))
@@ -29,9 +29,9 @@ func test_find():
 	assert_eq(-1, TUP.find_tuple_in_array_of_tuples(ta, [7, 8]))
 
 
-func test_get_other_value():
-	var t1 = TUP.create_tuple(3, 5)
-	var t2 = TUP.create_tuple(1, 0)
+func test_get_other_value() -> void:
+	var t1 := TUP.create_tuple(3, 5)
+	var t2 := TUP.create_tuple(1, 0)
 	assert_eq(5, TUP.get_other_value_from_tuple(t1, 3))
 	assert_eq(3, TUP.get_other_value_from_tuple(t1, 5))
 	assert_eq(1, TUP.get_other_value_from_tuple(t2, 0))
@@ -40,7 +40,7 @@ func test_get_other_value():
 	assert_eq(-1, TUP.get_other_value_from_tuple(t2, 9))
 
 
-func test_is_tuple():
+func test_is_tuple() -> void:
 	assert_true(TUP.is_tuple([0, 2]))
 	assert_true(TUP.is_tuple([1, 0]))
 	assert_true(TUP.is_tuple([-1000, 1000]))

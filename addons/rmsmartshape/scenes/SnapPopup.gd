@@ -1,5 +1,6 @@
 @tool
 extends Popup
+class_name SS2D_SnapPopup
 
 @onready var snap_offset_x: SpinBox = %SnapOffsetX
 @onready var snap_offset_y: SpinBox = %SnapOffsetY

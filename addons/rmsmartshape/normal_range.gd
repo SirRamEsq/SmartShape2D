@@ -68,8 +68,8 @@ static func _get_signed_angle_deg(degrees: float) -> float:
 
 # Saving a scene with this resource requires a parameter-less init method
 func _init(_begin: float = 0.0, _distance: float = 0.0) -> void:
-	_begin = _get_signed_angle_deg(_begin)
-	_distance = _get_signed_angle_deg(_distance)
+	_begin = SS2D_NormalRange._get_signed_angle_deg(_begin)
+	_distance = SS2D_NormalRange._get_signed_angle_deg(_distance)
 
 	begin = _begin
 	distance = _distance
@@ -77,15 +77,15 @@ func _init(_begin: float = 0.0, _distance: float = 0.0) -> void:
 
 func is_in_range(vec: Vector2) -> bool:
 	# A Distance of 0 or 360 is the entire circle
-	if distance == 0 or _get_positive_angle_deg(distance) == 360.0:
+	if distance == 0 or SS2D_NormalRange._get_positive_angle_deg(distance) == 360.0:
 		return true
 
-	var begin_positive: float = _get_positive_angle_deg(begin)
-	var end_positive: float = _get_positive_angle_deg(begin + distance)
+	var begin_positive: float = SS2D_NormalRange._get_positive_angle_deg(begin)
+	var end_positive: float = SS2D_NormalRange._get_positive_angle_deg(begin + distance)
 	# If positive, counter clockwise direction
 	# If negative, clockwise direction
 	var direction: float = signf(distance)
-	var angle: float = get_angle_from_vector(vec)
+	var angle: float = SS2D_NormalRange.get_angle_from_vector(vec)
 
 	# Swap begin and end if direction is negative
 	if direction == -1:

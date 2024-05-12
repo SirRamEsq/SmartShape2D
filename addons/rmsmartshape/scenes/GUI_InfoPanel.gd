@@ -1,5 +1,6 @@
 @tool
 extends PanelContainer
+class_name SS2D_PointInfoPanel
 
 
 @onready var idx_label: Label = %IDX

@@ -1,15 +1,15 @@
 extends "res://addons/gut/test.gd"
 
 
-func test_setters():
-	var wrong_node = Node2D.new()
+func test_setters() -> void:
+	var wrong_node := Node2D.new()
 	add_child_autofree(wrong_node)
-	var shapes = [generate_closed_shape(), generate_open_shape()]
-	var anchor = SS2D_Shape_Anchor.new()
+	var shapes: Array[SS2D_Shape] = [generate_closed_shape(), generate_open_shape()]
+	var anchor := SS2D_Shape_Anchor.new()
 	add_child_autofree(anchor)
 
 	# Test bad path
-	var bad_path = "./HERP_DERP"
+	var bad_path := "./HERP_DERP"
 	anchor.shape_path = bad_path
 	assert_eq(anchor.shape_path, NodePath(bad_path))
 	assert_eq(anchor.shape, null)
@@ -21,9 +21,9 @@ func test_setters():
 	assert_eq(anchor.shape, null)
 
 	for shape in shapes:
-		var points = shape.get_vertices()
+		var points := shape.get_vertices()
 
-		var valid_path = anchor.get_path_to(shape)
+		var valid_path := anchor.get_path_to(shape)
 		# Check shape is sibling node
 		assert_eq(valid_path, NodePath("../%s" % shape.name))
 
@@ -50,8 +50,8 @@ func test_setters():
 		assert_eq(anchor.shape_point_index, points.size() - 2)
 
 
-func generate_closed_shape() -> SS2D_Shape_Closed:
-	var shape := SS2D_Shape_Closed.new()
+func generate_closed_shape() -> SS2D_Shape:
+	var shape := SS2D_Shape.new()
 	shape.name = "Closed"
 	add_child_autofree(shape)
 	var points := generate_points()

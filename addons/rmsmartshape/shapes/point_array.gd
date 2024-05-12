@@ -588,6 +588,9 @@ func get_material_override(tuple: Array[int]) -> SS2D_Material_Edge_Metadata:
 	return _material_overrides[get_material_override_tuple(tuple)]
 
 
+## Returns a dictionary of specific materials to use for specific tuples of points.[br]
+## Key is tuple of two point keys, value is material.[br]
+## => Dict[Array[int], SS2D_Material_Edge_Metadata]
 func get_material_overrides() -> Dictionary:
 	return _material_overrides
 

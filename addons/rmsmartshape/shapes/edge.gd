@@ -31,11 +31,12 @@ static func different_render(q1: SS2D_Quad, q2: SS2D_Quad) -> bool:
 	return true
 
 
-static func get_consecutive_quads_for_mesh(_quads: Array[SS2D_Quad]) -> Array:
-	if _quads.is_empty():
-		return []
+static func get_consecutive_quads_for_mesh(_quads: Array[SS2D_Quad]) -> Array[Array]:
+	var quad_ranges: Array[Array] = []
 
-	var quad_ranges: Array = []
+	if _quads.is_empty():
+		return quad_ranges
+
 	var quad_range: Array[SS2D_Quad] = []
 	quad_range.push_back(_quads[0])
 	for i in range(1, _quads.size(), 1):
@@ -310,7 +311,7 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 	# Get Arrays of consecutive quads with the same mesh data.
 	# For each array, generate Mesh Data from the quad.
 
-	var consecutive_quad_arrays: Array = SS2D_Edge.get_consecutive_quads_for_mesh(quads)
+	var consecutive_quad_arrays := SS2D_Edge.get_consecutive_quads_for_mesh(quads)
 	#print("Arrays: %s" % consecutive_quad_arrays.size())
 	var meshes: Array[SS2D_Mesh] = []
 	for consecutive_quads in consecutive_quad_arrays:

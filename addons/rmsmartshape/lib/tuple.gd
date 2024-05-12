@@ -30,7 +30,7 @@ static func tuples_are_equal(t1: Array[int], t2: Array[int]) -> bool:
 
 static func find_tuple_in_array_of_tuples(tuple_array: Array, t: Array[int]) -> int:
 	for i in range(tuple_array.size()):
-		var other: Array[int]
+		var other: Array[int] = []
 		other.assign(tuple_array[i])
 		if tuples_are_equal(t, other):
 			return i
@@ -41,8 +41,8 @@ static func is_tuple_in_array_of_tuples(tuple_array: Array, t: Array[int]) -> bo
 	return find_tuple_in_array_of_tuples(tuple_array, t) != -1
 
 
-static func is_tuple(thing) -> bool:
-	if thing is Array:
-		if thing.size() == 2:
-			return true
-	return false
+static func is_tuple(thing: Variant) -> bool:
+	if not thing is Array:
+		return false
+	var arr := thing as Array
+	return arr and arr.size() == 2

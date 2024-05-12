@@ -10,7 +10,6 @@ var ActionDeletePoint := preload("res://addons/rmsmartshape/actions/action_delet
 var ActionSplitShape := preload("res://addons/rmsmartshape/actions/action_split_shape.gd")
 
 var _shape: SS2D_Shape
-var _key: int
 var _action: SS2D_Action
 
 
