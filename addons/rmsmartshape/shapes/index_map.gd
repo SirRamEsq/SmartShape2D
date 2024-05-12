@@ -243,9 +243,9 @@ static func indicies_to_edges(p_indicies: Array[int]) -> Array:  # Array[Array[i
 static func index_map_array_sort_by_object(imaps: Array) -> Dictionary:
 	var dict := {}
 	for imap: SS2D_IndexMap in imaps:
-		var arr: Array[SS2D_IndexMap] = dict.get(imap.object)
-		if not arr:
-			arr = []
-			dict[imap.object] = arr
-		arr.push_back(imap)
+		if not dict.has(imap.object):
+			dict[imap.object] = [ imap ]
+		else:
+			var arr: Array[SS2D_IndexMap] = dict[imap.object]
+			arr.push_back(imap)
 	return dict
