@@ -1147,7 +1147,7 @@ func _input_handle_left_click(
 			elif Input.is_key_pressed(KEY_ALT):
 				# Add point between start and end points of the closest edge
 				idx = shape.get_point_index(closest_edge_keys[1])
-			var add_point := ActionAddPoint.new(shape, local_position, -1, not _defer_mesh_updates)
+			var add_point := ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates)
 			perform_action(add_point)
 			if Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_ALT):
 				select_control_points_to_move([add_point.get_key()], vp_m_pos)

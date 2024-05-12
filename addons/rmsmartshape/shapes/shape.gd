@@ -947,8 +947,8 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 
 
 func _get_uv_points(
-	points: PackedVector2Array, 
-	s_material: SS2D_Material_Shape, 
+	points: PackedVector2Array,
+	s_material: SS2D_Material_Shape,
 	tex_size: Vector2
 ) -> PackedVector2Array:
 	var transformation: Transform2D = global_transform
@@ -962,7 +962,7 @@ func _get_uv_points(
 	transformation = transformation.scaled(Vector2(tex_scale, tex_scale))
 
 	# If relative rotation ... undo rotation from global_transform
-	if not s_material.fill_texture_absolute_rotation: 
+	if not s_material.fill_texture_absolute_rotation:
 		transformation = transformation.rotated(-global_rotation)
 
 	# Rotate the desired extra amount
@@ -970,10 +970,10 @@ func _get_uv_points(
 
 	# Shift the desired amount (adjusted so it's scale independent)
 	transformation = transformation.translated(-s_material.fill_texture_offset / s_material.fill_texture_scale)
-	
+
 	# Convert local space to UV
 	transformation = transformation.scaled(Vector2(1 / tex_size.x, 1 / tex_size.y))
-	
+
 	return transformation * points
 
 
