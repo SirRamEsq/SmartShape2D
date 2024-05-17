@@ -473,7 +473,7 @@ func get_point_constraint(key1: int, key2: int) -> CONSTRAINT:
 	var t_index: int = TUP.find_tuple_in_array_of_tuples(keys, t)
 	if t_index == -1:
 		return CONSTRAINT.NONE
-	var t_key: Array[int] = keys[t_index]
+	var t_key: Array = keys[t_index]
 	return _constraints[t_key]
 
 

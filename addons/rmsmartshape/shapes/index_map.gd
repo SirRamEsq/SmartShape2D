@@ -244,7 +244,8 @@ static func index_map_array_sort_by_object(imaps: Array) -> Dictionary:
 	var dict := {}
 	for imap: SS2D_IndexMap in imaps:
 		if not dict.has(imap.object):
-			dict[imap.object] = [ imap ]
+			var arr: Array[SS2D_IndexMap] = [ imap ]
+			dict[imap.object] = arr
 		else:
 			var arr: Array[SS2D_IndexMap] = dict[imap.object]
 			arr.push_back(imap)
