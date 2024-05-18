@@ -1,4 +1,5 @@
 extends 'res://addons/gut/gut_to_move.gd'
+class_name GutMain
 
 # ##############################################################################
 #
@@ -52,14 +53,6 @@ var _ignore_pause_before_teardown = false
 var ignore_pause_before_teardown = _ignore_pause_before_teardown :
 	get: return _ignore_pause_before_teardown
 	set(val): _ignore_pause_before_teardown = val
-
-# TODO remove this
-var _temp_directory = 'user://gut_temp_directory'
-## The directory where GUT stores any temporary information during a run.
-var temp_directory = _temp_directory :
-	get: return _temp_directory
-	set(val): _temp_directory = val
-
 
 var _log_level = 1
 ## The log detail level.  Valid values are 0 - 2.  Larger values do not matter.
@@ -754,6 +747,8 @@ func _test_the_scripts(indexes=[]):
 			if((_unit_test_name != '' and _current_test.name.find(_unit_test_name) > -1) or
 				(_unit_test_name == '')):
 
+				var ticks_before := Time.get_ticks_usec()
+
 				if(_current_test.arg_count > 1):
 					_lgr.error(str('Parameterized test ', _current_test.name,
 						' has too many parameters:  ', _current_test.arg_count, '.'))
@@ -768,6 +763,9 @@ func _test_the_scripts(indexes=[]):
 					_lgr.risky(str(_current_test.name, ' did not assert'))
 
 				_current_test.has_printed_name = false
+
+				_current_test.time_taken = (Time.get_ticks_usec() - ticks_before) / 1000000.0
+
 				end_test.emit()
 
 				# After each test, check to see if we shoudl wait a frame to
@@ -886,22 +884,25 @@ func _get_files(path, prefix, suffix):
 		return [];
 
 	var d = DirAccess.open(path)
-	# true parameter tells list_dir_begin not to include "." and ".." directories.
-	d.list_dir_begin() # TODO 4.0 fill missing arguments https://github.com/godotengine/godot/pull/40547
+	d.include_hidden = false
+	d.include_navigational = false
 
-	# Traversing a directory is kinda odd.  You have to start the process of listing
-	# the contents of a directory with list_dir_begin then use get_next until it
-	# returns an empty string.  Then I guess you should end it.
+	# Traversing a directory is kinda odd.  You have to start the process of
+	# listing the contents of a directory with list_dir_begin then use get_next
+	# until it returns an empty string.  Then I guess you should end it.
+	d.list_dir_begin()
 	var fs_item = d.get_next()
 	var full_path = ''
 	while(fs_item != ''):
 		full_path = path.path_join(fs_item)
 
-		#file_exists returns fasle for directories
-		if(d.file_exists(full_path)):
+		# MUST use FileAccess since d.file_exists returns false for exported
+		# projects
+		if(FileAccess.file_exists(full_path)):
 			if(fs_item.begins_with(prefix) and fs_item.ends_with(suffix)):
 				files.append(full_path)
-		elif(include_subdirectories and d.dir_exists(full_path)):
+		# MUST use DirAccess, d.dir_exists is false for exported projects.
+		elif(include_subdirectories and DirAccess.dir_exists_absolute(full_path)):
 			directories.append(full_path)
 
 		fs_item = d.get_next()
@@ -921,7 +922,7 @@ func _get_files(path, prefix, suffix):
 # public
 #
 #########################
-func get_elapsed_time():
+func get_elapsed_time() -> float:
 	var to_return = 0.0
 	if(_start_time != 0.0):
 		to_return = Time.get_ticks_msec() - _start_time
@@ -1004,8 +1005,6 @@ func add_directory(path, prefix=_file_prefix, suffix=".gd"):
 	var dir = DirAccess.open(path)
 	if(dir == null):
 		_lgr.error(str('The path [', path, '] does not exist.'))
-		# !4.0 exit code does not exist anymore
-		# OS.exit_code = 1
 	else:
 		var files = _get_files(path, prefix, suffix)
 		for i in range(files.size()):

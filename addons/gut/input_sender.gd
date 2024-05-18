@@ -5,7 +5,7 @@
 # The MIT License (MIT)
 # =====================
 #
-# Copyright (c) 2020 Tom "Butch" Wesley
+# Copyright (c) 2023 Tom "Butch" Wesley
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -280,13 +280,16 @@ func _send_event(event):
 			if(_auto_flush_input):
 				Input.flush_buffered_events()
 		else:
-			if(r.has_method("_input")):
+			if(r.has_method(&"_input")):
 				r._input(event)
 
-			if(r.has_method("_gui_input")):
+			if(r.has_signal(&"gui_input")):
+				r.gui_input.emit(event)
+
+			if(r.has_method(&"_gui_input")):
 				r._gui_input(event)
 
-			if(r.has_method("_unhandled_input")):
+			if(r.has_method(&"_unhandled_input")):
 				r._unhandled_input(event)
 
 
