@@ -1,4 +1,6 @@
+@tool
 class_name GutUtils
+extends Object
 # ------------------------------------------------------------------------------
 # Description
 # -----------
@@ -36,6 +38,9 @@ const TEST_STATUSES = {
 	PASSED = 'pass'
 }
 
+static var avail_fonts = ['AnonymousPro', 'CourierPrime', 'LobsterTwo', 'Default']
+
+
 # This is a holdover from when GUT was making a psuedo autoload.  It would add
 # an instance of this class to the tree with a name and retrieve it when
 # get_instance was called.  We now have static variables so this var is now
@@ -58,9 +63,6 @@ static func get_root_node():
 
 # ------------------------------------------------------------------------------
 # Get the ONE instance of utils
-# Since we can't have static variables we have to store the instance in the
-# tree.  This means you have to wait a bit for the main loop to be up and
-# running.
 # ------------------------------------------------------------------------------
 static func get_instance():
 	if(_the_instance == null):
@@ -70,13 +72,29 @@ static func get_instance():
 
 
 # ------------------------------------------------------------------------------
-# Gets the value from an enum.  If passed an int it will return it if the enum
-# contains it.  If passed a string it will convert it to upper case and replace
-# spaces with underscores.  If the enum contains the key, it will return the
-# value for they key.  When keys or ints are not found, the default is returned.
+# Gets the value from an enum.
+# - If passed an integer value as a string it will convert it to an int and
+# 	processes the int value.
+# - If the value is a float then it is converted to an int and then processes
+#	the int value
+# - If the value is an int, or was converted to an int, then the enum is checked
+#	to see if it contains the value, if so then the value is returned.
+#	Otherwise the default is returned.
+# - If the value is a string then it is uppercased and all spaces are replaced
+#	with underscores.  It then checks to see if enum contains a key of that
+#	name.  If so then the value for that key is returned, otherwise the default
+#	is returned.
+#
+# This description is longer than the code, you should have just read the code
+# and the tests.
 # ------------------------------------------------------------------------------
 static func get_enum_value(thing, e, default=null):
 	var to_return = default
+
+	if(typeof(thing) == TYPE_STRING and str(thing.to_int()) == thing):
+		thing = thing.to_int()
+	elif(typeof(thing) == TYPE_FLOAT):
+		thing = int(thing)
 
 	if(typeof(thing) == TYPE_STRING):
 		var converted = thing.to_upper().replace(' ', '_')
@@ -190,9 +208,9 @@ var CollectedScript = load('res://addons/gut/collected_test.gd')
 var GutScene = load('res://addons/gut/GutScene.tscn')
 
 # Source of truth for the GUT version
-var version = '9.1.1'
+var version = '9.2.1'
 # The required Godot version as an array.
-var req_godot = [4, 1, 0]
+var req_godot = [4, 2, 0]
 
 
 # ------------------------------------------------------------------------------
@@ -485,15 +503,17 @@ func add_line_numbers(contents):
 		line_num += 1
 	return to_return
 
-func pp(dict, indent=''):
-	var text = json.stringify(dict, '  ')
+
+func pp(dict, indent='    '):
+	var text = json.stringify(dict, indent)
 	print(text)
 
 
+var _dynamic_script_base_name = 'gut_dynamic_script_' # needs to be changable for tests
 var _created_script_count = 0
 func create_script_from_source(source, override_path=null):
 	_created_script_count += 1
-	var r_path = ''#str('workaround for godot issue #65263 (', _created_script_count, ')')
+	var r_path = str('res://addons/gut/not_a_real_file/', _dynamic_script_base_name, _created_script_count)
 	if(override_path != null):
 		r_path = override_path
 
@@ -504,6 +524,11 @@ func create_script_from_source(source, override_path=null):
 	# ERROR: Another resource is loaded from path 'workaround for godot issue #65263' (possible cyclic resource inclusion).
 	DynamicScript.resource_path = r_path
 	var result = DynamicScript.reload()
+	if(result != OK):
+		DynamicScript = null
+		var l = get_logger()
+		l.error(str('Could not create script from source.  Error Code ', result))
+		l.info(str("Source Code:\n", add_line_numbers(source)))
 
 	return DynamicScript
 

@@ -1,0 +1,112 @@
+[gd_scene load_steps=2 format=3 uid="uid://tsfsnxbfcax6"]
+
+[ext_resource type="Script" path="res://addons/diagnosticlist/Panel.gd" id="1_fewy8"]
+
+[node name="DiagnosticsPanel" type="Control"]
+custom_minimum_size = Vector2(250, 225)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fewy8")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="error_tree_list" type="Tree" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 3
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+scroll_horizontal_enabled = false
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="cb_auto_refresh" type="CheckBox" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Auto-Refresh"
+
+[node name="btn_refresh_errors" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate = false
+text = "Refresh"
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="cb_group_by_file" type="CheckBox" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Group by file"
+
+[node name="btn_filter_errors" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"EditorLogFilterButton"
+toggle_mode = true
+button_pressed = true
+text = "0"
+
+[node name="btn_filter_warnings" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"EditorLogFilterButton"
+toggle_mode = true
+button_pressed = true
+text = "0"
+
+[node name="btn_filter_infos" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"EditorLogFilterButton"
+toggle_mode = true
+button_pressed = true
+text = "0"
+
+[node name="btn_filter_hints" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"EditorLogFilterButton"
+toggle_mode = true
+button_pressed = true
+text = "0"
+
+[node name="label_refresh_time" type="Label" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0.541176)
+layout_mode = 2
+size_flags_vertical = 10
+text = "Connecting..."
+horizontal_alignment = 2
+autowrap_mode = 2
+
+[node name="multiple_instances_alert" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "Diagnostic List - Warning!"
+position = Vector2i(0, 36)
+size = Vector2i(640, 158)
+dialog_text = "There seems to be another Godot instance running.
+
+The Diagnostic List plugin does not work correctly with multiple Godot instances.
+It will only be able to connect to the first instance, causing incorrect diagnostics."

@@ -11,6 +11,9 @@ var valid_fonts = ['AnonymousPro', 'CourierPro', 'LobsterTwo', 'Default']
 var default_options = {
 	background_color = Color(.15, .15, .15, 1).to_html(),
 	config_file = 'res://.gutconfig.json',
+	# used by editor to handle enabled/disabled dirs.  All dirs configured go
+	# here and only the enabled dirs go into dirs
+	configured_dirs = [],
 	dirs = [],
 	disable_colors = false,
 	# double strategy can be the name of the enum value, the enum value or
@@ -48,20 +51,21 @@ var default_options = {
 	gut_on_top = true,
 }
 
-var default_panel_options = {
-	font_name = 'CourierPrime',
-	font_size = 16,
-	output_font_name = 'CourierPrime',
-	output_font_size = 30,
-	hide_result_tree = false,
-	hide_output_text = false,
-	hide_settings = false,
-	use_colors = true
-}
 
 var options = default_options.duplicate()
 var json = JSON.new()
 
+
+func _init() -> void:
+	# Ensure the exclude_addons option in the project settings is enabled when running GUT.
+	# This is important, because GUT will throw errors if this option is disabled, e.g. due to
+	# overriding native methods.
+	# When working on addons it is usually desired to disable exclude_addons in order to get proper
+	# code diagnostics.
+	# This however makes it tedious to run GUT because the option has to be manually disabled before
+	# running tests.
+	if not Engine.is_editor_hint():
+		ProjectSettings.set("debug/gdscript/warnings/exclude_addons", true)
 
 func _null_copy(h):
 	var new_hash = {}
@@ -135,7 +139,7 @@ func _apply_options(opts, gut):
 	# Sometimes it is the index, sometimes it's a string.  This sets it regardless
 	gut.double_strategy = GutUtils.get_enum_value(
 		opts.double_strategy, GutUtils.DOUBLE_STRATEGY,
-		GutUtils.DOUBLE_STRATEGY.INCLUDE_NATIVE)
+		GutUtils.DOUBLE_STRATEGY.SCRIPT_ONLY)
 
 	gut.unit_test_name = opts.unit_test_name
 	gut.pre_run_script = opts.pre_run_script
@@ -165,13 +169,18 @@ func write_options(path):
 	return result
 
 
+# consistent name
+func save_file(path):
+	write_options(path)
+
+
 func load_options(path):
 	return _load_options_from_config_file(path, options)
 
 
-func load_panel_options(path):
-	options['panel_options'] = default_panel_options.duplicate()
-	return _load_options_from_config_file(path, options)
+# consistent name
+func load_file(path):
+	return load_options(path)
 
 
 func load_options_no_defaults(path):
