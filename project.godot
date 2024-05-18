@@ -16,7 +16,7 @@ config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/rmsmartshape/plugin.cfg", "res://addons/gut/plugin.cfg")
+enabled=PackedStringArray("res://addons/diagnosticlist/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/rmsmartshape/plugin.cfg")
 
 [physics]
 
