@@ -182,11 +182,11 @@ func test_material_override_add_delete() -> void:
 
 	# Add
 	assert_eq(0, pa.get_material_overrides().size())
-	pa.set_material_override([0,1], mmat1)
+	pa.set_material_override(Vector2i(0,1), mmat1)
 	assert_eq(1, pa.get_material_overrides().size())
-	pa.set_material_override([1,0], mmat1)
+	pa.set_material_override(Vector2i(1,0), mmat1)
 	assert_eq(1, pa.get_material_overrides().size())
-	pa.set_material_override([2,1], mmat2)
+	pa.set_material_override(Vector2i(2,1), mmat2)
 	assert_eq(2, pa.get_material_overrides().size())
 
 	assert_true(mmat1.is_connected("changed", pa._on_material_override_changed))
@@ -194,29 +194,29 @@ func test_material_override_add_delete() -> void:
 
 
 	# Get
-	assert_eq(null, pa.get_material_override([5,1]))
-	assert_eq(mmat1, pa.get_material_override([0,1]))
-	assert_eq(mmat2, pa.get_material_override([2,1]))
+	assert_eq(null, pa.get_material_override(Vector2i(5,1)))
+	assert_eq(mmat1, pa.get_material_override(Vector2i(0,1)))
+	assert_eq(mmat2, pa.get_material_override(Vector2i(2,1)))
 
 
 	# Has
-	assert_false(pa.has_material_override([5,1]))
-	assert_true(pa.has_material_override([0,1]))
-	assert_true(pa.has_material_override([2,1]))
+	assert_false(pa.has_material_override(Vector2i(5,1)))
+	assert_true(pa.has_material_override(Vector2i(0,1)))
+	assert_true(pa.has_material_override(Vector2i(2,1)))
 
 
 	# Overwrite
-	pa.set_material_override([1,0], mmat2)
-	assert_eq(mmat2, pa.get_material_override([0,1]))
+	pa.set_material_override(Vector2i(1,0), mmat2)
+	assert_eq(mmat2, pa.get_material_override(Vector2i(0,1)))
 
 	assert_false(mmat1.is_connected("changed", pa._on_material_override_changed))
 	assert_true(mmat2.is_connected("changed", pa._on_material_override_changed))
 
 
 	# Delete
-	pa.remove_material_override([1,2])
+	pa.remove_material_override(Vector2i(1,2))
 	assert_eq(1, pa.get_material_overrides().size())
-	pa.remove_material_override([0,1])
+	pa.remove_material_override(Vector2i(0,1))
 	assert_eq(0, pa.get_material_overrides().size())
 
 	assert_false(mmat1.is_connected("changed", pa._on_material_override_changed))
@@ -240,6 +240,16 @@ func test_changed_signals() -> void:
 
 	assert_signal_emit_count(points, "changed", 4)
 	assert_signal_emit_count(points, "update_finished", 2)
+
+
+func test_helpers() -> void:
+	var p_array := SS2D_Point_Array.new()
+	var key1 := p_array.add_point(Vector2(0, 0))
+	var key2 := p_array.add_point(Vector2(1, 1))
+	var key3 := p_array.add_point(Vector2(2, 2))
+
+	assert_eq(p_array.get_edge_keys_for_indices(Vector2i(0, 1)), Vector2i(key1, key2))
+	assert_eq(p_array.get_edge_keys_for_indices(Vector2i(1, 2)), Vector2i(key2, key3))
 
 
 func generate_points() -> Array[Vector2]:

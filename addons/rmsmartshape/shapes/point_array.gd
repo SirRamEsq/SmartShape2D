@@ -2,21 +2,22 @@
 extends Resource
 class_name SS2D_Point_Array
 
-const TUP = preload("../lib/tuple.gd")
-
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 
 # Maps a key to each point: Dict[int, SS2D_Point]
 @export var _points: Dictionary = {} : set = _set_points
 # Contains all keys; the order of the keys determines the order of the points
 @export var _point_order: Array[int] = [] : set = set_point_order
-# Key is tuple of point_keys; Value is the CONSTRAINT enum: Dict[Array[int], CONSTRAINT]
+
+## Dict[Vector2i, CONSTRAINT]
+## Key is tuple of point_keys; Value is the CONSTRAINT enum.
 @export var _constraints: Dictionary = {} : set = _set_constraints
 # Next key value to generate
 @export var _next_key: int = 0 : set = set_next_key
-# Dictionary of specific materials to use for specific tuples of points
-# Key is tuple of two point keys
-# Value is material
+
+## Dict[Vector2i, SS2D_Material_Edge_Metadata]
+## Dictionary of specific materials to use for specific tuples of points.
+## Key is tuple of two point keys, value is material.
 @export var _material_overrides: Dictionary = {} : set = set_material_overrides
 
 ## Controls how many subdivisions a curve segment may face before it is considered
@@ -32,6 +33,9 @@ var tessellation_tolerance: float = 4.0 : set = set_tessellation_tolerance
 @export_range(1, 512) var curve_bake_interval: float = 20.0 : set = set_curve_bake_interval
 
 var _constraints_enabled: bool = true
+var _updating_constraints := false
+var _keys_to_update_constraints: Array[int] = []
+
 var _changed_during_update := false
 var _updating := false
 
@@ -50,7 +54,7 @@ var _tess_vertex_mapping := SS2D_TesselationVertexMapping.new()
 signal update_finished()
 
 signal constraint_removed(key1: int, key2: int)
-signal material_override_changed(tuple: Array[int])
+signal material_override_changed(tuple: Vector2i)
 
 ###################
 # HANDLING POINTS #
@@ -84,14 +88,8 @@ func clone(deep: bool = false) -> SS2D_Point_Array:
 			new_point_dict[k] = get_point(k).duplicate(true)
 		copy._points = new_point_dict
 		copy._point_order = _point_order.duplicate(true)
-
-		copy._constraints = {}
-		for tuple: Array[int] in _constraints:
-			copy._constraints[tuple] = _constraints[tuple]
-
-		copy._material_overrides = {}
-		for tuple: Array[int] in _material_overrides:
-			copy._material_overrides[tuple] = _material_overrides[tuple]
+		copy._constraints = _constraints.duplicate()
+		copy._material_overrides = _material_overrides.duplicate()
 	else:
 		copy._points = _points
 		copy._point_order = _point_order
@@ -117,18 +115,9 @@ func set_point_order(po: Array[int]) -> void:
 func _set_constraints(cs: Dictionary) -> void:
 	_constraints = cs
 
-	# Fix for Backwards Compatibility with Godot 3.x
+	# For backwards compatibility (Array to Vector2i transition)
 	if Engine.is_editor_hint():
-		for tuple: Array[int] in _constraints:
-			if not tuple is Array:
-				push_error("Constraints Dictionary should have the following structure: key is a tuple of point_keys and value is the CONSTRAINT enum")
-			elif tuple.get_typed_builtin() != TYPE_INT:
-				# Try to convert
-				var new_tuple: Array[int] = []
-				new_tuple.assign(tuple)
-				var constraint: CONSTRAINT = _constraints[tuple]
-				_constraints.erase(tuple)
-				_constraints[new_tuple] = constraint
+		SS2D_IndexTuple.dict_validate(_constraints, TYPE_INT)
 
 
 func set_next_key(i: int) -> void:
@@ -154,11 +143,7 @@ func get_next_key() -> int:
 
 
 func is_key_valid(k: int) -> bool:
-	if k < 0:
-		return false
-	if _points.has(k):
-		return false
-	return true
+	return k >= 0 and not _points.has(k)
 
 
 ## Add a point.[br]
@@ -209,6 +194,13 @@ func is_index_in_range(idx: int) -> bool:
 
 func get_point_key_at_index(idx: int) -> int:
 	return _point_order[idx]
+
+
+func get_edge_keys_for_indices(indices: Vector2i) -> Vector2i:
+	return Vector2i(
+		get_point_key_at_index(indices.x),
+		get_point_key_at_index(indices.y)
+	)
 
 
 func get_point_at_index(idx: int) -> SS2D_Point:
@@ -405,9 +397,6 @@ func _changed() -> void:
 # CONSTRAINTS #
 ###############
 
-var _updating_constraints := false
-var _keys_to_update_constraints: Array[int] = []
-
 
 func disable_constraints() -> void:
 	_constraints_enabled = false
@@ -420,12 +409,17 @@ func enable_constraints() -> void:
 func _update_constraints(src: int) -> void:
 	if not _constraints_enabled:
 		return
-	var constraints: Dictionary = get_point_constraints(src)
-	for tuple: Array[int] in constraints:
-		var constraint: CONSTRAINT = constraints[tuple]
+
+	var constraints := get_point_constraints_tuples(src)
+
+	for tuple in constraints:
+		var constraint: CONSTRAINT = SS2D_IndexTuple.dict_get(_constraints, tuple)
+
 		if constraint == CONSTRAINT.NONE:
 			continue
-		var dst: int = TUP.get_other_value_from_tuple(tuple, src)
+
+		var dst: int = SS2D_IndexTuple.get_other_value(tuple, src)
+
 		if constraint & CONSTRAINT.AXIS_X:
 			set_point_position(dst, Vector2(get_point_position(src).x, get_point_position(dst).y))
 		if constraint & CONSTRAINT.AXIS_Y:
@@ -442,6 +436,7 @@ func _update_constraints(src: int) -> void:
 func update_constraints(src: int) -> void:
 	if not has_point(src) or _updating_constraints:
 		return
+
 	_updating_constraints = true
 	# Initial pass of updating constraints
 	_update_constraints(src)
@@ -457,59 +452,50 @@ func update_constraints(src: int) -> void:
 	_changed()
 
 
-## Will Return all constraints for a given key.
+## Returns all point constraint that include the given point key.
+## Returns a Dictionary[Vector2i, CONSTRAINT].
 func get_point_constraints(key1: int) -> Dictionary:
 	var constraints := {}
-	for tuple: Array[int] in _constraints:
-		if tuple.has(key1):
-			constraints[tuple] = _constraints[tuple]
+	var tuples := get_point_constraints_tuples(key1)
+
+	for t in tuples:
+		constraints[t] = get_point_constraint(t.x, t.y)
+
 	return constraints
 
 
-## Will Return the constraint for a pair of keys.
+## Returns all point constraint tuples that include the given point key.
+func get_point_constraints_tuples(key1: int) -> Array[Vector2i]:
+	return SS2D_IndexTuple.dict_find_partial(_constraints, key1)
+
+
+## Returns the constraint for a pair of keys.
 func get_point_constraint(key1: int, key2: int) -> CONSTRAINT:
-	var t := TUP.create_tuple(key1, key2)
-	var keys: Array = _constraints.keys()  # Array[Array[int]]
-	var t_index: int = TUP.find_tuple_in_array_of_tuples(keys, t)
-	if t_index == -1:
-		return CONSTRAINT.NONE
-	var t_key: Array = keys[t_index]
-	return _constraints[t_key]
+	return SS2D_IndexTuple.dict_get(_constraints, Vector2i(key1, key2), CONSTRAINT.NONE)
 
 
 func set_constraint(key1: int, key2: int, constraint: CONSTRAINT) -> void:
-	var t := TUP.create_tuple(key1, key2)
-	var existing_tuples: Array = _constraints.keys()  # Array[Array[int]]
-	var existing_t_index: int = TUP.find_tuple_in_array_of_tuples(existing_tuples, t)
-	if existing_t_index != -1:
-		t = existing_tuples[existing_t_index]
-	_constraints[t] = constraint
-	if _constraints[t] == CONSTRAINT.NONE:
-		_constraints.erase(t)
-		emit_signal("constraint_removed", key1, key2)
-	else:
-		update_constraints(key1)
+	var t := Vector2i(key1, key2)
+
+	if constraint == CONSTRAINT.NONE:
+		remove_constraint(t)
+		return
+
+	SS2D_IndexTuple.dict_set(_constraints, t, constraint)
+	update_constraints(key1)
 	_changed()
 
 
+## Remove all constraints involving the given point key.
 func remove_constraints(key1: int) -> void:
-	var constraints: Dictionary = get_point_constraints(key1)
-	for tuple: Array[int] in constraints:
-		var key2: int = TUP.get_other_value_from_tuple(tuple, key1)
-		set_constraint(key1, key2, CONSTRAINT.NONE)
+	for tuple in get_point_constraints_tuples(key1):
+		remove_constraint(tuple)
 
 
-func remove_constraint(key1: int, key2: int) -> void:
-	set_constraint(key1, key2, CONSTRAINT.NONE)
-
-
-func get_all_constraints_of_type(type: CONSTRAINT) -> Array[TUP]:
-	var constraints: Array[TUP] = []
-	for t: Array[int] in _constraints:
-		var c: CONSTRAINT = _constraints[t]
-		if c == type:
-			constraints.push_back(t)
-	return constraints
+## Remove the constraint between the two point indices of the given tuple.
+func remove_constraint(point_index_tuple: Vector2i) -> void:
+	if SS2D_IndexTuple.dict_erase(_constraints, point_index_tuple):
+		emit_signal("constraint_removed", point_index_tuple.x, point_index_tuple.y)
 
 
 ########
@@ -526,71 +512,66 @@ func debug_print() -> void:
 ######################
 # MATERIAL OVERRIDES #
 ######################
-## dict: Dict[Array[int], SS2D_Material_Edge_Metadata]
+## dict: Dict[Vector2i, SS2D_Material_Edge_Metadata]
 func set_material_overrides(dict: Dictionary) -> void:
-	for k: Variant in dict:
-		if not TUP.is_tuple(k):
-			push_error("Material Override Dictionary KEY is not an Array with 2 points!")
-		if not dict[k] is SS2D_Material_Edge_Metadata:
-			push_error("Material Override Dictionary VALUE is not SS2D_Material_Edge_Metadata!")
+	SS2D_IndexTuple.dict_validate(dict, SS2D_Material_Edge_Metadata)
 
 	if _material_overrides != null:
 		for old: SS2D_Material_Edge_Metadata in _material_overrides.values():
-			if old.is_connected("changed", self._on_material_override_changed):
-				old.disconnect("changed", self._on_material_override_changed)
+			_unhook_mat(old)
 
 	_material_overrides = dict
-	for tuple: Array[int] in _material_overrides:
-		var m: SS2D_Material_Edge_Metadata = _material_overrides[tuple]
-		m.connect("changed", self._on_material_override_changed.bind(tuple))
+
+	for tuple: Vector2i in _material_overrides:
+		_hook_mat(tuple, _material_overrides[tuple])
 
 
-func get_material_override_tuple(tuple: Array[int]) -> Array[int]:
-	var keys: Array = _material_overrides.keys()  # Array[Array[int]]
-	var idx: int = TUP.find_tuple_in_array_of_tuples(keys, tuple)
-	if idx != -1:
-		tuple = keys[idx]
-	return tuple
+func has_material_override(tuple: Vector2i) -> bool:
+	return SS2D_IndexTuple.dict_has(_material_overrides, tuple)
 
 
-func has_material_override(tuple: Array[int]) -> bool:
-	tuple = get_material_override_tuple(tuple)
-	return _material_overrides.has(tuple)
-
-
-func remove_material_override(tuple: Array[int]) -> void:
-	if not has_material_override(tuple):
-		return
+func remove_material_override(tuple: Vector2i) -> void:
 	var old := get_material_override(tuple)
-	if old.is_connected("changed", self._on_material_override_changed):
-		old.disconnect("changed", self._on_material_override_changed)
-	_material_overrides.erase(get_material_override_tuple(tuple))
-	_on_material_override_changed(tuple)
+
+	if old != null:
+		_unhook_mat(old)
+		SS2D_IndexTuple.dict_erase(_material_overrides, tuple)
+		_on_material_override_changed(tuple)
 
 
-func set_material_override(tuple: Array[int], mat: SS2D_Material_Edge_Metadata) -> void:
-	if has_material_override(tuple):
-		var old := get_material_override(tuple)
+func set_material_override(tuple: Vector2i, mat: SS2D_Material_Edge_Metadata) -> void:
+	var old := get_material_override(tuple)
+
+	if old != null:
 		if old == mat:
 			return
 		else:
-			if old.is_connected("changed", self._on_material_override_changed):
-				old.disconnect("changed", self._on_material_override_changed)
-	if not mat.is_connected("changed", self._on_material_override_changed):
-		mat.connect("changed", self._on_material_override_changed.bind(tuple))
-	_material_overrides[get_material_override_tuple(tuple)] = mat
+			_unhook_mat(old)
+
+	_hook_mat(tuple, mat)
+	SS2D_IndexTuple.dict_set(_material_overrides, tuple, mat)
 	_on_material_override_changed(tuple)
 
 
-func get_material_override(tuple: Array[int]) -> SS2D_Material_Edge_Metadata:
-	if not has_material_override(tuple):
-		return null
-	return _material_overrides[get_material_override_tuple(tuple)]
+## Returns the material override for the edge defined by the given point index tuple, or null if
+## there is no override.
+func get_material_override(tuple: Vector2i) -> SS2D_Material_Edge_Metadata:
+	return SS2D_IndexTuple.dict_get(_material_overrides, tuple)
+
+
+func _hook_mat(tuple: Vector2i, mat: SS2D_Material_Edge_Metadata) -> void:
+	if not mat.changed.is_connected(_on_material_override_changed):
+		mat.changed.connect(_on_material_override_changed.bind(tuple))
+
+
+func _unhook_mat(mat: SS2D_Material_Edge_Metadata) -> void:
+	if mat.changed.is_connected(_on_material_override_changed):
+		mat.changed.disconnect(_on_material_override_changed)
 
 
 ## Returns a dictionary of specific materials to use for specific tuples of points.[br]
 ## Key is tuple of two point keys, value is material.[br]
-## => Dict[Array[int], SS2D_Material_Edge_Metadata]
+## => Dict[Vector2i, SS2D_Material_Edge_Metadata]
 func get_material_overrides() -> Dictionary:
 	return _material_overrides
 
@@ -686,5 +667,5 @@ func _to_string() -> String:
 	return "<SS2D_Point_Array points: %s order: %s>" % [_points.keys(), _point_order]
 
 
-func _on_material_override_changed(tuple: Array[int]) -> void:
-	emit_signal("material_override_changed", tuple)
+func _on_material_override_changed(tuple: Vector2i) -> void:
+	material_override_changed.emit(tuple)

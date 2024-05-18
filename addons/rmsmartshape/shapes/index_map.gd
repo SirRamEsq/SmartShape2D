@@ -4,31 +4,25 @@ class_name SS2D_IndexMap
 
 ## Maps a set of indicies to an object.
 
-const TUP = preload("res://addons/rmsmartshape/lib/tuple.gd")
-
 var object: Variant = null
-var indicies: Array[int] = [] : set = set_indicies
+var indicies: PackedInt32Array
 
 
 ## Parameter [param subresources] has no effect, no subresources to duplicate.
 func duplicate(_subresources: bool = false) -> SS2D_IndexMap:
-	return SS2D_IndexMap.new(indicies, object)
+	return SS2D_IndexMap.new(indicies.duplicate(), object)
 
 
-func _init(i: Array[int], o: Variant) -> void:
+func _init(i: PackedInt32Array, o: Variant) -> void:
+	indicies = i
 	object = o
-	set_indicies(i)
-
-
-func set_indicies(a: Array[int]) -> void:
-	indicies = a.duplicate()
 
 
 func _to_string() -> String:
 	return "[M_2_IDX] (%s) | %s" % [str(object), indicies]
 
 
-static func is_index_array_valid(idx_array: Array[int]) -> bool:
+static func is_index_array_valid(idx_array: PackedInt32Array) -> bool:
 	return idx_array.size() >= 2
 
 
@@ -36,29 +30,32 @@ func is_valid() -> bool:
 	return SS2D_IndexMap.is_index_array_valid(indicies)
 
 
-func get_contiguous_segments() -> Array:
-	if is_contiguous():
-		return [indicies.duplicate()]
-	var segments: Array = []
-	var break_idx: int = find_break()
-	var remainder: Array[int] = indicies.duplicate()
-	while break_idx != -1:
-		var new_slice: Array[int] = []
-		for i in range(0, break_idx):
-			new_slice.push_back(remainder[i])
-		segments.push_back(new_slice)
-		remainder = remainder.slice(break_idx, remainder.size())
-		break_idx = SS2D_IndexMap.find_break_in_array(remainder)
-	if not remainder.is_empty():
-		segments.push_back(remainder)
-	return segments
+# FIXME: Unused. Remove eventually
+# func get_contiguous_segments() -> Array:
+# 	if is_contiguous():
+# 		return [indicies.duplicate()]
+# 	var segments: Array = []
+# 	var break_idx: int = find_break()
+# 	var remainder: Array[int] = indicies.duplicate()
+# 	while break_idx != -1:
+# 		var new_slice: Array[int] = []
+# 		for i in range(0, break_idx):
+# 			new_slice.push_back(remainder[i])
+# 		segments.push_back(new_slice)
+# 		remainder = remainder.slice(break_idx, remainder.size())
+# 		break_idx = SS2D_IndexMap.find_break_in_array(remainder)
+# 	if not remainder.is_empty():
+# 		segments.push_back(remainder)
+# 	return segments
 
 
 ## Will join together segments that share the same idx,
 ## ex. [1,2], [4,5], and [2,3,4] become [1,2,3,4,5]
-static func join_segments(segments: Array) -> Array:
-	var final_segments := segments.duplicate()
-	var to_join_tuple: Array[int]
+static func join_segments(segments: Array[PackedInt32Array]) -> Array[PackedInt32Array]:
+	var final_segments: Array[PackedInt32Array] = []
+	final_segments.assign(segments.duplicate())
+
+	var to_join_tuple: Vector2i
 	var join_performed := true
 	while join_performed:
 		join_performed = false
@@ -66,28 +63,26 @@ static func join_segments(segments: Array) -> Array:
 			if join_performed:
 				break
 			for ii in range(i + 1, final_segments.size()):
-				var a: Array[int] = final_segments[i]
-				var b: Array[int] = final_segments[ii]
-				if a.back() == b[0]:
-					to_join_tuple = TUP.create_tuple(i, ii)
+				var a := final_segments[i]
+				var b := final_segments[ii]
+				if a[-1] == b[0]:
+					to_join_tuple = Vector2i(i, ii)
 					join_performed = true
-				if b.back() == a[0]:
-					to_join_tuple = TUP.create_tuple(ii, i)
+				if b[-1] == a[0]:
+					to_join_tuple = Vector2i(ii, i)
 					join_performed = true
 				if join_performed:
 					break
 		if join_performed:
 			var idx_lowest: int = to_join_tuple[0]
 			var idx_highest: int = to_join_tuple[1]
-			var lowest: Array[int] = final_segments[idx_lowest]
-			var highest: Array[int] = final_segments[idx_highest]
+			var lowest: PackedInt32Array = final_segments[idx_lowest]
+			var highest: PackedInt32Array = final_segments[idx_highest]
 			final_segments.erase(lowest)
 			final_segments.erase(highest)
 			# pop the shared idx from lowest
-			lowest.pop_back()
-			var new_segment: Array[int] = []
-			new_segment.append_array(lowest)
-			new_segment.append_array(highest)
+			lowest.remove_at(lowest.size() - 1)
+			var new_segment := lowest + highest
 			final_segments.push_back(new_segment)
 
 	return final_segments
@@ -98,7 +93,7 @@ func is_contiguous() -> bool:
 	return SS2D_IndexMap.is_array_contiguous(indicies)
 
 
-static func is_array_contiguous(a: Array[int]) -> bool:
+static func is_array_contiguous(a: PackedInt32Array) -> bool:
 	return find_break_in_array(a) == -1
 
 
@@ -108,8 +103,8 @@ func find_break() -> int:
 	return SS2D_IndexMap.find_break_in_array(indicies)
 
 
-static func find_break_in_array(a: Array[int]) -> int:
-	for i in range(0, a.size() - 1, 1):
+static func find_break_in_array(a: PackedInt32Array, offset: int = 0) -> int:
+	for i in range(offset, a.size() - 1, 1):
 		if is_break_at_index_in_array(a, i):
 			return i + 1
 	return -1
@@ -121,7 +116,7 @@ func is_break_at_index(i: int) -> bool:
 	return SS2D_IndexMap.is_break_at_index_in_array(indicies, i)
 
 
-static func is_break_at_index_in_array(a: Array[int], i: int) -> bool:
+static func is_break_at_index_in_array(a: PackedInt32Array, i: int) -> bool:
 	var difference: int = absi((a[i]) - (a[i + 1]))
 	return difference != 1
 
@@ -130,32 +125,40 @@ func has_index(idx: int) -> bool:
 	return indicies.has(idx)
 
 
-func lowest_index() -> int:
-	return indicies.min()
+# FIXME: Unused, remove eventually.
+# func lowest_index() -> int:
+# 	return indicies.min()
+#
+#
+# func highest_index() -> int:
+# 	return indicies.max()
 
 
-func highest_index() -> int:
-	return indicies.max()
-
-
-func _split_indicies_into_multiple_mappings(new_indicies: Array[int]) -> Array[SS2D_IndexMap]:
+# FIXME: Unused, remove eventually
+func _split_indicies_into_multiple_mappings(new_indicies: PackedInt32Array) -> Array[SS2D_IndexMap]:
 	var maps: Array[SS2D_IndexMap] = []
-	var break_idx: int = SS2D_IndexMap.find_break_in_array(new_indicies)
+	var break_idx := SS2D_IndexMap.find_break_in_array(new_indicies)
+	var offset := 0
+	var sub_indicies: PackedInt32Array
+
 	while break_idx != -1:
-		var sub_indicies: Array[int] = []
-		for i in range(0, break_idx, 1):
-			sub_indicies.push_back(new_indicies[i])
+		sub_indicies = new_indicies.slice(offset, break_idx)
+
 		if SS2D_IndexMap.is_index_array_valid(sub_indicies):
 			maps.push_back(SS2D_IndexMap.new(sub_indicies, object))
-		for i in sub_indicies:
-			new_indicies.erase(i)
-		break_idx = SS2D_IndexMap.find_break_in_array(new_indicies)
 
-	if SS2D_IndexMap.is_index_array_valid(new_indicies):
-		maps.push_back(SS2D_IndexMap.new(new_indicies, object))
+		offset = break_idx
+		break_idx = SS2D_IndexMap.find_break_in_array(new_indicies, offset)
+
+	sub_indicies = new_indicies.slice(offset)
+
+	if SS2D_IndexMap.is_index_array_valid(sub_indicies):
+		maps.push_back(SS2D_IndexMap.new(sub_indicies, object))
+
 	return maps
 
 
+## FIXME: Unused, remove eventually
 ## Will create a new set of SS2D_IndexMaps. [br][br]
 ##
 ## The new set will contain all of the indicies of the current set,
@@ -169,13 +172,20 @@ func _split_indicies_into_multiple_mappings(new_indicies: Array[int]) -> Array[S
 ## This may split the IndexMap or make it invalid entirely.
 ## As a result, the returned array could have 0 or several IndexMaps.
 func remove_indicies(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
-	var new_indicies: Array[int] = indicies.duplicate()
+	var out: Array[SS2D_IndexMap] = []
+	var new_indicies := indicies.duplicate()
+
 	for r in to_remove:
-		new_indicies.erase(r)
+		var idx := new_indicies.find(r)
+		if idx >= 0:
+			new_indicies.remove_at(idx)
+
 	if not SS2D_IndexMap.is_index_array_valid(new_indicies):
-		return []
+		return out
+
 	if SS2D_IndexMap.is_array_contiguous(new_indicies):
-		return [SS2D_IndexMap.new(new_indicies, object)]
+		out.push_back(SS2D_IndexMap.new(new_indicies, object))
+		return out
 
 	return _split_indicies_into_multiple_mappings(new_indicies)
 
@@ -210,13 +220,13 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 		return [SS2D_IndexMap.new(indicies, object)]
 
 	# General case
-	var new_edges: Array = SS2D_IndexMap.indicies_to_edges(indicies.duplicate())
+	var new_edges := SS2D_IndexMap.indicies_to_edges(indicies)
 	for i in range(0, to_remove.size() - 1, 1):
 		var idx1: int = to_remove[i]
 		var idx2: int = to_remove[i + 1]
 		var edges_to_remove: Array[int] = []
-		for ii in range(0, new_edges.size(), 1):
-			var edge: Array[int] = new_edges[ii]
+		for ii in new_edges.size():
+			var edge := new_edges[ii]
 			if (edge[0] == idx1 or edge[0] == idx2) and (edge[1] == idx1 or edge[1] == idx2):
 				edges_to_remove.push_back(ii)
 		# Reverse iterate
@@ -225,16 +235,18 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 
 	new_edges = SS2D_IndexMap.join_segments(new_edges)
 	var new_index_mappings: Array[SS2D_IndexMap] = []
-	for e: Array[int] in new_edges:
+	for e in new_edges:
 		new_index_mappings.push_back(SS2D_IndexMap.new(e, object))
 	return new_index_mappings
 
 
-static func indicies_to_edges(p_indicies: Array[int]) -> Array:  # Array[Array[int]]
-	var edges: Array = []
-	for i in range(0, p_indicies.size()-1, 1):
-		var edge: Array[int] = [i, i+1]
-		if is_array_contiguous(edge):
+# NOTE: Even though it makes more sense to return an Array[Vector2i], we return PackedInt32Arrays
+# instead because it makes things easier in the context where this function output is needed.
+static func indicies_to_edges(p_indicies: PackedInt32Array) -> Array[PackedInt32Array]:
+	var edges: Array[PackedInt32Array] = []
+	for i in p_indicies.size() - 1:
+		var edge := PackedInt32Array([ i, i+1 ])
+		if absi(edge[0] - edge[1]) == 1:
 			edges.push_back(edge)
 	return edges
 

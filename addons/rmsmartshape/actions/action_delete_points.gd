@@ -67,21 +67,22 @@ func undo() -> void:
 		_shape.set_point_properties(_keys[i], _properties[i])
 	# Restore point constraints.
 	for i in range(_keys.size()-1, -1, -1):
-		for tuple: Array[int] in _constraints[i]:
+		for tuple: Vector2i in _constraints[i]:
 			_shape.set_constraint(tuple[0], tuple[1], _constraints[i][tuple])
 	_shape.end_update()
 
 
 func add_point_to_delete(key: int) -> void:
 	_keys.push_back(key)
-	var constraints: Dictionary = _shape.get_point_constraints(key)
+	var constraints := _shape.get_point_array().get_point_constraints(key)
 	# Save point constraints.
-	_constraints.append(_shape.get_point_constraints(key))
-	for tuple: Array[int] in constraints:
+	_constraints.append(constraints)
+
+	for tuple: Vector2i in constraints:
 		var constraint: SS2D_Point_Array.CONSTRAINT = constraints[tuple]
 		if constraint == SS2D_Point_Array.CONSTRAINT.NONE:
 			continue
-		var key_other: int = TUP.get_other_value_from_tuple(tuple, key)
+		var key_other := SS2D_IndexTuple.get_other_value(tuple, key)
 		if constraint & SS2D_Point_Array.CONSTRAINT.ALL:
 			if not _keys.has(key_other):
 				add_point_to_delete(key_other)

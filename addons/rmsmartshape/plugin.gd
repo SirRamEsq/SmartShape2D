@@ -151,7 +151,7 @@ var edge_data: SS2D_Edge = null
 var on_width_handle: bool = false
 const WIDTH_HANDLE_OFFSET: float = 60.0
 var closest_key: int
-var closest_edge_keys: Array[int] = [-1, -1]
+var closest_edge_keys := Vector2i(-1, -1)
 var width_scaling: float
 
 # Vertex paint mode stuff
@@ -342,13 +342,13 @@ func _gui_update_edge_info_panel() -> void:
 	# Don't update if already visible
 	if gui_edge_info_panel.visible:
 		return
-	var indicies: Array[int] = [-1, -1]
+	var indicies := Vector2i(-1, -1)
 	var override: SS2D_Material_Edge_Metadata = null
 	if on_edge:
 		var t: Transform2D = get_et() * shape.get_global_transform()
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
-		var keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		indicies = [shape.get_point_index(keys[0]), shape.get_point_index(keys[1])]
+		var keys: Vector2i = _get_edge_point_keys_from_offset(offset, true)
+		indicies = Vector2i(shape.get_point_index(keys.x), shape.get_point_index(keys.y))
 		if shape.get_point_array().has_material_override(keys):
 			override = shape.get_point_array().get_material_override(keys)
 	gui_edge_info_panel.set_indicies(indicies)
@@ -585,12 +585,7 @@ func connect_shape(s: SS2D_Shape) -> void:
 
 
 func get_material_override_from_indicies() -> SS2D_Material_Edge_Metadata:
-	var keys: Array[int] = []
-	var indices := gui_edge_info_panel.indicies
-	for i in indices:
-		keys.push_back(shape.get_point_key_at_index(i))
-	if not shape.get_point_array().has_material_override(keys):
-		return null
+	var keys := shape.get_point_array().get_edge_keys_for_indices(gui_edge_info_panel.indicies)
 	return shape.get_point_array().get_material_override(keys)
 
 
@@ -619,17 +614,15 @@ func _on_edge_material_changed(m: SS2D_Material_Edge) -> void:
 
 
 func _on_edge_material_override_toggled(enabled: bool) -> void:
-	var indicies: Array[int] = gui_edge_info_panel.indicies
-	if indicies.has(-1) or indicies.size() != 2:
+	var indices := gui_edge_info_panel.indicies
+
+	if SS2D_IndexTuple.has(indices, -1):
 		return
-	var keys: Array[int] = []
-	for i in indicies:
-		keys.push_back(shape.get_point_key_at_index(i))
+
+	var keys := shape.get_point_array().get_edge_keys_for_indices(indices)
 
 	# Get the relevant Override data if any exists
-	var override: SS2D_Material_Edge_Metadata = null
-	if shape.get_point_array().has_material_override(keys):
-		override = shape.get_point_array().get_material_override(keys)
+	var override: SS2D_Material_Edge_Metadata = shape.get_point_array().get_material_override(keys)
 
 	if enabled:
 		if override == null:
@@ -791,16 +784,16 @@ func draw_mode_edit_edge(overlay: Control, color_normal: Color, color_highlight:
 	draw_vert_handles(overlay, t, verts, false)
 
 	if current_action.type == ACTION_VERT.MOVE_VERT:
-		var edge_point_keys: Array[int] = current_action.keys
+		var edge_point_keys := current_action.keys
 		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
 		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
 		overlay.draw_line(t * p1, t * p2, Color.BLACK, 8.0, true)
 		overlay.draw_line(t * p1, t * p2, color_highlight, 4.0, true)
 	elif on_edge:
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
-		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		var p1: Vector2 = shape.get_point_position(edge_point_keys[0])
-		var p2: Vector2 = shape.get_point_position(edge_point_keys[1])
+		var edge_point_keys := _get_edge_point_keys_from_offset(offset, true)
+		var p1: Vector2 = shape.get_point_position(edge_point_keys.x)
+		var p2: Vector2 = shape.get_point_position(edge_point_keys.y)
 		overlay.draw_line(t * p1, t * p2, Color.BLACK, 8.0, true)
 		overlay.draw_line(t * p1, t * p2, color_highlight, 4.0, true)
 
@@ -812,9 +805,9 @@ func draw_mode_cut_edge(overlay: Control) -> void:
 		# Draw "X" marks along the edge that is selected
 		var t: Transform2D = get_et() * shape.get_global_transform()
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
-		var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		var from: Vector2 = t * shape.get_point_position(edge_point_keys[0])
-		var to: Vector2 = t * shape.get_point_position(edge_point_keys[1])
+		var edge_point_keys := _get_edge_point_keys_from_offset(offset, true)
+		var from: Vector2 = t * shape.get_point_position(edge_point_keys.x)
+		var to: Vector2 = t * shape.get_point_position(edge_point_keys.y)
 		var dir: Vector2 = (to - from).normalized()
 		var angle: float = dir.angle()
 		var length: float = (to - from).length()
@@ -1134,8 +1127,8 @@ func _input_handle_left_click(
 			var offset: float = shape.get_closest_offset_straight_edge(
 				t.affine_inverse() * edge_point
 			)
-			var edge_point_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-			select_vertices_to_move([edge_point_keys[0], edge_point_keys[1]], vp_m_pos)
+			var edge_point_keys := _get_edge_point_keys_from_offset(offset, true)
+			select_vertices_to_move([edge_point_keys.x, edge_point_keys.y], vp_m_pos)
 			if _defer_mesh_updates:
 				shape.begin_update()
 		return true
@@ -1143,8 +1136,8 @@ func _input_handle_left_click(
 		if not on_edge:
 			return true
 		var offset: float = shape.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
-		var edge_keys: Array[int] = _get_edge_point_keys_from_offset(offset, true)
-		perform_action(ActionCutEdge.new(shape, edge_keys[0], edge_keys[1]))
+		var edge_keys := _get_edge_point_keys_from_offset(offset, true)
+		perform_action(ActionCutEdge.new(shape, edge_keys.x, edge_keys.y))
 		on_edge = false
 		return true
 	elif current_mode == MODE.FREEHAND:
@@ -1348,7 +1341,7 @@ func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, gr
 
 func _get_edge_point_keys_from_offset(
 	offset: float, straight: bool = false, _position := Vector2(0, 0)
-) -> Array[int]:
+) -> Vector2i:
 	for i in range(0, shape.get_point_count() - 1, 1):
 		var key: int = shape.get_point_key_at_index(i)
 		var key_next: int = shape.get_point_key_at_index(i + 1)
@@ -1362,11 +1355,11 @@ func _get_edge_point_keys_from_offset(
 			next_offset = shape.get_closest_offset(shape.get_point_position(key_next))
 
 		if offset >= this_offset and offset <= next_offset:
-			return [key, key_next]
+			return Vector2i(key, key_next)
 		# for when the shape is closed and the final point has an offset of 0
 		if next_offset == 0 and offset >= this_offset:
-			return [key, key_next]
-	return [-1, -1]
+			return Vector2i(key, key_next)
+	return Vector2i(-1, -1)
 
 
 func _input_motion_is_on_edge(mm: InputEventMouseMotion, grab_threshold: float) -> bool:
