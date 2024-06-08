@@ -189,7 +189,7 @@ func _unhook_point(p: SS2D_Point) -> void:
 
 
 func is_index_in_range(idx: int) -> bool:
-	return idx > 0 and idx < _point_order.size()
+	return idx >= 0 and idx < _point_order.size()
 
 
 func get_point_key_at_index(idx: int) -> int:
