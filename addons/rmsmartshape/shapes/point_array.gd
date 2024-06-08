@@ -655,8 +655,10 @@ func _update_cache() -> void:
 	# Point 0 will be the same on both the curve points and the vertices
 	# Point size - 1 will be the same on both the curve points and the vertices
 	_tesselation_cache = _curve.tessellate(tessellation_stages, tessellation_tolerance)
-	_tesselation_cache[0] = _curve.get_point_position(0)
-	_tesselation_cache[_tesselation_cache.size() - 1] = _curve.get_point_position(_curve.get_point_count() - 1)
+
+	if _tesselation_cache.size() >= 2:
+		_tesselation_cache[0] = _curve.get_point_position(0)
+		_tesselation_cache[-1] = _curve.get_point_position(_curve.get_point_count() - 1)
 
 	_tess_vertex_mapping.build(_tesselation_cache, _vertex_cache)
 
