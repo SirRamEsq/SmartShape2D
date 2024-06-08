@@ -11,8 +11,8 @@ const ActionCloseShape := preload("res://addons/rmsmartshape/actions/action_clos
 var _close_shape: ActionCloseShape
 
 var _shape: SS2D_Shape
-var _keys: PackedInt64Array
-var _indicies: PackedInt64Array
+var _keys: PackedInt32Array
+var _indicies: PackedInt32Array
 var _positions: PackedVector2Array
 var _points_in: PackedVector2Array
 var _points_out: PackedVector2Array
@@ -22,7 +22,7 @@ var _was_closed: bool
 var _commit_update: bool
 
 
-func _init(shape: SS2D_Shape, keys: PackedInt64Array, commit_update: bool = true) -> void:
+func _init(shape: SS2D_Shape, keys: PackedInt32Array, commit_update: bool = true) -> void:
 	_shape = shape
 	_invert_orientation = ActionInvertOrientation.new(shape)
 	_close_shape = ActionCloseShape.new(shape)

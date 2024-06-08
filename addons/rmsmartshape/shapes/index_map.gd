@@ -171,7 +171,7 @@ func _split_indicies_into_multiple_mappings(new_indicies: PackedInt32Array) -> A
 ##
 ## This may split the IndexMap or make it invalid entirely.
 ## As a result, the returned array could have 0 or several IndexMaps.
-func remove_indicies(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
+func remove_indicies(to_remove: PackedInt32Array) -> Array[SS2D_IndexMap]:
 	var out: Array[SS2D_IndexMap] = []
 	var new_indicies := indicies.duplicate()
 
@@ -202,7 +202,7 @@ func remove_indicies(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 ##
 ## This may split the IndexMap or make it invalid entirely.
 ## As a result, the returned array could have 0 or several IndexMaps.
-func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
+func remove_edges(to_remove: PackedInt32Array) -> Array[SS2D_IndexMap]:
 	# Corner case
 	if to_remove.size() == 2:
 		var idx: int = indicies.find(to_remove[0])
@@ -224,7 +224,7 @@ func remove_edges(to_remove: Array[int]) -> Array[SS2D_IndexMap]:
 	for i in range(0, to_remove.size() - 1, 1):
 		var idx1: int = to_remove[i]
 		var idx2: int = to_remove[i + 1]
-		var edges_to_remove: Array[int] = []
+		var edges_to_remove := PackedInt32Array()
 		for ii in new_edges.size():
 			var edge := new_edges[ii]
 			if (edge[0] == idx1 or edge[0] == idx2) and (edge[1] == idx1 or edge[1] == idx2):

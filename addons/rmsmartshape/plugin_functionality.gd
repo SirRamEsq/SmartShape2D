@@ -13,20 +13,20 @@ extends RefCounted
 
 static func get_intersecting_control_point_in(
 	s: SS2D_Shape, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
-) -> Array[int]:
+) -> PackedInt32Array:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, true)
 
 
 static func get_intersecting_control_point_out(
 	s: SS2D_Shape, et: Transform2D, mouse_pos: Vector2, grab_threshold: float
-) -> Array[int]:
+) -> PackedInt32Array:
 	return _get_intersecting_control_point(s, et, mouse_pos, grab_threshold, false)
 
 
 static func _get_intersecting_control_point(
 	s: SS2D_Shape, et: Transform2D, mouse_pos: Vector2, grab_threshold: float, _in: bool
-) -> Array[int]:
-	var points: Array[int] = []
+) -> PackedInt32Array:
+	var points := PackedInt32Array()
 	var xform: Transform2D = et * s.get_global_transform()
 	for i in s.get_point_count():
 		var key: int = s.get_point_key_at_index(i)

@@ -7,7 +7,7 @@ enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTI
 # Maps a key to each point: Dict[int, SS2D_Point]
 @export var _points: Dictionary = {} : set = _set_points
 # Contains all keys; the order of the keys determines the order of the points
-@export var _point_order: Array[int] = [] : set = set_point_order
+@export var _point_order := PackedInt32Array() : set = set_point_order
 
 ## Dict[Vector2i, CONSTRAINT]
 ## Key is tuple of point_keys; Value is the CONSTRAINT enum.
@@ -34,7 +34,7 @@ var tessellation_tolerance: float = 4.0 : set = set_tessellation_tolerance
 
 var _constraints_enabled: bool = true
 var _updating_constraints := false
-var _keys_to_update_constraints: Array[int] = []
+var _keys_to_update_constraints := PackedInt32Array()
 
 var _changed_during_update := false
 var _updating := false
@@ -64,7 +64,6 @@ signal material_override_changed(tuple: Vector2i)
 func _init() -> void:
 	# Required by Godot to correctly make unique instances of this resource
 	_points = {}
-	_point_order = []
 	_constraints = {}
 	_next_key = 0
 	# Assigning an empty dict to _material_overrides this way
@@ -87,7 +86,7 @@ func clone(deep: bool = false) -> SS2D_Point_Array:
 		for k: int in _points:
 			new_point_dict[k] = get_point(k).duplicate(true)
 		copy._points = new_point_dict
-		copy._point_order = _point_order.duplicate(true)
+		copy._point_order = _point_order.duplicate()
 		copy._constraints = _constraints.duplicate()
 		copy._material_overrides = _material_overrides.duplicate()
 	else:
@@ -107,7 +106,7 @@ func _set_points(ps: Dictionary) -> void:
 	_changed()
 
 
-func set_point_order(po: Array[int]) -> void:
+func set_point_order(po: PackedInt32Array) -> void:
 	_point_order = po
 	_changed()
 
@@ -146,8 +145,8 @@ func is_key_valid(k: int) -> bool:
 	return k >= 0 and not _points.has(k)
 
 
-## Add a point.[br]
-## Returns key of the added point.[br]
+## Add a point and insert it at the given index or at the end by default.
+## Returns the key of the added point.
 func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 #	print("Add Point  ::  ", point, " | idx: ", idx, " | key: ", use_key, " |")
 	if use_key == -1 or not is_key_valid(use_key):
@@ -265,7 +264,7 @@ func has_point(key: int) -> bool:
 	return _points.has(key)
 
 
-func get_all_point_keys() -> Array[int]:
+func get_all_point_keys() -> PackedInt32Array:
 	# _point_order should contain every single point ONLY ONCE
 	return _point_order
 
@@ -444,7 +443,7 @@ func update_constraints(src: int) -> void:
 	# Subsequent required passes of updating constraints
 	while not _keys_to_update_constraints.is_empty():
 		var key_set := _keys_to_update_constraints
-		_keys_to_update_constraints = []
+		_keys_to_update_constraints = PackedInt32Array()
 		for k in key_set:
 			_update_constraints(k)
 
@@ -469,11 +468,12 @@ func get_point_constraints_tuples(key1: int) -> Array[Vector2i]:
 	return SS2D_IndexTuple.dict_find_partial(_constraints, key1)
 
 
-## Returns the constraint for a pair of keys.
+## Returns the constraint for a pair of keys or CONSTRAINT.NONE if no constraint exists.
 func get_point_constraint(key1: int, key2: int) -> CONSTRAINT:
 	return SS2D_IndexTuple.dict_get(_constraints, Vector2i(key1, key2), CONSTRAINT.NONE)
 
 
+## Set a constraint between two points. If the constraint is NONE, remove_constraint() is called instead.
 func set_constraint(key1: int, key2: int, constraint: CONSTRAINT) -> void:
 	var t := Vector2i(key1, key2)
 
@@ -569,11 +569,11 @@ func _unhook_mat(mat: SS2D_Material_Edge_Metadata) -> void:
 		mat.changed.disconnect(_on_material_override_changed)
 
 
-## Returns a dictionary of specific materials to use for specific tuples of points.[br]
-## Key is tuple of two point keys, value is material.[br]
-## => Dict[Vector2i, SS2D_Material_Edge_Metadata]
-func get_material_overrides() -> Dictionary:
-	return _material_overrides
+## Returns a list of index tuples for wich material overrides exist.
+func get_material_overrides() -> Array[Vector2i]:
+	var keys: Array[Vector2i] = []
+	keys.assign(_material_overrides.keys())
+	return keys
 
 
 func clear_all_material_overrides() -> void:

@@ -46,8 +46,8 @@ static func array_has(tuple_array: Array[Vector2i], t: Vector2i) -> bool:
 
 
 ## Returns a list indices to tuples that contain the given value.
-static func array_find_partial(tuple_array: Array[Vector2i], value: int) -> Array[int]:
-	var out: Array[int] = []
+static func array_find_partial(tuple_array: Array[Vector2i], value: int) -> PackedInt32Array:
+	var out := PackedInt32Array()
 
 	for i in tuple_array.size():
 		if tuple_array[i].x == value or tuple_array[i].y == value:
@@ -56,11 +56,20 @@ static func array_find_partial(tuple_array: Array[Vector2i], value: int) -> Arra
 	return out
 
 
-## Returns a tuple with elements in ascending order.
+## Transform the tuple into a normalized representation (elements in ascending order).
+## Same as sort_ascending() at the moment.
+## Useful in more optimized use-cases where certain assumptions can be made if all tuples share a
+## normalized representation.
 static func normalize_tuple(tuple: Vector2i) -> Vector2i:
+	return sort_ascending(tuple)
+
+
+## Returns a tuple with elements in ascending order.
+static func sort_ascending(tuple: Vector2i) -> Vector2i:
 	if tuple.x <= tuple.y:
 		return tuple
 	return flip_elements(tuple)
+
 
 
 ## Returns a tuple with x and y components switched.

@@ -4,7 +4,7 @@ extends "res://addons/rmsmartshape/actions/action_delete_points.gd"
 
 
 func _init(shape: SS2D_Shape, key: int, commit_update: bool = true) -> void:
-	var keys: PackedInt64Array = [key]
+	var keys: PackedInt32Array = [key]
 	super(shape, keys, commit_update)
 
 

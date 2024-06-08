@@ -5,9 +5,9 @@ extends "res://addons/gut/test.gd"
 ###################
 func test_remove_indicies_basic() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [0,1,2,3,4,5,6,7,8]
-	var to_remove: Array[int] = [2,3,4,5]
-	var expected := convert_segments_to_typed([[0,1],[6,7,8]])
+	var indicies: PackedInt32Array = [0,1,2,3,4,5,6,7,8]
+	var to_remove: PackedInt32Array = [2,3,4,5]
+	var expected: Array[PackedInt32Array] = [[0,1],[6,7,8]]
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_indicies(to_remove)
 	assert_eq(new_maps.size(), expected.size())
@@ -21,9 +21,9 @@ func test_remove_indicies_basic() -> void:
 
 func test_remove_indicies_basic_2() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [1,2,3,4,5,6,7,8]
-	var to_remove: Array[int] = [2,3,4,5]
-	var expected := convert_segments_to_typed([[6,7,8]])
+	var indicies: PackedInt32Array = [1,2,3,4,5,6,7,8]
+	var to_remove: PackedInt32Array = [2,3,4,5]
+	var expected: Array[PackedInt32Array] = [[6,7,8]]
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_indicies(to_remove)
 	assert_eq(new_maps.size(), expected.size())
@@ -35,8 +35,8 @@ func test_remove_indicies_basic_2() -> void:
 
 func test_remove_indicies_none_remaining() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [1,2,3,4,5,6]
-	var to_remove: Array[int] = [2,3,4,5]
+	var indicies: PackedInt32Array = [1,2,3,4,5,6]
+	var to_remove: PackedInt32Array = [2,3,4,5]
 	var expected := []
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_indicies(to_remove)
@@ -46,9 +46,9 @@ func test_remove_indicies_none_remaining() -> void:
 
 func test_remove_indicies_unaffected() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [1,2,3,4,5,6]
-	var to_remove: Array[int] = [8,9,10]
-	var expected := convert_segments_to_typed([[1,2,3,4,5,6]])
+	var indicies: PackedInt32Array = [1,2,3,4,5,6]
+	var to_remove: PackedInt32Array = [8,9,10]
+	var expected: Array[PackedInt32Array] = [[1,2,3,4,5,6]]
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_indicies(to_remove)
 	assert_eq(new_maps.size(), expected.size())
@@ -64,9 +64,9 @@ func test_remove_indicies_unaffected() -> void:
 ################
 func test_remove_edges_basic() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [0,1,2,3,4,5,6,7,8]
-	var to_remove: Array[int] = [2,3,4,5]
-	var expected := convert_segments_to_typed([[0,1,2],[5,6,7,8]])
+	var indicies: PackedInt32Array = [0,1,2,3,4,5,6,7,8]
+	var to_remove: PackedInt32Array = [2,3,4,5]
+	var expected: Array[PackedInt32Array] = [[0,1,2],[5,6,7,8]]
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_edges(to_remove)
 	assert_eq(new_maps.size(), expected.size())
@@ -80,9 +80,9 @@ func test_remove_edges_basic() -> void:
 
 func test_remove_edges_basic_2() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [0,1,2,3,4,5,6,7,8]
-	var to_remove: Array[int] = [3,4]
-	var expected := convert_segments_to_typed([[0,1,2,3],[4,5,6,7,8]])
+	var indicies: PackedInt32Array = [0,1,2,3,4,5,6,7,8]
+	var to_remove: PackedInt32Array = [3,4]
+	var expected: Array[PackedInt32Array] = [[0,1,2,3],[4,5,6,7,8]]
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_edges(to_remove)
 	assert_eq(new_maps.size(), expected.size())
@@ -97,9 +97,9 @@ func test_remove_edges_basic_2() -> void:
 
 func test_remove_edges_basic_3() -> void:
 	var object := "OBJECT"
-	var indicies: Array[int] = [2,3,4,5,6,7,8]
-	var to_remove: Array[int] = [2,3]
-	var expected := convert_segments_to_typed([[3,4,5,6,7,8]])
+	var indicies: PackedInt32Array = [2,3,4,5,6,7,8]
+	var to_remove: PackedInt32Array = [2,3]
+	var expected: Array[PackedInt32Array] = [[3,4,5,6,7,8]]
 	var imap := SS2D_IndexMap.new(indicies, object)
 	var new_maps := imap.remove_edges(to_remove)
 	assert_eq(new_maps.size(), expected.size())
@@ -131,7 +131,6 @@ func test_remove_edges_basic_3() -> void:
 func test_join_segments() -> void:
 	# Test contains some points, but not all
 	var segments: Array[PackedInt32Array] = [ [0, 1, 2, 3], [4, 5], [7, 8], [5, 6, 7], [8, 9, 10], [10, 11] ]
-	convert_segments_to_typed(segments)
 	segments = SS2D_IndexMap.join_segments(segments)
 	gut.p(segments)
 
@@ -140,7 +139,6 @@ func test_join_segments() -> void:
 	assert_eq(segments[1], PackedInt32Array([4,5,6,7,8,9,10,11]))
 
 	segments = [[0, 1], [1,2], [2,3], [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11]]
-	convert_segments_to_typed(segments)
 	segments = SS2D_IndexMap.join_segments(segments)
 	gut.p(segments)
 	assert_eq(segments.size(), 2)
@@ -149,7 +147,6 @@ func test_join_segments() -> void:
 
 	# Test wrap around
 	segments = [[0, 1, 2,3],  [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11, 0]]
-	convert_segments_to_typed(segments)
 	segments = SS2D_IndexMap.join_segments(segments)
 	gut.p(segments)
 	assert_eq(segments.size(), 1)
@@ -157,7 +154,6 @@ func test_join_segments() -> void:
 
 	# Test contains all point pairs
 	segments = [[0, 1, 2,3,4],  [4, 5],   [7, 8],   [5, 6, 7],   [8, 9, 10],   [10, 11, 0]]
-	convert_segments_to_typed(segments)
 	segments = SS2D_IndexMap.join_segments(segments)
 	gut.p(segments)
 	assert_eq(segments.size(), 1)
@@ -165,7 +161,7 @@ func test_join_segments() -> void:
 
 
 func test_index_order() -> void:
-	var indicies: Array[int] = [5, 4, 2, 3, 1]
+	var indicies: PackedInt32Array = [5, 4, 2, 3, 1]
 	var mm2i := new_index_map(indicies)
 
 	# FIXME: Unused, remove eventually.
@@ -179,13 +175,13 @@ func test_index_order() -> void:
 func test_contiguous() -> void:
 	var mm2i := new_index_map()
 
-	mm2i.indicies = to_int_array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+	mm2i.indicies = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 	assert_true(mm2i.is_contiguous())
-	mm2i.indicies = to_int_array([1, 2, 3, 4, 6, 7, 8, 9])
+	mm2i.indicies = [1, 2, 3, 4, 6, 7, 8, 9]
 	assert_false(mm2i.is_contiguous())
-	mm2i.indicies = to_int_array([4, 5, 9])
+	mm2i.indicies = [4, 5, 9]
 	assert_false(mm2i.is_contiguous())
-	mm2i.indicies = to_int_array([4, 8, 9])
+	mm2i.indicies = [4, 8, 9]
 	assert_false(mm2i.is_contiguous())
 
 
@@ -199,21 +195,7 @@ func test_duplicate() -> void:
 	assert_ne(a.indicies, b.indicies)
 
 
-func new_index_map(indicies: Array[int] = [1, 2, 3, 4, 5]) -> SS2D_IndexMap:
+func new_index_map(indicies: PackedInt32Array = [1, 2, 3, 4, 5]) -> SS2D_IndexMap:
 	var meta_mat := SS2D_Material_Edge_Metadata.new()
 	var mm2i := SS2D_IndexMap.new(indicies, meta_mat)
 	return mm2i
-
-
-# Convert Array[ Array ] -> Array[ Array[p_type] ]
-func convert_segments_to_typed(p_arr: Array) -> Array[PackedInt32Array]:
-	var out: Array[PackedInt32Array] = []
-	for i in p_arr.size():
-		out.push_back(PackedInt32Array(p_arr[i]))
-	return out
-
-
-func to_int_array(p_arr: Array) -> Array[int]:
-	var new_arr: Array[int] = []
-	new_arr.assign(p_arr)
-	return new_arr

@@ -338,9 +338,9 @@ func adjust_add_point_index(index: int) -> int:
 
 
 # FIXME: Only unit tests use this.
-func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
+func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> PackedInt32Array:
 	starting_index = adjust_add_point_index(starting_index)
-	var keys: Array[int] = []
+	var keys := PackedInt32Array()
 	_points.begin_update()
 	for i in range(0, verts.size(), 1):
 		var v: Vector2 = verts[i]
@@ -511,7 +511,7 @@ func has_point(key: int) -> bool:
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
-func get_all_point_keys() -> Array[int]:
+func get_all_point_keys() -> PackedInt32Array:
 	return _points.get_all_point_keys()
 
 
@@ -1315,12 +1315,10 @@ static func get_meta_material_index_mapping_for_overrides(
 	_s_material: SS2D_Material_Shape, pa: SS2D_Point_Array
 ) -> Array[SS2D_IndexMap]:
 	var mappings: Array[SS2D_IndexMap] = []
-	var overrides := pa.get_material_overrides()
-	for key_tuple: Vector2i in overrides:
-		var indicies: Array[int] = [pa.get_point_index(key_tuple.x), pa.get_point_index(key_tuple.y)]
-		indicies = sort_by_int_ascending(indicies)
+	for key_tuple in pa.get_material_overrides():
+		var indices := SS2D_IndexTuple.sort_ascending(Vector2i(pa.get_point_index(key_tuple.x), pa.get_point_index(key_tuple.y)))
 		var m: SS2D_Material_Edge_Metadata = pa.get_material_override(key_tuple)
-		var new_mapping := SS2D_IndexMap.new(PackedInt32Array(indicies), m)
+		var new_mapping := SS2D_IndexMap.new(PackedInt32Array([ indices.x, indices.y ]), m)
 		mappings.push_back(new_mapping)
 
 	return mappings

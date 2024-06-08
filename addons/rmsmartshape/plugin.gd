@@ -64,18 +64,18 @@ class ActionDataVert:
 	#Type of Action from the ACTION_VERT enum
 	var type: ACTION_VERT = ACTION_VERT.NONE
 	# The affected Verticies and their initial positions
-	var keys: Array[int] = []
-	var starting_width: Array[float] = []
+	var keys: PackedInt32Array
+	var starting_width: PackedFloat32Array
 	var starting_positions: PackedVector2Array = []
 	var starting_positions_control_in: PackedVector2Array = []
 	var starting_positions_control_out: PackedVector2Array = []
 
 	func _init(
-		_keys: Array[int],
+		_keys: PackedInt32Array,
 		positions: PackedVector2Array,
 		positions_in: PackedVector2Array,
 		positions_out: PackedVector2Array,
-		width: Array[float],
+		width: PackedFloat32Array,
 		t: ACTION_VERT
 	) -> void:
 		type = t
@@ -89,13 +89,10 @@ class ActionDataVert:
 		return keys.size() > 0
 
 	func _to_string() -> String:
-		var s := "%s: %s = %s"
-		return s % [type, keys, starting_positions]
+		return "%s: %s = %s" % [type, keys, starting_positions]
 
 	func is_single_vert_selected() -> bool:
-		if keys.size() == 1:
-			return true
-		return false
+		return keys.size() == 1
 
 	func current_point_key() -> int:
 		if not is_single_vert_selected():
@@ -960,11 +957,11 @@ func deselect_verts() -> void:
 	current_action = ActionDataVert.new([], [], [], [], [], ACTION_VERT.NONE)
 
 
-func select_verticies(keys: Array[int], action: ACTION_VERT) -> ActionDataVert:
+func select_verticies(keys: PackedInt32Array, action: ACTION_VERT) -> ActionDataVert:
 	var from_positions := PackedVector2Array()
 	var from_positions_c_in := PackedVector2Array()
 	var from_positions_c_out := PackedVector2Array()
-	var from_widths: Array[float] = []
+	var from_widths := PackedFloat32Array()
 	for key in keys:
 		from_positions.push_back(shape.get_point_position(key))
 		from_positions_c_in.push_back(shape.get_point_in(key))
@@ -975,19 +972,19 @@ func select_verticies(keys: Array[int], action: ACTION_VERT) -> ActionDataVert:
 	)
 
 
-func select_vertices_to_move(keys: Array[int], _mouse_starting_pos_viewport: Vector2) -> void:
+func select_vertices_to_move(keys: PackedInt32Array, _mouse_starting_pos_viewport: Vector2) -> void:
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 	current_action = select_verticies(keys, ACTION_VERT.MOVE_VERT)
 
 
 func select_control_points_to_move(
-	keys: Array[int], _mouse_starting_pos_viewport: Vector2, action: ACTION_VERT = ACTION_VERT.MOVE_CONTROL
+	keys: PackedInt32Array, _mouse_starting_pos_viewport: Vector2, action: ACTION_VERT = ACTION_VERT.MOVE_CONTROL
 ) -> void:
 	current_action = select_verticies(keys, action)
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 
 
-func select_width_handle_to_move(keys: Array[int], _mouse_starting_pos_viewport: Vector2) -> void:
+func select_width_handle_to_move(keys: PackedInt32Array, _mouse_starting_pos_viewport: Vector2) -> void:
 	_mouse_motion_delta_starting_pos = _mouse_starting_pos_viewport
 	current_action = select_verticies(keys, ACTION_VERT.MOVE_WIDTH_HANDLE)
 
@@ -1324,10 +1321,10 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 
 
 func _input_move_control_points(mb: InputEventMouseButton, vp_m_pos: Vector2, grab_threshold: float) -> bool:
-	var points_in: Array[int] = FUNC.get_intersecting_control_point_in(
+	var points_in := SS2D_PluginFunctionality.get_intersecting_control_point_in(
 		shape, get_et(), mb.position, grab_threshold
 	)
-	var points_out: Array[int] = FUNC.get_intersecting_control_point_out(
+	var points_out := SS2D_PluginFunctionality.get_intersecting_control_point_out(
 		shape, get_et(), mb.position, grab_threshold
 	)
 	if not points_in.is_empty():

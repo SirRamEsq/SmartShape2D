@@ -79,13 +79,19 @@ func test_point_constraints() -> void:
 	assert_eq(p_array.get_point_constraints(keys[1]).size(), 1)
 	assert_eq(p_array.get_point_constraints(keys[2]).size(), 2)
 	assert_eq(p_array.get_point_constraints(keys[3]).size(), 2)
-	p_array.set_constraint(keys[1], keys[2], SS2D_Point_Array.CONSTRAINT.NONE)
+	p_array.remove_constraint(Vector2i(keys[1], keys[2]))
 	assert_eq(p_array.get_point_constraints(keys[1]).size(), 0)
 	assert_eq(p_array.get_point_constraints(keys[2]).size(), 1)
 	assert_eq(p_array.get_point_constraints(keys[3]).size(), 2)
 	p_array.set_point_position(keys[1], Vector2(777, 888))
 	assert_eq(p_array.get_point_position(keys[1]), Vector2(777, 888))
 	assert_eq(p_array.get_point_position(keys[2]), Vector2(123, 321))
+
+	p_array.set_constraint(keys[1], keys[2], SS2D_Point_Array.CONSTRAINT.ALL)
+	p_array.set_constraint(keys[1], keys[2], SS2D_Point_Array.CONSTRAINT.NONE)
+	assert_eq(p_array.get_point_constraints(keys[1]).size(), 0)
+	assert_eq(p_array.get_point_constraints(keys[2]).size(), 1)
+	assert_eq(p_array.get_point_constraints(keys[3]).size(), 2)
 
 	# POINT IN/OUT AND PROPERTIES
 	assert_eq(p_array.get_point_in(keys[3]), Vector2(0, 0))
@@ -113,6 +119,12 @@ func test_point_constraints() -> void:
 	assert_eq(p_array.get_point_out(keys[1]), Vector2(0, 0))
 	assert_eq(p_array.get_point_properties(keys[1]).flip, false)
 
+	# Get constraint
+	assert_eq(p_array.get_point_constraint(keys[2], keys[3]), SS2D_Point_Array.CONSTRAINT.ALL)
+	assert_eq(p_array.get_point_constraint(keys[4], keys[5]), SS2D_Point_Array.CONSTRAINT.AXIS_X)
+	# Should not exist and return NONE
+	assert_eq(p_array.get_point_constraint(keys[1], keys[1]), SS2D_Point_Array.CONSTRAINT.NONE)
+
 
 # TODO Test that material overrides are correctly handled when duplicating
 func test_clone() -> void:
@@ -122,42 +134,26 @@ func test_clone() -> void:
 
 	var other := p_array.clone(true)
 	assert_ne(p_array, other)
-	p_array._constraints["dummy"] = ""
-	assert_ne(p_array._constraints, other._constraints)
-	p_array._constraints.erase("dummy")
-	p_array._points["dummy"] = ""
-	assert_ne(p_array._points, other._points)
-	p_array._points.erase("dummy")
 
-	assert_eq(p_array._point_order, other._point_order)
-	p_array._point_order.push_back(31337)
-	assert_ne(p_array._point_order, other._point_order)
-	p_array._point_order.pop_back()
-	assert_eq(p_array._point_order, other._point_order)
-
-	assert_eq(p_array._next_key, other._next_key)
-	assert_eq(p_array._constraints.size(), other._constraints.size())
-	assert_eq(p_array._points.size(), other._points.size())
-	for i in range(0, p_array._point_order.size(), 1):
-		var key1 := p_array._point_order[i]
-		var key2 := other._point_order[i]
-		assert_eq(key1, key2, "Same Point Order")
-
-	for k: int in p_array._points:
-		var p1: SS2D_Point = p_array._points[k]
+	for k in p_array.get_all_point_keys():
+		var p1: SS2D_Point = p_array.get_point(k)
 		print("p1: ", p1.get_instance_id())
-		var p2: SS2D_Point = other._points[k]
+		var p2: SS2D_Point = other.get_point(k)
 		print("p2: ", p2.get_instance_id())
+
 		assert_ne(p1, p2, "Unique Point with key %s" % k)
 		assert_ne(p1.properties, p2.properties)
 
 		assert_eq(p1.get_signal_connection_list("changed").size(), 1, "SIGNALS CONNECTED")
 		print(p1.get_signal_connection_list("changed")[0])
+
+		@warning_ignore("unsafe_method_access")
 		assert_eq(
 			p1.get_signal_connection_list("changed")[0].callable.get_object(),
 			p_array,
 			"SIGNALS CONNECTED to Parent"
 		)
+		@warning_ignore("unsafe_method_access")
 		assert_eq(
 			p2.get_signal_connection_list("changed")[0].callable.get_object(),
 			other,
@@ -174,6 +170,26 @@ func test_clone() -> void:
 		assert_eq(p1.properties.texture_idx, p2.properties.texture_idx, "tex_idx Same Values")
 		assert_eq(p1.properties.flip, p2.properties.flip, "flip Same Values")
 		assert_eq(p1.properties.width, p2.properties.width, "width Same Values")
+
+	# Run these tests after checking for point uniqueness because they modify the point array
+	assert_eq(p_array.get_next_key(), other.get_next_key())
+	p_array.reserve_key()
+	assert_ne(p_array.get_next_key(), other.get_next_key())
+
+	assert_eq(p_array.get_point_constraints_tuples(0), other.get_point_constraints_tuples(0))
+	p_array.set_constraint(0, 1, SS2D_Point_Array.CONSTRAINT.ALL)
+	assert_eq(p_array.get_point_constraints_tuples(0).size(), 1)
+	assert_eq(other.get_point_constraints_tuples(0).size(), 0)
+
+	assert_eq(p_array.get_point_count(), other.get_point_count())
+	var added_key := p_array.add_point(Vector2.ONE)
+	assert_ne(p_array.get_point_count(), other.get_point_count())
+	p_array.remove_point(added_key)
+
+	assert_eq(p_array.get_all_point_keys(), other.get_all_point_keys())
+	p_array.set_point_order([2, 1, 0])
+	assert_ne(p_array.get_all_point_keys(), other.get_all_point_keys())
+
 
 func test_material_override_add_delete() -> void:
 	var mmat1 := SS2D_Material_Edge_Metadata.new()
@@ -252,7 +268,7 @@ func test_helpers() -> void:
 	assert_eq(p_array.get_edge_keys_for_indices(Vector2i(1, 2)), Vector2i(key2, key3))
 
 
-func generate_points() -> Array[Vector2]:
+func generate_points() -> PackedVector2Array:
 	return [
 		Vector2(0, 0),
 		Vector2(10, 10),
