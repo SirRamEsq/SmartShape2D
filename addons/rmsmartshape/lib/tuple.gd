@@ -89,7 +89,7 @@ static func dict_validate(dict: Dictionary, value_type: Variant = null) -> void:
 		if value_type != null:
 			assert(is_instance_of(value, value_type), "Incorrect value type in dictionary: " + var_to_str(value))
 
-		if key is Array:
+		if key is Array or key is PackedInt32Array or key is PackedInt64Array:
 			var converted := Vector2i(int(key[0]), int(key[1]))
 			dict.erase(key)
 			dict[converted] = value
