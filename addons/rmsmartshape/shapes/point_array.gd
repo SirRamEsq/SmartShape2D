@@ -115,8 +115,8 @@ func _set_constraints(cs: Dictionary) -> void:
 	_constraints = cs
 
 	# For backwards compatibility (Array to Vector2i transition)
-	if Engine.is_editor_hint():
-		SS2D_IndexTuple.dict_validate(_constraints, TYPE_INT)
+	# FIXME: Maybe remove during the next breaking release
+	SS2D_IndexTuple.dict_validate(_constraints, TYPE_INT)
 
 
 func set_next_key(i: int) -> void:
@@ -514,6 +514,8 @@ func debug_print() -> void:
 ######################
 ## dict: Dict[Vector2i, SS2D_Material_Edge_Metadata]
 func set_material_overrides(dict: Dictionary) -> void:
+	# For backwards compatibility (Array to Vector2i transition)
+	# FIXME: Maybe remove during the next breaking release
 	SS2D_IndexTuple.dict_validate(dict, SS2D_Material_Edge_Metadata)
 
 	if _material_overrides != null:
