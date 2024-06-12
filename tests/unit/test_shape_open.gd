@@ -202,7 +202,7 @@ func test_get_edge_meta_materials_many() -> void:
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
 	var mappings := SS2D_Shape.get_meta_material_index_mapping(s_m, points, false)
 	assert_eq(mappings.size(), edge_materials_count, "Expecting %s materials" % edge_materials_count)
-	var expected_indicies := [[0, 1, 2], [2, 3], [3, 4], [4, 5]]
+	var expected_indicies := [PackedInt32Array([0, 1, 2]), PackedInt32Array([2, 3]), PackedInt32Array([3, 4]), PackedInt32Array([4, 5])]
 	for i in range(0, mappings.size(), 1):
 		var mapping := mappings[i]
 		assert_eq(expected_indicies[i], mapping.indicies, "Actual indicies match expected?")

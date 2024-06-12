@@ -90,9 +90,9 @@ func test_get_meta_material_index_mapping_simple_squareish_shape() -> void:
 	assert_true(mappings_materials.has(shape_material.get_edge_meta_materials(n_up)[0]))
 	assert_true(mappings_materials.has(shape_material.get_edge_meta_materials(n_down)[0]))
 
-	assert_eq(mappings[0].indicies, [0,1,2])
-	assert_eq(mappings[1].indicies, [2,3])
-	assert_eq(mappings[2].indicies, [3,4,5])
+	assert_eq(mappings[0].indicies, PackedInt32Array([0,1,2]))
+	assert_eq(mappings[1].indicies, PackedInt32Array([2,3]))
+	assert_eq(mappings[2].indicies, PackedInt32Array([3,4,5]))
 
 func test_get_meta_material_index_mapping_complex_shape() -> void:
 	var verts: Array[Vector2] = [
@@ -128,13 +128,13 @@ func test_get_meta_material_index_mapping_complex_shape() -> void:
 	assert_true(mappings_materials.has(shape_material.get_edge_meta_materials(n_up)[0]))
 	assert_true(mappings_materials.has(shape_material.get_edge_meta_materials(n_down)[0]))
 
-	assert_eq(mappings[0].indicies, [0,1])
-	assert_eq(mappings[1].indicies, [1,2])
-	assert_eq(mappings[2].indicies, [2,3])
-	assert_eq(mappings[3].indicies, [3,4])
-	assert_eq(mappings[4].indicies, [4,5])
-	assert_eq(mappings[5].indicies, [5,6])
-	assert_eq(mappings[6].indicies, [6,7,8,9,10,11])
+	assert_eq(mappings[0].indicies, PackedInt32Array([0,1]))
+	assert_eq(mappings[1].indicies, PackedInt32Array([1,2]))
+	assert_eq(mappings[2].indicies, PackedInt32Array([2,3]))
+	assert_eq(mappings[3].indicies, PackedInt32Array([3,4]))
+	assert_eq(mappings[4].indicies, PackedInt32Array([4,5]))
+	assert_eq(mappings[5].indicies, PackedInt32Array([5,6]))
+	assert_eq(mappings[6].indicies, PackedInt32Array([6,7,8,9,10,11]))
 
 var offset_params: Array[float] = [1.0, 1.5, 0.5, 0.0, 10.0, -1.0]
 func test_build_edge_with_material_basic_square(offset: float = use_parameters(offset_params)) -> void:

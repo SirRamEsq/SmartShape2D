@@ -146,13 +146,13 @@ func set_point_array(a: SS2D_Point_Array) -> void:
 	if _points != null:
 		if _points.is_connected("update_finished", self._points_modified):
 			_points.disconnect("update_finished", self._points_modified)
-		if _points.is_connected("material_override_changed", self._handle_material_override_change):
-			_points.disconnect("material_override_changed", self._handle_material_override_change)
+		if _points.material_override_changed.is_connected(_handle_material_override_change):
+			_points.material_override_changed.disconnect(_handle_material_override_change)
 	if a == null:
 		a = SS2D_Point_Array.new()
 	_points = a
 	_points.connect("update_finished", self._points_modified)
-	_points.connect("material_override_changed", self._handle_material_override_change)
+	_points.material_override_changed.connect(_handle_material_override_change)
 	clear_cached_data()
 	set_as_dirty()
 	notify_property_list_changed()
@@ -338,9 +338,9 @@ func adjust_add_point_index(index: int) -> int:
 
 
 # FIXME: Only unit tests use this.
-func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> Array[int]:
+func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> PackedInt32Array:
 	starting_index = adjust_add_point_index(starting_index)
-	var keys: Array[int] = []
+	var keys := PackedInt32Array()
 	_points.begin_update()
 	for i in range(0, verts.size(), 1):
 		var v: Vector2 = verts[i]
@@ -416,7 +416,7 @@ func _has_closing_point() -> bool:
 		return false
 	var key1: int = _points.get_point_key_at_index(0)
 	var key2: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
-	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
+	return _points.get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
 
 
 ## Deprecated. Use get_point_array().begin_update() instead.
@@ -511,7 +511,7 @@ func has_point(key: int) -> bool:
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
-func get_all_point_keys() -> Array[int]:
+func get_all_point_keys() -> PackedInt32Array:
 	return _points.get_all_point_keys()
 
 
@@ -822,9 +822,8 @@ func generate_collision_points() -> PackedVector2Array:
 		return points
 
 	var csize: float = 1.0 if is_shape_closed() else collision_size
-	var indicies: Array[int] = []
-	indicies.assign(range(num_points))  # assign() also type casts the array
-	var edge_data := SS2D_IndexMap.new(indicies, null)
+	var indices := PackedInt32Array(range(num_points))
+	var edge_data := SS2D_IndexMap.new(indices, null)
 	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, csize)
 	_weld_quad_array(edge.quads, false)
 
@@ -1262,9 +1261,7 @@ func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -
 			else:
 				final_edges.erase(edge_last_idx)
 				final_edges.erase(edge_first_idx)
-				var indicies: Array[int] = []
-				indicies.append_array(edge_last_idx.indicies)
-				indicies.append_array(edge_first_idx.indicies)
+				var indicies := edge_last_idx.indicies + edge_first_idx.indicies
 				var merged_edge := SS2D_IndexMap.new(indicies, mat)
 				final_edges.push_back(merged_edge)
 	return final_edges
@@ -1318,12 +1315,10 @@ static func get_meta_material_index_mapping_for_overrides(
 	_s_material: SS2D_Material_Shape, pa: SS2D_Point_Array
 ) -> Array[SS2D_IndexMap]:
 	var mappings: Array[SS2D_IndexMap] = []
-	var overrides: Dictionary = pa.get_material_overrides()
-	for key_tuple: Array[int] in overrides:
-		var indicies: Array[int] = [pa.get_point_index(key_tuple[0]), pa.get_point_index(key_tuple[1])]
-		indicies = sort_by_int_ascending(indicies)
+	for key_tuple in pa.get_material_overrides():
+		var indices := SS2D_IndexTuple.sort_ascending(Vector2i(pa.get_point_index(key_tuple.x), pa.get_point_index(key_tuple.y)))
 		var m: SS2D_Material_Edge_Metadata = pa.get_material_override(key_tuple)
-		var new_mapping := SS2D_IndexMap.new(indicies, m)
+		var new_mapping := SS2D_IndexMap.new(PackedInt32Array([ indices.x, indices.y ]), m)
 		mappings.push_back(new_mapping)
 
 	return mappings
@@ -1384,7 +1379,7 @@ func _handle_material_change() -> void:
 	set_as_dirty()
 
 
-func _handle_material_override_change(_tuple: Array[int]) -> void:
+func _handle_material_override_change(_tuple: Vector2i) -> void:
 	set_as_dirty()
 
 
@@ -1535,7 +1530,7 @@ func _edge_generate_corner(
 
 
 func _imap_contains_all_points(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
-	return imap.indicies[0] == 0 and imap.indicies.back() == verts.size()-1
+	return imap.indicies[0] == 0 and imap.indicies[-1] == verts.size()-1
 
 
 func _is_edge_contiguous(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
