@@ -323,7 +323,7 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 		var tex: Texture2D = consecutive_quads[0].texture
 		var flip: bool = consecutive_quads[0].flip_texture
 		var mesh_data := SS2D_Mesh.new(tex, flip, Transform2D(), [array_mesh], material)
-		mesh_data.force_no_tiling = consecutive_quads.size() <= 1
+		mesh_data.force_no_tiling = consecutive_quads[0].corner != SS2D_Quad.CORNER.NONE
 		mesh_data.z_index = z_index
 		mesh_data.z_as_relative = z_as_relative
 		meshes.push_back(mesh_data)
