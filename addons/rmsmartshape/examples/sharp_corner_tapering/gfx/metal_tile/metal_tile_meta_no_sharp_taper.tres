@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SS2D_Material_Edge_Metadata" load_steps=5 format=3 uid="uid://84jgty60gk4u"]
+
+[ext_resource type="Resource" uid="uid://c8q2nrxnbopbb" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/metal_tile.tres" id="1_j7wvk"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/normal_range.gd" id="2_46lcb"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" id="3_i7qnq"]
+
+[sub_resource type="Resource" id="Resource_42qh7"]
+script = ExtResource("2_46lcb")
+begin = 0.0
+distance = 360.0
+edgeRendering = Vector2(0, 0)
+
+[resource]
+script = ExtResource("3_i7qnq")
+edge_material = ExtResource("1_j7wvk")
+normal_range = SubResource("Resource_42qh7")
+weld = true
+taper_sharp_corners = false
+render = true
+z_index = 0
+z_as_relative = true
+offset = 0.0
