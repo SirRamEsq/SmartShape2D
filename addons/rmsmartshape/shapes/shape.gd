@@ -1796,9 +1796,11 @@ func _taper_quad_left(new_quad: SS2D_Quad, edge_material: SS2D_Material_Edge, te
 			taper_quad.pt_c = taper_quad.pt_b + offset
 			new_quad.pt_a = taper_quad.pt_d
 			new_quad.pt_b = taper_quad.pt_c
+			taper_quad.is_tapered = true
 			return taper_quad
 		# If a new taper quad doesn't fit, re-texture the new_quad
 		else:
+			new_quad.is_tapered = true
 			new_quad.texture = taper_texture
 	return null
 
@@ -1817,9 +1819,11 @@ func _taper_quad_right(new_quad: SS2D_Quad, edge_material: SS2D_Material_Edge, t
 			taper_quad.pt_b = taper_quad.pt_c - offset
 			new_quad.pt_d = taper_quad.pt_a
 			new_quad.pt_c = taper_quad.pt_b
+			taper_quad.is_tapered = true
 			return taper_quad
 		# If a new taper quad doesn't fit, re-texture the new_quad
 		else:
+			new_quad.is_tapered = true
 			new_quad.texture = taper_texture
 	return null
 
