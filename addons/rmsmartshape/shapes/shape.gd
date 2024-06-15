@@ -1230,7 +1230,7 @@ func _weld_quad_array(
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		if !this_quad.ignore_weld_next:
+		if not this_quad.ignore_weld_next:
 			SS2D_Shape.weld_quads(this_quad, next_quad)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
@@ -1248,7 +1248,7 @@ func _weld_quad_array(
 				return
 
 	if weld_first_and_last:
-		if !quads[-1].ignore_weld_next:
+		if not quads[-1].ignore_weld_next:
 			weld_quads(quads[-1], quads[0])
 
 
@@ -1609,9 +1609,9 @@ func _build_edge_with_material(
 	var texture_idx := 0
 	var sharp_taper_next: SS2D_Quad = null
 	var is_not_corner: bool = true
-	var taper_sharp: bool = (edge_material != null && 
-		edge_material.use_taper_texture && 
-		edge_material_meta != null &&
+	var taper_sharp: bool = (edge_material != null and
+		edge_material.use_taper_texture and
+		edge_material_meta != null and
 		edge_material_meta.taper_sharp_corners)
 	while i < tess_point_count:
 		var tess_idx: int = (first_idx_t + i) % verts_t.size()
@@ -1692,7 +1692,8 @@ func _build_edge_with_material(
 				if q != null:
 					new_quads.push_front(q)
 					is_not_corner = false
-				else: is_not_corner = true
+				else: 
+					is_not_corner = true
 
 		# Taper Quad
 		# Bear in mind, a point can be both first AND last
@@ -1712,9 +1713,9 @@ func _build_edge_with_material(
 				new_quads.push_back(taper_quad)
 
 		# Taper sharp corners
-		#is_not_corner = new_quads[0].corner == SS2D_Quad.CORNER.NONE
 		if taper_sharp:
-			if sharp_taper_next != null && is_not_corner:
+			var ang_threshold := PI * 0.5
+			if sharp_taper_next != null and is_not_corner:
 				var taper := _taper_quad_right(sharp_taper_next, edge_material, texture_idx)
 				if taper != null:
 					taper.ignore_weld_next = true
@@ -1723,22 +1724,22 @@ func _build_edge_with_material(
 					sharp_taper_next.ignore_weld_next = true
 			sharp_taper_next = null
 			var vert := verts[vert_idx]
-			var prev_vert := verts[wrapi(vert_idx - 1, 0, verts.size() - 1)] as Vector2
-			var next_vert := verts[wrapi(vert_idx + 1, 0, verts.size() - 1)] as Vector2
-			if !did_taper_left && is_not_corner:
+			var prev_vert := verts[wrapi(vert_idx - 1, 0, verts.size() - 1)]
+			var next_vert := verts[wrapi(vert_idx + 1, 0, verts.size() - 1)]
+			if !did_taper_left and is_not_corner:
 				var ang_from := prev_vert.angle_to_point(vert)
-				var ang_to = vert.angle_to_point(next_vert)
-				var ang_dif = angle_difference(ang_from, ang_to)
-				if absf(ang_dif) > PI - PI * 0.5:
+				var ang_to := vert.angle_to_point(next_vert)
+				var ang_dif := angle_difference(ang_from, ang_to)
+				if absf(ang_dif) >ang_threshold:
 					var taper = _taper_quad_left(new_quad, edge_material, texture_idx)
 					if taper != null:
 						new_quads.push_front(taper)
 			if !did_taper_right:
 				var next_next_vert := verts[wrapi(vert_idx + 2, 0, verts.size() - 1)] as Vector2
-				var ang_from = vert.angle_to_point(next_vert)
-				var ang_to = next_vert.angle_to_point(next_next_vert)
-				var ang_dif = angle_difference(ang_from, ang_to)
-				if absf(ang_dif) > PI - PI * 0.5:
+				var ang_from := vert.angle_to_point(next_vert)
+				var ang_to := next_vert.angle_to_point(next_next_vert)
+				var ang_dif := angle_difference(ang_from, ang_to)
+				if absf(ang_dif) > ang_threshold:
 					sharp_taper_next = new_quad
 
 		# Final point for closed shapes fix
@@ -1765,7 +1766,7 @@ func _build_edge_with_material(
 	
 	# leftover final taper for the last sharp corner if required
 	if taper_sharp:
-		if sharp_taper_next != null && edge.quads[0].corner == SS2D_Quad.CORNER.NONE:
+		if sharp_taper_next != null and edge.quads[0].corner == SS2D_Quad.CORNER.NONE:
 			var taper := _taper_quad_right(sharp_taper_next, edge_material, texture_idx)
 			if taper != null:
 				taper.ignore_weld_next = true
