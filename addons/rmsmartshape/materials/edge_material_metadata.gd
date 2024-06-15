@@ -12,7 +12,8 @@ class_name SS2D_Material_Edge_Metadata
 ## If edge should be welded to the edges surrounding it.
 @export var weld: bool = true : set = set_weld
 ## Whether or not the edges should use the tapering texture and not be welded, if they are
-## too sharp to be welded without significant distortion
+## too sharp to be welded without significant distortion. NOTE this will not work properly
+## in curved shapes
 @export var taper_sharp_corners: bool = false : set = set_taper_sharp_corners
 ## If this edge should be visible.
 @export var render: bool = true : set = set_render
