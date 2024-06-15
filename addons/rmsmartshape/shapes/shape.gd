@@ -1249,7 +1249,7 @@ func _weld_quad_array(
 
 	if weld_first_and_last:
 		if not quads[-1].ignore_weld_next:
-			weld_quads(quads[-1], quads[0])
+			SS2D_Shape.weld_quads(quads[-1], quads[0])
 
 
 func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
