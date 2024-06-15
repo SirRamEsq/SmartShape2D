@@ -1726,16 +1726,16 @@ func _build_edge_with_material(
 			var vert := verts[vert_idx]
 			var prev_vert := verts[wrapi(vert_idx - 1, 0, verts.size() - 1)]
 			var next_vert := verts[wrapi(vert_idx + 1, 0, verts.size() - 1)]
-			if !did_taper_left and is_not_corner:
+			if not did_taper_left and is_not_corner:
 				var ang_from := prev_vert.angle_to_point(vert)
 				var ang_to := vert.angle_to_point(next_vert)
 				var ang_dif := angle_difference(ang_from, ang_to)
-				if absf(ang_dif) >ang_threshold:
-					var taper = _taper_quad(new_quad, edge_material, texture_idx, false)
+				if absf(ang_dif) > ang_threshold:
+					var taper := _taper_quad(new_quad, edge_material, texture_idx, false)
 					if taper != null:
 						new_quads.push_front(taper)
-			if !did_taper_right:
-				var next_next_vert := verts[wrapi(vert_idx + 2, 0, verts.size() - 1)] as Vector2
+			if not did_taper_right:
+				var next_next_vert := verts[wrapi(vert_idx + 2, 0, verts.size() - 1)]
 				var ang_from := vert.angle_to_point(next_vert)
 				var ang_to := next_vert.angle_to_point(next_next_vert)
 				var ang_dif := angle_difference(ang_from, ang_to)
