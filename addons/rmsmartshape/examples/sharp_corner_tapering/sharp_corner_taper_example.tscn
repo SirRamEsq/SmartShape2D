@@ -95,7 +95,7 @@ width = 1.0
 
 [sub_resource type="Resource" id="Resource_w1ohc"]
 script = ExtResource("3_edpr6")
-position = Vector2(639.235, 322.256)
+position = Vector2(641.411, 322.256)
 point_in = Vector2(0, 0)
 point_out = Vector2(0, 0)
 properties = SubResource("Resource_10cps")
