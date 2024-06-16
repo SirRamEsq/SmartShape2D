@@ -23,12 +23,12 @@ enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTI
 ## Controls how many subdivisions a curve segment may face before it is considered
 ## approximate enough.
 @export_range(0, 8, 1)
-var tessellation_stages: int = 5 : set = set_tessellation_stages
+var tessellation_stages: int = 3 : set = set_tessellation_stages
 
 ## Controls how many degrees the midpoint of a segment may deviate from the real
 ## curve, before the segment has to be subdivided.
-@export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
-var tessellation_tolerance: float = 4.0 : set = set_tessellation_tolerance
+@export_range(0.1, 16.0, 0.1, "or_greater", "or_lesser")
+var tessellation_tolerance: float = 6.0 : set = set_tessellation_tolerance
 
 @export_range(1, 512) var curve_bake_interval: float = 20.0 : set = set_curve_bake_interval
 

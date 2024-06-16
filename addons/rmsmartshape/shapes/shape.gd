@@ -88,15 +88,15 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ## approximate enough.
 ## @deprecated
 @export_range(0, 8, 1)
-var tessellation_stages: int = 5 :
+var tessellation_stages: int = 3 :
 	set(value): _points.tessellation_stages = value
 	get: return _points.tessellation_stages
 
 ## Controls how many degrees the midpoint of a segment may deviate from the real
 ## curve, before the segment has to be subdivided.
 ## @deprecated
-@export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
-var tessellation_tolerence: float = 4.0 :
+@export_range(0.1, 16.0, 0.1, "or_greater", "or_lesser")
+var tessellation_tolerence: float = 6.0 :
 	set(value): _points.tessellation_tolerance = value
 	get: return _points.tessellation_tolerance
 
