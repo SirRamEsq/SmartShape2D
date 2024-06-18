@@ -1098,11 +1098,11 @@ static func build_quad_from_two_points(
 	return quad
 
 
-# Will build a corner quad
-# pt is the center of this corner quad
-# width will scale the quad in line with the next point (one dimension)
-# prev_width will scale the quad in line with the prev point (hte other dimension)
-# custom_scale will scale the quad in both dimensions
+## Builds a corner quad. [br]
+## - [param pt] is the center of this corner quad. [br]
+## - [param width] will scale the quad in line with the next point (one dimension). [br]
+## - [param prev_width] will scale the quad in line with the prev point (hte other dimension). [br]
+## - [param custom_scale] will scale the quad in both dimensions. [br]
 static func build_quad_corner(
 	pt_next: Vector2,
 	pt: Vector2,
@@ -1118,42 +1118,39 @@ static func build_quad_corner(
 ) -> SS2D_Quad:
 	var new_quad := SS2D_Quad.new()
 
-	var quad_size: Vector2 = size / 2.0
+	#             :BUILD PLAN:
+	#   OUTER CORNER        INNER CORNER
+	#
+	#   0------A-----D             0-----0
+	#   |  1   :  2  |             |  3  :
+	#   0......B.....C             |     :
+	#          :     |     0-------D-----A
+	#          :  3  |     |  1    |  2  :
+	#          0-----0     0.......C.....B
+	#
+	#  1-previous, 2-current, 3-next (points)
+
+	var quad_size: Vector2 = size * 0.5
 	var delta_12: Vector2 = pt - pt_prev
 	var delta_23: Vector2 = pt_next - pt
-	var normal_23 := Vector2(delta_23.y, -delta_23.x).normalized()
-	var normal_12 := Vector2(delta_12.y, -delta_12.x).normalized()
+	var offset_12: Vector2 = delta_12.normalized() * custom_scale * pt_width * quad_size
+	var offset_23: Vector2 = delta_23.normalized() * custom_scale * pt_prev_width * quad_size
+	var custom_offset_13: Vector2 = (offset_12.normalized() - offset_23.normalized()) * custom_offset * quad_size
 
-	var offset_12: Vector2 = normal_12 * custom_scale * pt_prev_width * quad_size
-	var offset_23: Vector2 = normal_23 * custom_scale * pt_width * quad_size
-	var custom_offset_13: Vector2 = (normal_12 + normal_23) * custom_offset * quad_size
 	if flip_edges_:
 		offset_12 *= -1
 		offset_23 *= -1
 		custom_offset_13 *= -1
 
-	var pt_d := pt + (offset_23) + (offset_12) + custom_offset_13
-	var pt_a := pt - (offset_23) + (offset_12) + custom_offset_13
-	var pt_c := pt + (offset_23) - (offset_12) + custom_offset_13
-	var pt_b := pt - (offset_23) - (offset_12) + custom_offset_13
-	
-	# apply anti-distortion ratio, so corner doesn't clip into interior of shape
-	var mid_point := (pt_a + pt_b + pt_c + pt_d) * 0.25
-	var off_a := pt_a - mid_point
-	var off_b := pt_b - mid_point
-	var off_c := pt_c - mid_point
-	var off_d := pt_d - mid_point
-	var ratio := off_a.length() / off_b.length()
-	var inv_ratio := 1 / ratio
-	off_a *= inv_ratio
-	off_b *= ratio
-	off_c *= inv_ratio
-	off_d *= ratio
+	# Should we mirror internal ABCD vertices relative to quad center.
+	# - Historically, quad internal vertices are flipped for inner corner quads (see illustration).
+	# - Value: 1.0 for outer, -1.0 for inner (mirrored).
+	var mirror: float = -1.0 if corner_status == SS2D_Quad.CORNER.INNER else 1.0
 
-	new_quad.pt_a = mid_point + off_a
-	new_quad.pt_b = mid_point + off_b
-	new_quad.pt_c = mid_point + off_c
-	new_quad.pt_d = mid_point + off_d
+	new_quad.pt_a = pt + (-offset_12 - offset_23 + custom_offset_13) * mirror
+	new_quad.pt_b = pt + (-offset_12 + offset_23 + custom_offset_13) * mirror
+	new_quad.pt_c = pt + (offset_12 + offset_23 + custom_offset_13) * mirror
+	new_quad.pt_d = pt + (offset_12 - offset_23 + custom_offset_13) * mirror
 
 	new_quad.corner = corner_status
 	new_quad.texture = texture
@@ -1689,7 +1686,7 @@ func _build_edge_with_material(
 				if q != null:
 					new_quads.push_front(q)
 					is_not_corner = false
-				else: 
+				else:
 					is_not_corner = true
 
 		# Taper Quad
@@ -1760,7 +1757,7 @@ func _build_edge_with_material(
 		for q in new_quads:
 			edge.quads.push_back(q)
 		i += next_point_delta
-	
+
 	# leftover final taper for the last sharp corner if required
 	if taper_sharp:
 		if sharp_taper_next != null and edge.quads[0].corner == SS2D_Quad.CORNER.NONE:
@@ -1771,14 +1768,15 @@ func _build_edge_with_material(
 			else:
 				sharp_taper_next.ignore_weld_next = true
 		sharp_taper_next = null
-	
+
 	if edge_material_meta != null:
 		if edge_material_meta.weld:
 			_weld_quad_array(edge.quads, edge.wrap_around)
 
 	return edge
 
-# get the appropriate tapering texture based on direction and whether the current taper is a sharp 
+
+# get the appropriate tapering texture based on direction and whether the current taper is a sharp
 # corner taper or normal material edge taper
 func get_taper_tex(edge_mat: SS2D_Material_Edge, tex_idx: int, facing_right: bool, corner_taper: bool) -> Texture2D:
 	if facing_right:
@@ -1792,11 +1790,12 @@ func get_taper_tex(edge_mat: SS2D_Material_Edge, tex_idx: int, facing_right: boo
 		else:
 			return edge_mat.get_texture_taper_left(tex_idx)
 
+
 func _taper_quad(
-	quad: SS2D_Quad, 
-	edge_mat: SS2D_Material_Edge, 
-	tex_idx: int, 
-	facing_right: bool, 
+	quad: SS2D_Quad,
+	edge_mat: SS2D_Material_Edge,
+	tex_idx: int,
+	facing_right: bool,
 	corner_taper: bool
 ) -> SS2D_Quad:
 	var taper_texture: Texture2D = get_taper_tex(edge_mat, tex_idx, facing_right, corner_taper)
@@ -1819,7 +1818,7 @@ func _taper_quad(
 				taper_quad.pt_c = taper_quad.pt_b + offset
 				quad.pt_a = taper_quad.pt_d
 				quad.pt_b = taper_quad.pt_c
-			
+
 			taper_quad.is_tapered = true
 			return taper_quad
 		# If a new taper quad doesn't fit, re-texture the new_quad
@@ -1827,6 +1826,7 @@ func _taper_quad(
 			quad.is_tapered = true
 			quad.texture = taper_texture
 	return null
+
 
 func _build_edge_with_material_thread_wrapper(args: Array) -> SS2D_Edge:
 	return _build_edge_with_material(args[0], args[1], args[2])
