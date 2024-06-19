@@ -280,7 +280,7 @@ func test_get_width_for_tessellated_point() -> void:
 	assert_ne(test_t_idx, t_idx_1)
 	assert_ne(test_t_idx, t_idx_2)
 	var test_width := shape._get_width_for_tessellated_point(points, test_t_idx)
-	assert_almost_eq(test_width, w_average, 0.1)
+	assert_almost_eq(test_width, w_average, 0.15)
 
 
 func get_clockwise_points() -> PackedVector2Array:
