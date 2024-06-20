@@ -1131,11 +1131,11 @@ static func build_quad_corner(
 	#  1-previous, 2-current, 3-next (points)
 
 	var quad_size: Vector2 = size * 0.5
-	var delta_12: Vector2 = pt - pt_prev
-	var delta_23: Vector2 = pt_next - pt
-	var offset_12: Vector2 = delta_12.normalized() * custom_scale * pt_width * quad_size
-	var offset_23: Vector2 = delta_23.normalized() * custom_scale * pt_prev_width * quad_size
-	var custom_offset_13: Vector2 = (offset_12.normalized() - offset_23.normalized()) * custom_offset * quad_size
+	var dir_12: Vector2 = (pt - pt_prev).normalized()
+	var dir_23: Vector2 = (pt_next - pt).normalized()
+	var offset_12: Vector2 = dir_12 * custom_scale * pt_width * quad_size
+	var offset_23: Vector2 = dir_23 * custom_scale * pt_prev_width * quad_size
+	var custom_offset_13: Vector2 = (dir_12 - dir_23) * custom_offset * quad_size
 
 	if flip_edges_:
 		offset_12 *= -1
