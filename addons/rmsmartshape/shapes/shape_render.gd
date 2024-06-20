@@ -10,6 +10,10 @@ var mesh: SS2D_Mesh = null : set = set_mesh
 func set_mesh(m: SS2D_Mesh) -> void:
 	mesh = m
 	if m != null:
+		if m.force_no_tiling:
+			texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+		else:
+			texture_repeat = CanvasItem.TEXTURE_REPEAT_PARENT_NODE
 		material = mesh.material
 		z_index = mesh.z_index
 		z_as_relative = mesh.z_as_relative

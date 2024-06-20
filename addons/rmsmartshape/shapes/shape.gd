@@ -1136,10 +1136,24 @@ static func build_quad_corner(
 	var pt_a := pt - (offset_23) + (offset_12) + custom_offset_13
 	var pt_c := pt + (offset_23) - (offset_12) + custom_offset_13
 	var pt_b := pt - (offset_23) - (offset_12) + custom_offset_13
-	new_quad.pt_a = pt_a
-	new_quad.pt_b = pt_b
-	new_quad.pt_c = pt_c
-	new_quad.pt_d = pt_d
+	
+	# apply anti-distortion ratio, so corner doesn't clip into interior of shape
+	var mid_point := (pt_a + pt_b + pt_c + pt_d) * 0.25
+	var off_a := pt_a - mid_point
+	var off_b := pt_b - mid_point
+	var off_c := pt_c - mid_point
+	var off_d := pt_d - mid_point
+	var ratio := off_a.length() / off_b.length()
+	var inv_ratio := 1 / ratio
+	off_a *= inv_ratio
+	off_b *= ratio
+	off_c *= inv_ratio
+	off_d *= ratio
+
+	new_quad.pt_a = mid_point + off_a
+	new_quad.pt_b = mid_point + off_b
+	new_quad.pt_c = mid_point + off_c
+	new_quad.pt_d = mid_point + off_d
 
 	new_quad.corner = corner_status
 	new_quad.texture = texture
@@ -1216,7 +1230,8 @@ func _weld_quad_array(
 	for index in range(start_idx, quads.size() - 1, 1):
 		var this_quad: SS2D_Quad = quads[index]
 		var next_quad: SS2D_Quad = quads[index + 1]
-		SS2D_Shape.weld_quads(this_quad, next_quad)
+		if not this_quad.ignore_weld_next:
+			SS2D_Shape.weld_quads(this_quad, next_quad)
 		# If this quad self_intersects after welding, it's likely very small and can be removed
 		# Usually happens when welding a very large and very small quad together
 		# Generally looks better when simply being removed
@@ -1233,7 +1248,8 @@ func _weld_quad_array(
 				return
 
 	if weld_first_and_last:
-		SS2D_Shape.weld_quads(quads[-1], quads[0])
+		if not quads[-1].ignore_weld_next:
+			SS2D_Shape.weld_quads(quads[-1], quads[0])
 
 
 func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
@@ -1590,6 +1606,10 @@ func _build_edge_with_material(
 	var tess_point_count: int = _edge_data_get_tess_point_count(index_map)
 
 	var i := 0
+	var texture_idx := 0
+	var sharp_taper_next: SS2D_Quad = null
+	var is_not_corner: bool = true
+	var taper_sharp: bool = edge_material_meta != null and edge_material_meta.taper_sharp_corners
 	while i < tess_point_count:
 		var tess_idx: int = (first_idx_t + i) % verts_t.size()
 		var tess_idx_next: int = SS2D_PluginFunctionality.get_next_unique_point_idx(tess_idx, verts_t, true)
@@ -1610,8 +1630,6 @@ func _build_edge_with_material(
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
 		var pt_prev: Vector2 = verts_t[tess_idx_prev]
-
-		var texture_idx := 0
 		var flip_x: bool = get_point_texture_flip(vert_key)
 
 		var width_scale: float = _get_width_for_tessellated_point(verts, tess_idx)
@@ -1670,50 +1688,56 @@ func _build_edge_with_material(
 				)
 				if q != null:
 					new_quads.push_front(q)
+					is_not_corner = false
+				else: 
+					is_not_corner = true
 
 		# Taper Quad
 		# Bear in mind, a point can be both first AND last
 		# Consider an edge that consists of two points (one edge)
 		# This first point is used to generate the quad; it is both first and last
+		var did_taper_left: bool = false
+		var did_taper_right: bool = false
 		if is_first_tess_point and edge_material != null and edge_material.use_taper_texture:
-			var taper_texture: Texture2D = edge_material.get_texture_taper_left(texture_idx)
-			if taper_texture != null:
-				var taper_size: Vector2 = taper_texture.get_size()
-				var fit: bool = absf(taper_size.x) <= new_quad.get_length_average()
-				if fit:
-					var taper_quad := new_quad.duplicate()
-					taper_quad.corner = 0
-					taper_quad.texture = taper_texture
-					var delta_normal: Vector2 = (taper_quad.pt_d - taper_quad.pt_a).normalized()
-					var offset: Vector2 = delta_normal * taper_size
-
-					taper_quad.pt_d = taper_quad.pt_a + offset
-					taper_quad.pt_c = taper_quad.pt_b + offset
-					new_quad.pt_a = taper_quad.pt_d
-					new_quad.pt_b = taper_quad.pt_c
-					new_quads.push_front(taper_quad)
-				# If a new taper quad doesn't fit, re-texture the new_quad
-				else:
-					new_quad.texture = taper_texture
+			did_taper_left = true
+			var taper_quad := _taper_quad(new_quad, edge_material, texture_idx, false, false)
+			if taper_quad != null:
+				new_quads.push_front(taper_quad)
 		if is_last_tess_point and edge_material != null and edge_material.use_taper_texture:
-			var taper_texture: Texture2D = edge_material.get_texture_taper_right(texture_idx)
-			if taper_texture != null:
-				var taper_size: Vector2 = taper_texture.get_size()
-				var fit: bool = absf(taper_size.x) <= new_quad.get_length_average()
-				if fit:
-					var taper_quad := new_quad.duplicate()
-					taper_quad.corner = 0
-					taper_quad.texture = taper_texture
-					var delta_normal: Vector2 = (taper_quad.pt_d - taper_quad.pt_a).normalized()
-					var offset: Vector2 = delta_normal * taper_size
-					taper_quad.pt_a = taper_quad.pt_d - offset
-					taper_quad.pt_b = taper_quad.pt_c - offset
-					new_quad.pt_d = taper_quad.pt_a
-					new_quad.pt_c = taper_quad.pt_b
-					new_quads.push_back(taper_quad)
-				# If a new taper quad doesn't fit, re-texture the new_quad
+			did_taper_right = true
+			var taper_quad := _taper_quad(new_quad, edge_material, texture_idx, true, true)
+			if taper_quad != null:
+				new_quads.push_back(taper_quad)
+
+		# Taper sharp corners
+		if taper_sharp:
+			var ang_threshold := PI * 0.5
+			if sharp_taper_next != null and is_not_corner:
+				var taper := _taper_quad(sharp_taper_next, edge_material, texture_idx, true, true)
+				if taper != null:
+					taper.ignore_weld_next = true
+					edge.quads.push_back(taper)
 				else:
-					new_quad.texture = taper_texture
+					sharp_taper_next.ignore_weld_next = true
+			sharp_taper_next = null
+			var vert := verts[vert_idx]
+			var prev_vert := verts[wrapi(vert_idx - 1, 0, verts.size() - 1)]
+			var next_vert := verts[wrapi(vert_idx + 1, 0, verts.size() - 1)]
+			if not did_taper_left and is_not_corner:
+				var ang_from := prev_vert.angle_to_point(vert)
+				var ang_to := vert.angle_to_point(next_vert)
+				var ang_dif := angle_difference(ang_from, ang_to)
+				if absf(ang_dif) > ang_threshold:
+					var taper := _taper_quad(new_quad, edge_material, texture_idx, false, true)
+					if taper != null:
+						new_quads.push_front(taper)
+			if not did_taper_right:
+				var next_next_vert := verts[wrapi(vert_idx + 2, 0, verts.size() - 1)]
+				var ang_from := vert.angle_to_point(next_vert)
+				var ang_to := next_vert.angle_to_point(next_next_vert)
+				var ang_dif := angle_difference(ang_from, ang_to)
+				if absf(ang_dif) > ang_threshold:
+					sharp_taper_next = new_quad
 
 		# Final point for closed shapes fix
 		# Corner quads aren't always correctly when the corner is between final and first pt
@@ -1736,13 +1760,73 @@ func _build_edge_with_material(
 		for q in new_quads:
 			edge.quads.push_back(q)
 		i += next_point_delta
-
+	
+	# leftover final taper for the last sharp corner if required
+	if taper_sharp:
+		if sharp_taper_next != null and edge.quads[0].corner == SS2D_Quad.CORNER.NONE:
+			var taper := _taper_quad(sharp_taper_next, edge_material, texture_idx, true, true)
+			if taper != null:
+				taper.ignore_weld_next = true
+				edge.quads.push_back(taper)
+			else:
+				sharp_taper_next.ignore_weld_next = true
+		sharp_taper_next = null
+	
 	if edge_material_meta != null:
 		if edge_material_meta.weld:
 			_weld_quad_array(edge.quads, edge.wrap_around)
 
 	return edge
 
+# get the appropriate tapering texture based on direction and whether the current taper is a sharp 
+# corner taper or normal material edge taper
+func get_taper_tex(edge_mat: SS2D_Material_Edge, tex_idx: int, facing_right: bool, corner_taper: bool) -> Texture2D:
+	if facing_right:
+		if corner_taper:
+			return edge_mat.get_texture_taper_corner_right(tex_idx)
+		else:
+			return edge_mat.get_texture_taper_right(tex_idx)
+	else:
+		if corner_taper:
+			return edge_mat.get_texture_taper_corner_left(tex_idx)
+		else:
+			return edge_mat.get_texture_taper_left(tex_idx)
+
+func _taper_quad(
+	quad: SS2D_Quad, 
+	edge_mat: SS2D_Material_Edge, 
+	tex_idx: int, 
+	facing_right: bool, 
+	corner_taper: bool
+) -> SS2D_Quad:
+	var taper_texture: Texture2D = get_taper_tex(edge_mat, tex_idx, facing_right, corner_taper)
+	if taper_texture != null:
+		var taper_size: Vector2 = taper_texture.get_size()
+		var fit: bool = absf(taper_size.x) <= quad.get_length_average()
+		if fit:
+			var taper_quad := quad.duplicate()
+			taper_quad.corner = SS2D_Quad.CORNER.NONE
+			taper_quad.texture = taper_texture
+			var delta_normal: Vector2 = (taper_quad.pt_d - taper_quad.pt_a).normalized()
+			var offset: Vector2 = delta_normal * taper_size
+			if facing_right:
+				taper_quad.pt_a = taper_quad.pt_d - offset
+				taper_quad.pt_b = taper_quad.pt_c - offset
+				quad.pt_d = taper_quad.pt_a
+				quad.pt_c = taper_quad.pt_b
+			else:
+				taper_quad.pt_d = taper_quad.pt_a + offset
+				taper_quad.pt_c = taper_quad.pt_b + offset
+				quad.pt_a = taper_quad.pt_d
+				quad.pt_b = taper_quad.pt_c
+			
+			taper_quad.is_tapered = true
+			return taper_quad
+		# If a new taper quad doesn't fit, re-texture the new_quad
+		else:
+			quad.is_tapered = true
+			quad.texture = taper_texture
+	return null
 
 func _build_edge_with_material_thread_wrapper(args: Array) -> SS2D_Edge:
 	return _build_edge_with_material(args[0], args[1], args[2])

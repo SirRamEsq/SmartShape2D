@@ -23,6 +23,8 @@ var bn_d : Vector2
 var texture: Texture2D = null
 var color: Color = Color(1.0, 1.0, 1.0, 1.0)
 
+var is_tapered: bool = false
+var ignore_weld_next: bool = false
 var flip_texture: bool = false
 # Deprecated, should remove control_point_index
 var control_point_index: int

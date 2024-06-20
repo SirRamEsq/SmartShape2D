@@ -35,6 +35,9 @@ Instead, this resource contains a single **Edge Material** and describes how and
   - The angles at which an edge is allowed to be rendered
 - Weld
   - Whether or not to weld the quads in this edge
+- Taper Sharp Corners
+  - Edge vertices sharper than 90° that aren't rendered as corners, will be tapered and not welded
+  - Will not work properly on shapes with curves
 - Render
   - Whether or not this edge is visible
 - Z Index

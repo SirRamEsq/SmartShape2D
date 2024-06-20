@@ -12,6 +12,7 @@ var material: Material = null
 var z_index: int = 0
 var z_as_relative: bool = true
 var show_behind_parent: bool = false
+var force_no_tiling: bool = false
 
 
 func _init(
@@ -38,6 +39,7 @@ func duplicate(subresources: bool = false) -> SS2D_Mesh:
 	copy.z_index = z_index
 	copy.z_as_relative = z_as_relative
 	copy.show_behind_parent = show_behind_parent
+	copy.force_no_tiling = force_no_tiling
 	copy.meshes = []
 	if subresources:
 		for m in meshes:
