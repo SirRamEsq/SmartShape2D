@@ -1609,10 +1609,7 @@ func _build_edge_with_material(
 	var texture_idx := 0
 	var sharp_taper_next: SS2D_Quad = null
 	var is_not_corner: bool = true
-	var taper_sharp: bool = (edge_material != null and
-		edge_material.use_taper_texture and
-		edge_material_meta != null and
-		edge_material_meta.taper_sharp_corners)
+	var taper_sharp: bool = edge_material_meta != null and edge_material_meta.taper_sharp_corners
 	while i < tess_point_count:
 		var tess_idx: int = (first_idx_t + i) % verts_t.size()
 		var tess_idx_next: int = SS2D_PluginFunctionality.get_next_unique_point_idx(tess_idx, verts_t, true)

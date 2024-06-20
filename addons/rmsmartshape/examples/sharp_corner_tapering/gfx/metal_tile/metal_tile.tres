@@ -18,6 +18,5 @@ textures_taper_corner_left = Array[Texture2D]([ExtResource("5_j1beu")])
 textures_taper_corner_right = Array[Texture2D]([ExtResource("6_1j2bs")])
 randomize_texture = false
 use_corner_texture = true
-use_taper_texture = true
-taper_sharp_corners = true
+use_taper_texture = false
 fit_mode = 0
