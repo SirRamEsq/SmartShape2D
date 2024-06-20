@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SS2D_Material_Edge" load_steps=5 format=3 uid="uid://dtd3hfy5mgnot"]
+
+[ext_resource type="Script" path="res://addons/rmsmartshape/materials/edge_material.gd" id="1_plvh7"]
+[ext_resource type="Texture2D" uid="uid://b3aqa3bj1osvp" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/textures/tex_metal_tiling_outline.png" id="2_bpovm"]
+[ext_resource type="Texture2D" uid="uid://bobwi3r6aiiqg" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/textures/tex_metal_tiling_corner.png" id="3_2tlbl"]
+[ext_resource type="Texture2D" uid="uid://bc34cuc50as8f" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/textures/tex_metal_tiling_corner_outer.png" id="4_7anl0"]
+
+[resource]
+script = ExtResource("1_plvh7")
+textures = Array[Texture2D]([ExtResource("2_bpovm")])
+textures_corner_outer = Array[Texture2D]([ExtResource("4_7anl0")])
+textures_corner_inner = Array[Texture2D]([ExtResource("3_2tlbl")])
+textures_taper_left = Array[Texture2D]([])
+textures_taper_right = Array[Texture2D]([])
+textures_taper_corner_left = Array[Texture2D]([])
+textures_taper_corner_right = Array[Texture2D]([])
+randomize_texture = false
+use_corner_texture = true
+use_taper_texture = true
+taper_sharp_corners = false
+fit_mode = 0

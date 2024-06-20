@@ -1,13 +1,15 @@
-[gd_scene load_steps=36 format=3 uid="uid://cl71flny1scun"]
+[gd_scene load_steps=42 format=3 uid="uid://cl71flny1scun"]
 
 [ext_resource type="Script" path="res://addons/rmsmartshape/shapes/shape.gd" id="1_5hlge"]
 [ext_resource type="Script" path="res://addons/rmsmartshape/vertex_properties.gd" id="2_yp1d2"]
 [ext_resource type="Script" path="res://addons/rmsmartshape/shapes/point.gd" id="3_edpr6"]
 [ext_resource type="Script" path="res://addons/rmsmartshape/shapes/point_array.gd" id="4_udfgv"]
-[ext_resource type="Resource" uid="uid://dmjb02jvl3ggc" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/metal_tile_meta.tres" id="5_207rt"]
-[ext_resource type="Resource" uid="uid://84jgty60gk4u" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/metal_tile_meta_no_sharp_taper.tres" id="5_og3j5"]
 [ext_resource type="Texture2D" uid="uid://bj658oli0klj3" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/textures/tex_metal_tiling_fill.png" id="6_ry0x0"]
 [ext_resource type="Script" path="res://addons/rmsmartshape/materials/shape_material.gd" id="7_ncdby"]
+[ext_resource type="Resource" uid="uid://c8q2nrxnbopbb" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/metal_tile.tres" id="8_uwntg"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/normal_range.gd" id="9_tqu3h"]
+[ext_resource type="Resource" uid="uid://dtd3hfy5mgnot" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/metal_tile_no_sharp_corner_taper.tres" id="10_0bu1s"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" id="10_umoay"]
 
 [sub_resource type="Resource" id="Resource_dtvso"]
 script = ExtResource("2_yp1d2")
@@ -191,9 +193,25 @@ tessellation_stages = 5
 tessellation_tolerance = 4.0
 curve_bake_interval = 20.0
 
+[sub_resource type="Resource" id="Resource_42qh7"]
+script = ExtResource("9_tqu3h")
+begin = 0.0
+distance = 360.0
+edgeRendering = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Resource_t7ed3"]
+script = ExtResource("10_umoay")
+edge_material = ExtResource("8_uwntg")
+normal_range = SubResource("Resource_42qh7")
+weld = true
+render = true
+z_index = 0
+z_as_relative = true
+offset = 0.0
+
 [sub_resource type="Resource" id="Resource_07ymf"]
 script = ExtResource("7_ncdby")
-_edge_meta_materials = Array[Resource("res://addons/rmsmartshape/materials/edge_material_metadata.gd")]([ExtResource("5_207rt")])
+_edge_meta_materials = Array[ExtResource("10_umoay")]([SubResource("Resource_t7ed3")])
 fill_textures = Array[Texture2D]([ExtResource("6_ry0x0")])
 fill_texture_z_index = -10
 fill_texture_show_behind_parent = false
@@ -205,9 +223,25 @@ fill_texture_angle_offset = 0.0
 fill_mesh_offset = 0.0
 render_offset = 0.0
 
+[sub_resource type="Resource" id="Resource_atqmo"]
+script = ExtResource("9_tqu3h")
+begin = 0.0
+distance = 360.0
+edgeRendering = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Resource_vboqn"]
+script = ExtResource("10_umoay")
+edge_material = ExtResource("10_0bu1s")
+normal_range = SubResource("Resource_atqmo")
+weld = true
+render = true
+z_index = 0
+z_as_relative = true
+offset = 0.0
+
 [sub_resource type="Resource" id="Resource_xsfev"]
 script = ExtResource("7_ncdby")
-_edge_meta_materials = Array[Resource("res://addons/rmsmartshape/materials/edge_material_metadata.gd")]([ExtResource("5_og3j5")])
+_edge_meta_materials = Array[ExtResource("10_umoay")]([SubResource("Resource_vboqn")])
 fill_textures = Array[Texture2D]([ExtResource("6_ry0x0")])
 fill_texture_z_index = -10
 fill_texture_show_behind_parent = false

@@ -23,12 +23,22 @@ class_name SS2D_Material_Edge
 @export var textures_taper_left: Array[Texture2D] = [] : set = _set_textures_taper_left
 @export var textures_taper_right: Array[Texture2D] = [] : set = _set_textures_taper_right
 
+## Textures that will be used for the sharp_corner_tapering feature
+@export var textures_taper_corner_left: Array[Texture2D] = [] : set = _set_textures_taper_corner_left
+@export var textures_taper_corner_right: Array[Texture2D] = [] : set = _set_textures_taper_corner_right
+
 ## If the texture choice should be randomized instead of the choice by point setup
 @export var randomize_texture: bool = false : set = _set_randomize_texture
 ## If corner textures should be used
 @export var use_corner_texture: bool = true : set = _set_use_corner
 ## If taper textures should be used
 @export var use_taper_texture: bool = true : set = _set_use_taper
+
+## Whether or not the edges should use the tapering texture and not be welded, if they are
+## too sharp to be welded without significant distortion. NOTE this will not work properly
+## in curved shapes
+@export var taper_sharp_corners: bool = false : set = _set_taper_sharp_corners
+
 ## Whether squishing can occur when texture doesn't fit nicely into total length.
 enum FITMODE {SQUISH_AND_STRETCH, CROP}
 @export var fit_mode: FITMODE = FITMODE.SQUISH_AND_STRETCH : set = _set_fit_texture
@@ -63,6 +73,13 @@ func _set_textures_taper_right(a: Array[Texture2D]) -> void:
 	textures_taper_right = a
 	emit_changed()
 
+func _set_textures_taper_corner_left(a: Array[Texture2D]) -> void:
+	textures_taper_corner_left = a
+	emit_changed()
+
+func _set_textures_taper_corner_right(a: Array[Texture2D]) -> void:
+	textures_taper_corner_right = a
+	emit_changed()
 
 func _set_randomize_texture(b: bool) -> void:
 	randomize_texture = b
@@ -78,6 +95,9 @@ func _set_use_taper(b: bool) -> void:
 	use_taper_texture = b
 	emit_changed()
 
+func _set_taper_sharp_corners(b: bool) -> void:
+	taper_sharp_corners = b
+	emit_changed()
 
 func _set_fit_texture(fitmode: FITMODE) -> void:
 	fit_mode = fitmode
@@ -110,6 +130,14 @@ func get_texture_taper_left(idx: int) -> Texture2D:
 
 func get_texture_taper_right(idx: int) -> Texture2D:
 	return _get_element(idx, textures_taper_right)
+
+
+func get_texture_taper_corner_left(idx: int) -> Texture2D:
+	return _get_element(idx, textures_taper_corner_left)
+
+
+func get_texture_taper_corner_right(idx: int) -> Texture2D:
+	return _get_element(idx, textures_taper_corner_right)
 
 
 #########
