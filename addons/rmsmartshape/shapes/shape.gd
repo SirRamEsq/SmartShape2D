@@ -1791,7 +1791,7 @@ func _taper_quad(quad: SS2D_Quad, edge_mat: SS2D_Material_Edge, tex_idx: int, fa
 		var fit: bool = absf(taper_size.x) <= quad.get_length_average()
 		if fit:
 			var taper_quad := quad.duplicate()
-			taper_quad.corner = 0
+			taper_quad.corner = SS2D_Quad.CORNER.NONE
 			taper_quad.texture = taper_texture
 			var delta_normal: Vector2 = (taper_quad.pt_d - taper_quad.pt_a).normalized()
 			var offset: Vector2 = delta_normal * taper_size
