@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SS2D_Material_Edge" load_steps=7 format=3 uid="uid://c8q2nrxnbopbb"]
+
+[ext_resource type="Script" path="res://addons/rmsmartshape/materials/edge_material.gd" id="1_lbfns"]
+[ext_resource type="Texture2D" uid="uid://b3aqa3bj1osvp" path="res://examples/sharp_corner_tapering/assets/tex_metal_edge.png" id="2_bmjh3"]
+[ext_resource type="Texture2D" uid="uid://bobwi3r6aiiqg" path="res://examples/sharp_corner_tapering/assets/tex_metal_corner_inner.png" id="3_n1i1s"]
+[ext_resource type="Texture2D" uid="uid://bc34cuc50as8f" path="res://examples/sharp_corner_tapering/assets/tex_metal_corner_outer.png" id="4_ml2u7"]
+[ext_resource type="Texture2D" uid="uid://jc3g5qsmnpdd" path="res://examples/sharp_corner_tapering/assets/tex_metal_taper_corner_left.png" id="5_244mn"]
+[ext_resource type="Texture2D" uid="uid://cdnfaf3bslk38" path="res://examples/sharp_corner_tapering/assets/tex_metal_taper_corner_right.png" id="6_1c2na"]
+
+[resource]
+script = ExtResource("1_lbfns")
+textures = Array[Texture2D]([ExtResource("2_bmjh3")])
+textures_corner_outer = Array[Texture2D]([ExtResource("4_ml2u7")])
+textures_corner_inner = Array[Texture2D]([ExtResource("3_n1i1s")])
+textures_taper_left = Array[Texture2D]([])
+textures_taper_right = Array[Texture2D]([])
+textures_taper_corner_left = Array[Texture2D]([ExtResource("5_244mn")])
+textures_taper_corner_right = Array[Texture2D]([ExtResource("6_1c2na")])
+randomize_texture = false
+use_corner_texture = true
+use_taper_texture = false
+fit_mode = 0

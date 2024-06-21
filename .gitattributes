@@ -6,5 +6,7 @@
 /addons    !export-ignore
 /addons/rmsmartshape	!export-ignore
 /addons/rmsmartshape/** !export-ignore
+/examples !export-ignore
+/examples/** !export-ignore
 /README.md !export-ignore
 /LICENSE !export-ignore
