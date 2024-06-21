@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://jc3g5qsmnpdd"
-path="res://.godot/imported/tex_metal_tiling_taper_left.png-b2ad027e151707409097674e4d32a3cc.ctex"
+uid="uid://bj658oli0klj3"
+path="res://.godot/imported/tex_metal_fill.png-307d5ebcedc9e8c4f154a2c09687cb41.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/rmsmartshape/examples/sharp_corner_tapering/gfx/metal_tile/textures/tex_metal_tiling_taper_left.png"
-dest_files=["res://.godot/imported/tex_metal_tiling_taper_left.png-b2ad027e151707409097674e4d32a3cc.ctex"]
+source_file="res://examples/sharp_corner_tapering/assets/tex_metal_fill.png"
+dest_files=["res://.godot/imported/tex_metal_fill.png-307d5ebcedc9e8c4f154a2c09687cb41.ctex"]
 
 [params]
 
