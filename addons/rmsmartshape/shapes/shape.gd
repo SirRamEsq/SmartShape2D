@@ -1757,7 +1757,7 @@ func _build_edge_with_material(
 				new_quads.push_front(taper_quad)
 		if is_last_tess_point and edge_material != null and edge_material.use_taper_texture:
 			did_taper_right = true
-			var taper_quad := _taper_quad(new_quad, edge_material, texture_idx, true, true)
+			var taper_quad := _taper_quad(new_quad, edge_material, texture_idx, true, false)
 			if taper_quad != null:
 				new_quads.push_back(taper_quad)
 
