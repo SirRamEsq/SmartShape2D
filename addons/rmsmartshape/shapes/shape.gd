@@ -33,6 +33,7 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
 enum CollisionGenerationMethod {
 	## Uses the shape curve to generate a collision polygon. Usually this method is accurate enough.
+	## For open shapes, a precise method will be used instead, as the fast method is not suitable.
 	Fast,
 	## Uses the edge generation algorithm to create an accurate collision representation that
 	## exactly matches the shape's visuals.
@@ -913,11 +914,10 @@ func bake_collision() -> void:
 
 	var generated_points: PackedVector2Array
 
-	match collision_generation_method:
-		CollisionGenerationMethod.Fast:
-			generated_points = _generate_collision_points_fast()
-		CollisionGenerationMethod.Precise:
-			generated_points = _generate_collision_points_precise()
+	if collision_generation_method == CollisionGenerationMethod.Fast and is_shape_closed():
+		generated_points = _generate_collision_points_fast()
+	else:
+		generated_points = _generate_collision_points_precise()
 
 	var xform := _collision_polygon_node.get_global_transform().affine_inverse() * get_global_transform()
 	_collision_polygon_node.polygon = xform * generated_points
