@@ -1,0 +1,2475 @@
+[gd_scene load_steps=355 format=3 uid="uid://crdjqyv506r4g"]
+
+[ext_resource type="Script" path="res://addons/rmsmartshape/shapes/shape_closed.gd" id="1_ru2uh"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/vertex_properties.gd" id="2_f0eul"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/shapes/point.gd" id="3_kpmtg"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/shapes/point_array.gd" id="4_v2ws8"]
+[ext_resource type="Texture2D" uid="uid://8l501jrnaqt8" path="res://icon.png" id="5_l7tri"]
+[ext_resource type="Script" path="res://addons/rmsmartshape/materials/shape_material.gd" id="6_f4cio"]
+
+[sub_resource type="Resource" id="Resource_cvxmo"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ujcq7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(86.79, -7990.83)
+point_in = Vector2(-257.024, -251.984)
+point_out = Vector2(257.024, 251.984)
+properties = SubResource("Resource_cvxmo")
+
+[sub_resource type="Resource" id="Resource_8rym0"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_j61uj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(86.79, -7990.83)
+point_in = Vector2(-257.024, -251.984)
+point_out = Vector2(257.024, 251.984)
+properties = SubResource("Resource_8rym0")
+
+[sub_resource type="Resource" id="Resource_uyik2"]
+script = ExtResource("2_f0eul")
+texture_idx = 1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_pngbs"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-813.018, -7881.98)
+point_in = Vector2(156.975, 45.1904)
+point_out = Vector2(-156.975, -45.1904)
+properties = SubResource("Resource_uyik2")
+
+[sub_resource type="Resource" id="Resource_ukr0q"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_4k6cw"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1852, -6985)
+point_in = Vector2(392.438, -85.623)
+point_out = Vector2(-392.438, 85.623)
+properties = SubResource("Resource_ukr0q")
+
+[sub_resource type="Resource" id="Resource_vobc4"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_kf48e"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-101.952, -7510.65)
+point_in = Vector2(161.732, 80.8662)
+point_out = Vector2(-161.732, -80.8662)
+properties = SubResource("Resource_vobc4")
+
+[sub_resource type="Resource" id="Resource_jkcs3"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_kchr6"]
+script = ExtResource("3_kpmtg")
+position = Vector2(823.167, -6991.42)
+point_in = Vector2(192.651, 97.5146)
+point_out = Vector2(-192.651, -97.5146)
+properties = SubResource("Resource_jkcs3")
+
+[sub_resource type="Resource" id="Resource_73c2x"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_kp3un"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1524, -7417)
+point_in = Vector2(-555.159, 25.4268)
+point_out = Vector2(555.159, -25.4268)
+properties = SubResource("Resource_73c2x")
+
+[sub_resource type="Resource" id="Resource_3nnyh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_e0eom"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4284.09, -7159.76)
+point_in = Vector2(130.813, 126.056)
+point_out = Vector2(-130.813, -126.056)
+properties = SubResource("Resource_3nnyh")
+
+[sub_resource type="Resource" id="Resource_gn0tm"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ryeuo"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4316.53, -7767.33)
+point_in = Vector2(-174.616, -199.562)
+point_out = Vector2(174.616, 199.562)
+properties = SubResource("Resource_gn0tm")
+
+[sub_resource type="Resource" id="Resource_0ih7e"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ysyt6"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6080.4, -7142.03)
+point_in = Vector2(-380.57, 95.8916)
+point_out = Vector2(380.57, -95.8916)
+properties = SubResource("Resource_0ih7e")
+
+[sub_resource type="Resource" id="Resource_mp4rv"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.6
+
+[sub_resource type="Resource" id="Resource_nb64g"]
+script = ExtResource("3_kpmtg")
+position = Vector2(3237.06, -8275.19)
+point_in = Vector2(-441.886, 64.1455)
+point_out = Vector2(441.886, -64.1455)
+properties = SubResource("Resource_mp4rv")
+
+[sub_resource type="Resource" id="Resource_mvn5x"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_baycf"]
+script = ExtResource("3_kpmtg")
+position = Vector2(3078.47, -7612.41)
+point_in = Vector2(240.22, -178.381)
+point_out = Vector2(-240.22, 178.381)
+properties = SubResource("Resource_mvn5x")
+
+[sub_resource type="Resource" id="Resource_urkni"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ykcg1"]
+script = ExtResource("3_kpmtg")
+position = Vector2(3845.37, -7564.73)
+point_in = Vector2(190.273, 111.786)
+point_out = Vector2(-190.273, -111.786)
+properties = SubResource("Resource_urkni")
+
+[sub_resource type="Resource" id="Resource_4swac"]
+script = ExtResource("2_f0eul")
+texture_idx = 2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_4ug4t"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4945.23, -6797.83)
+point_in = Vector2(261.625, 97.5151)
+point_out = Vector2(-261.625, -97.5151)
+properties = SubResource("Resource_4swac")
+
+[sub_resource type="Resource" id="Resource_1t20d"]
+script = ExtResource("2_f0eul")
+texture_idx = 8
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_s0mhp"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6910.94, -7051.07)
+point_in = Vector2(228.724, -295.995)
+point_out = Vector2(-228.724, 295.995)
+properties = SubResource("Resource_1t20d")
+
+[sub_resource type="Resource" id="Resource_hnq28"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_lj5mn"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6219.74, -8769.19)
+point_in = Vector2(152.827, 143.838)
+point_out = Vector2(-152.827, -143.838)
+properties = SubResource("Resource_hnq28")
+
+[sub_resource type="Resource" id="Resource_3gg5c"]
+script = ExtResource("2_f0eul")
+texture_idx = 9
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ocrtw"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6658.89, -9145.63)
+point_in = Vector2(-141.271, -191.724)
+point_out = Vector2(141.271, 191.724)
+properties = SubResource("Resource_3gg5c")
+
+[sub_resource type="Resource" id="Resource_cl2xw"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_3bppq"]
+script = ExtResource("3_kpmtg")
+position = Vector2(5292.78, -9748.4)
+point_in = Vector2(-457.448, -23.5449)
+point_out = Vector2(457.448, 23.5449)
+properties = SubResource("Resource_cl2xw")
+
+[sub_resource type="Resource" id="Resource_y1yxh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_iq1b4"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6541.82, -7674.36)
+point_in = Vector2(-35.9595, 224.746)
+point_out = Vector2(35.9595, -224.746)
+properties = SubResource("Resource_y1yxh")
+
+[sub_resource type="Resource" id="Resource_mxl1b"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_hotdm"]
+script = ExtResource("3_kpmtg")
+position = Vector2(5102.21, -9275.43)
+point_in = Vector2(329.627, 0)
+point_out = Vector2(-329.627, 0)
+properties = SubResource("Resource_mxl1b")
+
+[sub_resource type="Resource" id="Resource_jdjoe"]
+script = ExtResource("2_f0eul")
+texture_idx = -2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_r80wp"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2453.3, -8574.79)
+point_in = Vector2(350.604, -50.9424)
+point_out = Vector2(-350.604, 50.9424)
+properties = SubResource("Resource_jdjoe")
+
+[sub_resource type="Resource" id="Resource_o56gh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_55kvr"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2016.44, -8941.36)
+point_in = Vector2(-211.906, 6.72754)
+point_out = Vector2(211.906, -6.72754)
+properties = SubResource("Resource_o56gh")
+
+[sub_resource type="Resource" id="Resource_a86ff"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_yghhg"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-825.166, -9643.22)
+point_in = Vector2(197.776, 86.9014)
+point_out = Vector2(-197.776, -86.9014)
+properties = SubResource("Resource_a86ff")
+
+[sub_resource type="Resource" id="Resource_jvqwj"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_iafnc"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-719.41, -10199.5)
+point_in = Vector2(-206.627, -125.992)
+point_out = Vector2(206.627, 125.992)
+properties = SubResource("Resource_jvqwj")
+
+[sub_resource type="Resource" id="Resource_f8vic"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_a4dob"]
+script = ExtResource("3_kpmtg")
+position = Vector2(272.644, -9601.22)
+point_in = Vector2(-136.072, -100.793)
+point_out = Vector2(136.072, 100.793)
+properties = SubResource("Resource_f8vic")
+
+[sub_resource type="Resource" id="Resource_wgadv"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_cfef5"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1194.45, -8047.46)
+point_in = Vector2(85.6229, 61.8389)
+point_out = Vector2(-85.6229, -61.8389)
+properties = SubResource("Resource_wgadv")
+
+[sub_resource type="Resource" id="Resource_yids1"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_6xxgj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(457.472, -8871.8)
+point_in = Vector2(275.688, 170.808)
+point_out = Vector2(-275.688, -170.808)
+properties = SubResource("Resource_yids1")
+
+[sub_resource type="Resource" id="Resource_h1il0"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_32fg2"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1076.78, -9084)
+point_in = Vector2(-120.952, -73.0752)
+point_out = Vector2(120.952, 73.0752)
+properties = SubResource("Resource_h1il0")
+
+[sub_resource type="Resource" id="Resource_0tvka"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_51qqb"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1487.13, -8479.88)
+point_in = Vector2(248.719, 44.9492)
+point_out = Vector2(-248.719, -44.9492)
+properties = SubResource("Resource_0tvka")
+
+[sub_resource type="Resource" id="Resource_tkq21"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_eo70b"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1925.06, -10294.5)
+point_in = Vector2(71.9188, 245.722)
+point_out = Vector2(-71.9188, -245.722)
+properties = SubResource("Resource_tkq21")
+
+[sub_resource type="Resource" id="Resource_qggv5"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_mrpe3"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1892.37, -11063.5)
+point_in = Vector2(-50.9425, 149.831)
+point_out = Vector2(50.9425, -149.831)
+properties = SubResource("Resource_qggv5")
+
+[sub_resource type="Resource" id="Resource_y6864"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_gfr1u"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1435.19, -11691.9)
+point_in = Vector2(-221.749, 176.8)
+point_out = Vector2(221.749, -176.8)
+properties = SubResource("Resource_y6864")
+
+[sub_resource type="Resource" id="Resource_8np6g"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_s4ovx"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-866.99, -11968.1)
+point_in = Vector2(-200.773, 8.99023)
+point_out = Vector2(200.773, -8.99023)
+properties = SubResource("Resource_8np6g")
+
+[sub_resource type="Resource" id="Resource_g7cfn"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_xdh7t"]
+script = ExtResource("3_kpmtg")
+position = Vector2(236.713, -11770.7)
+point_in = Vector2(-8.98975, 89.8984)
+point_out = Vector2(8.98975, -89.8984)
+properties = SubResource("Resource_g7cfn")
+
+[sub_resource type="Resource" id="Resource_fmdne"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_537kv"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1412, -10897)
+point_in = Vector2(2.51984, -168.829)
+point_out = Vector2(-2.51984, 168.829)
+properties = SubResource("Resource_fmdne")
+
+[sub_resource type="Resource" id="Resource_3h8yc"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_geq5s"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-201.792, -11064.9)
+point_in = Vector2(236.865, 42.8379)
+point_out = Vector2(-236.865, -42.8379)
+properties = SubResource("Resource_3h8yc")
+
+[sub_resource type="Resource" id="Resource_rf6cl"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_8flcw"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-914.872, -11401.2)
+point_in = Vector2(201.587, -7.55957)
+point_out = Vector2(-201.587, 7.55957)
+properties = SubResource("Resource_rf6cl")
+
+[sub_resource type="Resource" id="Resource_6ste8"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7r1bx"]
+script = ExtResource("3_kpmtg")
+position = Vector2(573.649, -11391.1)
+point_in = Vector2(178.909, -254.504)
+point_out = Vector2(-178.909, 254.504)
+properties = SubResource("Resource_6ste8")
+
+[sub_resource type="Resource" id="Resource_q27qj"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_6vmxp"]
+script = ExtResource("3_kpmtg")
+position = Vector2(771.276, -13016.5)
+point_in = Vector2(-78.1152, -226.786)
+point_out = Vector2(78.1152, 226.786)
+properties = SubResource("Resource_q27qj")
+
+[sub_resource type="Resource" id="Resource_j7xif"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_otxfe"]
+script = ExtResource("3_kpmtg")
+position = Vector2(199.665, -13452.4)
+point_in = Vector2(-294.822, -70.5557)
+point_out = Vector2(294.822, 70.5557)
+properties = SubResource("Resource_j7xif")
+
+[sub_resource type="Resource" id="Resource_be0x5"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ie1ig"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-112.118, -13052.6)
+point_in = Vector2(170.807, 65.9248)
+point_out = Vector2(-170.807, -65.9248)
+properties = SubResource("Resource_be0x5")
+
+[sub_resource type="Resource" id="Resource_pbu5y"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ytyhv"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1487.1, -13958.3)
+point_in = Vector2(-8.98987, 170.808)
+point_out = Vector2(8.98987, -170.808)
+properties = SubResource("Resource_pbu5y")
+
+[sub_resource type="Resource" id="Resource_3q604"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7fh28"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-945.492, -13524.2)
+point_in = Vector2(-115.913, -120.952)
+point_out = Vector2(115.913, 120.952)
+properties = SubResource("Resource_3q604")
+
+[sub_resource type="Resource" id="Resource_occqy"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_kbmpf"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-525.01, -14501.9)
+point_in = Vector2(309.941, -27.7188)
+point_out = Vector2(-309.941, 27.7188)
+properties = SubResource("Resource_occqy")
+
+[sub_resource type="Resource" id="Resource_8bugh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_qmn8d"]
+script = ExtResource("3_kpmtg")
+position = Vector2(406.669, -14176.7)
+point_in = Vector2(178.909, 32.7578)
+point_out = Vector2(-178.909, -32.7578)
+properties = SubResource("Resource_8bugh")
+
+[sub_resource type="Resource" id="Resource_d1sn4"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_muwj3"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1496.47, -14129.6)
+point_in = Vector2(-374.577, -425.52)
+point_out = Vector2(374.577, 425.52)
+properties = SubResource("Resource_d1sn4")
+
+[sub_resource type="Resource" id="Resource_76r6u"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_2j15k"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1039.02, -13800)
+point_in = Vector2(216.707, 287.263)
+point_out = Vector2(-216.707, -287.263)
+properties = SubResource("Resource_76r6u")
+
+[sub_resource type="Resource" id="Resource_nb46w"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_io1oo"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1375.38, -12373.8)
+point_in = Vector2(120.952, 201.587)
+point_out = Vector2(-120.952, -201.587)
+properties = SubResource("Resource_nb46w")
+
+[sub_resource type="Resource" id="Resource_c3hec"]
+script = ExtResource("2_f0eul")
+texture_idx = 1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_00hv4"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2011.18, -12421.1)
+point_in = Vector2(-101.938, -151.02)
+point_out = Vector2(101.938, 151.02)
+properties = SubResource("Resource_c3hec")
+
+[sub_resource type="Resource" id="Resource_4u5yg"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_u3tsj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1985.77, -11853.2)
+point_in = Vector2(231.825, 105.833)
+point_out = Vector2(-231.825, -105.833)
+properties = SubResource("Resource_4u5yg")
+
+[sub_resource type="Resource" id="Resource_y78xl"]
+script = ExtResource("2_f0eul")
+texture_idx = 1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_f7u2e"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2999.03, -11681.7)
+point_in = Vector2(178.909, 37.7969)
+point_out = Vector2(-178.909, -37.7969)
+properties = SubResource("Resource_y78xl")
+
+[sub_resource type="Resource" id="Resource_bye2u"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ijlkc"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2947.61, -12207.1)
+point_in = Vector2(-206.533, 13.4697)
+point_out = Vector2(206.533, -13.4697)
+properties = SubResource("Resource_bye2u")
+
+[sub_resource type="Resource" id="Resource_s31qg"]
+script = ExtResource("2_f0eul")
+texture_idx = 2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_bwq05"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4959.89, -12771.2)
+point_in = Vector2(143.631, -257.024)
+point_out = Vector2(-143.631, 257.024)
+properties = SubResource("Resource_s31qg")
+
+[sub_resource type="Resource" id="Resource_ph322"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_gj86i"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4238.69, -11810.1)
+point_in = Vector2(284.742, -272.143)
+point_out = Vector2(-284.742, 272.143)
+properties = SubResource("Resource_ph322")
+
+[sub_resource type="Resource" id="Resource_x8g77"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_qxntq"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4047.46, -12373.7)
+point_in = Vector2(-166.125, 175.104)
+point_out = Vector2(166.125, -175.104)
+properties = SubResource("Resource_x8g77")
+
+[sub_resource type="Resource" id="Resource_mupp0"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_a5xm3"]
+script = ExtResource("3_kpmtg")
+position = Vector2(5436.84, -15258.2)
+point_in = Vector2(-128.434, 275.896)
+point_out = Vector2(128.434, -275.896)
+properties = SubResource("Resource_mupp0")
+
+[sub_resource type="Resource" id="Resource_laykf"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_nccs8"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8675.32, -16259.7)
+point_in = Vector2(-356.762, -214.059)
+point_out = Vector2(356.762, 214.059)
+properties = SubResource("Resource_laykf")
+
+[sub_resource type="Resource" id="Resource_tmo4c"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_17qg8"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8502.54, -15046.8)
+point_in = Vector2(85.6738, 259.544)
+point_out = Vector2(-85.6738, -259.544)
+properties = SubResource("Resource_tmo4c")
+
+[sub_resource type="Resource" id="Resource_sqsfh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_0ywu7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(5981.07, -15063.3)
+point_in = Vector2(105.833, -284.742)
+point_out = Vector2(-105.833, 284.742)
+properties = SubResource("Resource_sqsfh")
+
+[sub_resource type="Resource" id="Resource_gs717"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7hmro"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6720.68, -16577.3)
+point_in = Vector2(-328.221, 85.6211)
+point_out = Vector2(328.221, -85.6211)
+properties = SubResource("Resource_gs717")
+
+[sub_resource type="Resource" id="Resource_t3jv3"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_b7mdx"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6966.68, -15988.6)
+point_in = Vector2(330.1, -143.631)
+point_out = Vector2(-330.1, 143.631)
+properties = SubResource("Resource_t3jv3")
+
+[sub_resource type="Resource" id="Resource_cbkjr"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_gupyl"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9166.83, -13375.3)
+point_in = Vector2(147.461, -347.248)
+point_out = Vector2(-147.461, 347.248)
+properties = SubResource("Resource_cbkjr")
+
+[sub_resource type="Resource" id="Resource_8y2ai"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_aee1g"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9170.31, -15279.9)
+point_in = Vector2(-71.3525, -242.598)
+point_out = Vector2(71.3525, 242.598)
+properties = SubResource("Resource_8y2ai")
+
+[sub_resource type="Resource" id="Resource_g2y05"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_jyjrs"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7594.88, -11114.5)
+point_in = Vector2(88.1943, 178.909)
+point_out = Vector2(-88.1943, -178.909)
+properties = SubResource("Resource_g2y05")
+
+[sub_resource type="Resource" id="Resource_cqhpg"]
+script = ExtResource("2_f0eul")
+texture_idx = -2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_u3tnk"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9302.1, -11052.5)
+point_in = Vector2(-223.571, 85.623)
+point_out = Vector2(223.571, -85.623)
+properties = SubResource("Resource_cqhpg")
+
+[sub_resource type="Resource" id="Resource_8lpc3"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_tqaeq"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10480.6, -12275.9)
+point_in = Vector2(-161.732, 152.218)
+point_out = Vector2(161.732, -152.218)
+properties = SubResource("Resource_8lpc3")
+
+[sub_resource type="Resource" id="Resource_dpfqn"]
+script = ExtResource("2_f0eul")
+texture_idx = 2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_2rklh"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11819.9, -12687.1)
+point_in = Vector2(277.496, -122.771)
+point_out = Vector2(-277.496, 122.771)
+properties = SubResource("Resource_dpfqn")
+
+[sub_resource type="Resource" id="Resource_2j3bu"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_lij0s"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12380.3, -13174.6)
+point_in = Vector2(-332.979, 9.51367)
+point_out = Vector2(332.979, -9.51367)
+properties = SubResource("Resource_2j3bu")
+
+[sub_resource type="Resource" id="Resource_uex2c"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_31nym"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14662, -11013.9)
+point_in = Vector2(-28.541, -271.139)
+point_out = Vector2(28.541, 271.139)
+properties = SubResource("Resource_uex2c")
+
+[sub_resource type="Resource" id="Resource_p4cfv"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_yhrll"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6065.52, -6654.91)
+point_in = Vector2(235.463, 4.75684)
+point_out = Vector2(-235.463, -4.75684)
+properties = SubResource("Resource_p4cfv")
+
+[sub_resource type="Resource" id="Resource_83tc3"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_f7bg5"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8290.51, -15721.7)
+point_in = Vector2(204.107, 173.869)
+point_out = Vector2(-204.107, -173.869)
+properties = SubResource("Resource_83tc3")
+
+[sub_resource type="Resource" id="Resource_fq0wx"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_sfg7q"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8431.75, -11230.6)
+point_in = Vector2(-204.544, -114.164)
+point_out = Vector2(204.544, 114.164)
+properties = SubResource("Resource_fq0wx")
+
+[sub_resource type="Resource" id="Resource_hnffu"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_w7eg5"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7419.69, -12171.3)
+point_in = Vector2(-55.4365, 393.095)
+point_out = Vector2(55.4365, -393.095)
+properties = SubResource("Resource_hnffu")
+
+[sub_resource type="Resource" id="Resource_7pebs"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_dbrr7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8525.25, -13494.4)
+point_in = Vector2(-98.2734, 435.933)
+point_out = Vector2(98.2734, -435.933)
+properties = SubResource("Resource_7pebs")
+
+[sub_resource type="Resource" id="Resource_hg58a"]
+script = ExtResource("2_f0eul")
+texture_idx = -2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_pnplm"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8465.86, -12512)
+point_in = Vector2(356.762, -242.599)
+point_out = Vector2(-356.762, 242.599)
+properties = SubResource("Resource_hg58a")
+
+[sub_resource type="Resource" id="Resource_a314d"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_mgmjd"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8088.33, -11961.7)
+point_in = Vector2(-23.7842, -180.76)
+point_out = Vector2(23.7842, 180.76)
+properties = SubResource("Resource_a314d")
+
+[sub_resource type="Resource" id="Resource_ilsn1"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7rqci"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8139.32, -10653.3)
+point_in = Vector2(246.944, 156.23)
+point_out = Vector2(-246.944, -156.23)
+properties = SubResource("Resource_ilsn1")
+
+[sub_resource type="Resource" id="Resource_v77ax"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_hvvfx"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13111.5, -12575)
+point_in = Vector2(179.951, 90.8164)
+point_out = Vector2(-179.951, -90.8164)
+properties = SubResource("Resource_v77ax")
+
+[sub_resource type="Resource" id="Resource_uybd4"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_8i8ua"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13743.2, -10178.3)
+point_in = Vector2(-104.768, 247.635)
+point_out = Vector2(104.768, -247.635)
+properties = SubResource("Resource_uybd4")
+
+[sub_resource type="Resource" id="Resource_roknf"]
+script = ExtResource("2_f0eul")
+texture_idx = 8
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_kqlh7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12349, -9416.13)
+point_in = Vector2(-215.887, 142.866)
+point_out = Vector2(215.887, -142.866)
+properties = SubResource("Resource_roknf")
+
+[sub_resource type="Resource" id="Resource_ja3xa"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_g1w1q"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14305.8, -9796.39)
+point_in = Vector2(204.544, -275.896)
+point_out = Vector2(-204.544, 275.896)
+properties = SubResource("Resource_ja3xa")
+
+[sub_resource type="Resource" id="Resource_2jo5g"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_bn0s2"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8896.12, -8491.58)
+point_in = Vector2(195.03, -71.3525)
+point_out = Vector2(-195.03, 71.3525)
+properties = SubResource("Resource_2jo5g")
+
+[sub_resource type="Resource" id="Resource_c4g6u"]
+script = ExtResource("2_f0eul")
+texture_idx = 5
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_x4x5b"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13940.7, -10932.6)
+point_in = Vector2(3.1748, 276.207)
+point_out = Vector2(-3.1748, -276.207)
+properties = SubResource("Resource_c4g6u")
+
+[sub_resource type="Resource" id="Resource_r10ly"]
+script = ExtResource("2_f0eul")
+texture_idx = 1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ayps8"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11563.6, -8998.91)
+point_in = Vector2(-264, 84)
+point_out = Vector2(264, -84)
+properties = SubResource("Resource_r10ly")
+
+[sub_resource type="Resource" id="Resource_5pyka"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_egnxx"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7776, -7820.5)
+point_in = Vector2(-20.2041, 204.288)
+point_out = Vector2(20.2041, -204.288)
+properties = SubResource("Resource_5pyka")
+
+[sub_resource type="Resource" id="Resource_qx0lq"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_wku4x"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8739.62, -9122.83)
+point_in = Vector2(-233.415, 58.7988)
+point_out = Vector2(233.415, -58.7988)
+properties = SubResource("Resource_qx0lq")
+
+[sub_resource type="Resource" id="Resource_dr2us"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_i0vld"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8137.55, -6546.69)
+point_in = Vector2(211.666, 191.508)
+point_out = Vector2(-211.666, -191.508)
+properties = SubResource("Resource_dr2us")
+
+[sub_resource type="Resource" id="Resource_lw3su"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_dn3jb"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11500.4, -8399.07)
+point_in = Vector2(380.546, -38.0547)
+point_out = Vector2(-380.546, 38.0547)
+properties = SubResource("Resource_lw3su")
+
+[sub_resource type="Resource" id="Resource_c4flh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7akv7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13424.4, -8980.84)
+point_in = Vector2(347.249, -161.731)
+point_out = Vector2(-347.249, 161.731)
+properties = SubResource("Resource_c4flh")
+
+[sub_resource type="Resource" id="Resource_yubas"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_f6ura"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13466.2, -12972)
+point_in = Vector2(-247.355, -99.8936)
+point_out = Vector2(247.355, 99.8936)
+properties = SubResource("Resource_yubas")
+
+[sub_resource type="Resource" id="Resource_rhht1"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_uhwx0"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10277.4, -8884.46)
+point_in = Vector2(-288.5, 14.1426)
+point_out = Vector2(288.5, -14.1426)
+properties = SubResource("Resource_rhht1")
+
+[sub_resource type="Resource" id="Resource_rd1pk"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_dpjlp"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10093.5, -8306.08)
+point_in = Vector2(532.765, 28.541)
+point_out = Vector2(-532.765, -28.541)
+properties = SubResource("Resource_rd1pk")
+
+[sub_resource type="Resource" id="Resource_yfepg"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_brlif"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8423.13, -7138.4)
+point_in = Vector2(-95.1367, -161.732)
+point_out = Vector2(95.1367, 161.732)
+properties = SubResource("Resource_yfepg")
+
+[sub_resource type="Resource" id="Resource_c3i3o"]
+script = ExtResource("2_f0eul")
+texture_idx = 2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_3mq1w"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7793.85, -7046.93)
+point_in = Vector2(46.3262, 151.453)
+point_out = Vector2(-46.3262, -151.453)
+properties = SubResource("Resource_c3i3o")
+
+[sub_resource type="Resource" id="Resource_26t2v"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_wxp2p"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9115.54, -6182.9)
+point_in = Vector2(136.225, 10.0908)
+point_out = Vector2(-136.225, -10.0908)
+properties = SubResource("Resource_26t2v")
+
+[sub_resource type="Resource" id="Resource_fsxo7"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_8tvv7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9533.08, -6818.33)
+point_in = Vector2(-133.19, 95.1367)
+point_out = Vector2(133.19, -95.1367)
+properties = SubResource("Resource_fsxo7")
+
+[sub_resource type="Resource" id="Resource_llldw"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_4k506"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9691.11, -6286.97)
+point_in = Vector2(234.346, -133.552)
+point_out = Vector2(-234.346, 133.552)
+properties = SubResource("Resource_llldw")
+
+[sub_resource type="Resource" id="Resource_sjilu"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ypier"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10115.5, -7223.05)
+point_in = Vector2(-147.462, 142.705)
+point_out = Vector2(147.462, -142.705)
+properties = SubResource("Resource_sjilu")
+
+[sub_resource type="Resource" id="Resource_6d45b"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_33jid"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11111.5, -7428.04)
+point_in = Vector2(-242.599, -9.51367)
+point_out = Vector2(242.599, 9.51367)
+properties = SubResource("Resource_6d45b")
+
+[sub_resource type="Resource" id="Resource_xgukp"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_dcry4"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12067.7, -6964.7)
+point_in = Vector2(-128.435, -190.273)
+point_out = Vector2(128.435, 190.273)
+properties = SubResource("Resource_xgukp")
+
+[sub_resource type="Resource" id="Resource_wbn3p"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_hnlwo"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12383.7, -6379.56)
+point_in = Vector2(-85.623, -271.139)
+point_out = Vector2(85.623, 271.139)
+properties = SubResource("Resource_wbn3p")
+
+[sub_resource type="Resource" id="Resource_lfeff"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7yllj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11431.2, -6749.51)
+point_in = Vector2(325.515, 197.553)
+point_out = Vector2(-325.515, -197.553)
+properties = SubResource("Resource_lfeff")
+
+[sub_resource type="Resource" id="Resource_f162a"]
+script = ExtResource("2_f0eul")
+texture_idx = 1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_hetxy"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9860.54, -4643.48)
+point_in = Vector2(-313.601, 0)
+point_out = Vector2(313.601, 0)
+properties = SubResource("Resource_f162a")
+
+[sub_resource type="Resource" id="Resource_vtmmr"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_rfuad"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10514.6, -6851.32)
+point_in = Vector2(195.308, -103.267)
+point_out = Vector2(-195.308, 103.267)
+properties = SubResource("Resource_vtmmr")
+
+[sub_resource type="Resource" id="Resource_0tgph"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_77wm5"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11341.7, -12991.7)
+point_in = Vector2(-275.896, 114.164)
+point_out = Vector2(275.896, -114.164)
+properties = SubResource("Resource_0tgph")
+
+[sub_resource type="Resource" id="Resource_qeg0y"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_pvt05"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8092.33, -8727.34)
+point_in = Vector2(-163.925, 179.962)
+point_out = Vector2(163.925, -179.962)
+properties = SubResource("Resource_qeg0y")
+
+[sub_resource type="Resource" id="Resource_gs7n1"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_r66xo"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8476.33, -8055.34)
+point_in = Vector2(4.75586, -185.516)
+point_out = Vector2(-4.75586, 185.516)
+properties = SubResource("Resource_gs7n1")
+
+[sub_resource type="Resource" id="Resource_0fxf0"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_lpv4a"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11379.3, -5171.95)
+point_in = Vector2(-162.347, 264.285)
+point_out = Vector2(162.347, -264.285)
+properties = SubResource("Resource_0fxf0")
+
+[sub_resource type="Resource" id="Resource_0np5u"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_6xj8n"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7807.9, -5274.06)
+point_in = Vector2(-383.016, 50.397)
+point_out = Vector2(383.016, -50.397)
+properties = SubResource("Resource_0np5u")
+
+[sub_resource type="Resource" id="Resource_04kw3"]
+script = ExtResource("2_f0eul")
+texture_idx = 2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_nbwaj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7822.23, -4739.81)
+point_in = Vector2(380.546, -57.082)
+point_out = Vector2(-380.546, 57.082)
+properties = SubResource("Resource_04kw3")
+
+[sub_resource type="Resource" id="Resource_vekiq"]
+script = ExtResource("2_f0eul")
+texture_idx = 2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_tj6ce"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6667.04, -3642.55)
+point_in = Vector2(71.272, -263.706)
+point_out = Vector2(-71.272, 263.706)
+properties = SubResource("Resource_vekiq")
+
+[sub_resource type="Resource" id="Resource_8i7lq"]
+script = ExtResource("2_f0eul")
+texture_idx = -2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ilhcu"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6199.47, -3968.9)
+point_in = Vector2(-146.107, 466.831)
+point_out = Vector2(146.107, -466.831)
+properties = SubResource("Resource_8i7lq")
+
+[sub_resource type="Resource" id="Resource_wuhvk"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_6kvri"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6288.03, -2581.9)
+point_in = Vector2(171.053, 285.087)
+point_out = Vector2(-171.053, -285.087)
+properties = SubResource("Resource_wuhvk")
+
+[sub_resource type="Resource" id="Resource_8773p"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ousy1"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7367.42, -2398.19)
+point_in = Vector2(253.015, -199.562)
+point_out = Vector2(-253.015, 199.562)
+properties = SubResource("Resource_8773p")
+
+[sub_resource type="Resource" id="Resource_40u34"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_l5fct"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7363.75, -3466.58)
+point_in = Vector2(-188.871, 235.197)
+point_out = Vector2(188.871, -235.197)
+properties = SubResource("Resource_40u34")
+
+[sub_resource type="Resource" id="Resource_i7sj2"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_il2xv"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7968.05, -3710.77)
+point_in = Vector2(-242.324, 3.56348)
+point_out = Vector2(242.324, -3.56348)
+properties = SubResource("Resource_i7sj2")
+
+[sub_resource type="Resource" id="Resource_oi55q"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_2ro67"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9162.43, -3416.64)
+point_in = Vector2(-149.671, -57.0176)
+point_out = Vector2(149.671, 57.0176)
+properties = SubResource("Resource_oi55q")
+
+[sub_resource type="Resource" id="Resource_ock7j"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_w4jcu"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7937.81, -3150.92)
+point_in = Vector2(302.905, -114.035)
+point_out = Vector2(-302.905, 114.035)
+properties = SubResource("Resource_ock7j")
+
+[sub_resource type="Resource" id="Resource_h3twv"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_42yj0"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8770.72, -2958.04)
+point_in = Vector2(260.143, 74.8357)
+point_out = Vector2(-260.143, -74.8357)
+properties = SubResource("Resource_h3twv")
+
+[sub_resource type="Resource" id="Resource_jdmgk"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_jq7q6"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8571.88, -3637.46)
+point_in = Vector2(-224.507, -28.5088)
+point_out = Vector2(224.507, 28.5088)
+properties = SubResource("Resource_jdmgk")
+
+[sub_resource type="Resource" id="Resource_2xr2n"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_cmefc"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9934.41, -2517.76)
+point_in = Vector2(616.502, -10.6907)
+point_out = Vector2(-616.502, 10.6907)
+properties = SubResource("Resource_2xr2n")
+
+[sub_resource type="Resource" id="Resource_7op1v"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_271yn"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12976.1, -2871.84)
+point_in = Vector2(184.999, -215.204)
+point_out = Vector2(-184.999, 215.204)
+properties = SubResource("Resource_7op1v")
+
+[sub_resource type="Resource" id="Resource_otijn"]
+script = ExtResource("2_f0eul")
+texture_idx = -2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_frh8g"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9923.42, -3110.6)
+point_in = Vector2(-210.252, 49.8901)
+point_out = Vector2(210.252, -49.8901)
+properties = SubResource("Resource_otijn")
+
+[sub_resource type="Resource" id="Resource_o12f6"]
+script = ExtResource("2_f0eul")
+texture_idx = 3
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7c1k2"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10432, -3534.38)
+point_in = Vector2(-224.506, 178.18)
+point_out = Vector2(224.506, -178.18)
+properties = SubResource("Resource_o12f6")
+
+[sub_resource type="Resource" id="Resource_qhcyo"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_5y7h3"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11482.9, -3907.31)
+point_in = Vector2(-459.703, -3.56348)
+point_out = Vector2(459.703, 3.56348)
+properties = SubResource("Resource_qhcyo")
+
+[sub_resource type="Resource" id="Resource_r204n"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ory55"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12526.3, -3199.72)
+point_in = Vector2(-210.252, 114.035)
+point_out = Vector2(210.252, -114.035)
+properties = SubResource("Resource_r204n")
+
+[sub_resource type="Resource" id="Resource_u6tm2"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_v7xum"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13328, -3956.75)
+point_in = Vector2(71.7354, -234.081)
+point_out = Vector2(-71.7354, 234.081)
+properties = SubResource("Resource_u6tm2")
+
+[sub_resource type="Resource" id="Resource_7x8o3"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_mnr8m"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11945.1, -3346.13)
+point_in = Vector2(-192.433, -138.98)
+point_out = Vector2(192.433, 138.98)
+properties = SubResource("Resource_7x8o3")
+
+[sub_resource type="Resource" id="Resource_t84nx"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_r26sy"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12789.2, -4226.14)
+point_in = Vector2(-81.9629, 171.053)
+point_out = Vector2(81.9629, -171.053)
+properties = SubResource("Resource_t84nx")
+
+[sub_resource type="Resource" id="Resource_wvqq3"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_sady0"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13295.5, -5457.37)
+point_in = Vector2(46.3262, 117.599)
+point_out = Vector2(-46.3262, -117.599)
+properties = SubResource("Resource_wvqq3")
+
+[sub_resource type="Resource" id="Resource_sn0w2"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7ctq0"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13893.5, -5714.02)
+point_in = Vector2(-5.04004, -221.746)
+point_out = Vector2(5.04004, 221.746)
+properties = SubResource("Resource_sn0w2")
+
+[sub_resource type="Resource" id="Resource_81e5t"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_o6r0c"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13491.5, -6628.3)
+point_in = Vector2(35.6367, 146.107)
+point_out = Vector2(-35.6367, -146.107)
+properties = SubResource("Resource_81e5t")
+
+[sub_resource type="Resource" id="Resource_eafxu"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_kum0m"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14235.5, -7903.94)
+point_in = Vector2(-320.724, 64.1445)
+point_out = Vector2(320.724, -64.1445)
+properties = SubResource("Resource_eafxu")
+
+[sub_resource type="Resource" id="Resource_u5xs7"]
+script = ExtResource("2_f0eul")
+texture_idx = -2
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_20nax"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13471.7, -4926.56)
+point_in = Vector2(-78.3994, 181.743)
+point_out = Vector2(78.3994, -181.743)
+properties = SubResource("Resource_u5xs7")
+
+[sub_resource type="Resource" id="Resource_nfko8"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_iqf5b"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14059.7, -4871.2)
+point_in = Vector2(145.083, -416.223)
+point_out = Vector2(-145.083, 416.223)
+properties = SubResource("Resource_nfko8")
+
+[sub_resource type="Resource" id="Resource_rho07"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_na86u"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13645.7, -7365.16)
+point_in = Vector2(-21.3809, 146.107)
+point_out = Vector2(21.3809, -146.107)
+properties = SubResource("Resource_rho07")
+
+[sub_resource type="Resource" id="Resource_38ws8"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_gjgaf"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14620.8, -7402.3)
+point_in = Vector2(30.2383, -138.591)
+point_out = Vector2(-30.2383, 138.591)
+properties = SubResource("Resource_38ws8")
+
+[sub_resource type="Resource" id="Resource_yhbu8"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_673c0"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2513.22, -7872.32)
+point_in = Vector2(-160.362, 178.18)
+point_out = Vector2(160.362, -178.18)
+properties = SubResource("Resource_yhbu8")
+
+[sub_resource type="Resource" id="Resource_uvgeu"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ou84i"]
+script = ExtResource("3_kpmtg")
+position = Vector2(2694.78, -7224.64)
+point_in = Vector2(118.921, -104.65)
+point_out = Vector2(-118.921, 104.65)
+properties = SubResource("Resource_uvgeu")
+
+[sub_resource type="Resource" id="Resource_7v2ug"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_6cnyj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4766.63, -7383.41)
+point_in = Vector2(-134.848, -128.854)
+point_out = Vector2(134.848, 128.854)
+properties = SubResource("Resource_7v2ug")
+
+[sub_resource type="Resource" id="Resource_b63sp"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_jd8jv"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7094.23, -8311.76)
+point_in = Vector2(-73.999, -302.723)
+point_out = Vector2(73.999, 302.723)
+properties = SubResource("Resource_b63sp")
+
+[sub_resource type="Resource" id="Resource_poi60"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_2g8at"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6562.79, -8311.76)
+point_in = Vector2(44.9492, 104.881)
+point_out = Vector2(-44.9492, -104.881)
+properties = SubResource("Resource_poi60")
+
+[sub_resource type="Resource" id="Resource_uky1r"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_k8p46"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1398.28, -10514.2)
+point_in = Vector2(-50.3969, -90.7148)
+point_out = Vector2(50.3969, 90.7148)
+properties = SubResource("Resource_uky1r")
+
+[sub_resource type="Resource" id="Resource_nv05w"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_itiip"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-91.9531, -11594)
+point_in = Vector2(-248.719, 8.99023)
+point_out = Vector2(248.719, -8.99023)
+properties = SubResource("Resource_nv05w")
+
+[sub_resource type="Resource" id="Resource_nvb8i"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_be1nl"]
+script = ExtResource("3_kpmtg")
+position = Vector2(247.841, -12779.5)
+point_in = Vector2(95.8916, 152.827)
+point_out = Vector2(-95.8916, -152.827)
+properties = SubResource("Resource_nvb8i")
+
+[sub_resource type="Resource" id="Resource_1idv6"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_0ndee"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1020.73, -14100.9)
+point_in = Vector2(2.51978, -199.068)
+point_out = Vector2(-2.51978, 199.068)
+properties = SubResource("Resource_1idv6")
+
+[sub_resource type="Resource" id="Resource_33oxf"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_vb20e"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1183.26, -14830.2)
+point_in = Vector2(-284.678, 209.763)
+point_out = Vector2(284.678, -209.763)
+properties = SubResource("Resource_33oxf")
+
+[sub_resource type="Resource" id="Resource_3igyr"]
+script = ExtResource("2_f0eul")
+texture_idx = 1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_74ft3"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11789.5, -6060.44)
+point_in = Vector2(-6.73438, 143.675)
+point_out = Vector2(6.73438, -143.675)
+properties = SubResource("Resource_3igyr")
+
+[sub_resource type="Resource" id="Resource_k5r7j"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_svor2"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6905.17, -4895.37)
+point_in = Vector2(-206.626, 176.389)
+point_out = Vector2(206.626, -176.389)
+properties = SubResource("Resource_k5r7j")
+
+[sub_resource type="Resource" id="Resource_2gan8"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_ywf7i"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11319.1, -3482.58)
+point_in = Vector2(256.734, 33.9795)
+point_out = Vector2(-256.734, -33.9795)
+properties = SubResource("Resource_2gan8")
+
+[sub_resource type="Resource" id="Resource_iqrm6"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_s44jg"]
+script = ExtResource("3_kpmtg")
+position = Vector2(12236.1, -2634.99)
+point_in = Vector2(313.366, 45.3059)
+point_out = Vector2(-313.366, -45.3059)
+properties = SubResource("Resource_iqrm6")
+
+[sub_resource type="Resource" id="Resource_2d713"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_1fwt4"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14381.7, -11927.6)
+point_in = Vector2(-166.488, -247.355)
+point_out = Vector2(166.488, 247.355)
+properties = SubResource("Resource_2d713")
+
+[sub_resource type="Resource" id="Resource_dms2h"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_x4thr"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9484.46, -10521.3)
+point_in = Vector2(290.995, -61.4023)
+point_out = Vector2(-290.995, 61.4023)
+properties = SubResource("Resource_dms2h")
+
+[sub_resource type="Resource" id="Resource_rmd2h"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_0xix7"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1134.66, -8932.24)
+point_in = Vector2(-241.905, 5.03906)
+point_out = Vector2(241.905, -5.03906)
+properties = SubResource("Resource_rmd2h")
+
+[sub_resource type="Resource" id="Resource_hh3kv"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_m7e3u"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10755.8, -4269.72)
+point_in = Vector2(223.571, -95.1367)
+point_out = Vector2(-223.571, 95.1367)
+properties = SubResource("Resource_hh3kv")
+
+[sub_resource type="Resource" id="Resource_icy60"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_xi1xe"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11890.5, -4950.29)
+point_in = Vector2(156.975, -180.76)
+point_out = Vector2(-156.975, 180.76)
+properties = SubResource("Resource_icy60")
+
+[sub_resource type="Resource" id="Resource_4fxgu"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_4dj5p"]
+script = ExtResource("3_kpmtg")
+position = Vector2(6733.34, -3006.11)
+point_in = Vector2(-106.908, -160.362)
+point_out = Vector2(106.908, 160.362)
+properties = SubResource("Resource_4fxgu")
+
+[sub_resource type="Resource" id="Resource_u8fc1"]
+script = ExtResource("2_f0eul")
+texture_idx = -1
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_yjhas"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7074.96, -2916.21)
+point_in = Vector2(-110.472, 92.6536)
+point_out = Vector2(110.472, -92.6536)
+properties = SubResource("Resource_u8fc1")
+
+[sub_resource type="Resource" id="Resource_xmpkh"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_jo1wu"]
+script = ExtResource("3_kpmtg")
+position = Vector2(7126.14, -4368.3)
+point_in = Vector2(123.677, -166.489)
+point_out = Vector2(-123.677, 166.489)
+properties = SubResource("Resource_xmpkh")
+
+[sub_resource type="Resource" id="Resource_l5p1m"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_rs3ep"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1446.35, -8848.33)
+point_in = Vector2(-19.0273, 88.001)
+point_out = Vector2(19.0273, -88.001)
+properties = SubResource("Resource_l5p1m")
+
+[sub_resource type="Resource" id="Resource_u0e68"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_71pgt"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-1273.26, -13219.7)
+point_in = Vector2(194.78, 221.75)
+point_out = Vector2(-194.78, -221.75)
+properties = SubResource("Resource_u0e68")
+
+[sub_resource type="Resource" id="Resource_qsvmi"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_dj8n4"]
+script = ExtResource("3_kpmtg")
+position = Vector2(-278.388, -15008.7)
+point_in = Vector2(-212.76, -2.99707)
+point_out = Vector2(212.76, 2.99707)
+properties = SubResource("Resource_qsvmi")
+
+[sub_resource type="Resource" id="Resource_s8emj"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_pjwtm"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1763.63, -13116.3)
+point_in = Vector2(-3.77539, -173.673)
+point_out = Vector2(3.77539, 173.673)
+properties = SubResource("Resource_s8emj")
+
+[sub_resource type="Resource" id="Resource_j7dge"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_0jocw"]
+script = ExtResource("3_kpmtg")
+position = Vector2(4858.28, -13880)
+point_in = Vector2(-188.574, 260.411)
+point_out = Vector2(188.574, -260.411)
+properties = SubResource("Resource_j7dge")
+
+[sub_resource type="Resource" id="Resource_rjjyq"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_8ydea"]
+script = ExtResource("3_kpmtg")
+position = Vector2(8933.19, -6824.25)
+point_in = Vector2(-161.732, -42.8115)
+point_out = Vector2(161.732, 42.8115)
+properties = SubResource("Resource_rjjyq")
+
+[sub_resource type="Resource" id="Resource_s1l1k"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_m8we2"]
+script = ExtResource("3_kpmtg")
+position = Vector2(14221.5, -7094.69)
+point_in = Vector2(40.3174, -151.191)
+point_out = Vector2(-40.3174, 151.191)
+properties = SubResource("Resource_s1l1k")
+
+[sub_resource type="Resource" id="Resource_stwhe"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_04o2k"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11650.8, -3001.44)
+point_in = Vector2(124.592, 177.448)
+point_out = Vector2(-124.592, -177.448)
+properties = SubResource("Resource_stwhe")
+
+[sub_resource type="Resource" id="Resource_pjigy"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_7hygj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10775.3, -3093.57)
+point_in = Vector2(21.3818, -153.235)
+point_out = Vector2(-21.3818, 153.235)
+properties = SubResource("Resource_pjigy")
+
+[sub_resource type="Resource" id="Resource_xcnjm"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_sk38k"]
+script = ExtResource("3_kpmtg")
+position = Vector2(9920.06, -4135.71)
+point_in = Vector2(311.127, -19.7993)
+point_out = Vector2(-311.127, 19.7993)
+properties = SubResource("Resource_xcnjm")
+
+[sub_resource type="Resource" id="Resource_le87f"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_avbid"]
+script = ExtResource("3_kpmtg")
+position = Vector2(13720.2, -11695.8)
+point_in = Vector2(46.6162, 152.563)
+point_out = Vector2(-46.6162, -152.563)
+properties = SubResource("Resource_le87f")
+
+[sub_resource type="Resource" id="Resource_5clop"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_4gkto"]
+script = ExtResource("3_kpmtg")
+position = Vector2(10348.6, -11468.6)
+point_in = Vector2(107.943, -142.866)
+point_out = Vector2(-107.943, 142.866)
+properties = SubResource("Resource_5clop")
+
+[sub_resource type="Resource" id="Resource_frjcm"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_4so84"]
+script = ExtResource("3_kpmtg")
+position = Vector2(11029.4, -12225.9)
+point_in = Vector2(163.79, -156.23)
+point_out = Vector2(-163.79, 156.23)
+properties = SubResource("Resource_frjcm")
+
+[sub_resource type="Resource" id="Resource_hncgt"]
+script = ExtResource("2_f0eul")
+texture_idx = 0
+flip = false
+width = 1.0
+
+[sub_resource type="Resource" id="Resource_w70gj"]
+script = ExtResource("3_kpmtg")
+position = Vector2(1230.3, -13130.7)
+point_in = Vector2(0, 0)
+point_out = Vector2(0, 0)
+properties = SubResource("Resource_hncgt")
+
+[sub_resource type="Resource" id="Resource_18g5o"]
+script = ExtResource("4_v2ws8")
+_points = {
+0: SubResource("Resource_ujcq7"),
+8: SubResource("Resource_j61uj"),
+10: SubResource("Resource_pngbs"),
+41: SubResource("Resource_4k6cw"),
+56: SubResource("Resource_kf48e"),
+57: SubResource("Resource_kchr6"),
+58: SubResource("Resource_kp3un"),
+60: SubResource("Resource_e0eom"),
+61: SubResource("Resource_ryeuo"),
+62: SubResource("Resource_ysyt6"),
+64: SubResource("Resource_nb64g"),
+65: SubResource("Resource_baycf"),
+66: SubResource("Resource_ykcg1"),
+68: SubResource("Resource_4ug4t"),
+69: SubResource("Resource_s0mhp"),
+70: SubResource("Resource_lj5mn"),
+71: SubResource("Resource_ocrtw"),
+72: SubResource("Resource_3bppq"),
+73: SubResource("Resource_iq1b4"),
+75: SubResource("Resource_hotdm"),
+76: SubResource("Resource_r80wp"),
+77: SubResource("Resource_55kvr"),
+78: SubResource("Resource_yghhg"),
+79: SubResource("Resource_iafnc"),
+80: SubResource("Resource_a4dob"),
+81: SubResource("Resource_cfef5"),
+82: SubResource("Resource_6xxgj"),
+83: SubResource("Resource_32fg2"),
+85: SubResource("Resource_51qqb"),
+86: SubResource("Resource_eo70b"),
+87: SubResource("Resource_mrpe3"),
+88: SubResource("Resource_gfr1u"),
+89: SubResource("Resource_s4ovx"),
+90: SubResource("Resource_xdh7t"),
+91: SubResource("Resource_537kv"),
+92: SubResource("Resource_geq5s"),
+93: SubResource("Resource_8flcw"),
+94: SubResource("Resource_7r1bx"),
+95: SubResource("Resource_6vmxp"),
+98: SubResource("Resource_otxfe"),
+99: SubResource("Resource_ie1ig"),
+101: SubResource("Resource_ytyhv"),
+103: SubResource("Resource_7fh28"),
+104: SubResource("Resource_kbmpf"),
+107: SubResource("Resource_qmn8d"),
+108: SubResource("Resource_muwj3"),
+109: SubResource("Resource_2j15k"),
+110: SubResource("Resource_io1oo"),
+111: SubResource("Resource_00hv4"),
+112: SubResource("Resource_u3tsj"),
+113: SubResource("Resource_f7u2e"),
+114: SubResource("Resource_ijlkc"),
+116: SubResource("Resource_bwq05"),
+117: SubResource("Resource_gj86i"),
+118: SubResource("Resource_qxntq"),
+119: SubResource("Resource_a5xm3"),
+120: SubResource("Resource_nccs8"),
+121: SubResource("Resource_17qg8"),
+122: SubResource("Resource_0ywu7"),
+123: SubResource("Resource_7hmro"),
+125: SubResource("Resource_b7mdx"),
+127: SubResource("Resource_gupyl"),
+128: SubResource("Resource_aee1g"),
+129: SubResource("Resource_jyjrs"),
+130: SubResource("Resource_u3tnk"),
+132: SubResource("Resource_tqaeq"),
+133: SubResource("Resource_2rklh"),
+134: SubResource("Resource_lij0s"),
+135: SubResource("Resource_31nym"),
+137: SubResource("Resource_yhrll"),
+140: SubResource("Resource_f7bg5"),
+142: SubResource("Resource_sfg7q"),
+143: SubResource("Resource_w7eg5"),
+144: SubResource("Resource_dbrr7"),
+145: SubResource("Resource_pnplm"),
+146: SubResource("Resource_mgmjd"),
+147: SubResource("Resource_7rqci"),
+148: SubResource("Resource_hvvfx"),
+149: SubResource("Resource_8i8ua"),
+150: SubResource("Resource_kqlh7"),
+151: SubResource("Resource_g1w1q"),
+152: SubResource("Resource_bn0s2"),
+153: SubResource("Resource_x4x5b"),
+154: SubResource("Resource_ayps8"),
+155: SubResource("Resource_egnxx"),
+156: SubResource("Resource_wku4x"),
+157: SubResource("Resource_i0vld"),
+158: SubResource("Resource_dn3jb"),
+159: SubResource("Resource_7akv7"),
+160: SubResource("Resource_f6ura"),
+161: SubResource("Resource_uhwx0"),
+162: SubResource("Resource_dpjlp"),
+163: SubResource("Resource_brlif"),
+164: SubResource("Resource_3mq1w"),
+166: SubResource("Resource_wxp2p"),
+167: SubResource("Resource_8tvv7"),
+168: SubResource("Resource_4k506"),
+169: SubResource("Resource_ypier"),
+170: SubResource("Resource_33jid"),
+171: SubResource("Resource_dcry4"),
+172: SubResource("Resource_hnlwo"),
+174: SubResource("Resource_7yllj"),
+175: SubResource("Resource_hetxy"),
+176: SubResource("Resource_rfuad"),
+181: SubResource("Resource_77wm5"),
+183: SubResource("Resource_pvt05"),
+184: SubResource("Resource_r66xo"),
+185: SubResource("Resource_lpv4a"),
+186: SubResource("Resource_6xj8n"),
+188: SubResource("Resource_nbwaj"),
+189: SubResource("Resource_tj6ce"),
+190: SubResource("Resource_ilhcu"),
+191: SubResource("Resource_6kvri"),
+193: SubResource("Resource_ousy1"),
+195: SubResource("Resource_l5fct"),
+196: SubResource("Resource_il2xv"),
+197: SubResource("Resource_2ro67"),
+199: SubResource("Resource_w4jcu"),
+200: SubResource("Resource_42yj0"),
+201: SubResource("Resource_jq7q6"),
+202: SubResource("Resource_cmefc"),
+205: SubResource("Resource_271yn"),
+206: SubResource("Resource_frh8g"),
+207: SubResource("Resource_7c1k2"),
+209: SubResource("Resource_5y7h3"),
+211: SubResource("Resource_ory55"),
+212: SubResource("Resource_v7xum"),
+213: SubResource("Resource_mnr8m"),
+214: SubResource("Resource_r26sy"),
+215: SubResource("Resource_sady0"),
+216: SubResource("Resource_7ctq0"),
+217: SubResource("Resource_o6r0c"),
+218: SubResource("Resource_kum0m"),
+219: SubResource("Resource_20nax"),
+220: SubResource("Resource_iqf5b"),
+221: SubResource("Resource_na86u"),
+222: SubResource("Resource_gjgaf"),
+224: SubResource("Resource_673c0"),
+226: SubResource("Resource_ou84i"),
+228: SubResource("Resource_6cnyj"),
+229: SubResource("Resource_jd8jv"),
+230: SubResource("Resource_2g8at"),
+232: SubResource("Resource_k8p46"),
+234: SubResource("Resource_itiip"),
+235: SubResource("Resource_be1nl"),
+237: SubResource("Resource_0ndee"),
+238: SubResource("Resource_vb20e"),
+241: SubResource("Resource_74ft3"),
+242: SubResource("Resource_svor2"),
+243: SubResource("Resource_ywf7i"),
+244: SubResource("Resource_s44jg"),
+245: SubResource("Resource_1fwt4"),
+246: SubResource("Resource_x4thr"),
+248: SubResource("Resource_0xix7"),
+249: SubResource("Resource_m7e3u"),
+251: SubResource("Resource_xi1xe"),
+252: SubResource("Resource_4dj5p"),
+253: SubResource("Resource_yjhas"),
+254: SubResource("Resource_jo1wu"),
+255: SubResource("Resource_rs3ep"),
+256: SubResource("Resource_71pgt"),
+257: SubResource("Resource_dj8n4"),
+258: SubResource("Resource_pjwtm"),
+259: SubResource("Resource_0jocw"),
+260: SubResource("Resource_8ydea"),
+261: SubResource("Resource_m8we2"),
+262: SubResource("Resource_04o2k"),
+263: SubResource("Resource_7hygj"),
+264: SubResource("Resource_sk38k"),
+265: SubResource("Resource_avbid"),
+266: SubResource("Resource_4gkto"),
+267: SubResource("Resource_4so84"),
+268: SubResource("Resource_w70gj")
+}
+_point_order = PackedInt32Array(8, 58, 224, 64, 61, 228, 62, 73, 230, 70, 75, 76, 85, 82, 78, 86, 87, 88, 89, 234, 90, 235, 99, 256, 101, 238, 257, 108, 258, 111, 114, 118, 259, 119, 123, 120, 128, 127, 145, 146, 142, 130, 132, 181, 134, 160, 245, 135, 151, 159, 158, 162, 152, 184, 163, 260, 167, 169, 170, 171, 172, 251, 249, 264, 188, 254, 189, 252, 253, 195, 196, 201, 197, 206, 207, 209, 213, 211, 214, 219, 215, 217, 221, 218, 222, 261, 216, 220, 212, 205, 244, 262, 243, 263, 202, 200, 199, 193, 191, 190, 242, 186, 175, 185, 241, 174, 176, 168, 166, 157, 164, 155, 183, 156, 161, 154, 150, 149, 153, 265, 148, 133, 267, 266, 246, 147, 129, 143, 144, 121, 140, 125, 122, 116, 117, 113, 112, 110, 268, 109, 107, 104, 237, 103, 98, 95, 94, 92, 93, 91, 232, 79, 80, 83, 77, 72, 71, 229, 69, 137, 68, 60, 66, 65, 226, 41, 57, 56, 10, 81, 255, 248, 0)
+_constraints = {
+Vector2i(8, 0): 15
+}
+_next_key = 270
+_material_overrides = {}
+tessellation_stages = 3
+tessellation_tolerance = 6.0
+curve_bake_interval = 20.0
+
+[sub_resource type="Resource" id="Resource_ptj8i"]
+script = ExtResource("6_f4cio")
+_edge_meta_materials = Array[Resource("res://addons/rmsmartshape/materials/edge_material_metadata.gd")]([])
+fill_textures = Array[Texture2D]([ExtResource("5_l7tri")])
+fill_texture_z_index = -2
+fill_texture_show_behind_parent = false
+fill_texture_scale = 1.0
+fill_texture_absolute_position = false
+fill_texture_absolute_rotation = false
+fill_texture_offset = Vector2(0, 0)
+fill_texture_angle_offset = 0.0
+fill_mesh_offset = 0.0
+render_offset = 0.0
+
+[node name="Node2D" type="Node2D"]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+position = Vector2(-5964, 6953)
+
+[node name="RoadShape2" type="Node2D" parent="StaticBody2D"]
+texture_repeat = 2
+script = ExtResource("1_ru2uh")
+_points = SubResource("Resource_18g5o")
+shape_material = SubResource("Resource_ptj8i")
+collision_polygon_node_path = NodePath("../CollisionPolygon2D")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+visible = false
+modulate = Color(1, 1, 1, 0.3)
+polygon = PackedVector2Array(86.79, -7990.83, 341.717, -7791.29, 693.594, -7599.89, 1101.37, -7460.5, 1313.4, -7424.02, 1524, -7417, 1719.32, -7436.56, 1890.22, -7473.81, 2038.68, -7525.26, 2166.66, -7587.38, 2369.07, -7729.58, 2513.22, -7872.32, 2631.83, -8001.42, 2769.57, -8116.52, 2856.13, -8166.51, 2960.09, -8210.24, 3237.06, -8275.19, 3320.09, -8282.25, 3403.15, -8279.97, 3567.59, -8250.96, 3726.76, -8195.31, 3877.02, -8120.15, 4136.34, -7939.89, 4316.53, -7767.33, 4441.56, -7641.27, 4766.63, -7383.41, 4799.43, -7358.41, 4846.19, -7332.11, 4975.28, -7277.85, 5331.37, -7178.44, 5733.53, -7121.17, 5920.21, -7119.59, 6080.4, -7142.03, 6208.02, -7183.22, 6307.99, -7234.06, 6384.16, -7293.34, 6440.34, -7359.87, 6480.37, -7432.45, 6508.07, -7509.85, 6541.82, -7674.36, 6582.65, -8038.01, 6583.53, -8199.52, 6576.27, -8263.48, 6570.36, -8289.79, 6562.79, -8311.76, 6431.72, -8525.87, 6219.74, -8769.19, 6027.01, -8908.97, 5727.27, -9076.25, 5394.39, -9216.56, 5238.6, -9259.58, 5102.21, -9275.43, 2453.3, -8574.79, 1932.01, -8491.38, 1693.72, -8468.58, 1585.67, -8468.96, 1487.13, -8479.88, 982.414, -8628.64, 457.472, -8871.8, -825.166, -9643.22, -1422.31, -9909.3, -1750.67, -10101.3, -1865.26, -10199.5, -1903.03, -10247.6, -1925.06, -10294.5, -1946.39, -10391.9, -1957.46, -10497.2, -1954.79, -10715, -1929.08, -10914.7, -1892.37, -11063.5, -1830.63, -11200, -1727.83, -11367.6, -1593.01, -11540.2, -1435.19, -11691.9, -1143.22, -11892.9, -1009.29, -11946, -939.953, -11960.9, -866.99, -11968.1, -827.932, -11965.3, -786.245, -11954.2, -696.165, -11912.2, -289.747, -11649.9, -188.43, -11607.9, -139.439, -11596.8, -91.9531, -11594, 63.0651, -11612.8, 118.969, -11630.2, 162.278, -11652, 179.634, -11664.4, 194.351, -11677.7, 206.597, -11691.7, 216.542, -11706.4, 224.357, -11721.8, 230.211, -11737.7, 236.713, -11770.7, 281.608, -12251.5, 287.821, -12570, 275.263, -12696, 263.617, -12744, 247.841, -12779.5, 175.163, -12877.4, 136.845, -12915.7, 95.9548, -12948.6, 2.70005, -13003.6, -112.118, -13052.6, -151.166, -13062.9, -203.062, -13069.6, -683.699, -13077.7, -1033.68, -13109.3, -1108.41, -13127.6, -1174.45, -13151.6, -1230, -13182, -1273.26, -13219.7, -1338.74, -13308.1, -1390.11, -13404.6, -1456.59, -13608.1, -1484.87, -13802, -1487.1, -13958.3, -1438.56, -14379.6, -1402.13, -14507.2, -1349.57, -14629.5, -1277.68, -14739.5, -1233.49, -14787.7, -1183.26, -14830.2, -1071.37, -14898.2, -951.695, -14947, -703.855, -14999.2, -278.388, -15008.7, -156.403, -14987.5, 36.0168, -14929.9, 548.36, -14727.6, 1091.04, -14446.1, 1321.39, -14289.4, 1496.47, -14129.6, 1615.34, -13971, 1695.71, -13816.2, 1744.61, -13667.8, 1769.1, -13528.5, 1763.63, -13116.3, 1771.17, -13042.8, 1789.57, -12955.6, 1850.59, -12760.2, 1930.03, -12569, 2011.18, -12421.1, 2036.23, -12393.7, 2072.21, -12368, 2171.46, -12322.1, 2440.17, -12252.4, 2947.61, -12207.1, 3512.69, -12229.8, 3834.57, -12275.7, 3960.98, -12316.8, 4010, -12343.1, 4047.46, -12373.7, 4122.26, -12478, 4858.28, -13880, 5436.84, -15258.2, 5645.47, -15568.7, 6003.84, -15989.1, 6399.67, -16373.9, 6576.55, -16507.4, 6653.58, -16551.4, 6720.68, -16577.3, 6884.27, -16597, 7114.39, -16593.9, 7687.3, -16530.9, 8265.55, -16411.7, 8502.36, -16338.3, 8675.32, -16259.7, 8738.89, -16216.1, 8796.09, -16166.1, 8893.14, -16050.4, 8969.91, -15919.6, 9029.84, -15780.5, 9170.31, -15279.9, 9250.62, -14366.8, 9239.62, -13785.3, 9212.24, -13546.9, 9191.95, -13451.2, 9166.83, -13375.3, 9045.26, -13128, 8894.83, -12904.4, 8705.16, -12700.4, 8465.86, -12512, 8253.02, -12349.1, 8183.36, -12278.9, 8134.39, -12213.7, 8103.26, -12151.3, 8087.12, -12089.8, 8083.09, -12027.3, 8088.33, -11961.7, 8123.26, -11787.3, 8192.25, -11571.2, 8239.47, -11464.4, 8295.14, -11367.6, 8359.24, -11287.4, 8394.45, -11255.6, 8431.75, -11230.6, 8622.59, -11142.6, 8859.79, -11066.6, 9100.55, -11028.2, 9208.9, -11030.9, 9257.73, -11039.1, 9302.1, -11052.5, 9350.4, -11078.7, 9410.29, -11123.4, 9557.82, -11258.4, 10480.6, -12275.9, 10868.3, -12648.1, 11113.5, -12853.1, 11232.1, -12934.4, 11341.7, -12991.7, 11573.5, -13067.1, 11839.6, -13122.4, 12380.3, -13174.6, 12655.7, -13161, 12955.4, -13114.3, 13466.2, -12972, 13515.4, -12946.5, 13569.7, -12908.6, 13690.2, -12801.5, 13954.3, -12505.1, 14381.7, -11927.6, 14491.7, -11718.6, 14573.6, -11479.7, 14662, -11013.9, 14663.3, -10895.1, 14647.1, -10748.1, 14571.3, -10406.9, 14451.8, -10064.9, 14381, -9916.8, 14305.8, -9796.39, 13918.6, -9345.8, 13679.9, -9137.7, 13424.4, -8980.84, 11500.4, -8399.07, 10093.5, -8306.08, 9090.57, -8496.71, 8981.71, -8505.27, 8935.85, -8501.57, 8896.12, -8491.58, 8748.92, -8419.4, 8678.84, -8371.11, 8614.87, -8316.27, 8559.82, -8256.08, 8516.5, -8191.73, 8500.12, -8158.37, 8487.73, -8124.42, 8479.69, -8090.03, 8476.33, -8055.34, 8412.27, -7587.95, 8390.64, -7323.81, 8397.91, -7216.63, 8408, -7173.31, 8423.13, -7138.4, 8465.73, -7080.22, 8520.22, -7027.1, 8653.19, -6936.73, 8798.64, -6868.65, 8933.19, -6824.25, 9243.84, -6769.56, 9327.38, -6767.11, 9405.9, -6773.1, 9475.7, -6789.51, 9506.17, -6802.25, 9533.08, -6818.33, 10115.5, -7223.05, 10148.3, -7248.97, 10190.7, -7273.22, 10299.2, -7316.62, 10577.8, -7382.63, 11111.5, -7428.04, 11217, -7413.2, 11345.2, -7378.39, 11632.4, -7264.15, 11898.2, -7116.03, 11999.7, -7038.85, 12038.5, -7001.16, 12067.7, -6964.7, 12241.8, -6702.45, 12316.3, -6558.62, 12383.7, -6379.56, 12394, -6320.81, 12393.5, -6247.71, 12364.8, -6067.27, 12228.1, -5631.03, 12045.8, -5211.74, 11960.3, -5052.48, 11890.5, -4950.29, 11805.8, -4873.05, 11678.4, -4781.07, 11348.1, -4577.9, 10755.8, -4269.72, 10574.6, -4211.43, 10370.8, -4174.46, 9920.06, -4135.71, 9849.41, -4139.86, 9756.2, -4158.32, 9514.53, -4229.77, 8266.81, -4666.72, 8008.87, -4729.43, 7905.08, -4742.21, 7822.23, -4739.81, 7570.32, -4681.09, 7377.86, -4595.08, 7300.4, -4543.96, 7233.57, -4488.56, 7126.14, -4368.3, 6876.94, -4041.88, 6751.45, -3843.79, 6702.16, -3742.62, 6667.04, -3642.55, 6632.3, -3454.41, 6633.37, -3285.58, 6646.59, -3208.42, 6667.86, -3136.12, 6696.87, -3068.68, 6733.34, -3006.11, 6774.18, -2952.41, 6816.28, -2911.38, 6859.28, -2882.76, 6881, -2873.02, 6902.81, -2866.28, 6924.66, -2862.5, 6946.51, -2861.66, 6968.31, -2863.71, 6990.01, -2868.62, 7011.57, -2876.36, 7032.95, -2886.89, 7074.96, -2916.21, 7094.33, -2935.08, 7111.34, -2956.81, 7140.13, -3008.22, 7254.48, -3294.39, 7301.65, -3379.2, 7363.75, -3466.58, 7434, -3544.45, 7503.78, -3603.46, 7574.06, -3646.26, 7645.85, -3675.54, 7720.16, -3693.96, 7797.96, -3704.19, 7968.05, -3710.77, 8571.88, -3637.46, 8737.82, -3598.95, 8895.22, -3537.74, 9162.43, -3416.64, 9520.21, -3223.53, 9736.86, -3129.35, 9836.49, -3107.09, 9881.87, -3105.19, 9923.42, -3110.6, 9996.43, -3135.83, 10060, -3172.81, 10172.4, -3274.38, 10432, -3534.38, 10626.3, -3668.32, 10869.3, -3789, 11156.3, -3875.6, 11482.9, -3907.31, 11561.7, -3901.95, 11626.9, -3887.87, 11679.8, -3866.11, 11722, -3837.67, 11755, -3803.57, 11780.4, -3764.83, 11799.6, -3722.47, 11814.2, -3677.5, 11856.3, -3491.95, 11870.4, -3449.22, 11888.8, -3410, 11913.2, -3375.3, 11945.1, -3346.13, 12087.5, -3248.58, 12158.1, -3208.66, 12229, -3178.04, 12300.7, -3159.29, 12337.1, -3155.15, 12373.8, -3154.94, 12411.1, -3158.98, 12448.9, -3167.57, 12487.2, -3181.04, 12526.3, -3199.72, 12563, -3228.16, 12594.6, -3269.55, 12621.6, -3322.13, 12644.6, -3384.15, 12705.9, -3691.55, 12763, -4137.6, 12775.1, -4187.68, 12789.2, -4226.14, 12809.5, -4260.2, 12838.8, -4297.89, 12919.4, -4382.19, 13343.5, -4764.5, 13423.2, -4851.3, 13452, -4890.62, 13471.7, -4926.56, 13483.2, -4961.18, 13488.5, -4996.73, 13488.5, -5032.96, 13483.8, -5069.63, 13462.6, -5143.37, 13430.4, -5216.02, 13295.5, -5457.37, 13290.5, -5488.29, 13292.1, -5535.45, 13311.6, -5669.39, 13469.4, -6400.24, 13491.4, -6540.86, 13494.7, -6592.36, 13491.5, -6628.3, 13487.1, -6659.05, 13487, -6695.92, 13497.6, -6784.53, 13547.2, -6996.73, 13645.7, -7365.16, 13652.3, -7394.58, 13664, -7427.63, 13701.8, -7501.96, 13757.1, -7582.93, 13828.3, -7665.29, 13913.6, -7743.8, 14011, -7813.24, 14119, -7868.37, 14235.5, -7903.94, 14293, -7910.4, 14345.4, -7906.49, 14392.7, -7893.34, 14435.3, -7872.11, 14473.1, -7843.93, 14506.3, -7809.95, 14535.2, -7771.31, 14559.8, -7729.15, 14596.7, -7638.84, 14618.5, -7548.17, 14626.1, -7466.28, 14625, -7431.48, 14620.8, -7402.3, 14611.8, -7377.67, 14596.6, -7355.49, 14576.2, -7335.4, 14551.3, -7317.03, 14296.6, -7187.05, 14270.7, -7167.34, 14249, -7145.63, 14232.3, -7121.54, 14221.5, -7094.69, 13893.5, -5714.02, 13897.8, -5672.59, 13908, -5631.21, 13942, -5547.31, 14032.9, -5365.54, 14072.2, -5262.32, 14095.6, -5147.3, 14098.7, -5084.54, 14094.4, -5017.82, 14081.8, -4946.82, 14059.7, -4871.2, 13989.5, -4722.01, 13894.3, -4585.64, 13452.2, -4139.85, 13374.1, -4046.18, 13346.4, -4001.02, 13328, -3956.75, 13194.5, -3407.22, 13099, -3099.23, 13041.4, -2970.64, 13009.8, -2916.92, 12976.1, -2871.84, 12904, -2798.02, 12826.5, -2737.67, 12743.3, -2690.38, 12654.2, -2655.72, 12559.2, -2633.28, 12457.9, -2622.62, 12236.1, -2634.99, 12126.1, -2656.47, 12030, -2686.41, 11946, -2724.06, 11872.7, -2768.66, 11808.1, -2819.46, 11750.7, -2875.69, 11650.8, -3001.44, 11611.3, -3071.67, 11582.5, -3146.7, 11534.5, -3295.81, 11504, -3362.2, 11484.7, -3391.67, 11461.7, -3418.02, 11434.4, -3440.77, 11402, -3459.43, 11363.8, -3473.53, 11319.1, -3482.58, 11270.9, -3485.49, 11222.9, -3481.91, 11175.4, -3472.43, 11128.8, -3457.68, 11039.9, -3414.83, 10958.9, -3358.28, 10889.1, -3292.95, 10833.2, -3223.78, 10794.3, -3155.67, 10782.1, -3123.56, 10775.3, -3093.57, 10758.3, -3025.27, 10721.6, -2940.46, 10662.4, -2846.86, 10578, -2752.21, 10465.8, -2664.24, 10322.9, -2590.69, 10146.7, -2539.29, 9934.41, -2517.76, 9718.07, -2530.54, 9529.08, -2571.52, 9363.88, -2632.64, 9218.93, -2705.83, 8870.12, -2917.2, 8770.72, -2958.04, 8370.3, -3125.31, 8265.87, -3159.74, 8159.16, -3179.41, 8104.86, -3181.88, 8049.9, -3178.44, 7994.22, -3168.37, 7937.81, -3150.92, 7884.27, -3125.87, 7836.71, -3094.02, 7794.37, -3056.21, 7756.48, -3013.26, 7690.94, -2915.26, 7633.91, -2806.63, 7520.69, -2583.96, 7452.15, -2483.15, 7412.19, -2438.28, 7367.42, -2398.19, 7315.48, -2364.23, 7255.41, -2337.09, 7188.51, -2316.61, 7116.08, -2302.61, 6959.81, -2293.45, 6796.99, -2308.3, 6638.01, -2345.87, 6493.27, -2404.86, 6429.48, -2441.98, 6373.14, -2483.97, 6325.56, -2530.66, 6288.03, -2581.9, 6229.12, -2704.2, 6181.48, -2853.24, 6124.81, -3207.25, 6127.61, -3595.33, 6154.31, -3786.96, 6199.47, -3968.9, 6263.27, -4135.51, 6342.32, -4285.8, 6529.63, -4541.05, 6905.17, -4895.37, 7079.53, -5021.87, 7290.39, -5131.96, 7534.32, -5218.43, 7807.9, -5274.06, 7890.63, -5275.28, 7993.2, -5261.43, 8246.11, -5196.79, 9698.01, -4672.64, 9790.02, -4651.12, 9860.54, -4643.48, 10207.3, -4688.89, 10676.6, -4808.61, 11117.6, -4977.88, 11280.3, -5073.36, 11338.9, -5122.46, 11379.3, -5171.95, 11642.8, -5661.42, 11745.4, -5898.17, 11776.6, -5991.85, 11785.6, -6029.69, 11789.5, -6060.44, 11782.1, -6200.94, 11764.9, -6289.52, 11734.9, -6384.77, 11689.4, -6482.55, 11625.5, -6578.7, 11540.3, -6669.07, 11431.2, -6749.51, 11306.4, -6814.84, 11178.1, -6863.28, 11049.6, -6895.77, 10924.1, -6913.22, 10804.6, -6916.58, 10694.4, -6906.76, 10596.7, -6884.7, 10514.6, -6851.32, 9691.11, -6286.97, 9604.68, -6243.74, 9521.47, -6212.95, 9366.53, -6181.07, 9115.54, -6182.9, 8654.83, -6296.76, 8360.5, -6410.47, 8234.76, -6476.49, 8137.55, -6546.69, 8001.06, -6684.35, 7903.7, -6811.83, 7837.33, -6931.8, 7793.85, -7046.93, 7768.68, -7202.97, 7759.98, -7413.9, 7776, -7820.5, 7880.27, -8283.04, 7976.59, -8538.45, 8032.5, -8645.08, 8092.33, -8727.34, 8229.8, -8856.79, 8389.92, -8970.52, 8563.06, -9061.54, 8739.62, -9122.83, 8792.19, -9129.69, 8860.88, -9128.89, 9037.8, -9108.4, 10277.4, -8884.46, 11563.6, -8998.91, 11974.3, -9185.45, 12349, -9416.13, 13087.8, -9757.93, 13511.5, -9974.83, 13662.1, -10080.3, 13712.6, -10130.5, 13743.2, -10178.3, 13882.4, -10544.7, 13925.9, -10733, 13940.7, -10932.6, 13932.2, -11038.4, 13911.5, -11146.9, 13846.7, -11360.6, 13720.2, -11695.8, 13465.8, -12158.6, 13276, -12420.8, 13187.4, -12517.4, 13147.5, -12551.8, 13111.5, -12575, 12872.8, -12648.1, 12502.3, -12711.1, 12113.5, -12734.1, 11947.7, -12721.3, 11878.2, -12707.1, 11819.9, -12687.1, 11382, -12469, 11183, -12346.6, 11029.4, -12225.9, 10348.6, -11468.6, 9985.17, -10964.4, 9727.07, -10675.1, 9600.71, -10573.8, 9540.93, -10540.5, 9484.46, -10521.3, 9186.25, -10494.1, 8795.37, -10505.7, 8412.76, -10558.1, 8256.08, -10600.3, 8191.92, -10625.4, 8139.32, -10653.3, 7807.57, -10875.4, 7682.43, -10988.9, 7633.47, -11049.7, 7594.88, -11114.5, 7522.5, -11299.8, 7453.42, -11562.6, 7411.27, -11865.5, 7419.69, -12171.3, 7440.16, -12246.2, 7479.08, -12323.1, 7602, -12482.6, 8318.84, -13159, 8451.8, -13328.5, 8497.25, -13412, 8525.25, -13494.4, 8575.21, -13884.4, 8582.88, -14336.7, 8556.05, -14756, 8502.54, -15046.8, 8440.94, -15416.4, 8424.7, -15500.2, 8397.7, -15579.4, 8378.53, -15617.1, 8354.71, -15653.4, 8325.59, -15688.3, 8290.51, -15721.7, 8188.56, -15789, 8043.97, -15857, 7675.84, -15974.2, 7284.09, -16031.9, 7109.97, -16025.5, 7033.7, -16011.2, 6966.68, -15988.6, 6688.3, -15823.5, 6389.77, -15578.9, 6133.3, -15307.8, 6040.27, -15178.9, 5981.07, -15063.3, 4959.89, -12771.2, 4652.21, -12296.3, 4238.69, -11810.1, 4179.81, -11763.4, 4111.01, -11724.9, 3950.03, -11669.9, 3768.5, -11639.9, 3579.17, -11629.7, 2999.03, -11681.7, 2216.73, -11787.1, 2088.53, -11817, 1985.77, -11853.2, 1809.6, -11950.8, 1639, -12077.6, 1489.18, -12222.3, 1375.38, -12373.8, 1334.42, -12464.2, 1301.68, -12577.1, 1257.48, -12827.8, 1230.3, -13130.7, 1215.93, -13357.6, 1160.33, -13574.2, 1109.46, -13688.8, 1039.02, -13800, 956.968, -13897.3, 873.951, -13975.4, 790.881, -14036.8, 708.67, -14083.8, 550.477, -14144.4, 406.669, -14176.7, 327.982, -14201.2, -10.0335, -14362, -273.838, -14467.4, -403.328, -14497.2, -465.436, -14503.2, -525.01, -14501.9, -635.194, -14484.9, -732.868, -14455.5, -817.399, -14415.3, -888.153, -14365.7, -944.497, -14308, -967.066, -14276.5, -985.796, -14243.6, -1000.61, -14209.5, -1011.42, -14174.1, -1018.15, -14137.9, -1020.73, -14100.9, -1027.52, -13783.3, -1020.9, -13707.3, -1006.5, -13637.3, -982.108, -13575.5, -965.467, -13548.4, -945.492, -13524.2, -916.768, -13504.2, -875.099, -13489.3, -759.12, -13471.9, 70.5671, -13470.8, 199.665, -13452.4, 402.372, -13386.4, 489.49, -13343.3, 566.736, -13293, 633.823, -13235.5, 690.466, -13170.4, 736.379, -13097.4, 771.276, -13016.5, 783.895, -12963.7, 792.55, -12892, 798.511, -12702.6, 768.847, -12214.2, 690.99, -11720.5, 636.711, -11524.7, 606.21, -11448.8, 573.649, -11391.1, 498.678, -11302.3, 410.318, -11226.7, 312.127, -11164.8, 207.662, -11116.5, 100.48, -11082.2, -5.861, -11062, -107.804, -11056.2, -201.792, -11064.9, -292.17, -11092, -384.79, -11136.6, -751.718, -11357.9, -836.069, -11390.7, -876.246, -11399.1, -914.872, -11401.2, -953.648, -11396.1, -994.007, -11384.3, -1077.24, -11343, -1160.09, -11282.9, -1238.09, -11209.6, -1306.75, -11128.7, -1361.61, -11045.9, -1398.18, -10966.8, -1408.22, -10930.4, -1412, -10897, -1424.98, -10676.3, -1422.04, -10588.5, -1413.44, -10549.8, -1398.28, -10514.2, -1384.62, -10497.1, -1363.12, -10479.8, -1300, -10444.5, -719.41, -10199.5, 272.644, -9601.22, 1076.78, -9084, 1104.94, -9070.28, 1143.19, -9056.62, 1244.83, -9029.94, 1512.5, -8982.75, 2016.44, -8941.36, 5029.35, -9720.76, 5292.78, -9748.4, 5477.02, -9723.6, 5679.35, -9671.25, 6094.4, -9510.08, 6450.17, -9317.38, 6578.39, -9225.61, 6625.29, -9183.74, 6658.89, -9145.63, 6901.79, -8770.32, 7014.86, -8542.8, 7094.23, -8311.76, 7128.97, -8028.69, 7116.11, -7678.89, 7046.48, -7330.36, 6987.52, -7177.81, 6951.5, -7110.68, 6910.94, -7051.07, 6818.6, -6948.87, 6715.46, -6863.63, 6605.01, -6794.39, 6490.76, -6740.21, 6264.79, -6673.18, 6065.52, -6654.91, 5515.19, -6691.59, 5197.54, -6735.03, 4945.23, -6797.83, 4565.61, -6968.09, 4405.79, -7063.74, 4284.09, -7159.76, 4087.03, -7367.6, 3975.8, -7472.02, 3845.37, -7564.73, 3679.05, -7644.42, 3582.44, -7675.98, 3480.65, -7697.38, 3376.52, -7705.19, 3272.88, -7695.93, 3222.14, -7683.83, 3172.59, -7666.16, 3124.58, -7642.5, 3078.47, -7612.41, 2933.9, -7491.28, 2694.78, -7224.64, 2670.03, -7205.64, 2640.52, -7187.81, 2568.11, -7155.09, 2375.96, -7097.69, 1852, -6985, 1262.66, -6919.53, 1010.01, -6937.24, 906.59, -6959.63, 823.167, -6991.42, -101.952, -7510.65, -813.018, -7881.98, -1030.49, -7958.48, -1120.8, -8001.87, -1194.45, -8047.46, -1211.6, -8065.68, -1230.64, -8096.02, -1272.61, -8186.31, -1359.64, -8438.08, -1427.06, -8694.76, -1444.5, -8791.19, -1447.6, -8825.51, -1446.35, -8848.33, -1437.42, -8876.99, -1431.25, -8888.32, -1423.64, -8897.86, -1414.35, -8905.77, -1403.15, -8912.22, -1389.81, -8917.38, -1374.08, -8921.4, -1134.66, -8932.24, -1083.9, -8925.27, -1023.26, -8903.57, -877.899, -8822.71, -529.605, -8557.92, 86.79, -7990.83)

@@ -48,6 +48,16 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 - Second Param in Curve2D.tessellate.
 - See [Curve2D Documentation](https://docs.godotengine.org/en/3.2/classes/class_curve2d.html#class-curve2d-method-tessellate).
 
+### Collision Generation Method
+
+- Controls which method should be used to generate the collision shape.
+- See also in-engine documentation.
+
+### Collision Update Mode
+
+- Controls when to update collisions.
+- See also in-engine documentation.
+
 ### Curve Bake Interval
 
 - Bake interval value for Curve2D.

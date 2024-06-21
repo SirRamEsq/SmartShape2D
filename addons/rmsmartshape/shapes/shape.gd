@@ -14,8 +14,6 @@ class_name SS2D_Shape
 #
 # To use search to jump between categories, use the regex: # .+ #
 
-const TUP = preload("../lib/tuple.gd")
-
 ################
 #-DECLARATIONS-#
 ################
@@ -32,6 +30,30 @@ signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape)
 
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
+
+enum CollisionGenerationMethod {
+	## Uses the shape curve to generate a collision polygon. Usually this method is accurate enough.
+	Fast,
+	## Uses the edge generation algorithm to create an accurate collision representation that
+	## exactly matches the shape's visuals.
+	## Depending on the shape's complexity, this method is very expensive.
+	Precise,
+}
+
+enum CollisionUpdateMode {
+	## Only update collisions in editor. If the corresponding CollisionPolygon2D is part of the same
+	## scene, it will be saved automatically by Godot, hence no additional regeneration at runtime
+	## is necessary, which reduces the loading times.
+	## Does not work if the CollisionPolygon2D is part of an instanced scene, as only the scene root
+	## node will be saved by Godot.
+	Editor,
+	## Only update collisions during runtime. Improves the shape-editing performance in editor but
+	## increases loading times as collision generation is deferred to runtime.
+	Runtime,
+	## Update collisions both in editor and during runtime. This is the default behavior in older
+	## SS2D versions.
+	EditorAndRuntime,
+}
 
 ###########
 #-EXPORTS-#
@@ -88,19 +110,25 @@ enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 ## approximate enough.
 ## @deprecated
 @export_range(0, 8, 1)
-var tessellation_stages: int = 5 :
+var tessellation_stages: int = 3 :
 	set(value): _points.tessellation_stages = value
 	get: return _points.tessellation_stages
 
 ## Controls how many degrees the midpoint of a segment may deviate from the real
 ## curve, before the segment has to be subdivided.
 ## @deprecated
-@export_range(0.1, 8.0, 0.1, "or_greater", "or_lesser")
-var tessellation_tolerence: float = 4.0 :
+@export_range(0.1, 16.0, 0.1, "or_greater", "or_lesser")
+var tessellation_tolerence: float = 6.0 :
 	set(value): _points.tessellation_tolerance = value
 	get: return _points.tessellation_tolerance
 
 @export_group("Collision")
+
+## Controls which method should be used to generate the collision shape.
+@export var collision_generation_method := CollisionGenerationMethod.Fast : set = set_collision_generation_method
+
+## Controls when to update collisions.
+@export var collision_update_mode := CollisionUpdateMode.Editor : set = set_collision_update_mode
 
 ## Controls size of generated polygon for CollisionPolygon2D.
 @export_range(0.0, 64.0, 1.0, "or_greater")
@@ -178,6 +206,16 @@ func set_render_edges(b: bool) -> void:
 	render_edges = b
 	set_as_dirty()
 	notify_property_list_changed()
+
+
+func set_collision_generation_method(value: CollisionGenerationMethod) -> void:
+	collision_generation_method = value
+	set_as_dirty()
+
+
+func set_collision_update_mode(value: CollisionUpdateMode) -> void:
+	collision_update_mode = value
+	set_as_dirty()
 
 
 func set_collision_size(s: float) -> void:
@@ -815,7 +853,7 @@ func should_flip_edges() -> bool:
 		return flip_edges
 
 
-func generate_collision_points() -> PackedVector2Array:
+func _generate_collision_points_precise() -> PackedVector2Array:
 	var points := PackedVector2Array()
 	var num_points: int = _points.get_point_count()
 	if num_points < 2:
@@ -861,11 +899,28 @@ func generate_collision_points() -> PackedVector2Array:
 	return points
 
 
+func _generate_collision_points_fast() -> PackedVector2Array:
+	return _points.get_tessellated_points()
+
+
 func bake_collision() -> void:
 	if not _collision_polygon_node:
 		return
+
+	if collision_update_mode == CollisionUpdateMode.Editor and not Engine.is_editor_hint() \
+			or collision_update_mode == CollisionUpdateMode.Runtime and Engine.is_editor_hint():
+		return
+
+	var generated_points: PackedVector2Array
+
+	match collision_generation_method:
+		CollisionGenerationMethod.Fast:
+			generated_points = _generate_collision_points_fast()
+		CollisionGenerationMethod.Precise:
+			generated_points = _generate_collision_points_precise()
+
 	var xform := _collision_polygon_node.get_global_transform().affine_inverse() * get_global_transform()
-	_collision_polygon_node.polygon = xform * generate_collision_points()
+	_collision_polygon_node.polygon = xform * generated_points
 
 
 func cache_edges() -> void:
