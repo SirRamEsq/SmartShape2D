@@ -30,6 +30,8 @@ var ICON_SNAP: Texture2D = load("res://addons/rmsmartshape/assets/icon_editor_sn
 var ICON_IMPORT_CLOSED: Texture2D = load("res://addons/rmsmartshape/assets/closed_shape.png")
 var ICON_IMPORT_OPEN: Texture2D = load("res://addons/rmsmartshape/assets/open_shape.png")
 
+const HANDLE_RADIUS: float = 13
+
 const FUNC = preload("plugin_functionality.gd")
 const ActionAddCollisionNodes := preload("res://addons/rmsmartshape/actions/action_add_collision_nodes.gd")
 const ActionMoveVerticies := preload("res://addons/rmsmartshape/actions/action_move_verticies.gd")
@@ -457,7 +459,6 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 		cached_shape_global_transform = shape.get_global_transform()
 
 	var et: Transform2D = get_et()
-	var grab_threshold := 13
 
 	var key_return_value := false
 	if event is InputEventKey:
@@ -465,11 +466,11 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 
 	var mb_return_value := false
 	if event is InputEventMouseButton:
-		mb_return_value = _input_handle_mouse_button_event(event, et, grab_threshold)
+		mb_return_value = _input_handle_mouse_button_event(event, et, HANDLE_RADIUS)
 
 	var mm_return_value := false
 	if event is InputEventMouseMotion:
-		mb_return_value = _input_handle_mouse_motion_event(event, et, grab_threshold)
+		mb_return_value = _input_handle_mouse_motion_event(event, et, HANDLE_RADIUS)
 
 	var return_value := key_return_value == true or mb_return_value == true or mm_return_value == true
 	_gui_update_info_panels()
