@@ -926,13 +926,8 @@ func draw_new_point_preview(overlay: Control) -> void:
 	var mouse: Vector2 = overlay.get_local_mouse_position()
 
 	if verts.size() > 0:
-		var a: Vector2
-		if shape.is_shape_closed() and verts.size() > 1:
-			a = t * verts[verts.size() - 2]
-			overlay.draw_line(mouse, t * verts[0], color,width * .5)
-		else:
-			a = t * verts[verts.size() - 1]
-		overlay.draw_line(mouse, a, color, width)
+		var a: Vector2 = t * verts[verts.size() - 1]
+		overlay.draw_dashed_line(mouse, a, color, width, width * 3)
 
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
 
