@@ -457,9 +457,7 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 		cached_shape_global_transform = shape.get_global_transform()
 
 	var et: Transform2D = get_et()
-	var grab_threshold: float = EditorInterface.get_editor_settings().get(
-		"editors/polygon_editor/point_grab_radius"
-	)
+	var grab_threshold := 13
 
 	var key_return_value := false
 	if event is InputEventKey:
@@ -733,6 +731,9 @@ func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
 	if not is_shape_valid() or not is_inside_tree():
 		return
 
+	if Input.is_key_pressed(KEY_H):
+		return
+
 	match current_mode:
 		MODE.CREATE_VERT:
 			draw_mode_edit_vert(overlay)
@@ -777,8 +778,8 @@ func draw_mode_edit_edge(overlay: Control, color_normal: Color, color_highlight:
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var verts: PackedVector2Array = shape.get_vertices()
 
+	draw_shape_outline(overlay, t, verts, Color.BLACK, 3)
 	draw_shape_outline(overlay, t, verts, color_normal)
-	draw_vert_handles(overlay, t, verts, false)
 
 	if current_action.type == ACTION_VERT.MOVE_VERT:
 		var edge_point_keys := current_action.keys
@@ -824,25 +825,18 @@ func draw_mode_edit_vert(overlay: Control, show_vert_handles: bool = true) -> vo
 	var t: Transform2D = get_et() * shape.get_global_transform()
 	var verts: PackedVector2Array = shape.get_vertices()
 	var points: PackedVector2Array = shape.get_tessellated_points()
-	draw_shape_outline(overlay, t, points, shape.modulate)
+	var color := Color(1, 1, 1, 0.6)
+	draw_shape_outline(overlay, t, points, color)
 	if show_vert_handles:
 		draw_vert_handles(overlay, t, verts, true)
 	if on_edge:
 		overlay.draw_texture(ICON_ADD_HANDLE, edge_point - ICON_ADD_HANDLE.get_size() * 0.5)
 
-	# Draw Highlighted Handle
-	if current_action.is_single_vert_selected():
-		var tex: Texture2D = ICON_HANDLE_SELECTED
-		overlay.draw_texture(
-			tex, t * verts[current_action.current_point_index(shape)] - tex.get_size() * 0.5
-		)
-
 
 func draw_shape_outline(
-	overlay: Control, t: Transform2D, points: PackedVector2Array, color: Color, width: float = 2.0
+	overlay: Control, t: Transform2D, points: PackedVector2Array, color: Color, width: float = 1.0
 ) -> void:
 	if points.size() >= 2:
-		overlay.draw_polyline(t * points, Color.BLACK, width * 1.5, true)
 		overlay.draw_polyline(t * points, color, width, true)
 
 
@@ -850,11 +844,18 @@ func draw_vert_handles(
 	overlay: Control, t: Transform2D, verts: PackedVector2Array, control_points: bool
 ) -> void:
 	var transformed_verts := t * verts
-	for i in verts.size():
+	for i in max(verts.size() - 1, 0):
 		# Draw Vert handles
 		var hp: Vector2 = transformed_verts[i]
-		var icon: Texture2D = ICON_HANDLE_BEZIER if (Input.is_key_pressed(KEY_SHIFT) and not current_mode == MODE.FREEHAND) else ICON_HANDLE
+		var icon: Texture2D = ICON_HANDLE
 		overlay.draw_texture(icon, hp - icon.get_size() * 0.5)
+
+	# Draw Highlighted Handle
+	if current_action.is_single_vert_selected():
+		var tex: Texture2D = ICON_HANDLE_SELECTED
+		overlay.draw_texture(
+			tex, t * verts[current_action.current_point_index(shape)] - tex.get_size() * 0.5
+		)
 
 	# Draw Width handle
 	var offset: float = WIDTH_HANDLE_OFFSET
@@ -885,26 +886,30 @@ func draw_vert_handles(
 		for i in verts.size():
 			var key: int = shape.get_point_key_at_index(i)
 			var hp: Vector2 = transformed_verts[i]
+			var is_bezier_vert: bool = false
 
 			# Drawing the point-out for the last point makes no sense, as there's no point ahead of it
 			if i < verts.size() - 1:
 				var pointout: Vector2 = t * (verts[i] + shape.get_point_out(key))
 				if hp != pointout:
 					_draw_control_point_line(overlay, hp, pointout, ICON_HANDLE_CONTROL)
+					is_bezier_vert = true
 			# Drawing the point-in for point 0 makes no sense, as there's no point behind it
 			if i > 0:
 				var pointin: Vector2 = t * (verts[i] + shape.get_point_in(key))
 				if hp != pointin:
 					_draw_control_point_line(overlay, hp, pointin, ICON_HANDLE_CONTROL)
+					is_bezier_vert = true
+
+			if is_bezier_vert:
+				overlay.draw_texture(ICON_HANDLE_BEZIER, hp - ICON_HANDLE_BEZIER.get_size() * 0.5)
 
 
 func _draw_control_point_line(c: Control, vert: Vector2, cp: Vector2, tex: Texture2D) -> void:
 	# Draw the line with a dark and light color to be visible on all backgrounds
-	var color_dark := Color(0, 0, 0, 0.3)
-	var color_light := Color(1, 1, 1, .5)
+	var color_light := Color(1, 1, 1, .6)
 	var width := 2.0
 	var normal := (cp - vert).normalized()
-	c.draw_line(vert + normal * 4 + Vector2.DOWN, cp + Vector2.DOWN, color_dark, width)
 	c.draw_line(vert + normal * 4, cp, color_light, width)
 	c.draw_texture(tex, cp - tex.get_size() * 0.5)
 
@@ -938,9 +943,8 @@ func draw_new_point_close_preview(overlay: Control) -> void:
 	var mouse: Vector2 = overlay.get_local_mouse_position()
 	var a: Vector2 = t * shape.get_point_position(closest_edge_keys[0])
 	var b: Vector2 = t * shape.get_point_position(closest_edge_keys[1])
-	overlay.draw_line(mouse, a, color, width)
-	color.a = 0.1
-	overlay.draw_line(mouse, b, color, width)
+	overlay.draw_dashed_line(mouse, a, color, width, width * 3)
+	overlay.draw_dashed_line(mouse, b, color, width, width * 3)
 	overlay.draw_texture(ICON_ADD_HANDLE, mouse - ICON_ADD_HANDLE.get_size() * 0.5)
 
 
@@ -1212,6 +1216,9 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 		if kb.keycode == KEY_ALT:
 			update_overlays()
 
+		if kb.keycode == KEY_H:
+			update_overlays()
+
 		return true
 	return false
 
@@ -1229,6 +1236,8 @@ func _is_valid_keyboard_scancode(kb: InputEventKey) -> bool:
 		KEY_ALT:
 			return true
 		KEY_CTRL:
+			return true
+		KEY_H:
 			return true
 	return false
 
