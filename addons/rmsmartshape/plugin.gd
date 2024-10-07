@@ -739,7 +739,7 @@ func _forward_canvas_draw_over_viewport(overlay: Control) -> void:
 			draw_mode_edit_vert(overlay)
 			if Input.is_key_pressed(KEY_ALT) and Input.is_key_pressed(KEY_SHIFT):
 				draw_new_shape_preview(overlay)
-			elif Input.is_key_pressed(KEY_ALT):
+			elif Input.is_key_pressed(KEY_ALT) or shape.is_shape_closed():
 				draw_new_point_close_preview(overlay)
 			else:
 				draw_new_point_preview(overlay)
@@ -844,7 +844,9 @@ func draw_vert_handles(
 	overlay: Control, t: Transform2D, verts: PackedVector2Array, control_points: bool
 ) -> void:
 	var transformed_verts := t * verts
-	for i in max(verts.size() - 1, 0):
+	var draw_vert_count: int = max(verts.size() - 1, 0) if shape.is_shape_closed() else verts.size()
+
+	for i in draw_vert_count:
 		# Draw Vert handles
 		var hp: Vector2 = transformed_verts[i]
 		var icon: Texture2D = ICON_HANDLE
@@ -1057,11 +1059,12 @@ func _input_handle_left_click(
 
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		gui_edge_info_panel.visible = false
-		var can_add_point: bool = Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT
-		var is_first_selected: bool = current_action.is_single_vert_selected() and current_action.current_point_key() == shape.get_point_key_at_index(0)
 
 		if _defer_mesh_updates:
 			shape.begin_update()
+
+		var can_add_point: bool = Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT
+		var is_first_selected: bool = current_action.is_single_vert_selected() and current_action.current_point_key() == shape.get_point_key_at_index(0)
 
 		# Close the shape if the first point is clicked
 		if can_add_point and is_first_selected and shape.can_close():
@@ -1074,7 +1077,7 @@ func _input_handle_left_click(
 			return true
 
 		# Any nearby control points to move?
-		if not Input.is_key_pressed(KEY_ALT):
+		if not Input.is_key_pressed(KEY_ALT) and current_mode != MODE.CREATE_VERT:
 			if _input_move_control_points(mb, vp_m_pos, grab_threshold):
 				return true
 
@@ -1109,7 +1112,7 @@ func _input_handle_left_click(
 				selection.clear()
 				selection.add_node(copy)
 				shape = copy
-			elif Input.is_key_pressed(KEY_ALT):
+			elif Input.is_key_pressed(KEY_ALT) or shape.is_shape_closed():
 				# Add point between start and end points of the closest edge
 				idx = shape.get_point_index(closest_edge_keys[1])
 			var add_point := ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates)
@@ -1539,7 +1542,7 @@ func _input_handle_mouse_motion_event(
 			on_edge = false
 			on_width_handle = true
 			current_action = select_verticies([mouse_over_width_handle], ACTION_VERT.NONE)
-		elif Input.is_key_pressed(KEY_ALT):
+		elif Input.is_key_pressed(KEY_ALT) or current_mode == MODE.CREATE_VERT:
 			_input_find_closest_edge_keys(mm)
 		else:
 			deselect_verts()
