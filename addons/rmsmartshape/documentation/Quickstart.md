@@ -4,6 +4,13 @@
 
 If you feel like your workflow with SmartShape2D is a little bit slow, try reading [Controls and Hotkeys](./Controls.md). The hotkeys may help you work with the tool more effectively.
 
+## Basic understanding
+SmartShapes work similarly to [tilesets](https://docs.godotengine.org/en/latest/tutorials/2d/using_tilesets.html) but are not bound to a grid. They can be used to create polygons and even organic shapes. This allows for level design akin to [Rayman Legends](https://youtu.be/WFu1utKAZ18?si=_33TaErpHSh-r732&t=916) (based on the UbiArt Framework).
+
+Each SmartShape is made up of multiple textures that are responsible for rendering different aspects like corners or edges:
+
+![Texture Breakdown](./imgs/smartshape_textures_breakdown.png)
+
 ## Creating a Shape
 
 <!-- TODO: Outdated, including screenshots. -->
