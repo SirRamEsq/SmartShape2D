@@ -1360,20 +1360,27 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 	# Add the overrides to the mappings to be rendered
 	for override in overrides:
 		index_maps.push_back(override)
-
-	# Might be able to introduce threading here
-	# One thread per index_map?
-	var threads: Array[Thread] = []
-	for index_map in index_maps:
-		var thread := Thread.new()
-		var args := [index_map, s_mat.render_offset, 0.0]
-		var priority := 2
-		thread.start(self._build_edge_with_material_thread_wrapper.bind(args), priority)
-		threads.push_back(thread)
-	for thread in threads:
-		var new_edge: SS2D_Edge = thread.wait_to_finish()
-		edges.push_back(new_edge)
-
+	
+	# Edge case for web so it doesn't use thread
+	if OS.get_name() != "Web":
+		var threads: Array[Thread] = []
+		for index_map in index_maps:
+			var thread := Thread.new()
+			var args := [index_map, s_mat.render_offset, 0.0]
+			var priority := 2
+			thread.start(self._build_edge_with_material_thread_wrapper.bind(args), priority)
+			threads.push_back(thread)
+		for thread in threads:
+			var new_edge: SS2D_Edge = thread.wait_to_finish()
+			edges.push_back(new_edge)
+		
+	else:
+		# Process index_maps sequentially for web exports (probably slower than thread)
+		for index_map in index_maps:
+			var args = [index_map, s_mat.render_offset, 0.0]
+			var new_edge: SS2D_Edge = _build_edge_with_material_thread_wrapper(args)
+			edges.push_back(new_edge)
+			
 	return edges
 
 
