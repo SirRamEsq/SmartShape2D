@@ -71,8 +71,12 @@ enum CollisionUpdateMode {
 
 ## @deprecated
 @export_range(1, 512) var curve_bake_interval: float = 20.0 :
-	set(value): _points.curve_bake_interval = value
-	get: return _points.curve_bake_interval
+	set(value):
+		SS2D_PluginFunctionality.show_point_array_deprecation_warning("curve_bake_interval")
+		_points.curve_bake_interval = value
+	get:
+		SS2D_PluginFunctionality.show_point_array_deprecation_warning("curve_bake_interval")
+		return _points.curve_bake_interval
 
 ## How to treat color data. See [enum SS2D_Edge.COLOR_ENCODING].
 @export var color_encoding: SS2D_Edge.COLOR_ENCODING = SS2D_Edge.COLOR_ENCODING.COLOR : set = set_color_encoding
@@ -112,16 +116,24 @@ enum CollisionUpdateMode {
 ## @deprecated
 @export_range(0, 8, 1)
 var tessellation_stages: int = 3 :
-	set(value): _points.tessellation_stages = value
-	get: return _points.tessellation_stages
+	set(value):
+		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_stages")
+		_points.tessellation_stages = value
+	get:
+		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_stages")
+		return _points.tessellation_stages
 
 ## Controls how many degrees the midpoint of a segment may deviate from the real
 ## curve, before the segment has to be subdivided.
 ## @deprecated
 @export_range(0.1, 16.0, 0.1, "or_greater", "or_lesser")
 var tessellation_tolerence: float = 6.0 :
-	set(value): _points.tessellation_tolerance = value
-	get: return _points.tessellation_tolerance
+	set(value):
+		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_tolerance")
+		_points.tessellation_tolerance = value
+	get:
+		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_tolerance")
+		return _points.tessellation_tolerance
 
 @export_group("Collision")
 
@@ -245,6 +257,7 @@ func set_curve(curve: Curve2D) -> void:
 ## Deprecated. Use get_point_array().get_curve() instead.
 ## @deprecated
 func get_curve() -> Curve2D:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_curve()")
 	return _points.get_curve()
 
 
@@ -296,18 +309,21 @@ func update_render_nodes() -> void:
 ## Deprecated. Use get_point_array().tessellation_stages instead.
 ## @deprecated
 func set_tessellation_stages(value: int) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_tessellation_stages()")
 	_points.tessellation_stages = value
 
 
 ## Deprecated. Use get_point_array().tessellation_tolerance instead.
 ## @deprecated
 func set_tessellation_tolerence(value: float) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_tessellation_tolerance()")
 	_points.tessellation_tolerance = value
 
 
 ## Deprecated. Use get_point_array().curve_bake_interval instead.
 ## @deprecated
 func set_curve_bake_interval(f: float) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_curve_bake_interval()")
 	_points.curve_bake_interval = f
 
 
@@ -345,24 +361,28 @@ func set_material_overrides(dict: Dictionary) -> void:
 ## Deprecated. Use get_point_array().get_vertices() instead.
 ## @deprecated
 func get_vertices() -> PackedVector2Array:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_vertices()")
 	return _points.get_vertices()
 
 
 ## Deprecated. Use get_point_array().get_tessellated_points() instead.
 ## @deprecated
 func get_tessellated_points() -> PackedVector2Array:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_tessellated_points()")
 	return _points.get_tessellated_points()
 
 
 ## Deprecated. Use get_point_array().invert_point_order() instead.
 ## @deprecated
 func invert_point_order() -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("invert_point_order()")
 	_points.invert_point_order()
 
 
 ## Deprecated. Use get_point_array().clear() instead.
 ## @deprecated
 func clear_points() -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("clear_points()")
 	_points.clear()
 
 
@@ -394,6 +414,7 @@ func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = 
 ## Deprecated. Use get_point_array().add_point() instead.
 ## @deprecated
 func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("add_point()")
 	return _points.add_point(pos, adjust_add_point_index(index), key)
 
 
@@ -461,30 +482,35 @@ func _has_closing_point() -> bool:
 ## Deprecated. Use get_point_array().begin_update() instead.
 ## @deprecated
 func begin_update() -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("begin_update()")
 	_points.begin_update()
 
 
 ## Deprecated. Use get_point_array().end_update() instead.
 ## @deprecated
 func end_update() -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("end_update()")
 	_points.end_update()
 
 
 ## Deprecated. Use get_point_array().is_updating() instead.
 ## @deprecated
 func is_updating() -> bool:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("is_updating()")
 	return _points.is_updating()
 
 
 ## Deprecated. Use get_point_array().get_next_key() instead.
 ## @deprecated
 func get_next_key() -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_next_key()")
 	return _points.get_next_key()
 
 
 ## Deprecated. Use get_point_array().reserve_key() instead.
 ## @deprecated
 func reserve_key() -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("reserve_key()")
 	return _points.reserve_key()
 
 
@@ -500,24 +526,28 @@ func _is_array_index_in_range(a: Array, i: int) -> bool:
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func is_index_in_range(idx: int) -> bool:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("is_index_in_range()")
 	return _points.is_index_in_range(idx)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func set_point_position(key: int, pos: Vector2) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_position()")
 	_points.set_point_position(key, pos)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func remove_point(key: int) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("remove_point()")
 	_points.remove_point(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func remove_point_at_index(idx: int) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("remove_point_at_index()")
 	_points.remove_point_at_index(idx)
 
 
@@ -545,54 +575,63 @@ func clone(clone_point_array: bool = true) -> SS2D_Shape:
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func has_point(key: int) -> bool:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("has_point()")
 	return _points.has_point(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_all_point_keys() -> PackedInt32Array:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_all_point_keys()")
 	return _points.get_all_point_keys()
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_key_at_index(idx: int) -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_key_at_index()")
 	return _points.get_point_key_at_index(idx)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_at_index(idx: int) -> SS2D_Point:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_at_index()")
 	return _points.get_point_at_index(idx)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_index(key: int) -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_index()")
 	return _points.get_point_index(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func set_point_in(key: int, v: Vector2) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_in()")
 	_points.set_point_in(key, v)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func set_point_out(key: int, v: Vector2) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_out()")
 	_points.set_point_out(key, v)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_in(key: int) -> Vector2:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_in()")
 	return _points.get_point_in(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_out(key: int) -> Vector2:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_out()")
 	return _points.get_point_out(key)
 
 
@@ -615,18 +654,21 @@ func get_closest_offset(to_point: Vector2) -> float:
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func disable_constraints() -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("disable_constraints()")
 	_points.disable_constraints()
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func enable_constraints() -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("enable_constraints()")
 	_points.enable_constraints()
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_count() -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_count()")
 	return _points.get_point_count()
 
 
@@ -637,84 +679,98 @@ func get_edges() -> Array[SS2D_Edge]:
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_position(key: int) -> Vector2:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_position()")
 	return _points.get_point_position(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point(key: int) -> SS2D_Point:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point()")
 	return _points.get_point(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_constraints(key: int) -> Dictionary:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_constraints()")
 	return _points.get_point_constraints(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_constraint(key1: int, key2: int) -> SS2D_Point_Array.CONSTRAINT:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_constraint()")
 	return _points.get_point_constraint(key1, key2)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func set_constraint(key1: int, key2: int, c: SS2D_Point_Array.CONSTRAINT) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_constraint()")
 	_points.set_constraint(key1, key2, c)
 
 
-## Deprecated. Use respective function in get_point_array() instead.
+## Deprecated.
 ## @deprecated
 func set_point(key: int, value: SS2D_Point) -> void:
+	SS2D_PluginFunctionality.show_deprecation_warning("set_point()", "")
 	_points.set_point(key, value)
 
 
 ## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
 ## @deprecated
 func set_point_width(key: int, w: float) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_width()")
 	_points.get_point_properties(key).width = w
 
 
 ## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
 ## @deprecated
 func get_point_width(key: int) -> float:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_width()")
 	return _points.get_point_properties(key).width
 
 
 ## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
 ## @deprecated
 func set_point_texture_index(key: int, tex_idx: int) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_index()")
 	_points.get_point_properties(key).texture_idx = tex_idx
 
 
 ## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
 ## @deprecated
 func get_point_texture_index(key: int) -> int:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_index()")
 	return _points.get_point_properties(key).texture_idx
 
 
 ## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
 ## @deprecated
 func set_point_texture_flip(key: int, flip: bool) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_flip()")
 	_points.get_point_properties(key).flip = flip
 
 
 ## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
 ## @deprecated
 func get_point_texture_flip(key: int) -> bool:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_flip()")
 	return _points.get_point_properties(key).flip
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func get_point_properties(key: int) -> SS2D_VertexProperties:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_properties()")
 	return _points.get_point_properties(key)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
 ## @deprecated
 func set_point_properties(key: int, properties: SS2D_VertexProperties) -> void:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_properties()")
 	_points.set_point_properties(key, properties)
 
 

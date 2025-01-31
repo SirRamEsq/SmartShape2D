@@ -165,6 +165,7 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 ## Deprecated. There is no reason to use this function, points can be modified directly.
 ## @deprecated
 func set_point(key: int, value: SS2D_Point) -> void:
+	SS2D_PluginFunctionality.show_deprecation_warning("set_point()", "")
 	if has_point(key):
 		# FIXME: Should there be a call to remove_constraints() like in remove_point()? Because
 		# we're technically deleting a point and replacing it with another.

@@ -130,3 +130,13 @@ static func snap_position(
 	return pos_global_snapped
 
 
+static func show_deprecation_warning(what: String, new_location: String) -> void:
+	if new_location:
+		push_warning(what, " is deprecated. Use ", new_location, " instead.")
+	else:
+		push_warning(what, " is deprecated and will be removed in a future version.")
+
+
+static func show_point_array_deprecation_warning(what: String) -> void:
+	show_deprecation_warning(what, "shape.get_point_array()." + what)
+
