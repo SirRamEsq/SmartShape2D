@@ -1487,6 +1487,7 @@ func clear_cached_data() -> void:
 func _on_dirty_update() -> void:
 	if _dirty:
 		force_update()
+		on_dirty_update.emit()
 
 
 func force_update() -> void:
