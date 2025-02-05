@@ -29,8 +29,6 @@ signal points_modified
 signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape)
 
-enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
-
 enum CollisionGenerationMethod {
 	## Uses the shape curve to generate a collision polygon. Usually this method is accurate enough.
 	## For open shapes, a precise method will be used instead, as the fast method is not suitable.
@@ -72,10 +70,10 @@ enum CollisionUpdateMode {
 ## @deprecated
 @export_range(1, 512) var curve_bake_interval: float = 20.0 :
 	set(value):
-		SS2D_PluginFunctionality.show_point_array_deprecation_warning("curve_bake_interval")
-		_points.curve_bake_interval = value
+		if value != _points.curve_bake_interval:
+			SS2D_PluginFunctionality.show_point_array_deprecation_warning("curve_bake_interval")
+			_points.curve_bake_interval = value
 	get:
-		SS2D_PluginFunctionality.show_point_array_deprecation_warning("curve_bake_interval")
 		return _points.curve_bake_interval
 
 ## How to treat color data. See [enum SS2D_Edge.COLOR_ENCODING].
@@ -117,10 +115,10 @@ enum CollisionUpdateMode {
 @export_range(0, 8, 1)
 var tessellation_stages: int = 3 :
 	set(value):
-		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_stages")
-		_points.tessellation_stages = value
+		if value != _points.tessellation_stages:
+			SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_stages")
+			_points.tessellation_stages = value
 	get:
-		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_stages")
 		return _points.tessellation_stages
 
 ## Controls how many degrees the midpoint of a segment may deviate from the real
@@ -129,10 +127,10 @@ var tessellation_stages: int = 3 :
 @export_range(0.1, 16.0, 0.1, "or_greater", "or_lesser")
 var tessellation_tolerence: float = 6.0 :
 	set(value):
-		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_tolerance")
-		_points.tessellation_tolerance = value
+		if value != _points.tessellation_tolerance:
+			SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_tolerance")
+			_points.tessellation_tolerance = value
 	get:
-		SS2D_PluginFunctionality.show_point_array_deprecation_warning("tesselation_tolerance")
 		return _points.tessellation_tolerance
 
 @export_group("Collision")
@@ -206,7 +204,7 @@ func _refresh_action(value: String) -> void:
 
 func _make_unique_action(value: String) -> void:
 	if value.length() > 0:
-		emit_signal("make_unique_pressed", self)
+		make_unique_pressed.emit(self)
 
 
 func set_flip_edges(b: bool) -> void:
@@ -243,15 +241,11 @@ func set_collision_offset(s: float) -> void:
 	notify_property_list_changed()
 
 
-# FIXME: Only used by unit test.
+## Deprecated. Use get_point_array().set_from_curve() instead.
+## @deprecated
 func set_curve(curve: Curve2D) -> void:
-	_points.begin_update()
-	_points.clear()
-
-	for i in curve.get_point_count():
-		_points.add_point(curve.get_point_position(i))
-
-	_points.end_update()
+	SS2D_PluginFunctionality.show_deprecation_warning("set_curve()", "get_point_array().set_from_curve()")
+	_points.set_from_curve(curve)
 
 
 ## Deprecated. Use get_point_array().get_curve() instead.
@@ -382,33 +376,22 @@ func invert_point_order() -> void:
 ## Deprecated. Use get_point_array().clear() instead.
 ## @deprecated
 func clear_points() -> void:
-	SS2D_PluginFunctionality.show_point_array_deprecation_warning("clear_points()")
+	SS2D_PluginFunctionality.show_deprecation_warning("clear_points()", "shape.get_point_array().clear()")
 	_points.clear()
 
 
+## Deprecated. This is now integrated in get_point_array().add_point().
+## @deprecated
 func adjust_add_point_index(index: int) -> int:
-	# Don't allow a point to be added after the last point of the closed shape or before the first
-	if _has_closing_point():
-		if index < 0 or (index > get_point_count() - 1):
-			index = maxi(get_point_count() - 1, 0)
-		if index < 1:
-			index = 1
-	return index
+	SS2D_PluginFunctionality.show_deprecation_warning("adjust_add_point_index()", "")
+	return _points._adjust_add_point_index(index)
 
 
-# FIXME: Only unit tests use this.
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> PackedInt32Array:
-	starting_index = adjust_add_point_index(starting_index)
-	var keys := PackedInt32Array()
-	_points.begin_update()
-	for i in range(0, verts.size(), 1):
-		var v: Vector2 = verts[i]
-		if starting_index != -1:
-			keys.push_back(_points.add_point(v, starting_index + i, key))
-		else:
-			keys.push_back(_points.add_point(v, starting_index, key))
-	_points.end_update()
-	return keys
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("add_points()")
+	return _points.add_points(verts, starting_index, key)
 
 
 ## Deprecated. Use get_point_array().add_point() instead.
@@ -418,65 +401,39 @@ func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
 	return _points.add_point(pos, adjust_add_point_index(index), key)
 
 
-## Is this shape closed, i.e. last point is constrained to the first point.
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func is_shape_closed() -> bool:
-	if _points.get_point_count() < 4:
-		return false
-	return _has_closing_point()
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("is_shape_closed()")
+	return _points.is_shape_closed()
 
 
-## Is this shape not yet closed but should be.[br]
-## Returns [code]false[/code] for open shapes.[br]
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func can_close() -> bool:
-	return _points.get_point_count() > 2 and _has_closing_point() == false
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("can_close()")
+	return _points.can_close()
 
 
-## Will mutate the _points to ensure this is a closed_shape.[br]
-## Last point will be constrained to first point.[br]
-## Returns key of a point used to close the shape.[br]
-## [param key] suggests which key to use instead of auto-generated.[br]
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func close_shape(key: int = -1) -> int:
-	if not can_close():
-		return -1
-
-	var key_first: int = _points.get_point_key_at_index(0)
-	var key_last: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
-
-	if get_point_position(key_first) != get_point_position(key_last):
-		key_last = _points.add_point(_points.get_point_position(key_first), -1, key)
-	_points.set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
-
-	return key_last
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("close_shape()")
+	return _points.close_shape(key)
 
 
-## Open shape by removing edge that starts at specified point index.
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func open_shape_at_edge(edge_start_idx: int) -> void:
-	var last_idx: int = get_point_count() - 1
-	if is_shape_closed():
-		remove_point(get_point_key_at_index(last_idx))
-		if edge_start_idx < last_idx:
-			for i in range(edge_start_idx + 1):
-				_points.set_point_index(_points.get_point_key_at_index(0), last_idx)
-	else:
-		push_warning("Can't open a shape that is not a closed shape.")
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("open_shape_at_edge()")
+	_points.open_shape_at_edge(edge_start_idx)
 
 
-## Undo shape opening done by [method open_shape_at_edge].
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func undo_open_shape_at_edge(edge_start_idx: int, closing_index: int) -> void:
-	var last_idx := get_point_count() - 1
-	if edge_start_idx < last_idx:
-		for i in range(edge_start_idx + 1):
-			_points.set_point_index(_points.get_point_key_at_index(last_idx), 0)
-	if can_close():
-		close_shape(closing_index)
-
-
-func _has_closing_point() -> bool:
-	if _points.get_point_count() < 2:
-		return false
-	var key1: int = _points.get_point_key_at_index(0)
-	var key2: int = _points.get_point_key_at_index(_points.get_point_count() - 1)
-	return _points.get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("undo_open_shape_at_edge()")
+	_points.undo_open_shape_at_edge(edge_start_idx, closing_index)
 
 
 ## Deprecated. Use get_point_array().begin_update() instead.
@@ -635,20 +592,32 @@ func get_point_out(key: int) -> Vector2:
 	return _points.get_point_out(key)
 
 
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func get_closest_point(to_point: Vector2) -> Vector2:
-	return _points.get_curve().get_closest_point(to_point)
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_closest_point()")
+	return _points.get_closest_point(to_point)
 
 
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func get_closest_point_straight_edge(to_point: Vector2) -> Vector2:
-	return _points.get_curve_no_control_points().get_closest_point(to_point)
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_closest_point_straight_edge()")
+	return _points.get_closest_point_straight_edge(to_point)
 
 
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func get_closest_offset_straight_edge(to_point: Vector2) -> float:
-	return _points.get_curve_no_control_points().get_closest_offset(to_point)
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_closest_offset_straight_edge()")
+	return _points.get_closest_offset_straight_edge(to_point)
 
 
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func get_closest_offset(to_point: Vector2) -> float:
-	return _points.get_curve().get_closest_offset(to_point)
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_closest_offset()")
+	return _points.get_closest_offset(to_point)
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
@@ -904,8 +873,8 @@ func _exit_tree() -> void:
 
 
 func should_flip_edges() -> bool:
-	if is_shape_closed():
-		return (are_points_clockwise() == flip_edges)
+	if _points.is_shape_closed():
+		return (_points.are_points_clockwise() == flip_edges)
 	else:
 		return flip_edges
 
@@ -916,13 +885,14 @@ func _generate_collision_points_precise() -> PackedVector2Array:
 	if num_points < 2:
 		return points
 
-	var csize: float = 1.0 if is_shape_closed() else collision_size
+	var is_closed := _points.is_shape_closed()
+	var csize: float = 1.0 if is_closed else collision_size
 	var indices := PackedInt32Array(range(num_points))
 	var edge_data := SS2D_IndexMap.new(indices, null)
 	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, csize)
 	_weld_quad_array(edge.quads, false)
 
-	if is_shape_closed():
+	if is_closed:
 		var first_quad: SS2D_Quad = edge.quads[0]
 		var last_quad: SS2D_Quad = edge.quads.back()
 		SS2D_Shape.weld_quads(last_quad, first_quad)
@@ -937,7 +907,7 @@ func _generate_collision_points_precise() -> PackedVector2Array:
 			elif quad.corner == SS2D_Quad.CORNER.INNER:
 				pass
 
-		if not is_shape_closed():
+		if not is_closed:
 			# Right Edge (point d, the first or final quad will never be a corner)
 			points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
 
@@ -970,7 +940,7 @@ func bake_collision() -> void:
 
 	var generated_points: PackedVector2Array
 
-	if collision_generation_method == CollisionGenerationMethod.Fast and is_shape_closed():
+	if collision_generation_method == CollisionGenerationMethod.Fast and _points.is_shape_closed():
 		generated_points = _generate_collision_points_fast()
 	else:
 		generated_points = _generate_collision_points_precise()
@@ -1003,7 +973,7 @@ func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
 
 	var produced_fill_mesh := false
 	for e in edges:
-		if not produced_fill_mesh and is_shape_closed():
+		if not produced_fill_mesh and _points.is_shape_closed():
 			if e.z_index > shape_material.fill_texture_z_index:
 				# Produce Fill Meshes
 				for m in _build_fill_mesh(_points.get_tessellated_points(), shape_material):
@@ -1013,7 +983,7 @@ func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
 		# Produce edge Meshes
 		for m in e.get_meshes(color_encoding):
 			meshes.push_back(m)
-	if not produced_fill_mesh and is_shape_closed():
+	if not produced_fill_mesh and _points.is_shape_closed():
 		for m in _build_fill_mesh(_points.get_tessellated_points(), shape_material):
 			meshes.push_back(m)
 		produced_fill_mesh = true
@@ -1125,31 +1095,18 @@ static func on_segment(p: Vector2, q: Vector2, r: Vector2) -> bool:
 	)
 
 
-static func get_points_orientation(points: PackedVector2Array) -> ORIENTATION:
-	var point_count: int = points.size()
-	if point_count < 3:
-		return ORIENTATION.COLINEAR
-
-	var sum := 0.0
-	for i in point_count:
-		var pt := points[i]
-		var pt2 := points[(i + 1) % point_count]
-		sum += pt.cross(pt2)
-
-	# Colinear
-	if sum == 0.0:
-		return ORIENTATION.COLINEAR
-
-	# Clockwise
-	if sum > 0.0:
-		return ORIENTATION.CLOCKWISE
-	return ORIENTATION.C_CLOCKWISE
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
+static func get_points_orientation(points: PackedVector2Array) -> SS2D_Point_Array.ORIENTATION:
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_points_orientation()")
+	return SS2D_Point_Array.get_points_orientation(points)
 
 
+## Deprecated. Use respective function in get_point_array() instead.
+## @deprecated
 func are_points_clockwise() -> bool:
-	var points: PackedVector2Array = _points.get_tessellated_points()
-	var orient: ORIENTATION = SS2D_Shape.get_points_orientation(points)
-	return orient == ORIENTATION.CLOCKWISE
+	SS2D_PluginFunctionality.show_point_array_deprecation_warning("are_points_clockwise()")
+	return _points.are_points_clockwise()
 
 
 func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2) -> void:
@@ -1366,7 +1323,7 @@ func _weld_quad_array(
 
 
 func _merge_index_maps(imaps: Array[SS2D_IndexMap], verts: PackedVector2Array) -> Array[SS2D_IndexMap]:
-	if not is_shape_closed():
+	if not _points.is_shape_closed():
 		return imaps
 	# See if any edges have both the first (0) and last idx (size)
 	# Merge them into one if so
@@ -1421,7 +1378,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 	# Add the overrides to the mappings to be rendered
 	for override in overrides:
 		index_maps.push_back(override)
-	
+
 	# Edge case for web so it doesn't use thread
 	if OS.get_name() != "Web":
 		var threads: Array[Thread] = []
@@ -1434,14 +1391,14 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 		for thread in threads:
 			var new_edge: SS2D_Edge = thread.wait_to_finish()
 			edges.push_back(new_edge)
-		
+
 	else:
 		# Process index_maps sequentially for web exports (probably slower than thread)
 		for index_map in index_maps:
 			var args = [index_map, s_mat.render_offset, 0.0]
 			var new_edge: SS2D_Edge = _build_edge_with_material_thread_wrapper(args)
 			edges.push_back(new_edge)
-			
+
 	return edges
 
 
@@ -1466,7 +1423,7 @@ static func get_meta_material_index_mapping_for_overrides(
 func _get_meta_material_index_mapping(
 	s_material: SS2D_Material_Shape, verts: PackedVector2Array
 ) -> Array[SS2D_IndexMap]:
-	return SS2D_Shape.get_meta_material_index_mapping(s_material, verts, is_shape_closed())
+	return SS2D_Shape.get_meta_material_index_mapping(s_material, verts, _points.is_shape_closed())
 
 
 static func get_meta_material_index_mapping(
@@ -1551,7 +1508,7 @@ func force_update() -> void:
 	clear_cached_data()
 
 	bake_collision()
-	if get_point_count() >= 2:
+	if _points.get_point_count() >= 2:
 		cache_edges()
 		cache_meshes()
 	queue_redraw()
@@ -1671,7 +1628,7 @@ func _imap_contains_all_points(imap: SS2D_IndexMap, verts: PackedVector2Array) -
 
 
 func _is_edge_contiguous(imap: SS2D_IndexMap, verts: PackedVector2Array) -> bool:
-	if not is_shape_closed():
+	if not _points.is_shape_closed():
 		return false
 	return _imap_contains_all_points(imap, verts)
 
@@ -1747,11 +1704,12 @@ func _build_edge_with_material(
 				break
 
 		var vert_idx: int = _points.get_tesselation_vertex_mapping().tess_to_vertex_index(tess_idx)
-		var vert_key: int = get_point_key_at_index(vert_idx)
+		var vert_key: int = _points.get_point_key_at_index(vert_idx)
+		var vert_props := _points.get_point_properties(vert_key)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
 		var pt_prev: Vector2 = verts_t[tess_idx_prev]
-		var flip_x: bool = get_point_texture_flip(vert_key)
+		var flip_x: bool = vert_props.flip
 
 		var width_scale: float = _get_width_for_tessellated_point(verts, tess_idx)
 		var is_first_point: bool = (vert_idx == first_idx) and not is_edge_contiguous
@@ -1766,7 +1724,7 @@ func _build_edge_with_material(
 			if edge_material.randomize_texture:
 				texture_idx = randi() % edge_material.textures.size()
 			else :
-				texture_idx = get_point_texture_index(vert_key)
+				texture_idx = vert_props.texture_idx
 			tex = edge_material.get_texture(texture_idx)
 			tex_size = tex.get_size()
 			fitmode = edge_material.fit_mode

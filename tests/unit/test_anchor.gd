@@ -21,7 +21,7 @@ func test_setters() -> void:
 	assert_eq(anchor.shape, null)
 
 	for shape in shapes:
-		var points := shape.get_vertices()
+		var points := shape.get_point_array().get_vertices()
 
 		var valid_path := anchor.get_path_to(shape)
 		# Check shape is sibling node
@@ -52,22 +52,24 @@ func test_setters() -> void:
 
 func generate_closed_shape() -> SS2D_Shape:
 	var shape := SS2D_Shape.new()
+	var pa := shape.get_point_array()
 	shape.name = "Closed"
 	add_child_autofree(shape)
 	var points := generate_points()
-	shape.add_points(points)
-	shape.close_shape()
-	assert_eq(shape.get_point_count(), points.size() + 1)
+	pa.add_points(points)
+	pa.close_shape()
+	assert_eq(pa.get_point_count(), points.size() + 1)
 	return shape
 
 
 func generate_open_shape() -> SS2D_Shape:
 	var shape := SS2D_Shape.new()
+	var pa := shape.get_point_array()
 	shape.name = "Open"
 	add_child_autofree(shape)
 	var points := generate_points()
-	shape.add_points(points)
-	assert_eq(shape.get_point_count(), points.size())
+	pa.add_points(points)
+	assert_eq(pa.get_point_count(), points.size())
 	return shape
 
 

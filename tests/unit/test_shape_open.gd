@@ -40,47 +40,49 @@ func test_on_segment() -> void:
 
 func test_are_points_clockwise() -> void:
 	var shape := SS2D_Shape.new()
+	var pa := shape.get_point_array()
 	add_child_autofree(shape)
 	var points_clockwise := [Vector2(-10, -10), Vector2(10, -10), Vector2(10, 10), Vector2(-10, 10)]
 	var points_c_clockwise := points_clockwise.duplicate()
 	points_c_clockwise.reverse()
 
-	shape.add_points(points_clockwise)
+	pa.add_points(points_clockwise)
 
-	assert_true(shape.are_points_clockwise())
+	assert_true(pa.are_points_clockwise())
 
-	shape.clear_points()
-	shape.add_points(points_c_clockwise)
-	assert_false(shape.are_points_clockwise())
+	pa.clear()
+	pa.add_points(points_c_clockwise)
+	assert_false(pa.are_points_clockwise())
 
 
 func test_invert_point_order() -> void:
 	var shape := SS2D_Shape.new()
 	add_child_autofree(shape)
+	var pa := shape.get_point_array()
 	var points := get_clockwise_points()
 	var size := points.size()
 	var last_idx := size - 1
-	var keys := shape.add_points(points)
-	shape.set_point_width(keys[0], 5.0)
-	assert_eq(points[0], shape.get_point_at_index(0).position)
-	assert_eq(points[last_idx], shape.get_point_at_index(last_idx).position)
+	var keys := pa.add_points(points)
+	pa.get_point_properties(keys[0]).width = 5.0
+	assert_eq(points[0], pa.get_point_at_index(0).position)
+	assert_eq(points[last_idx], pa.get_point_at_index(last_idx).position)
 
-	assert_eq(1.0, shape.get_point_at_index(last_idx).properties.width)
-	assert_eq(5.0, shape.get_point_at_index(0).properties.width)
+	assert_eq(1.0, pa.get_point_at_index(last_idx).properties.width)
+	assert_eq(5.0, pa.get_point_at_index(0).properties.width)
 
-	shape.invert_point_order()
+	pa.invert_point_order()
 
-	assert_eq(5.0, shape.get_point_at_index(last_idx).properties.width)
-	assert_eq(1.0, shape.get_point_at_index(0).properties.width)
+	assert_eq(5.0, pa.get_point_at_index(last_idx).properties.width)
+	assert_eq(1.0, pa.get_point_at_index(0).properties.width)
 
-	assert_eq(points[0], shape.get_point_at_index(last_idx).position)
-	assert_eq(points[last_idx], shape.get_point_at_index(0).position)
+	assert_eq(points[0], pa.get_point_at_index(last_idx).position)
+	assert_eq(points[last_idx], pa.get_point_at_index(0).position)
 
-	assert_eq(points[1], shape.get_point_at_index(last_idx - 1).position)
-	assert_eq(points[last_idx - 1], shape.get_point_at_index(1).position)
+	assert_eq(points[1], pa.get_point_at_index(last_idx - 1).position)
+	assert_eq(points[last_idx - 1], pa.get_point_at_index(1).position)
 
-	assert_eq(points[2], shape.get_point_at_index(last_idx - 2).position)
-	assert_eq(points[last_idx - 2], shape.get_point_at_index(2).position)
+	assert_eq(points[2], pa.get_point_at_index(last_idx - 2).position)
+	assert_eq(points[last_idx - 2], pa.get_point_at_index(2).position)
 
 
 # TODO Fix this test and flesh it out
@@ -88,7 +90,7 @@ func test_invert_point_order() -> void:
 #var shape = SS2D_Shape_Open.new()
 #add_child_autofree(shape)
 #var points = get_clockwise_points()
-#shape.add_points(points)
+#shape.get_point_array().add_points(points)
 #
 #shape.set_point_width(0, 5.0)
 #shape.set_point_width(2, 3.0)
@@ -118,9 +120,10 @@ func test_invert_point_order() -> void:
 
 func test_get_edge_meta_materials_one() -> void:
 	var shape := SS2D_Shape.new()
-	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
+	var pa := shape.get_point_array()
+	assert_eq(pa.get_material_overrides().size(), 0)
 	add_child_autofree(shape)
-	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
+	assert_eq(pa.get_material_overrides().size(), 0)
 
 	var edge_mat := SS2D_Material_Edge.new()
 	edge_mat.textures = Array([TEST_TEXTURE], TYPE_OBJECT, "Texture2D", null)
@@ -140,8 +143,8 @@ func test_get_edge_meta_materials_one() -> void:
 		assert_eq(e.edge_material, edge_mat)
 
 	var points := get_clockwise_points()
-	shape.add_points(points)
-	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
+	pa.add_points(points)
+	assert_eq(pa.get_material_overrides().size(), 0)
 	var mappings := SS2D_Shape.get_meta_material_index_mapping(s_m, points, false)
 
 	# Should be 1 edge, as the normal range specified covers the full 360.0 degrees
@@ -195,10 +198,10 @@ func test_get_edge_meta_materials_many() -> void:
 			assert_eq(e.edge_material, edge_materials[i])
 
 	var points := get_square_points()
-	shape.add_points(points)
+	shape.get_point_array().add_points(points)
 
 	assert_eq(shape.get_point_array().get_material_overrides().size(), 0)
-	assert_eq(shape.get_vertices().size(), 6)
+	assert_eq(shape.get_point_array().get_vertices().size(), 6)
 	assert_eq(s_m.get_all_edge_meta_materials().size(), edge_materials_meta.size())
 	var mappings := SS2D_Shape.get_meta_material_index_mapping(s_m, points, false)
 	assert_eq(mappings.size(), edge_materials_count, "Expecting %s materials" % edge_materials_count)
@@ -252,26 +255,27 @@ func test_build_quad_from_point_width(width: float = use_parameters(width_params
 
 func test_get_width_for_tessellated_point() -> void:
 	var shape := SS2D_Shape.new()
+	var pa := shape.get_point_array()
 	add_child_autofree(shape)
 	var points := get_clockwise_points()
-	shape.add_points(points)
+	pa.add_points(points)
 	var idx1 := 1
 	var idx2 := 2
-	var k1 := shape.get_point_key_at_index(idx1)
-	var k2 := shape.get_point_key_at_index(idx2)
+	var k1 := pa.get_point_key_at_index(idx1)
+	var k2 := pa.get_point_key_at_index(idx2)
 	var w1 := 5.3
 	var w2 := 3.15
 	var w_average := (w1 + w2) / 2.0
-	shape.set_point_width(k1, w1)
-	shape.set_point_width(k2, w2)
+	pa.get_point_properties(k1).width = w1
+	pa.get_point_properties(k2).width = w2
 	var point_in := Vector2(-16, 0)
 	var point_out := point_in * -1
-	shape.set_point_in(k1, point_in)
-	shape.set_point_out(k1, point_out)
-	shape.set_point_in(k2, point_in)
-	shape.set_point_out(k2, point_out)
+	pa.set_point_in(k1, point_in)
+	pa.set_point_out(k1, point_out)
+	pa.set_point_in(k2, point_in)
+	pa.set_point_out(k2, point_out)
 
-	var tmapping := shape.get_point_array().get_tesselation_vertex_mapping()
+	var tmapping := pa.get_tesselation_vertex_mapping()
 	var t_idx_1 := tmapping.vertex_to_tess_indices(idx1)[0]
 	var t_idx_2 := tmapping.vertex_to_tess_indices(idx2)[0]
 	var test_t_idx := int(floor((t_idx_1 + t_idx_2) / 2.0))

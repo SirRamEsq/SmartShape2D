@@ -3,6 +3,7 @@ extends Resource
 class_name SS2D_Point_Array
 
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
+enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
 # Maps a key to each point: Dict[int, SS2D_Point]
 @export var _points: Dictionary = {} : set = _set_points
@@ -98,6 +99,17 @@ func clone(deep: bool = false) -> SS2D_Point_Array:
 	return copy
 
 
+## Clears all existing points and recreates the shape from the given curve.
+func set_from_curve(curve: Curve2D) -> void:
+	begin_update()
+	clear()
+
+	for i in curve.get_point_count():
+		add_point(curve.get_point_position(i))
+
+	end_update()
+
+
 ## Called by Godot when loading from a saved scene
 func _set_points(ps: Dictionary) -> void:
 	_points = ps
@@ -145,9 +157,11 @@ func is_key_valid(k: int) -> bool:
 	return k >= 0 and not _points.has(k)
 
 
-## Add a point and insert it at the given index or at the end by default.
+## Add a point and insert it at the given index or at the end by default, regardless whether the
+## shape is closed or not.
+## See also add_point().
 ## Returns the key of the added point.
-func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
+func add_point_direct(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 #	print("Add Point  ::  ", point, " | idx: ", idx, " | key: ", use_key, " |")
 	if use_key == -1 or not is_key_valid(use_key):
 		use_key = reserve_key()
@@ -160,6 +174,39 @@ func add_point(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 		set_point_index(use_key, idx)
 	_changed()
 	return use_key
+
+
+## Add a point and insert it at the given index or at the end by default.
+## If the shape is closed, the point will always be created before the last and after the first point.
+## If explicitly you do not want this, use add_point_direct() instead.
+## Returns the key of the added point.
+func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
+	return add_point_direct(pos, _adjust_add_point_index(index), key)
+
+
+## Don't allow a point to be added after the last point of the closed shape or before the first.
+func _adjust_add_point_index(index: int) -> int:
+	if is_shape_closed():
+		if index < 0 or (index > get_point_count() - 1):
+			index = maxi(get_point_count() - 1, 0)
+		if index < 1:
+			index = 1
+	return index
+
+
+# FIXME: Only unit tests use this.
+func add_points(verts: PackedVector2Array, starting_index: int = -1, key: int = -1) -> PackedInt32Array:
+	starting_index = _adjust_add_point_index(starting_index)
+	var keys := PackedInt32Array()
+	begin_update()
+	for i in range(0, verts.size(), 1):
+		var v: Vector2 = verts[i]
+		if starting_index != -1:
+			keys.push_back(add_point_direct(v, starting_index + i, key))
+		else:
+			keys.push_back(add_point_direct(v, starting_index, key))
+	end_update()
+	return keys
 
 
 ## Deprecated. There is no reason to use this function, points can be modified directly.
@@ -224,6 +271,31 @@ func get_point_index(key: int) -> int:
 				return idx
 			idx += 1
 	return -1
+
+
+static func get_points_orientation(points: PackedVector2Array) -> ORIENTATION:
+	var point_count: int = points.size()
+	if point_count < 3:
+		return ORIENTATION.COLINEAR
+
+	var sum := 0.0
+	for i in point_count:
+		var pt := points[i]
+		var pt2 := points[(i + 1) % point_count]
+		sum += pt.cross(pt2)
+
+	# Colinear
+	if sum == 0.0:
+		return ORIENTATION.COLINEAR
+
+	# Clockwise
+	if sum > 0.0:
+		return ORIENTATION.CLOCKWISE
+	return ORIENTATION.C_CLOCKWISE
+
+
+func are_points_clockwise() -> bool:
+	return get_points_orientation(get_vertices()) == ORIENTATION.CLOCKWISE
 
 
 ## Reverse order of points in point array.[br]
@@ -499,6 +571,62 @@ func remove_constraint(point_index_tuple: Vector2i) -> void:
 		emit_signal("constraint_removed", point_index_tuple.x, point_index_tuple.y)
 
 
+## Whether the shape is closed, i.e. last point is constrained to the first point.
+func is_shape_closed() -> bool:
+	if get_point_count() < 2:
+		return false
+	var key1: int = get_point_key_at_index(0)
+	var key2: int = get_point_key_at_index(get_point_count() - 1)
+	return get_point_constraint(key1, key2) == SS2D_Point_Array.CONSTRAINT.ALL
+
+
+## Return whether the shape can be closed, i.e. has at least two points and is not yet closed.
+func can_close() -> bool:
+	return get_point_count() >= 2 and not is_shape_closed()
+
+
+## Open shape by removing edge that starts at specified point index.
+func open_shape_at_edge(edge_start_idx: int) -> void:
+	var last_idx: int = get_point_count() - 1
+	if is_shape_closed():
+		remove_point(get_point_key_at_index(last_idx))
+		if edge_start_idx < last_idx:
+			for i in range(edge_start_idx + 1):
+				set_point_index(get_point_key_at_index(0), last_idx)
+	else:
+		push_warning("Can't open a shape that is not a closed shape.")
+
+
+## Undo shape opening done by [method open_shape_at_edge].
+func undo_open_shape_at_edge(edge_start_idx: int, closing_index: int) -> void:
+	var last_idx := get_point_count() - 1
+	if edge_start_idx < last_idx:
+		for i in range(edge_start_idx + 1):
+			set_point_index(get_point_key_at_index(last_idx), 0)
+	if can_close():
+		close_shape(closing_index)
+
+
+## Closes the shape by constraining the last point to the first point.[br]
+## If last and first point are not identical, a new point is added to keep the existing shape intact.[br]
+## Does nothing when the shape is already closed or not closable.[br]
+## Returns the key of the last point or -1 if unchanged.[br]
+## [param key] suggests which key ID to use when creating a new point.
+func close_shape(key: int = -1) -> int:
+	if not can_close():
+		return -1
+
+	var key_first: int = get_point_key_at_index(0)
+	var key_last: int = get_point_key_at_index(get_point_count() - 1)
+
+	if get_point_position(key_first) != get_point_position(key_last):
+		key_last = add_point_direct(get_point_position(key_first), -1, key)
+
+	set_constraint(key_first, key_last, SS2D_Point_Array.CONSTRAINT.ALL)
+
+	return key_last
+
+
 ########
 # MISC #
 ########
@@ -627,6 +755,26 @@ func set_curve_bake_interval(f: float) -> void:
 func get_tesselation_vertex_mapping() -> SS2D_TesselationVertexMapping:
 	_update_cache()
 	return _tess_vertex_mapping
+
+
+## Returns the closest point on the shape.
+func get_closest_point(to_point: Vector2) -> Vector2:
+	return get_curve().get_closest_point(to_point)
+
+
+## Returns the offset of the closest point on the shape.
+func get_closest_offset(to_point: Vector2) -> float:
+	return get_curve().get_closest_offset(to_point)
+
+
+## Returns the closest point on the shape, disregarding bezier modifiers.
+func get_closest_point_straight_edge(to_point: Vector2) -> Vector2:
+	return get_curve_no_control_points().get_closest_point(to_point)
+
+
+## Returns the offset of the closest point on the shape, disregarding bezier modifiers.
+func get_closest_offset_straight_edge(to_point: Vector2) -> float:
+	return get_curve_no_control_points().get_closest_offset(to_point)
 
 
 func _update_cache() -> void:

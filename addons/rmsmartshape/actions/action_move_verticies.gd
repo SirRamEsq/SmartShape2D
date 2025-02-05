@@ -17,7 +17,7 @@ func _init(s: SS2D_Shape, keys: PackedInt32Array, old_positions: PackedVector2Ar
 	_old_positions = old_positions.duplicate()
 	_new_positions = PackedVector2Array()
 	for k in _keys:
-		_new_positions.append(_shape.get_point_position(k))
+		_new_positions.append(_shape.get_point_array().get_point_position(k))
 	_invert_orientation = ActionInvertOrientation.new(_shape)
 
 
@@ -29,16 +29,18 @@ func get_name() -> String:
 
 
 func do() -> void:
-	_shape.begin_update()
+	var pa := _shape.get_point_array()
+	pa.begin_update()
 	for i in _keys.size():
-		_shape.set_point_position(_keys[i], _new_positions[i])
+		pa.set_point_position(_keys[i], _new_positions[i])
 	_invert_orientation.do()
-	_shape.end_update()
+	pa.end_update()
 
 
 func undo() -> void:
-	_shape.begin_update()
+	var pa := _shape.get_point_array()
+	pa.begin_update()
 	_invert_orientation.undo()
 	for i in range(_keys.size() - 1, -1, -1):
-		_shape.set_point_position(_keys[i], _old_positions[i])
-	_shape.end_update()
+		pa.set_point_position(_keys[i], _old_positions[i])
+	pa.end_update()

@@ -20,20 +20,22 @@ func get_name() -> String:
 
 
 func do() -> void:
-	_performed = _shape.can_close()
+	var pa := _shape.get_point_array()
+	_performed = pa.can_close()
 	if _performed:
-		_shape.begin_update()
-		_key = _shape.close_shape(_key)
+		pa.begin_update()
+		_key = pa.close_shape(_key)
 		_invert_orientation.do()
-		_shape.end_update()
+		pa.end_update()
 
 
 func undo() -> void:
 	if _performed:
-		_shape.begin_update()
+		var pa := _shape.get_point_array()
+		pa.begin_update()
 		_invert_orientation.undo()
-		_shape.remove_point(_key)
-		_shape.end_update()
+		pa.remove_point(_key)
+		pa.end_update()
 
 
 func get_key() -> int:
