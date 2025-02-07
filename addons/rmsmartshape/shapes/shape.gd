@@ -333,7 +333,7 @@ func _set_material(value: SS2D_Material_Shape) -> void:
 
 func set_material_overrides(dict: Dictionary) -> void:
 	material_overrides = {}
-	if dict == null:
+	if dict.is_empty():
 		return
 	_points.set_material_overrides(dict)
 
