@@ -146,9 +146,9 @@ func test_action_delete_point() -> void:
 	# Test deleting closing point.
 	var a2 := ActionDeletePoint.new(s, pa.get_point_key_at_index(0))
 	a2.do()
-	assert_eq(pa.get_point_count(), 2)
-	assert_false(pa.is_shape_closed())
-	validate_positions(s, [Vector2.RIGHT, Vector2.DOWN])
+	assert_eq(pa.get_point_count(), 3)
+	assert_true(pa.is_shape_closed())
+	validate_positions(s, [Vector2.RIGHT, Vector2.DOWN, Vector2.RIGHT])
 	a2.undo()
 	assert_eq(pa.get_point_count(), 4)
 	assert_true(pa.is_shape_closed())

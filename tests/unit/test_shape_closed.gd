@@ -14,6 +14,7 @@ func test_adjust_point_index() -> void:
 	assert_eq(pa._adjust_add_point_index(80), 80)
 
 	pa.close_shape()
+	point_count = pa.get_point_count()
 
 	assert_eq(pa._adjust_add_point_index(0), 1)
 	assert_eq(pa._adjust_add_point_index(-1), point_count - 1)
