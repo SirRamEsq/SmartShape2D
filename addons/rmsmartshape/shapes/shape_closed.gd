@@ -54,5 +54,3 @@ class_name SS2D_Shape_Closed
 #		return null
 #
 #	return Vector2(a1.x + ua * (a2.x - a1.x), a1.y + ua * (a2.y - a1.y))
-
-
