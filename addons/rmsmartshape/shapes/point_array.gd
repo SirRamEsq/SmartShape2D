@@ -2,6 +2,16 @@
 extends Resource
 class_name SS2D_Point_Array
 
+# TODO: Ensure point order is always clockwise
+# Relevant SS2D_Actions already perform this check and automatically invert the point order when
+# needed.
+# This is not ensured when manually modifying points using the provided functions.
+#
+# Corner generation will break and edge generation will behave slightly different with
+# counter-clockwise order.
+# Automatically inverting the point order as necessary sounds much simpler than debugging the edge
+# generation code.
+
 enum CONSTRAINT { NONE = 0, AXIS_X = 1, AXIS_Y = 2, CONTROL_POINTS = 4, PROPERTIES = 8, ALL = 15 }
 enum ORIENTATION { COLINEAR, CLOCKWISE, C_CLOCKWISE }
 
