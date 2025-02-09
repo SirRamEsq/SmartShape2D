@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionMoveControlPoints
+class_name SS2D_ActionMoveControlPoints
 
 var _shape: SS2D_Shape
 var _keys: PackedInt32Array

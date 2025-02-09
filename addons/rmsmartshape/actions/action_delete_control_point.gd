@@ -1,11 +1,9 @@
 extends SS2D_Action
-
-## ActionDeleteControlPoint
+class_name SS2D_ActionDeleteControlPoint
 
 enum PointType {POINT_IN, POINT_OUT}
 
-const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
-var _invert_orientation: ActionInvertOrientation
+var _invert_orientation: SS2D_ActionInvertOrientation
 
 var _shape: SS2D_Shape
 var _key: int
@@ -19,7 +17,7 @@ func _init(shape: SS2D_Shape, key: int, point_type: PointType) -> void:
 	_point_type = point_type
 	var pa := _shape.get_point_array()
 	_old_value = pa.get_point_in(key) if _point_type == PointType.POINT_IN else pa.get_point_out(key)
-	_invert_orientation = ActionInvertOrientation.new(shape)
+	_invert_orientation = SS2D_ActionInvertOrientation.new(shape)
 
 
 func get_name() -> String:

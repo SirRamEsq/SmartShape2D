@@ -1,10 +1,7 @@
 extends SS2D_Action
+class_name SS2D_ActionMoveVerticies
 
-## ActionMoveVerticies
-
-const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
-var _invert_orientation: ActionInvertOrientation
-
+var _invert_orientation: SS2D_ActionInvertOrientation
 var _shape: SS2D_Shape
 var _keys: PackedInt32Array
 var _old_positions: PackedVector2Array
@@ -18,7 +15,7 @@ func _init(s: SS2D_Shape, keys: PackedInt32Array, old_positions: PackedVector2Ar
 	_new_positions = PackedVector2Array()
 	for k in _keys:
 		_new_positions.append(_shape.get_point_array().get_point_position(k))
-	_invert_orientation = ActionInvertOrientation.new(_shape)
+	_invert_orientation = SS2D_ActionInvertOrientation.new(_shape)
 
 
 func get_name() -> String:

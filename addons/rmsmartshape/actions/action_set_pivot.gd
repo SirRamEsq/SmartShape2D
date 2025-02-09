@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionSetPivot
+class_name SS2D_ActionSetPivot
 
 var _shape: SS2D_Shape
 

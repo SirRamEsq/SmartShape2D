@@ -30,20 +30,6 @@ var ICON_SNAP: Texture2D = load("res://addons/rmsmartshape/assets/icon_editor_sn
 var ICON_IMPORT_CLOSED: Texture2D = load("res://addons/rmsmartshape/assets/closed_shape.png")
 var ICON_IMPORT_OPEN: Texture2D = load("res://addons/rmsmartshape/assets/open_shape.png")
 
-const FUNC = preload("plugin_functionality.gd")
-const ActionAddCollisionNodes := preload("res://addons/rmsmartshape/actions/action_add_collision_nodes.gd")
-const ActionMoveVerticies := preload("res://addons/rmsmartshape/actions/action_move_verticies.gd")
-const ActionSetPivot := preload("res://addons/rmsmartshape/actions/action_set_pivot.gd")
-const ActionMoveControlPoints := preload("res://addons/rmsmartshape/actions/action_move_control_points.gd")
-const ActionDeleteControlPoint := preload("res://addons/rmsmartshape/actions/action_delete_control_point.gd")
-const ActionDeletePoint := preload("res://addons/rmsmartshape/actions/action_delete_point.gd")
-const ActionAddPoint := preload("res://addons/rmsmartshape/actions/action_add_point.gd")
-const ActionSplitCurve := preload("res://addons/rmsmartshape/actions/action_split_curve.gd")
-const ActionMakeShapeUnique := preload("res://addons/rmsmartshape/actions/action_make_shape_unique.gd")
-const ActionCutEdge := preload("res://addons/rmsmartshape/actions/action_cut_edge.gd")
-const ActionCloseShape := preload("res://addons/rmsmartshape/actions/action_close_shape.gd")
-const ActionSplitShape := preload("res://addons/rmsmartshape/actions/action_split_shape.gd")
-
 enum MODE { EDIT_VERT, EDIT_EDGE, CUT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
 enum SNAP_MENU { ID_USE_GRID_SNAP, ID_SNAP_RELATIVE, ID_CONFIGURE_SNAP }
@@ -650,7 +636,7 @@ func _on_shape_make_unique(_shape: SS2D_Shape) -> void:
 
 
 func _shape_make_unique() -> void:
-	perform_action(ActionMakeShapeUnique.new(shape))
+	perform_action(SS2D_ActionMakeShapeUnique.new(shape))
 
 
 func get_et() -> Transform2D:
@@ -697,7 +683,7 @@ func _add_collision() -> void:
 
 func _add_deferred_collision() -> void:
 	if shape and not shape.get_parent() is PhysicsBody2D:
-		perform_action(ActionAddCollisionNodes.new(shape))
+		perform_action(SS2D_ActionAddCollisionNodes.new(shape))
 
 
 func _center_pivot() -> void:
@@ -722,7 +708,7 @@ func _center_pivot() -> void:
 		if total_area != 0.0:
 			center /= 3 * total_area
 
-		perform_action(ActionSetPivot.new(shape, shape.to_global(center)))
+		perform_action(SS2D_ActionSetPivot.new(shape, shape.to_global(center)))
 
 #############
 # RENDERING #
@@ -1016,25 +1002,23 @@ func _input_handle_right_click_press(mb_position: Vector2, grab_threshold: float
 	if current_mode == MODE.EDIT_VERT or current_mode == MODE.CREATE_VERT:
 		# Mouse over a single vertex?
 		if current_action.is_single_vert_selected():
-			perform_action(ActionDeletePoint.new(shape, current_action.keys[0]))
+			perform_action(SS2D_ActionDeletePoint.new(shape, current_action.keys[0]))
 			deselect_verts()
 			return true
 		else:
 			# Mouse over a control point?
 			var et: Transform2D = get_et()
-			var points_in: Array = FUNC.get_intersecting_control_point_in(
+			var points_in: Array = SS2D_PluginFunctionality.get_intersecting_control_point_in(
 				shape, et, mb_position, grab_threshold
 			)
-			var points_out: Array = FUNC.get_intersecting_control_point_out(
+			var points_out: Array = SS2D_PluginFunctionality.get_intersecting_control_point_out(
 				shape, et, mb_position, grab_threshold
 			)
 			if not points_in.is_empty():
-				perform_action(ActionDeleteControlPoint.new(shape, points_in[0],
-						ActionDeleteControlPoint.PointType.POINT_IN))
+				perform_action(SS2D_ActionDeleteControlPoint.new(shape, points_in[0], SS2D_ActionDeleteControlPoint.PointType.POINT_IN))
 				return true
 			elif not points_out.is_empty():
-				perform_action(ActionDeleteControlPoint.new(shape, points_out[0],
-						ActionDeleteControlPoint.PointType.POINT_OUT))
+				perform_action(SS2D_ActionDeleteControlPoint.new(shape, points_out[0], SS2D_ActionDeleteControlPoint.PointType.POINT_OUT))
 				return true
 	elif current_mode == MODE.EDIT_EDGE:
 		if on_edge:
@@ -1056,7 +1040,7 @@ func _input_handle_left_click(
 		var local_position: Vector2 = et.affine_inverse() * mb.position
 		if use_snap():
 			local_position = snap(local_position)
-		perform_action(ActionSetPivot.new(shape, local_position))
+		perform_action(SS2D_ActionSetPivot.new(shape, local_position))
 		return true
 
 	var pa := shape.get_point_array()
@@ -1071,7 +1055,7 @@ func _input_handle_left_click(
 
 		# Close the shape if the first point is clicked
 		if can_add_point and is_first_selected and pa.can_close():
-			var close_action := ActionCloseShape.new(shape)
+			var close_action := SS2D_ActionCloseShape.new(shape)
 			perform_action(close_action)
 			if Input.is_key_pressed(KEY_SHIFT):
 				select_control_points_to_move([close_action.get_key()], vp_m_pos)
@@ -1118,7 +1102,7 @@ func _input_handle_left_click(
 			elif Input.is_key_pressed(KEY_ALT):
 				# Add point between start and end points of the closest edge
 				idx = pa.get_point_index(closest_edge_keys[1])
-			var add_point := ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates)
+			var add_point := SS2D_ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates)
 			perform_action(add_point)
 			if Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_ALT):
 				select_control_points_to_move([add_point.get_key()], vp_m_pos)
@@ -1144,7 +1128,7 @@ func _input_handle_left_click(
 			return true
 		var offset: float = pa.get_closest_offset_straight_edge(t.affine_inverse() * edge_point)
 		var edge_keys := _get_edge_point_keys_from_offset(offset, true)
-		perform_action(ActionCutEdge.new(shape, edge_keys.x, edge_keys.y))
+		perform_action(SS2D_ActionCutEdge.new(shape, edge_keys.x, edge_keys.y))
 		on_edge = false
 		return true
 	elif current_mode == MODE.FREEHAND:
@@ -1263,11 +1247,11 @@ func _input_handle_mouse_button_event(
 		var _in := type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_IN
 		var _out := type == ACTION_VERT.MOVE_CONTROL or type == ACTION_VERT.MOVE_CONTROL_OUT
 		if type == ACTION_VERT.MOVE_VERT:
-			perform_action(ActionMoveVerticies.new(shape, current_action.keys,
+			perform_action(SS2D_ActionMoveVerticies.new(shape, current_action.keys,
 					current_action.starting_positions))
 			rslt = true
 		elif _in or _out:
-			perform_action(ActionMoveControlPoints.new(
+			perform_action(SS2D_ActionMoveControlPoints.new(
 				shape,
 				current_action.keys,
 				current_action.starting_positions_control_in,
@@ -1318,7 +1302,7 @@ func _input_split_edge(mb: InputEventMouseButton, vp_m_pos: Vector2, t: Transfor
 	if insertion_point == -1:
 		insertion_point = pa.get_point_count() - 1
 
-	var split_curve := ActionSplitCurve.new(shape, insertion_point, gpoint, t, not _defer_mesh_updates)
+	var split_curve := SS2D_ActionSplitCurve.new(shape, insertion_point, gpoint, t, not _defer_mesh_updates)
 	perform_action(split_curve)
 	select_vertices_to_move([split_curve.get_key()], vp_m_pos)
 	on_edge = false
@@ -1574,7 +1558,7 @@ func _input_handle_mouse_motion_event(
 					if use_snap():
 						local_position = snap(local_position)
 					var idx: int = pa.get_point_index(closest_edge_keys[1]) if pa.is_shape_closed() else -1
-					perform_action(ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates))
+					perform_action(SS2D_ActionAddPoint.new(shape, local_position, idx, not _defer_mesh_updates))
 				update_overlays()
 				return true
 			else:
@@ -1588,7 +1572,7 @@ func _input_handle_mouse_motion_event(
 						delete_point = closest_key
 						on_width_handle = false
 						if delete_point != -1:
-							perform_action(ActionDeletePoint.new(shape, delete_point, not _defer_mesh_updates))
+							perform_action(SS2D_ActionDeletePoint.new(shape, delete_point, not _defer_mesh_updates))
 							last_point_position = Vector2.ZERO
 							update_overlays()
 							return true

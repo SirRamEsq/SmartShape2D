@@ -1,14 +1,8 @@
 extends SS2D_Action
+class_name SS2D_ActionDeletePoints
 
-## ActionDeletePoints
-
-const TUP := preload("res://addons/rmsmartshape/lib/tuple.gd")
-
-const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
-var _invert_orientation: ActionInvertOrientation
-
-const ActionCloseShape := preload("res://addons/rmsmartshape/actions/action_close_shape.gd")
-var _close_shape: ActionCloseShape
+var _invert_orientation: SS2D_ActionInvertOrientation
+var _close_shape: SS2D_ActionCloseShape
 
 var _shape: SS2D_Shape
 var _keys: PackedInt32Array
@@ -24,8 +18,8 @@ var _commit_update: bool
 
 func _init(shape: SS2D_Shape, keys: PackedInt32Array, commit_update: bool = true) -> void:
 	_shape = shape
-	_invert_orientation = ActionInvertOrientation.new(shape)
-	_close_shape = ActionCloseShape.new(shape)
+	_invert_orientation = SS2D_ActionInvertOrientation.new(shape)
+	_close_shape = SS2D_ActionCloseShape.new(shape)
 	_commit_update = commit_update
 
 	for k in keys:

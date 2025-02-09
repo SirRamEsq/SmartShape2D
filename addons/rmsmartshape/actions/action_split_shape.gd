@@ -1,14 +1,12 @@
 extends SS2D_Action
+class_name SS2D_ActionSplitShape
 
-## ActionSplitShape
-##
 ## How it's done:
 ## 1. First, the shape is copied and added to the scene tree.
 ## 2. Then, points of the splitted shape are deleted from first point to split point.
 ## 3. Finally, points of the original shape are deleted from the point after split point to last point.
 
-const ActionDeletePoints := preload("res://addons/rmsmartshape/actions/action_delete_points.gd")
-var _delete_points_from_original: ActionDeletePoints
+var _delete_points_from_original: SS2D_ActionDeletePoints
 
 var _shape: SS2D_Shape
 var _splitted: SS2D_Shape
@@ -56,7 +54,7 @@ func do() -> void:
 		var delete_keys := PackedInt32Array()
 		for i in range(pa.get_point_count() - 1, _split_idx, -1):
 			delete_keys.append(pa.get_point_key_at_index(i))
-		_delete_points_from_original = ActionDeletePoints.new(_shape, delete_keys)
+		_delete_points_from_original = SS2D_ActionDeletePoints.new(_shape, delete_keys)
 	_delete_points_from_original.do()
 
 

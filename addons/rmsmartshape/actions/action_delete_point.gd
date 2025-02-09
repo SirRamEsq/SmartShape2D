@@ -1,6 +1,5 @@
-extends "res://addons/rmsmartshape/actions/action_delete_points.gd"
-
-## ActionDeletePoint
+extends SS2D_ActionDeletePoints
+class_name SS2D_ActionDeletePoint
 
 
 func _init(shape: SS2D_Shape, key: int, commit_update: bool = true) -> void:

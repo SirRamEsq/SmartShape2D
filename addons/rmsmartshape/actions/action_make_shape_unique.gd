@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionMakeShapeUnique
+class_name SS2D_ActionMakeShapeUnique
 
 var _shape: SS2D_Shape
 var _old_array: SS2D_Point_Array

@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionAddCollisionNodes
+class_name SS2D_ActionAddCollisionNodes
 
 var _shape: SS2D_Shape
 

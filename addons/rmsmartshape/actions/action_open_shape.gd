@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionOpenShape
+class_name SS2D_ActionOpenShape
 
 var _shape: SS2D_Shape
 var _cut_idx: int

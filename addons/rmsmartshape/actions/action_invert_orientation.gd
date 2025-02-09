@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionInvertOrientation
+class_name SS2D_ActionInvertOrientation
 
 var _shape: SS2D_Shape
 var _performed: bool

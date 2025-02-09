@@ -1,9 +1,7 @@
 extends SS2D_Action
+class_name SS2D_ActionAddPoint
 
-## ActionAddPoint
-
-const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
-var _invert_orientation: ActionInvertOrientation
+var _invert_orientation: SS2D_ActionInvertOrientation
 
 var _commit_update: bool
 var _shape: SS2D_Shape
@@ -18,7 +16,7 @@ func _init(shape: SS2D_Shape, position: Vector2, idx: int = -1, commit_update: b
 	_commit_update = commit_update
 	_idx = idx
 	_key = _shape.get_point_array().reserve_key()
-	_invert_orientation = ActionInvertOrientation.new(shape)
+	_invert_orientation = SS2D_ActionInvertOrientation.new(shape)
 
 
 func get_name() -> String:

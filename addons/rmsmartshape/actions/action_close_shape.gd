@@ -1,9 +1,7 @@
 extends SS2D_Action
+class_name SS2D_ActionCloseShape
 
-## ActionCloseShape
-
-const ActionInvertOrientation := preload("res://addons/rmsmartshape/actions/action_invert_orientation.gd")
-var _invert_orientation: ActionInvertOrientation
+var _invert_orientation: SS2D_ActionInvertOrientation
 
 var _shape: SS2D_Shape
 var _key: int
@@ -12,7 +10,7 @@ var _performed: bool
 
 func _init(shape: SS2D_Shape) -> void:
 	_shape = shape
-	_invert_orientation = ActionInvertOrientation.new(shape)
+	_invert_orientation = SS2D_ActionInvertOrientation.new(shape)
 
 
 func get_name() -> String:
