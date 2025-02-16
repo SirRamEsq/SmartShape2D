@@ -1,14 +1,12 @@
 extends SS2D_Action
+class_name SS2D_ActionSplitShape
 
-## ActionSplitShape
-##
 ## How it's done:
 ## 1. First, the shape is copied and added to the scene tree.
 ## 2. Then, points of the splitted shape are deleted from first point to split point.
 ## 3. Finally, points of the original shape are deleted from the point after split point to last point.
 
-const ActionDeletePoints := preload("res://addons/rmsmartshape/actions/action_delete_points.gd")
-var _delete_points_from_original: ActionDeletePoints
+var _delete_points_from_original: SS2D_ActionDeletePoints
 
 var _shape: SS2D_Shape
 var _splitted: SS2D_Shape
@@ -17,9 +15,10 @@ var _split_idx: int
 
 
 func _init(shape: SS2D_Shape, split_point_key: int) -> void:
-	assert(shape.is_shape_closed() == false)
+	var pa := shape.get_point_array()
+	assert(pa.is_shape_closed() == false)
 	_shape = shape
-	_split_idx = shape.get_point_index(split_point_key)
+	_split_idx = pa.get_point_index(split_point_key)
 	_splitted = null
 	_splitted_collision = null
 	_delete_points_from_original = null
@@ -32,10 +31,11 @@ func get_name() -> String:
 func do() -> void:
 	if not is_instance_valid(_splitted):
 		_splitted = _shape.clone()
-		_splitted.begin_update()
+		var splitted_pa := _splitted.get_point_array()
+		splitted_pa.begin_update()
 		for i in range(0, _split_idx + 1):
-			_splitted.remove_point_at_index(0)
-		_splitted.end_update()
+			splitted_pa.remove_point_at_index(0)
+		splitted_pa.end_update()
 	_shape.get_parent().add_child(_splitted, true)
 	_splitted.set_owner(_shape.get_tree().get_edited_scene_root())
 	# Add a collision shape node if the original shape has one.
@@ -50,10 +50,11 @@ func do() -> void:
 		_splitted.collision_polygon_node_path = _splitted.get_path_to(_splitted_collision)
 
 	if _delete_points_from_original == null:
+		var pa := _shape.get_point_array()
 		var delete_keys := PackedInt32Array()
-		for i in range(_shape.get_point_count() - 1, _split_idx, -1):
-			delete_keys.append(_shape.get_point_key_at_index(i))
-		_delete_points_from_original = ActionDeletePoints.new(_shape, delete_keys)
+		for i in range(pa.get_point_count() - 1, _split_idx, -1):
+			delete_keys.append(pa.get_point_key_at_index(i))
+		_delete_points_from_original = SS2D_ActionDeletePoints.new(_shape, delete_keys)
 	_delete_points_from_original.do()
 
 

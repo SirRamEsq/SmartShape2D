@@ -6,11 +6,12 @@ var PLUGIN := load("res://addons/rmsmartshape/plugin.gd")
 
 func test_intersect_control_point() -> void:
 	var shape := SS2D_Shape_Closed.new()
+	var pa := shape.get_point_array()
 	add_child_autofree(shape)
 	var vert_p := Vector2(100, 100)
-	var key := shape.add_point(vert_p)
-	shape.set_point_in(key, Vector2(-32, 0))
-	shape.set_point_out(key, Vector2(32, 0))
+	var key := pa.add_point(vert_p)
+	pa.set_point_in(key, Vector2(-32, 0))
+	pa.set_point_out(key, Vector2(32, 0))
 	var et := Transform2D()
 	var grab := 16.0
 	var f1 := Callable(FUNC, "get_intersecting_control_point_out")

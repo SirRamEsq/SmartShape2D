@@ -26,7 +26,6 @@ func set_shape_path(value: NodePath) -> void:
 	shape_path = value
 	set_shape()
 
-	notify_property_list_changed()
 	refresh()
 
 
@@ -48,7 +47,7 @@ func set_shape() -> void:
 
 
 func get_shape_index_range(s: SS2D_Shape, idx: int) -> int:
-	var point_count: int = s.get_point_count()
+	var point_count: int = s.get_point_array().get_point_count()
 	# Subtract 2;
 	#   'point_count' is out of bounds; subtract 1
 	#   cannot use final idx as starting point_index; subtract another 1
@@ -68,31 +67,26 @@ func set_shape_point_index(value: int) -> void:
 		return
 
 	shape_point_index = get_shape_index_range(shape, value)
-	#notify_property_list_changed()
 	refresh()
 
 
 func set_shape_point_offset(value: float) -> void:
 	shape_point_offset = value
-	#notify_property_list_changed()
 	refresh()
 
 
 func set_use_shape_scale(value: bool) -> void:
 	use_shape_scale = value
-	#notify_property_list_changed()
 	refresh()
 
 
 func set_child_rotation(value: float) -> void:
 	child_rotation = value
-	#notify_property_list_changed()
 	refresh()
 
 
 func set_debug_draw(v: bool) -> void:
 	debug_draw = v
-	#notify_property_list_changed()
 	refresh()
 
 
@@ -153,16 +147,14 @@ func refresh() -> void:
 		shape = null
 		return
 
-	# Subtract one, cannot use final point as starting index
-#	var point_count: int = shape.get_point_count() - 1
-
+	var pa := shape.get_point_array()
 	var pt_a_index: int = shape_point_index
 	var pt_b_index: int = shape_point_index + 1
-	var pt_a_key: int = shape.get_point_key_at_index(pt_a_index)
-	var pt_b_key: int = shape.get_point_key_at_index(pt_b_index)
+	var pt_a_key: int = pa.get_point_key_at_index(pt_a_index)
+	var pt_b_key: int = pa.get_point_key_at_index(pt_b_index)
 
-	var pt_a: Vector2 = shape.global_transform * shape.get_point_position(pt_a_key)
-	var pt_b: Vector2 = shape.global_transform * shape.get_point_position(pt_b_key)
+	var pt_a: Vector2 = shape.global_transform * pa.get_point_position(pt_a_key)
+	var pt_b: Vector2 = shape.global_transform * pa.get_point_position(pt_b_key)
 
 	var pt_a_handle: Vector2
 	var pt_b_handle: Vector2
@@ -174,10 +166,10 @@ func refresh() -> void:
 	var angle := 0.0
 
 	pt_a_handle = shape.global_transform * (
-		shape.get_point_position(pt_a_key) + shape.get_point_out(pt_a_key)
+		pa.get_point_position(pt_a_key) + pa.get_point_out(pt_a_key)
 	)
 	pt_b_handle = shape.global_transform * (
-		shape.get_point_position(pt_b_key) + shape.get_point_in(pt_b_key)
+		pa.get_point_position(pt_b_key) + pa.get_point_in(pt_b_key)
 	)
 
 	# If this segment uses no bezier curve, use linear interpolation instead

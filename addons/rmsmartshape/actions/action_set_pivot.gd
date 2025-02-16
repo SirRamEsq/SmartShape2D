@@ -1,6 +1,5 @@
 extends SS2D_Action
-
-## ActionSetPivot
+class_name SS2D_ActionSetPivot
 
 var _shape: SS2D_Shape
 
@@ -28,17 +27,18 @@ func undo() -> void:
 
 func _set_pivot(shape_position: Vector2) -> void:
 	var shape_gt: Transform2D = _shape.get_global_transform()
+	var pa := _shape.get_point_array()
 
 	_shape.global_position = shape_position
 
-	_shape.begin_update()
-	_shape.disable_constraints()
+	pa.begin_update()
+	pa.disable_constraints()
 
-	for i in _shape.get_point_count():
-		var key: int = _shape.get_point_key_at_index(i)
-		var point: Vector2 = _shape.get_point_position(key)
-		_shape.set_point_position(key, _shape.to_local(shape_gt * point))
+	for i in pa.get_point_count():
+		var key: int = pa.get_point_key_at_index(i)
+		var point: Vector2 = pa.get_point_position(key)
+		pa.set_point_position(key, _shape.to_local(shape_gt * point))
 
-	_shape.enable_constraints()
-	_shape.end_update()
+	pa.enable_constraints()
+	pa.end_update()
 
