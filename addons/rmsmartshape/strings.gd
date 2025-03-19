@@ -14,3 +14,4 @@ const EN_TOOLTIP_SNAP := "Snapping Options"
 const EN_TOOLTIP_MORE_OPTIONS := "More Options"
 
 const EN_OPTIONS_DEFER_MESH_UPDATES := "Defer Mesh Updates"
+const EN_OPTIONS_CHECK_VERSION := "Perform Version Check"
