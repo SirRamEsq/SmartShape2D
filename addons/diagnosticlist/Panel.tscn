@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://tsfsnxbfcax6"]
 
-[ext_resource type="Script" path="res://addons/diagnosticlist/Panel.gd" id="1_fewy8"]
+[ext_resource type="Script" uid="uid://btyk17v3aai46" path="res://addons/diagnosticlist/Panel.gd" id="1_fewy8"]
 
 [node name="DiagnosticsPanel" type="Control"]
 custom_minimum_size = Vector2(250, 225)

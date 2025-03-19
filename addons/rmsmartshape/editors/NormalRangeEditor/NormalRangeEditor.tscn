@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://cg1vy768oxwxr"]
 
 [ext_resource type="Texture2D" uid="uid://dajqljvjm2d2q" path="res://addons/rmsmartshape/editors/NormalRangeEditor/progress_texture.png" id="1"]
-[ext_resource type="Script" path="res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.gd" id="2"]
+[ext_resource type="Script" uid="uid://r4rt5qimdlyf" path="res://addons/rmsmartshape/editors/NormalRangeEditor/NormalRangeEditor.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://dgd4sbhsw1no3" path="res://addons/rmsmartshape/editors/NormalRangeEditor/over_texture.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://cax163h05b60j" path="res://addons/rmsmartshape/editors/NormalRangeEditor/under_texture.png" id="4"]
 
