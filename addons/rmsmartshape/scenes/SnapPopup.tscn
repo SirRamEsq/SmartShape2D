@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://d1acvw8yuubxo"]
 
-[ext_resource type="Script" path="res://addons/rmsmartshape/scenes/SnapPopup.gd" id="1"]
+[ext_resource type="Script" uid="uid://xh70vbcfch5q" path="res://addons/rmsmartshape/scenes/SnapPopup.gd" id="1"]
 [ext_resource type="Theme" uid="uid://dud4fe6fsicvm" path="res://addons/rmsmartshape/assets/gui_theme.res" id="1_6ft7o"]
 
 [node name="SnapPopup" type="PopupPanel"]

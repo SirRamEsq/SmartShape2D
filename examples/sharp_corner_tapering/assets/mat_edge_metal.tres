@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="SS2D_Material_Edge" load_steps=7 format=3 uid="uid://c8q2nrxnbopbb"]
 
-[ext_resource type="Script" path="res://addons/rmsmartshape/materials/edge_material.gd" id="1_lbfns"]
+[ext_resource type="Script" uid="uid://d0xjijisx1woh" path="res://addons/rmsmartshape/materials/edge_material.gd" id="1_lbfns"]
 [ext_resource type="Texture2D" uid="uid://b3aqa3bj1osvp" path="res://examples/sharp_corner_tapering/assets/tex_metal_edge.png" id="2_bmjh3"]
 [ext_resource type="Texture2D" uid="uid://bobwi3r6aiiqg" path="res://examples/sharp_corner_tapering/assets/tex_metal_corner_inner.png" id="3_n1i1s"]
 [ext_resource type="Texture2D" uid="uid://bc34cuc50as8f" path="res://examples/sharp_corner_tapering/assets/tex_metal_corner_outer.png" id="4_ml2u7"]
