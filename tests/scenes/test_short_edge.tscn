@@ -422,7 +422,7 @@ render_offset = 0.0
 
 [node name="Node2D" type="Node2D"]
 
-[node name="SS2D_Shape" type="Node2D" parent="."]
+[node name="SS2D_Shape" type="MeshInstance2D" parent="."]
 texture_repeat = 2
 position = Vector2(5, 96)
 script = ExtResource("1_4snix")
