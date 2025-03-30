@@ -63,11 +63,11 @@ class TscnAnalyzer:
 
 	func load(tscn_path: String) -> bool:
 		_path = tscn_path
+		_shape_script_ids.clear()
 		var content := FileAccess.get_file_as_string(tscn_path)
 
 		if not content:
 			_lines.clear()
-			_shape_script_ids.clear()
 			_content_start_line = 0
 			return false
 

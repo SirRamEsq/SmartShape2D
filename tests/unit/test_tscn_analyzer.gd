@@ -17,7 +17,7 @@ func test_contains_shapes() -> void:
 	var analyzer := _get_test_analyzer()
 	assert_true(analyzer.contains_shapes())
 
-	analyzer.load("res://tests/unit/res://tests/unit/test_convert_tscn_node_types.gd")
+	analyzer.load("res://tests/unit/test_tscn_analyzer.gd")
 	assert_false(analyzer.contains_shapes())
 
 
@@ -32,7 +32,7 @@ func test_extract_shape_script_ids() -> void:
 	assert_eq(analyzer._content_start_line, 11)
 
 	shape_ids.clear()
-	analyzer.load("res://tests/unit/res://tests/unit/test_convert_tscn_node_types.gd")
+	analyzer.load("res://tests/unit/test_tscn_analyzer.gd")
 	var next_line := analyzer._extract_shape_script_ids(shape_ids)
 
 	assert_eq(next_line, -1)

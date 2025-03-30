@@ -1674,33 +1674,37 @@ func perform_version_check_and_conversion(force: bool = false, show_dialog_when_
 		i.init()
 
 	for i in converters:
-		if i.needs_conversion():
-			print("SS2D: Version conversion required")
-			var dialog: ConfirmationDialog = ConfirmationDialog.new()
-			add_child(dialog)
-			var original_ok_button_text := dialog.ok_button_text
-			dialog.ok_button_text += " (3s)"
-			dialog.dialog_close_on_escape = false
-			dialog.title = "SmartShape2D - Version Check"
-			dialog.dialog_text = """
-			SmartShape2D detected scenes that were saved with an older version of SmartShape2D.
-			These scenes need to be converted to work as before.
+		if not i.needs_conversion():
+			continue
 
-			We highly recommend making a backup of your project before proceeding.
+		print("SS2D: Version conversion required")
+		var dialog: ConfirmationDialog = ConfirmationDialog.new()
+		add_child(dialog)
+		var original_ok_button_text := dialog.ok_button_text
+		dialog.ok_button_text += " (3s)"
+		dialog.dialog_close_on_escape = false
+		dialog.title = "SmartShape2D - Version Check"
+		dialog.dialog_text = """
+		SmartShape2D detected scenes that were saved with an older version of SmartShape2D.
+		These scenes need to be converted to work as before.
 
-			Do you want to proceed?""".dedent().strip_edges()
-			dialog.get_ok_button().disabled = true
-			dialog.confirmed.connect(_on_dialog_confirm_conversion.bind(converters))
-			dialog.confirmed.connect(_free_dialog.bind(dialog))
-			dialog.get_cancel_button().pressed.connect(_free_dialog.bind(dialog))
-			dialog.popup_centered()
+		We highly recommend making a backup of your project before proceeding.
 
-			await get_tree().create_timer(3).timeout
+		Do you want to proceed?""".dedent().strip_edges()
+		dialog.get_ok_button().disabled = true
+		dialog.confirmed.connect(_on_dialog_confirm_conversion.bind(converters))
+		dialog.confirmed.connect(_free_dialog.bind(dialog))
+		dialog.get_cancel_button().pressed.connect(_free_dialog.bind(dialog))
+		dialog.popup_centered()
 
-			if is_instance_valid(dialog):  # Dialog could be closed already
-				dialog.get_ok_button().disabled = false
-				dialog.ok_button_text = original_ok_button_text
-			return
+		await get_tree().create_timer(3).timeout
+
+		# Dialog could be closed already
+		if is_instance_valid(dialog):
+			dialog.get_ok_button().disabled = false
+			dialog.ok_button_text = original_ok_button_text
+
+		return
 
 	# No conversion needed
 	print("SS2D: No conversion needed")
@@ -1719,6 +1723,9 @@ func _on_dialog_confirm_conversion(converters: Array[SS2D_VersionTransition.IVer
 	var success := true
 
 	for i in converters.size():
+		if not converters[i].needs_conversion():
+			continue
+
 		if converters[i].convert():
 			print("SS2D: Conversion step ", i + 1, " successful")
 		else:
