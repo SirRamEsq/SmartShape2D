@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cxu6258urdtf1"]
 
 [ext_resource type="Theme" uid="uid://dud4fe6fsicvm" path="res://addons/rmsmartshape/assets/gui_theme.res" id="1_byls6"]
-[ext_resource type="Script" path="res://addons/rmsmartshape/scenes/GUI_InfoPanel.gd" id="2"]
+[ext_resource type="Script" uid="uid://jmh3fa1lggij" path="res://addons/rmsmartshape/scenes/GUI_InfoPanel.gd" id="2"]
 
 [node name="GUI_InfoPanel" type="PanelContainer"]
 anchors_preset = 15

@@ -1,6 +1,6 @@
 @tool
 @icon("../assets/closed_shape.png")
-extends Node2D
+extends MeshInstance2D
 class_name SS2D_Shape
 
 ## Represents the base functionality for all smart shapes.

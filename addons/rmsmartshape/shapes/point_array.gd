@@ -241,7 +241,7 @@ func _hook_point(key: int) -> void:
 
 ## Disconnects the changed signal of the given point. See also _hook_point().
 func _unhook_point(p: SS2D_Point) -> void:
-	if not p.changed.is_connected(_on_point_changed):
+	if p.changed.is_connected(_on_point_changed):
 		p.changed.disconnect(_on_point_changed)
 
 

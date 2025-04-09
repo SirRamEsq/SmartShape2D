@@ -9,6 +9,8 @@ extends EditorPlugin
 ## 	- https://github.com/godotengine/godot/issues/11180
 ## 	- https://godotengine.org/qa/18051/tool-script-in-3-0
 
+const PROJECT_SETTING_INTERNAL_VERSION := "addons/ss2d/version"
+
 # Icons
 # TODO: Change to const and preload when this is resolved:
 # https://github.com/godotengine/godot/issues/17483
@@ -33,7 +35,7 @@ var ICON_IMPORT_OPEN: Texture2D = load("res://addons/rmsmartshape/assets/open_sh
 enum MODE { EDIT_VERT, EDIT_EDGE, CUT_EDGE, SET_PIVOT, CREATE_VERT, FREEHAND }
 
 enum SNAP_MENU { ID_USE_GRID_SNAP, ID_SNAP_RELATIVE, ID_CONFIGURE_SNAP }
-enum OPTIONS_MENU { ID_DEFER_MESH_UPDATES }
+enum OPTIONS_MENU { ID_DEFER_MESH_UPDATES, ID_CHECK_VERSION }
 
 enum ACTION_VERT {
 	NONE = 0,
@@ -190,6 +192,8 @@ func _options_item_selected(id: int) -> void:
 	if id == OPTIONS_MENU.ID_DEFER_MESH_UPDATES:
 		tb_options_popup.set_item_checked(id, not tb_options_popup.is_item_checked(id))
 		_defer_mesh_updates = tb_options_popup.is_item_checked(id)
+	elif id == OPTIONS_MENU.ID_CHECK_VERSION:
+		perform_version_check_and_conversion(true, true)
 
 
 func _gui_build_toolbar() -> void:
@@ -244,6 +248,7 @@ func _gui_build_toolbar() -> void:
 	tb_options.icon = EditorInterface.get_base_control().get_theme_icon("GuiTabMenuHl", "EditorIcons")
 	tb_options_popup = tb_options.get_popup()
 	tb_options_popup.add_check_item(SS2D_Strings.EN_OPTIONS_DEFER_MESH_UPDATES, OPTIONS_MENU.ID_DEFER_MESH_UPDATES)
+	tb_options_popup.add_item(SS2D_Strings.EN_OPTIONS_CHECK_VERSION, OPTIONS_MENU.ID_CHECK_VERSION)
 	tb_options_popup.hide_on_checkable_item_selection = false
 	tb_hb.add_child(tb_options)
 	tb_options_popup.connect("id_pressed", self._options_item_selected)
@@ -408,6 +413,8 @@ func _ready() -> void:
 	add_child(make_unique_dialog)
 
 	connect("main_screen_changed", self._on_main_screen_changed)
+
+	perform_version_check_and_conversion()
 
 
 func _enter_tree() -> void:
@@ -1639,3 +1646,113 @@ func _debug_mouse_positions(mm: InputEventMouseMotion, t: Transform2D) -> void:
 	print("Position:  %s" % str(t.affine_inverse() * mm.position))
 	print("Relative:  %s" % str(t.affine_inverse() * mm.relative))
 	print("MouseDelta:%s" % str(t.affine_inverse() * _mouse_motion_delta_starting_pos))
+
+
+####################
+# Version Checking #
+####################
+func perform_version_check_and_conversion(force: bool = false, show_dialog_when_no_conversion_needed: bool = false) -> void:
+	# Only perform check if version changed or after initial install to reduce project startup time.
+	if not force:
+		var last_version: String = ProjectSettings.get_setting(PROJECT_SETTING_INTERNAL_VERSION, "")
+
+		# This should suffice for most cases.
+		# TODO: Consider more sophisticated version checking, e.g. opening a newer project with an older version.
+		if last_version == get_plugin_version():
+			return
+
+		print("SS2D: Version change detected: ", last_version, " != ", get_plugin_version())
+
+	print("SS2D: Performing version check...")
+
+	var converters: Array[SS2D_VersionTransition.IVersionConverter] = [
+		SS2D_VersionTransition.ShapeNodeTypeConverter.new("Node2D", "MeshInstance2D"),
+		# Insert more converters for future changes here
+	]
+
+	for i in converters:
+		i.init()
+
+	for i in converters:
+		if not i.needs_conversion():
+			continue
+
+		print("SS2D: Version conversion required")
+		var dialog: ConfirmationDialog = ConfirmationDialog.new()
+		add_child(dialog)
+		var original_ok_button_text := dialog.ok_button_text
+		dialog.ok_button_text += " (3s)"
+		dialog.dialog_close_on_escape = false
+		dialog.title = "SmartShape2D - Version Check"
+		dialog.dialog_text = """
+		SmartShape2D detected scenes that were saved with an older version of SmartShape2D.
+		These scenes need to be converted to work as before.
+
+		We highly recommend making a backup of your project before proceeding.
+
+		Do you want to proceed?""".dedent().strip_edges()
+		dialog.get_ok_button().disabled = true
+		dialog.confirmed.connect(_on_dialog_confirm_conversion.bind(converters))
+		dialog.confirmed.connect(_free_dialog.bind(dialog))
+		dialog.get_cancel_button().pressed.connect(_free_dialog.bind(dialog))
+		dialog.popup_centered()
+
+		await get_tree().create_timer(3).timeout
+
+		# Dialog could be closed already
+		if is_instance_valid(dialog):
+			dialog.get_ok_button().disabled = false
+			dialog.ok_button_text = original_ok_button_text
+
+		return
+
+	# No conversion needed
+	print("SS2D: No conversion needed")
+	_write_version_info_to_project()
+
+	if show_dialog_when_no_conversion_needed:
+		var dialog := AcceptDialog.new()
+		add_child(dialog)
+		dialog.title = "Info"
+		dialog.dialog_text = "No conversion needed."
+		dialog.confirmed.connect(_free_dialog.bind(dialog))
+		dialog.popup_centered()
+
+
+func _on_dialog_confirm_conversion(converters: Array[SS2D_VersionTransition.IVersionConverter]) -> void:
+	var success := true
+
+	for i in converters.size():
+		if not converters[i].needs_conversion():
+			continue
+
+		if converters[i].convert():
+			print("SS2D: Conversion step ", i + 1, " successful")
+		else:
+			push_error("SS2D: Conversion step ", i + 1, " failed -> Aborting")
+			success = false
+			break
+
+	var summary := AcceptDialog.new()
+	add_child(summary)
+
+	if success:
+		summary.title = "Conversion Successful"
+		summary.dialog_text = "Conversion successful!"
+		_write_version_info_to_project()
+	else:
+		summary.title = "Conversion Failed"
+		summary.dialog_text = "An unexpected error occurred.\nSee log output for further information."
+
+	summary.confirmed.connect(_free_dialog.bind(summary))
+	summary.popup_centered()
+
+
+func _free_dialog(dialog: Node) -> void:
+	dialog.queue_free()
+
+
+func _write_version_info_to_project() -> void:
+	ProjectSettings.set_setting(PROJECT_SETTING_INTERNAL_VERSION, get_plugin_version())
+	ProjectSettings.set_as_internal(PROJECT_SETTING_INTERNAL_VERSION, true)
+	ProjectSettings.save()
