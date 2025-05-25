@@ -274,7 +274,7 @@ render_offset = 0.0
 
 [node name="Node2D" type="Node2D"]
 
-[node name="WithTapering" type="MeshInstance2D" parent="."]
+[node name="WithTapering" type="Node2D" parent="."]
 texture_repeat = 2
 position = Vector2(-30, 228)
 scale = Vector2(0.65, 0.65)
@@ -282,7 +282,7 @@ script = ExtResource("1_5hlge")
 _points = SubResource("Resource_o2w6y")
 shape_material = SubResource("Resource_07ymf")
 
-[node name="WithoutTapering" type="MeshInstance2D" parent="."]
+[node name="WithoutTapering" type="Node2D" parent="."]
 texture_repeat = 2
 position = Vector2(400, 10)
 scale = Vector2(0.65, 0.65)

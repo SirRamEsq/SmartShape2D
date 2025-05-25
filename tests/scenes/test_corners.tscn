@@ -720,7 +720,7 @@ curve_bake_interval = 20.0
 
 [node name="Node2D" type="Node2D"]
 
-[node name="WithTapering" type="MeshInstance2D" parent="."]
+[node name="WithTapering" type="Node2D" parent="."]
 texture_repeat = 2
 position = Vector2(-431, 86)
 script = ExtResource("1_mcb7j")
@@ -729,7 +729,7 @@ shape_material = SubResource("Resource_07ymf")
 tessellation_stages = 5
 tessellation_tolerence = 4.0
 
-[node name="WithTapering2" type="MeshInstance2D" parent="."]
+[node name="WithTapering2" type="Node2D" parent="."]
 texture_repeat = 2
 position = Vector2(-470, -514)
 script = ExtResource("1_mcb7j")
