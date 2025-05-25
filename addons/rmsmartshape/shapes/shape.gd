@@ -24,6 +24,7 @@ var _meshes: Array[SS2D_Mesh] = []
 var _collision_polygon_node: CollisionPolygon2D
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
+var _renderer: SS2D_Renderer
 
 signal points_modified
 signal on_dirty_update
@@ -192,7 +193,6 @@ func set_point_array(a: SS2D_Point_Array) -> void:
 	_points = a
 	_points.connect("update_finished", self._points_modified)
 	_points.material_override_changed.connect(_handle_material_override_change)
-	clear_cached_data()
 	set_as_dirty()
 	notify_property_list_changed()
 
@@ -257,47 +257,7 @@ func get_curve() -> Curve2D:
 
 func _set_editor_debug(value: bool) -> void:
 	editor_debug = value
-	set_as_dirty()
-	notify_property_list_changed()
-
-
-func set_render_node_light_masks(value: int) -> void:
-	# TODO: This method should be called when user changes mask in the inspector.
-	var render_parent: SS2D_Shape_Render = _get_rendering_nodes_parent()
-	for c: CanvasItem in render_parent.get_children():
-		c.light_mask = value
-	render_parent.light_mask = value
-
-
-func set_render_node_owners(v: bool) -> void:
-	if Engine.is_editor_hint():
-		# Force scene tree update
-		var render_parent: SS2D_Shape_Render = _get_rendering_nodes_parent()
-		var new_owner: Node = null
-		if v:
-			new_owner = get_tree().edited_scene_root
-		render_parent.set_owner(new_owner)
-
-		# Set owner recurisvely
-		for c in render_parent.get_children():
-			c.set_owner(new_owner)
-
-		# Force update
-		var dummy_name := "__DUMMY__"
-		if has_node(dummy_name):
-			var n: Node = get_node(dummy_name)
-			remove_child(n)
-			n.queue_free()
-
-		var dummy := Node2D.new()
-		dummy.name = dummy_name
-		add_child(dummy)
-		dummy.set_owner(new_owner)
-
-
-func update_render_nodes() -> void:
-#	set_render_node_owners(editor_debug)
-	set_render_node_light_masks(light_mask)
+	queue_redraw()
 
 
 ## Deprecated. Use get_point_array().tessellation_stages instead.
@@ -515,7 +475,6 @@ func clone(clone_point_array: bool = true) -> SS2D_Shape:
 	copy.shape_material = shape_material
 	copy.editor_debug = editor_debug
 	copy.flip_edges = flip_edges
-	copy.editor_debug = editor_debug
 	copy.collision_size = collision_size
 	copy.collision_offset = collision_offset
 	#copy.material_overrides = s.material_overrides
@@ -761,77 +720,12 @@ func _enter_tree() -> void:
 			shape_material.connect("changed", self._handle_material_change)
 
 
-func _get_rendering_nodes_parent() -> SS2D_Shape_Render:
-	var render_parent_name := "_SS2D_RENDER"
-	var render_parent: SS2D_Shape_Render = null
-	if not has_node(render_parent_name):
-		render_parent = SS2D_Shape_Render.new()
-		render_parent.name = render_parent_name
-		render_parent.light_mask = light_mask
-		add_child(render_parent)
-		if editor_debug and Engine.is_editor_hint():
-			render_parent.set_owner(get_tree().edited_scene_root)
-	else:
-		render_parent = get_node(render_parent_name)
-	return render_parent
-
-
-# Returns true if the children have changed.
-func _create_rendering_nodes(size: int) -> bool:
-	var render_parent: SS2D_Shape_Render = _get_rendering_nodes_parent()
-	var child_count := render_parent.get_child_count()
-	var delta := size - child_count
-	#print ("%s | %s | %s" % [child_count, size, delta])
-	# Size and child_count match
-	if delta == 0:
-		return false
-
-	# More children than needed
-	elif delta < 0:
-		var children := render_parent.get_children()
-		for i in range(0, abs(delta), 1):
-			var child: SS2D_Shape_Render = children[child_count - 1 - i]
-			render_parent.remove_child(child)
-			child.set_mesh(null)
-			child.queue_free()
-
-	# Fewer children than needed
-	elif delta > 0:
-		for i in range(0, delta, 1):
-			var child := SS2D_Shape_Render.new()
-			child.light_mask = light_mask
-			render_parent.add_child(child)
-			if editor_debug and Engine.is_editor_hint():
-				child.set_owner(get_tree().edited_scene_root)
-	return true
-
-
-# Takes an array of SS2D_Meshes and returns a flat array of SS2D_Meshes.
-# If a SS2D_Mesh has n meshes, will return an array contain n SS2D_Mesh.
-# The returned array will consist of SS2D_Meshes each with a SS2D_Mesh::meshes array of size 1.
-func _draw_flatten_meshes_array(meshes: Array[SS2D_Mesh]) -> Array[SS2D_Mesh]:
-	var flat_meshes: Array[SS2D_Mesh] = []
-	for ss2d_mesh in meshes:
-		for godot_mesh in ss2d_mesh.meshes:
-			var new_mesh: SS2D_Mesh = ss2d_mesh.duplicate(false)
-			var arr: Array[ArrayMesh] = [godot_mesh]
-			new_mesh.meshes = arr
-			flat_meshes.push_back(new_mesh)
-	return flat_meshes
+func _ready() -> void:
+	# This must run in _ready() because the shape node itself must be ready and registered at the RenderingServer.
+	_renderer = SS2D_Renderer.new(self)
 
 
 func _draw() -> void:
-	var flat_meshes: Array[SS2D_Mesh] = _draw_flatten_meshes_array(_meshes)
-	_create_rendering_nodes(flat_meshes.size())
-	var render_parent: SS2D_Shape_Render = _get_rendering_nodes_parent()
-	var render_nodes := render_parent.get_children()
-	#print ("RENDER | %s" % [render_nodes])
-	#print ("MESHES | %s" % [flat_meshes])
-	for i in range(0, flat_meshes.size(), 1):
-		var m: SS2D_Mesh = flat_meshes[i]
-		var render_node: SS2D_Shape_Render = render_nodes[i]
-		render_node.set_mesh(m)
-
 	if editor_debug and Engine.is_editor_hint():
 		_draw_debug(SS2D_Shape.sort_by_z_index(_edges))
 
@@ -954,75 +848,50 @@ func bake_collision() -> void:
 	_collision_polygon_node.polygon = local_collision_points
 
 
-func cache_edges() -> void:
-	if shape_material != null and render_edges:
+func _build_meshes() -> void:
+	_edges.clear()
+	_meshes.clear()
+
+	if _points == null or shape_material == null or _points.get_point_count() < 2:
+		return
+
+	# TODO: Do not create individual meshes for each edge, corner, taper, etc. Merge meshes with same properties.
+
+	# Fill Mesh
+	var fill_mesh := _build_fill_mesh(_points.get_tessellated_points(), shape_material)
+	if fill_mesh:
+		_meshes.append(fill_mesh)
+
+	# Edges
+	if render_edges:
 		_edges = _build_edges(shape_material, _points.get_vertices())
-	else:
-		_edges = []
+
+		for e in _edges:
+			_meshes.append_array(e.get_meshes(color_encoding))
 
 
-func cache_meshes() -> void:
-	if shape_material != null:
-		_meshes = _build_meshes(SS2D_Shape.sort_by_z_index(_edges))
+func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) -> SS2D_Mesh:
+	if not _points.is_shape_closed() or \
+			s_mat == null or \
+			s_mat.fill_textures.is_empty() or \
+			points.size() < 3:
+		return null
 
+	# TODO: Support all fill textures not just the first
+	var tex: Texture2D = s_mat.fill_textures[0]
 
-func _build_meshes(edges: Array[SS2D_Edge]) -> Array[SS2D_Mesh]:
-	var meshes: Array[SS2D_Mesh] = []
-	if _points == null or _points.get_point_count() < 2:
-		return meshes
+	if tex == null:
+		return null
 
-	var produced_fill_mesh := false
-	for e in edges:
-		if not produced_fill_mesh and _points.is_shape_closed():
-			if e.z_index > shape_material.fill_texture_z_index:
-				# Produce Fill Meshes
-				for m in _build_fill_mesh(_points.get_tessellated_points(), shape_material):
-					meshes.push_back(m)
-				produced_fill_mesh = true
-
-		# Produce edge Meshes
-		for m in e.get_meshes(color_encoding):
-			meshes.push_back(m)
-	if not produced_fill_mesh and _points.is_shape_closed():
-		for m in _build_fill_mesh(_points.get_tessellated_points(), shape_material):
-			meshes.push_back(m)
-		produced_fill_mesh = true
-	return meshes
-
-
-func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) -> Array[SS2D_Mesh]:
-	var meshes: Array[SS2D_Mesh] = []
-	if s_mat == null:
-		return meshes
-	if s_mat.fill_textures.is_empty():
-		return meshes
-	if points.size() < 3:
-		return meshes
-
-	var tex: Texture2D = null
-	if s_mat.fill_textures.is_empty():
-		return meshes
-	tex = s_mat.fill_textures[0]
 	var tex_size: Vector2 = tex.get_size()
+	points = Geometry2D.offset_polygon(points, tex_size.x * s_mat.fill_mesh_offset).front()
+	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(points)
 
-	# Points to produce the fill mesh
-	var fill_points: PackedVector2Array = PackedVector2Array()
-	var polygons: Array[PackedVector2Array] = Geometry2D.offset_polygon(
-		PackedVector2Array(points), tex_size.x * s_mat.fill_mesh_offset
-	)
-	points = polygons[0]
-	fill_points.resize(points.size())
-	for i in range(points.size()):
-		fill_points[i] = points[i]
-
-	# Produce the fill mesh
-	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(fill_points)
 	if fill_tris.is_empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
-		return []
+		return null
 
-	var st: SurfaceTool
-	st = SurfaceTool.new()
+	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	var uv_points := _get_uv_points(points, s_mat, tex_size)
@@ -1031,26 +900,27 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, uv_points[fill_tris[i]])
 		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
+
 		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 1]])
 		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
+
 		st.set_color(Color.WHITE)
 		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 2]])
 		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
+
 	st.index()
 	st.generate_normals()
 	st.generate_tangents()
-	var array_mesh := st.commit()
-	var flip := false
-	var trans := Transform2D()
-	var mesh_data := SS2D_Mesh.new(tex, flip, trans, [array_mesh])
-	mesh_data.material = s_mat.fill_mesh_material
-	mesh_data.z_index = s_mat.fill_texture_z_index
-	mesh_data.z_as_relative = true
-	mesh_data.show_behind_parent = s_mat.fill_texture_show_behind_parent
-	meshes.push_back(mesh_data)
 
-	return meshes
+	return SS2D_Mesh.new(
+		tex,
+		st.commit(),
+		s_mat.fill_mesh_material,
+		s_mat.fill_texture_z_index,
+		true,
+		s_mat.fill_texture_show_behind_parent
+	)
 
 
 func _get_uv_points(
@@ -1109,7 +979,7 @@ func are_points_clockwise() -> bool:
 	return _points.are_points_clockwise()
 
 
-func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2) -> void:
+static func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2) -> void:
 	surface_tool.set_uv(uv)
 	surface_tool.set_uv2(uv)
 
@@ -1184,7 +1054,7 @@ static func build_quad_corner(
 	pt_prev_width: float,
 	flip_edges_: bool,
 	corner_status: int,
-	texture: Texture2D,
+	tex: Texture2D,
 	size: Vector2,
 	custom_scale: float,
 	custom_offset: float
@@ -1226,7 +1096,7 @@ static func build_quad_corner(
 	new_quad.pt_d = pt + (offset_12 - offset_23 + custom_offset_13) * mirror
 
 	new_quad.corner = corner_status
-	new_quad.texture = texture
+	new_quad.texture = tex
 
 	return new_quad
 
@@ -1395,7 +1265,7 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 	else:
 		# Process index_maps sequentially for web exports (probably slower than thread)
 		for index_map in index_maps:
-			var args = [index_map, s_mat.render_offset, 0.0]
+			var args := [index_map, s_mat.render_offset, 0.0]
 			var new_edge: SS2D_Edge = _build_edge_with_material_thread_wrapper(args)
 			edges.push_back(new_edge)
 
@@ -1492,11 +1362,6 @@ static func sort_by_int_ascending(a: Array) -> Array:
 	return a
 
 
-func clear_cached_data() -> void:
-	_edges = []
-	_meshes = []
-
-
 func _on_dirty_update() -> void:
 	if _dirty:
 		force_update()
@@ -1504,14 +1369,10 @@ func _on_dirty_update() -> void:
 
 
 func force_update() -> void:
-	update_render_nodes()
-	clear_cached_data()
-
 	bake_collision()
-	if _points.get_point_count() >= 2:
-		cache_edges()
-		cache_meshes()
-	queue_redraw()
+	_build_meshes()
+	_renderer.render(_meshes)
+	queue_redraw()  # Debug drawing
 	_dirty = false
 
 
