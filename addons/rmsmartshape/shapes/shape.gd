@@ -18,6 +18,8 @@ class_name SS2D_Shape
 #-DECLARATIONS-#
 ################
 
+const CLICK_RECT_TAG := "__ss2d_click_rect__"
+
 var _dirty: bool = false
 var _edges: Array[SS2D_Edge] = []
 var _meshes: Array[SS2D_Mesh] = []
@@ -25,6 +27,7 @@ var _collision_polygon_node: CollisionPolygon2D
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 var _renderer: SS2D_Renderer
+var _click_rect: ColorRect
 
 signal points_modified
 signal on_dirty_update
@@ -724,6 +727,9 @@ func _ready() -> void:
 	# This must run in _ready() because the shape node itself must be ready and registered at the RenderingServer.
 	_renderer = SS2D_Renderer.new(self)
 
+	if Engine.is_editor_hint():
+		_setup_click_rect()
+
 
 func _draw() -> void:
 	if editor_debug and Engine.is_editor_hint():
@@ -1373,6 +1379,8 @@ func force_update() -> void:
 	_build_meshes()
 	_renderer.render(_meshes)
 	queue_redraw()  # Debug drawing
+	_update_click_rect()
+
 	_dirty = false
 
 
@@ -1773,3 +1781,50 @@ func _taper_quad(
 
 func _build_edge_with_material_thread_wrapper(args: Array) -> SS2D_Edge:
 	return _build_edge_with_material(args[0], args[1], args[2])
+
+
+## Create an invisible rect that catches mouse clicks in editor so we can get clickable shapes.
+## It is not very accurate but good enough. MeshInstance2D also only performs a bounding box check.
+func _setup_click_rect() -> void:
+	# NOTE: When duplicating the shape (ctrl+d), Godot will also duplicate the click rect node
+	# and update its owner to current scene root, which makes it appear in editor.
+	# Hence we need to check if the node already exists and delete it.
+	# Updating its owner again to hide it, does not work for some reason.
+	# add_child() with INTERNAL_MODE_FRONT seems to prevent this whole issue in 4.5 but not in 4.4.
+
+	for i in get_child_count(true):
+		var node := get_child(i)
+
+		if node.has_meta(CLICK_RECT_TAG):
+			node.queue_free()
+			break
+
+	_click_rect = ColorRect.new()
+	_click_rect.modulate = Color.TRANSPARENT
+	_click_rect.set_meta(CLICK_RECT_TAG, true)
+	add_child(_click_rect, false, INTERNAL_MODE_FRONT)
+	_click_rect.owner = self  # Needed to make it clickable
+
+
+## Computes a bounding box of the tesselated curve and assigns it to the click rect.
+func _update_click_rect() -> void:
+	if not _click_rect:
+		return
+
+	if _points.get_point_count() == 0:
+		_click_rect.size = Vector2.ZERO
+		return
+
+	var points := _points.get_tessellated_points()
+	var rect_min: Vector2 = points[0]
+	var rect_max: Vector2 = points[0]
+
+	for i in range(1, points.size()):
+		var p := points[i]
+		rect_min.x = min(rect_min.x, p.x)
+		rect_min.y = min(rect_min.y, p.y)
+		rect_max.x = max(rect_max.x, p.x)
+		rect_max.y = max(rect_max.y, p.y)
+
+	_click_rect.size = rect_max - rect_min
+	_click_rect.position = rect_min
