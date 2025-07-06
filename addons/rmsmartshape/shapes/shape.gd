@@ -34,13 +34,16 @@ signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape)
 
 enum CollisionGenerationMethod {
-	## Uses the shape curve to generate a collision polygon. Usually this method is accurate enough.
-	## For open shapes, a precise method will be used instead, as the fast method is not suitable.
-	Fast,
-	## Uses the edge generation algorithm to create an accurate collision representation that
-	## exactly matches the shape's visuals.
-	## Depending on the shape's complexity, this method is very expensive.
-	Precise,
+	## Uses the shape curve to generate a collision polygon.
+	Default,
+	## Uses the edge generation algorithm to create a collision representation that sometimes
+	## matches the shape's visuals more accurately.
+	## This method is much slower and less consistent than [enum Default]. It should not be used
+	## unless absolutely needed.
+	Legacy,
+	## Same as [enum Default] but only generates edge collisions and keeps the inside open.
+	## Only relevant for closed shapes. Behaves the same as [enum Default] for open shapes.
+	Hollow,
 }
 
 enum CollisionUpdateMode {
@@ -143,7 +146,7 @@ var tessellation_tolerence: float = 6.0 :
 @export_group("Collision")
 
 ## Controls which method should be used to generate the collision shape.
-@export var collision_generation_method := CollisionGenerationMethod.Fast : set = set_collision_generation_method
+@export var collision_generation_method := CollisionGenerationMethod.Default : set = set_collision_generation_method
 
 ## Controls when to update collisions.
 @export var collision_update_mode := CollisionUpdateMode.Editor : set = set_collision_update_mode
@@ -778,57 +781,6 @@ func should_flip_edges() -> bool:
 		return flip_edges
 
 
-func _generate_collision_points_precise() -> PackedVector2Array:
-	var points := PackedVector2Array()
-	var num_points: int = _points.get_point_count()
-	if num_points < 2:
-		return points
-
-	var is_closed := _points.is_shape_closed()
-	var csize: float = 1.0 if is_closed else collision_size
-	var indices := PackedInt32Array(range(num_points))
-	var edge_data := SS2D_IndexMap.new(indices, null)
-	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, csize)
-	_weld_quad_array(edge.quads, false)
-
-	if is_closed:
-		var first_quad: SS2D_Quad = edge.quads[0]
-		var last_quad: SS2D_Quad = edge.quads.back()
-		SS2D_Shape.weld_quads(last_quad, first_quad)
-
-	if not edge.quads.is_empty():
-		# Top edge (typically point A unless corner quad)
-		for quad in edge.quads:
-			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(quad.pt_a)
-			elif quad.corner == SS2D_Quad.CORNER.OUTER:
-				points.push_back(quad.pt_d)
-			elif quad.corner == SS2D_Quad.CORNER.INNER:
-				pass
-
-		if not is_closed:
-			# Right Edge (point d, the first or final quad will never be a corner)
-			points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
-
-			# Bottom Edge (typically point c)
-			for quad_index in edge.quads.size():
-				var quad: SS2D_Quad = edge.quads[edge.quads.size() - 1 - quad_index]
-				if quad.corner == SS2D_Quad.CORNER.NONE:
-					points.push_back(quad.pt_c)
-				elif quad.corner == SS2D_Quad.CORNER.OUTER:
-					pass
-				elif quad.corner == SS2D_Quad.CORNER.INNER:
-					points.push_back(quad.pt_b)
-
-			# Left Edge (point b)
-			points.push_back(edge.quads[0].pt_b)
-	return points
-
-
-func _generate_collision_points_fast() -> PackedVector2Array:
-	return _points.get_tessellated_points()
-
-
 func bake_collision() -> void:
 	if not _collision_polygon_node:
 		return
@@ -837,20 +789,40 @@ func bake_collision() -> void:
 			or collision_update_mode == CollisionUpdateMode.Runtime and Engine.is_editor_hint():
 		return
 
+	if _points.get_point_count() < 2:
+		_collision_polygon_node.polygon = PackedVector2Array()
+		return
+
 	var generated_points: PackedVector2Array
+	var input_points := _points.get_tessellated_points()
+	var gen := SS2D_CollisionGen.new()
+	gen.collision_size = collision_size
+	gen.collision_offset = collision_offset
 
-	if collision_generation_method == CollisionGenerationMethod.Fast and _points.is_shape_closed():
-		generated_points = _generate_collision_points_fast()
-	else:
-		generated_points = _generate_collision_points_precise()
+	match collision_generation_method:
+		CollisionGenerationMethod.Legacy:
+			generated_points = gen.generate_legacy(self)
 
+		CollisionGenerationMethod.Hollow:
+			if _points.is_shape_closed():
+				generated_points = gen.generate_hollow(input_points)
+			else:
+				generated_points = gen.generate_open(input_points)
+
+		CollisionGenerationMethod.Default:
+			if _points.is_shape_closed():
+				generated_points = gen.generate_filled(input_points)
+			else:
+				generated_points = gen.generate_open(input_points)
+
+	# Always apply xform afterwards so node scaling also affects collision offset and size
 	var xform := _collision_polygon_node.get_global_transform().affine_inverse() * get_global_transform()
-	var local_collision_points: PackedVector2Array = xform * generated_points
+	generated_points = xform * generated_points
 
-	if local_collision_points.size() > 1 and local_collision_points[0] == local_collision_points[-1]:
-		local_collision_points.resize(local_collision_points.size() - 1)
+	if generated_points.size() > 1 and generated_points[0] == generated_points[-1]:
+		generated_points.resize(generated_points.size() - 1)
 
-	_collision_polygon_node.polygon = local_collision_points
+	_collision_polygon_node.polygon = generated_points
 
 
 func _build_meshes() -> void:
