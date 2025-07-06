@@ -238,13 +238,11 @@ func set_collision_update_mode(value: CollisionUpdateMode) -> void:
 func set_collision_size(s: float) -> void:
 	collision_size = s
 	set_as_dirty()
-	notify_property_list_changed()
 
 
 func set_collision_offset(s: float) -> void:
 	collision_offset = s
 	set_as_dirty()
-	notify_property_list_changed()
 
 
 ## Deprecated. Use get_point_array().set_from_curve() instead.
