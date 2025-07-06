@@ -1255,28 +1255,10 @@ func _build_edges(s_mat: SS2D_Material_Shape, verts: PackedVector2Array) -> Arra
 	index_maps = _merge_index_maps(index_maps, verts)
 
 	# Add the overrides to the mappings to be rendered
-	for override in overrides:
-		index_maps.push_back(override)
+	index_maps.append_array(overrides)
 
-	# Edge case for web so it doesn't use thread
-	if OS.get_name() != "Web":
-		var threads: Array[Thread] = []
-		for index_map in index_maps:
-			var thread := Thread.new()
-			var args := [index_map, s_mat.render_offset, 0.0]
-			var priority := 2
-			thread.start(self._build_edge_with_material_thread_wrapper.bind(args), priority)
-			threads.push_back(thread)
-		for thread in threads:
-			var new_edge: SS2D_Edge = thread.wait_to_finish()
-			edges.push_back(new_edge)
-
-	else:
-		# Process index_maps sequentially for web exports (probably slower than thread)
-		for index_map in index_maps:
-			var args := [index_map, s_mat.render_offset, 0.0]
-			var new_edge: SS2D_Edge = _build_edge_with_material_thread_wrapper(args)
-			edges.push_back(new_edge)
+	for index_map in index_maps:
+		edges.push_back(_build_edge_with_material(index_map, s_mat.render_offset, 0.0))
 
 	return edges
 
@@ -1784,10 +1766,6 @@ func _taper_quad(
 			quad.is_tapered = true
 			quad.texture = taper_texture
 	return null
-
-
-func _build_edge_with_material_thread_wrapper(args: Array) -> SS2D_Edge:
-	return _build_edge_with_material(args[0], args[1], args[2])
 
 
 ## Create an invisible rect that catches mouse clicks in editor so we can get clickable shapes.
