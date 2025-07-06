@@ -327,16 +327,15 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 		if not array_mesh:
 			continue
 
-		var mesh_data := SS2D_Mesh.new(
-			quad.texture,
-			array_mesh,
-			material,
-			z_index,
-			z_as_relative,
-			false
-		)
-		mesh_data.force_no_tiling = quad.is_tapered or quad.corner != SS2D_Quad.CORNER.NONE
-		meshes.push_back(mesh_data)
+		var mesh := SS2D_Mesh.new()
+
+		mesh.texture = quad.texture
+		mesh.mesh = array_mesh
+		mesh.material = material
+		mesh.z_index = z_index
+		mesh.z_as_relative = z_as_relative
+		mesh.force_no_tiling = quad.is_tapered or quad.corner != SS2D_Quad.CORNER.NONE
+		meshes.push_back(mesh)
 
 	return meshes
 

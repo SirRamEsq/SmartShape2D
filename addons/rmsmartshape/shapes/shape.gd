@@ -22,12 +22,12 @@ const CLICK_RECT_TAG := "__ss2d_click_rect__"
 
 var _dirty: bool = false
 var _edges: Array[SS2D_Edge] = []
-var _meshes: Array[SS2D_Mesh] = []
 var _collision_polygon_node: CollisionPolygon2D
 # Whether or not the plugin should allow editing this shape
 var can_edit: bool = true
 var _renderer: SS2D_Renderer
 var _click_rect: ColorRect
+var _first_update: bool = true
 
 signal points_modified
 signal on_dirty_update
@@ -93,6 +93,10 @@ enum CollisionUpdateMode {
 
 ## Resource that holds shape point geometry (aka point array).
 @export var _points: SS2D_Point_Array : set = set_point_array
+
+# TODO: Consider bumping minimum Godot version to 4.3 so we can use @export_storage
+## Caches generated meshes for faster loading times. Do not touch this, this is an internal property.
+@export var _meshes: Array[SS2D_Mesh] = []
 
 @export_group("Edges")
 
@@ -919,14 +923,13 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	st.generate_normals()
 	st.generate_tangents()
 
-	return SS2D_Mesh.new(
-		tex,
-		st.commit(),
-		s_mat.fill_mesh_material,
-		s_mat.fill_texture_z_index,
-		true,
-		s_mat.fill_texture_show_behind_parent
-	)
+	var mesh := SS2D_Mesh.new()
+	mesh.texture = tex
+	mesh.mesh = st.commit()
+	mesh.material = s_mat.fill_mesh_material
+	mesh.z_index = s_mat.fill_texture_z_index
+	mesh.show_behind_parent = s_mat.fill_texture_show_behind_parent
+	return mesh
 
 
 func _get_uv_points(
@@ -1375,12 +1378,16 @@ func _on_dirty_update() -> void:
 
 
 func force_update() -> void:
-	bake_collision()
-	_build_meshes()
+	bake_collision()  # TODO: Get rid of CollisionUpdateMode and use _first_update as well.
+
+	if not _first_update or not _meshes:
+		_build_meshes()
+
 	_renderer.render(_meshes)
 	queue_redraw()  # Debug drawing
 	_update_click_rect()
 
+	_first_update = false
 	_dirty = false
 
 
