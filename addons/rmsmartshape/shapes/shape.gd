@@ -895,31 +895,28 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 
 	var tex_size: Vector2 = tex.get_size()
 	points = Geometry2D.offset_polygon(points, tex_size.x * s_mat.fill_mesh_offset).front()
-	var fill_tris: PackedInt32Array = Geometry2D.triangulate_polygon(points)
+	var indices: PackedInt32Array = Geometry2D.triangulate_polygon(points)
 
-	if fill_tris.is_empty():
+	if indices.is_empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
 		return null
 
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = points
+	arrays[Mesh.ARRAY_INDEX] = indices
+
+	var uv_points: PackedVector2Array = _get_uv_points(points, s_mat, tex_size)
+	arrays[Mesh.ARRAY_TEX_UV] = uv_points
+	arrays[Mesh.ARRAY_TEX_UV2] = uv_points
+
+	var colors := PackedColorArray()
+	colors.resize(points.size())
+	colors.fill(Color.WHITE)
+	arrays[Mesh.ARRAY_COLOR] = colors
+
 	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	var uv_points := _get_uv_points(points, s_mat, tex_size)
-
-	for i in range(0, fill_tris.size() - 1, 3):
-		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, uv_points[fill_tris[i]])
-		st.add_vertex(Vector3(points[fill_tris[i]].x, points[fill_tris[i]].y, 0))
-
-		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 1]])
-		st.add_vertex(Vector3(points[fill_tris[i + 1]].x, points[fill_tris[i + 1]].y, 0))
-
-		st.set_color(Color.WHITE)
-		_add_uv_to_surface_tool(st, uv_points[fill_tris[i + 2]])
-		st.add_vertex(Vector3(points[fill_tris[i + 2]].x, points[fill_tris[i + 2]].y, 0))
-
-	st.index()
+	st.create_from_arrays(arrays, Mesh.PRIMITIVE_TRIANGLES)
 	st.generate_normals()
 	st.generate_tangents()
 
@@ -986,11 +983,6 @@ static func get_points_orientation(points: PackedVector2Array) -> SS2D_Point_Arr
 func are_points_clockwise() -> bool:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("are_points_clockwise()")
 	return _points.are_points_clockwise()
-
-
-static func _add_uv_to_surface_tool(surface_tool: SurfaceTool, uv: Vector2) -> void:
-	surface_tool.set_uv(uv)
-	surface_tool.set_uv2(uv)
 
 
 static func build_quad_from_two_points(
