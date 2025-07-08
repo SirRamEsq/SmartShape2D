@@ -12,7 +12,7 @@ The issue is most likely that you need to set the texture's import options in Go
 
 ![Import-Texture-Settings](./imgs/faq-texture-repeat-import.png)
 
-## Why isn't my shape updaing when I change the Light Mask?
+## Why isn't my shape updating when I change the Light Mask?
 
 Each shape is currently rendered by multiple-subnodes (Children Node2Ds).
 Their owner isn't set, making them invisible in the editor (unless you have debug mode on).
@@ -45,3 +45,15 @@ Sharply changing the width will result in odd looking shapes.
 
 If anyone has any insights on this issue, please feel free to open an issue on this subject
 and let us know how we might be able to fix it
+
+
+## The shape is not rendered
+
+Usually appears in combination with the following error message.
+
+> canvas_item_add_polygon: Invalid polygon data, triangulation failed
+
+This error indicates there are inside-out parts, i.e. edges intersecting other edges.
+It is often caused by having two consecutive points at the same position.
+
+When generating closed SmartShapes programmatically, make sure to call `get_point_array().close_shape()` and do not manually add the closing point.

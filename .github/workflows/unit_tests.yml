@@ -5,7 +5,7 @@ on:
       godot-version:
         description: Godot Engine version to use for testing.
         type: string
-        default: 4.2.1-stable
+        default: 4.3-stable
       ss2d-ref:
         description: A commit, branch or tag to use for testing.
         type: string
@@ -16,7 +16,7 @@ on:
       godot-version:
         description: Godot Engine version to use for testing.
         type: string
-        default: 4.2.1-stable
+        default: 4.3-stable
       ss2d-ref:
         description: A commit, branch or tag to use for testing.
         type: string

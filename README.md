@@ -5,7 +5,7 @@
 
 ## About
 
-![Godot 4.2](https://img.shields.io/badge/Godot-v4.2.x-%23478cbf?logo=godot-engine&logoColor=white)
+![Godot 4.3](https://img.shields.io/badge/Godot-v4.3-%23478cbf?logo=godot-engine&logoColor=white)
 [![⚙️ CI](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/ci.yml/badge.svg)](https://github.com/SirRamEsq/SmartShape2D/actions/workflows/ci.yml)
 
 **This is the GODOT 4 version of this plugin.

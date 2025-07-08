@@ -198,13 +198,13 @@ static func generate_normals_for_quad_interpolated(qp: SS2D_Quad, q: SS2D_Quad, 
 static func generate_array_mesh_from_quad_sequence(_quads: Array[SS2D_Quad], _wrap_around: bool, color_encoding: int) -> ArrayMesh:
 	# FIXME: _wrap_around is unused.
 	if _quads.is_empty():
-		return ArrayMesh.new()
+		return null
 
 	var total_length: float = 0.0
 	for q in _quads:
 		total_length += q.get_length_average()
 	if total_length == 0.0:
-		return ArrayMesh.new()
+		return null
 
 	var first_quad: SS2D_Quad = _quads[0]
 	var tex: Texture2D = first_quad.texture
@@ -304,9 +304,11 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array[SS2D_Quad], _wr
 
 	st.index()
 	st.generate_normals()
+	st.generate_tangents()
 	return st.commit()
 
 
+## Returns only visible meshes, quads without a texture are skipped.
 func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 	# Get Arrays of consecutive quads with the same mesh data.
 	# For each array, generate Mesh Data from the quad.
@@ -317,17 +319,25 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 	for consecutive_quads in consecutive_quad_arrays:
 		if consecutive_quads.is_empty():
 			continue
-		var array_mesh: ArrayMesh = SS2D_Edge.generate_array_mesh_from_quad_sequence(
-			consecutive_quads, wrap_around, color_encoding
-		)
+
 		var quad: SS2D_Quad = consecutive_quads[0]
-		var tex: Texture2D = quad.texture
-		var flip: bool = quad.flip_texture
-		var mesh_data := SS2D_Mesh.new(tex, flip, Transform2D(), [array_mesh], material)
-		mesh_data.force_no_tiling = quad.is_tapered or quad.corner != SS2D_Quad.CORNER.NONE
-		mesh_data.z_index = z_index
-		mesh_data.z_as_relative = z_as_relative
-		meshes.push_back(mesh_data)
+
+		if not quad.texture:
+			continue
+
+		var array_mesh := SS2D_Edge.generate_array_mesh_from_quad_sequence(consecutive_quads, wrap_around, color_encoding)
+
+		if not array_mesh:
+			continue
+
+		var mesh := SS2D_Mesh.new()
+		mesh.texture = quad.texture
+		mesh.mesh = array_mesh
+		mesh.material = material
+		mesh.z_index = z_index
+		mesh.z_as_relative = z_as_relative
+		mesh.force_no_tiling = quad.is_tapered or quad.corner != SS2D_Quad.CORNER.NONE
+		meshes.push_back(mesh)
 
 	return meshes
 

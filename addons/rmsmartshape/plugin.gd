@@ -1666,7 +1666,7 @@ func perform_version_check_and_conversion(force: bool = false, show_dialog_when_
 	print("SS2D: Performing version check...")
 
 	var converters: Array[SS2D_VersionTransition.IVersionConverter] = [
-		SS2D_VersionTransition.ShapeNodeTypeConverter.new("Node2D", "MeshInstance2D"),
+		# SS2D_VersionTransition.ShapeNodeTypeConverter.new("Node2D", "MeshInstance2D"),
 		# Insert more converters for future changes here
 	]
 

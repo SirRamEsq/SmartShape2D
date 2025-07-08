@@ -2463,7 +2463,7 @@ render_offset = 0.0
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 position = Vector2(-5964, 6953)
 
-[node name="RoadShape2" type="MeshInstance2D" parent="StaticBody2D"]
+[node name="RoadShape2" type="Node2D" parent="StaticBody2D"]
 texture_repeat = 2
 script = ExtResource("1_ru2uh")
 _points = SubResource("Resource_18g5o")
