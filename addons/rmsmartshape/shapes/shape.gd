@@ -94,9 +94,8 @@ enum CollisionUpdateMode {
 ## Resource that holds shape point geometry (aka point array).
 @export var _points: SS2D_Point_Array : set = set_point_array
 
-# TODO: Consider bumping minimum Godot version to 4.3 so we can use @export_storage
-## Caches generated meshes for faster loading times. Do not touch this, this is an internal property.
-@export var _meshes: Array[SS2D_Mesh] = []
+## Caches generated meshes for faster loading times.
+@export_storage var _meshes: Array[SS2D_Mesh] = []
 
 @export_group("Edges")
 
