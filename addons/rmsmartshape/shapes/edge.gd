@@ -317,9 +317,12 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 	#print("Arrays: %s" % consecutive_quad_arrays.size())
 	var meshes: Array[SS2D_Mesh] = []
 	for consecutive_quads in consecutive_quad_arrays:
+		if consecutive_quads.is_empty():
+			continue
+
 		var quad: SS2D_Quad = consecutive_quads[0]
 
-		if consecutive_quads.is_empty() or not quad.texture:
+		if not quad.texture:
 			continue
 
 		var array_mesh := SS2D_Edge.generate_array_mesh_from_quad_sequence(consecutive_quads, wrap_around, color_encoding)
@@ -328,7 +331,6 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING) -> Array[SS2D_Mesh]:
 			continue
 
 		var mesh := SS2D_Mesh.new()
-
 		mesh.texture = quad.texture
 		mesh.mesh = array_mesh
 		mesh.material = material
