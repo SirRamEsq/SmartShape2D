@@ -2,13 +2,14 @@ extends SS2D_Action
 class_name SS2D_ActionAddCollisionNodes
 
 var _shape: SS2D_Shape
+var _container: Node
+var _poly: CollisionPolygon2D
+var _old_polygon_path: NodePath
 
-var _saved_index: int
-var _saved_pos: Vector2
 
-
-func _init(shape: SS2D_Shape) -> void:
+func _init(shape: SS2D_Shape, container: Node) -> void:
 	_shape = shape
+	_container = container
 
 
 func get_name() -> String:
@@ -16,40 +17,22 @@ func get_name() -> String:
 
 
 func do() -> void:
-	_saved_index = _shape.get_index()
-	_saved_pos = _shape.position
+	_old_polygon_path = _shape.collision_polygon_node_path
 
-	var owner := _shape.owner
-	var static_body := StaticBody2D.new()
-	static_body.position = _shape.position
-	_shape.position = Vector2.ZERO
+	_poly = CollisionPolygon2D.new()
 
-	_shape.get_parent().add_child(static_body, true)
-	static_body.owner = owner
+	if _container:
+		_container.add_child(_poly, true)
+	else:
+		_shape.add_sibling(_poly, true)
 
-	_shape.get_parent().remove_child(_shape)
-	static_body.add_child(_shape, true)
-	_shape.owner = owner
-
-	var poly: CollisionPolygon2D = CollisionPolygon2D.new()
-	static_body.add_child(poly, true)
-	poly.owner = owner
-	# TODO: Make this a option at some point
-	poly.modulate.a = 0.3
-	poly.visible = false
-	_shape.collision_polygon_node_path = _shape.get_path_to(poly)
+	_poly.owner = _shape.owner
+	_shape.collision_polygon_node_path = _shape.get_path_to(_poly)
 
 
 func undo() -> void:
-	var owner := _shape.owner
-	var parent := _shape.get_parent()
-	var grandparent := _shape.get_parent().get_parent()
-	parent.remove_child(_shape)
-	grandparent.remove_child(parent)
-	parent.free()
+	_shape.collision_polygon_node_path = _old_polygon_path
 
-	grandparent.add_child(_shape)
-	_shape.owner = owner
-	grandparent.move_child(_shape, _saved_index)
-	_shape.position = _saved_pos
-
+	if is_instance_valid(_poly):
+		_poly.queue_free()
+		_poly = null
