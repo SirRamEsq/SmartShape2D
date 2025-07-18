@@ -149,12 +149,10 @@ var tessellation_tolerence: float = 6.0 :
 @export var collision_update_mode := CollisionUpdateMode.Editor : set = set_collision_update_mode
 
 ## Controls size of generated polygon for CollisionPolygon2D.
-@export_range(0.0, 64.0, 1.0, "or_greater")
-var collision_size: float = 32 : set = set_collision_size
+@export var collision_size: float = 32 : set = set_collision_size
 
 ## Controls offset of generated polygon for CollisionPolygon2D.
-@export_range(-64.0, 64.0, 1.0, "or_greater", "or_lesser")
-var collision_offset: float = 0.0 : set = set_collision_offset
+@export var collision_offset: float = 0.0 : set = set_collision_offset
 
 ## NodePath to CollisionPolygon2D node for which polygon data will be generated.
 @export_node_path("CollisionPolygon2D") var collision_polygon_node_path: NodePath : set = set_collision_polygon_node_path
