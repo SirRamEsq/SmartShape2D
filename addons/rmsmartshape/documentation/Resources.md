@@ -24,7 +24,7 @@ Once a shape material is defined, it can be easily reused by any number of Smart
 - Render Offset
   - Every edge in the shape will be offset by this amount
 - Weld
-  - Whether or not to weld the last quad of an edge with the first quad of the next edge
+  - Whether to weld the last quad of an edge with the first quad of the next edge
 
 ## Edge Meta Material
 
@@ -34,12 +34,12 @@ Instead, this resource contains a single **Edge Material** and describes how and
 - Normal Range
   - The angles at which an edge is allowed to be rendered
 - Weld
-  - Whether or not to weld the quads in this edge
+  - Whether to weld the quads in this edge
 - Taper Sharp Corners
   - Edge vertices sharper than 90° that aren't rendered as corners, will be tapered and not welded
   - Will not work properly on shapes with curves
 - Render
-  - Whether or not this edge is visible
+  - Whether this edge is visible
 - Z Index
   - Dictates the order in which edges are drawn
 - Offset
@@ -104,9 +104,9 @@ See previous section.
 Most likely, the textures you use will not *perfectly* fit the polygon.
 This setting allows you to determine how SmartShape will rectify this.
 
-Differt options may look better or worse depending on the art-style.
+Different options may look better or worse depending on the art-style.
 
-- Sqush and Stretch
+- Squish and Stretch
   - Texture will be mutated
   - Either slightly squished or stretched to fit the polygon
 - Crop
