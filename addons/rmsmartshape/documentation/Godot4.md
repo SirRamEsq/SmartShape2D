@@ -10,9 +10,10 @@ To make point geometry unique, press **"Make Unique"** property button in Geomet
 
 ## Repeating Textures and Normal Textures with CanvasTexture
 
-CanvasItem, the base class of Node2D has a Texture section with `repeat`.  If you aren't using a normal, you can set it here.
-By default, this setting is inherited by children nodes so you could set it on a parent node (assuming all the children need
-repeating textures or it's easier to disable for a few specific nodes than turn it on for most).
+> 🛈 Starting with SS2D v3.3, edge textures will always be tiled regardless of the `repeat` setting.
+
+`CanvasItem`, the base class of `Node2D` has a `Texture` section with `repeat`.  If you aren't using a normal, you can set it here.
+By default, this setting is inherited by children nodes so you could set it on a parent node (assuming all the children need repeating textures or it's easier to disable for a few specific nodes than turn it on for most).
 
 ![Creating CanvasTexture](imgs/canvas-item-repeat.png)
 

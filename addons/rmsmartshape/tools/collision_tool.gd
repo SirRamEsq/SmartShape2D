@@ -23,7 +23,7 @@ class OptionsDialog:
 
 		var label := Label.new()
 		label.text = """
-		Enter a node path or a group name.
+		Enter a node path, a group name or a scene unique name.
 		The first node found is used as parent for collision polygons generated using the Collision Tool.
 		If empty, the collision polygon is created as sibling to the shape node.
 
