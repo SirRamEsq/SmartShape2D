@@ -96,28 +96,28 @@ func test_point_constraints() -> void:
 	# POINT IN/OUT AND PROPERTIES
 	assert_eq(p_array.get_point_in(keys[3]), Vector2(0, 0))
 	assert_eq(p_array.get_point_out(keys[3]), Vector2(0, 0))
-	assert_eq(p_array.get_point_properties(keys[3]).flip, false)
+	assert_eq(p_array.get_point(keys[3]).flip, false)
 	assert_eq(p_array.get_point_in(keys[4]), Vector2(0, 0))
 	assert_eq(p_array.get_point_out(keys[4]), Vector2(0, 0))
-	assert_eq(p_array.get_point_properties(keys[4]).flip, false)
+	assert_eq(p_array.get_point(keys[4]).flip, false)
 	p_array.set_point_in(keys[3], Vector2(33, 44))
 	p_array.set_point_out(keys[3], Vector2(11, 22))
 
-	p_array.get_point_properties(keys[3]).flip = true
+	p_array.get_point(keys[3]).flip = true
 
 	# Other points with CONSTRAINT.PROPERTIES should also be flipped now
 	assert_eq(p_array.get_point_in(keys[3]), Vector2(33, 44))
 	assert_eq(p_array.get_point_out(keys[3]), Vector2(11, 22))
-	assert_eq(p_array.get_point_properties(keys[3]).flip, true)
+	assert_eq(p_array.get_point(keys[3]).flip, true)
 	assert_eq(p_array.get_point_in(keys[4]), Vector2(33, 44))
 	assert_eq(p_array.get_point_out(keys[4]), Vector2(11, 22))
-	assert_eq(p_array.get_point_properties(keys[4]).flip, true)
+	assert_eq(p_array.get_point(keys[4]).flip, true)
 	assert_eq(p_array.get_point_in(keys[2]), Vector2(33, 44))
 	assert_eq(p_array.get_point_out(keys[2]), Vector2(11, 22))
-	assert_eq(p_array.get_point_properties(keys[2]).flip, true)
+	assert_eq(p_array.get_point(keys[2]).flip, true)
 	assert_eq(p_array.get_point_in(keys[1]), Vector2(0, 0))
 	assert_eq(p_array.get_point_out(keys[1]), Vector2(0, 0))
-	assert_eq(p_array.get_point_properties(keys[1]).flip, false)
+	assert_eq(p_array.get_point(keys[1]).flip, false)
 
 	# Get constraint
 	assert_eq(p_array.get_point_constraint(keys[2], keys[3]), SS2D_Point_Array.CONSTRAINT.ALL)
@@ -142,7 +142,6 @@ func test_clone() -> void:
 		print("p2: ", p2.get_instance_id())
 
 		assert_ne(p1, p2, "Unique Point with key %s" % k)
-		assert_ne(p1.properties, p2.properties)
 
 		assert_eq(p1.get_signal_connection_list("changed").size(), 1, "SIGNALS CONNECTED")
 		print(p1.get_signal_connection_list("changed")[0])
@@ -167,9 +166,9 @@ func test_clone() -> void:
 		assert_eq(p1.position, p2.position, "pos Same Values")
 		assert_eq(p1.point_in, p2.point_in, "p_in Same Values")
 		assert_eq(p1.point_out, p2.point_out, "p_out Same Values")
-		assert_eq(p1.properties.texture_idx, p2.properties.texture_idx, "tex_idx Same Values")
-		assert_eq(p1.properties.flip, p2.properties.flip, "flip Same Values")
-		assert_eq(p1.properties.width, p2.properties.width, "width Same Values")
+		assert_eq(p1.texture_idx, p2.texture_idx, "tex_idx Same Values")
+		assert_eq(p1.flip, p2.flip, "flip Same Values")
+		assert_eq(p1.width, p2.width, "width Same Values")
 
 	# Run these tests after checking for point uniqueness because they modify the point array
 	assert_eq(p_array.get_next_key(), other.get_next_key())
