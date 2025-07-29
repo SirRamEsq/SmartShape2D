@@ -172,12 +172,20 @@ func is_key_valid(k: int) -> bool:
 ## See also add_point().
 ## Returns the key of the added point.
 func add_point_direct(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
+	return add_point_object_direct(SS2D_Point.new(point), idx, use_key)
+
+
+## Add a point and insert it at the given index or at the end by default, regardless whether the
+## shape is closed or not.
+## See also add_point().
+## Returns the key of the added point.
+func add_point_object_direct(point: SS2D_Point, idx: int = -1, use_key: int = -1) -> int:
 #	print("Add Point  ::  ", point, " | idx: ", idx, " | key: ", use_key, " |")
 	if use_key == -1 or not is_key_valid(use_key):
 		use_key = reserve_key()
 	if use_key == _next_key:
 		_next_key += 1
-	_points[use_key] = SS2D_Point.new(point)
+	_points[use_key] = point
 	_hook_point(use_key)
 	_point_order.push_back(use_key)
 	if idx != -1:
@@ -191,7 +199,15 @@ func add_point_direct(point: Vector2, idx: int = -1, use_key: int = -1) -> int:
 ## If explicitly you do not want this, use add_point_direct() instead.
 ## Returns the key of the added point.
 func add_point(pos: Vector2, index: int = -1, key: int = -1) -> int:
-	return add_point_direct(pos, _adjust_add_point_index(index), key)
+	return add_point_object(SS2D_Point.new(pos), index, key)
+
+
+## Add a point and insert it at the given index or at the end by default.
+## If the shape is closed, the point will always be created before the last and after the first point.
+## If explicitly you do not want this, use add_point_direct() instead.
+## Returns the key of the added point.
+func add_point_object(point: SS2D_Point, index: int = -1, key: int = -1) -> int:
+	return add_point_object_direct(point, _adjust_add_point_index(index), key)
 
 
 ## Don't allow a point to be added after the last point of the closed shape or before the first.
@@ -415,15 +431,32 @@ func get_point_position(key: int) -> Vector2:
 	return Vector2(0, 0)
 
 
+## Deprecated. Use respective members in SS2D_Point directly.
+## @deprecated
 func set_point_properties(key: int, value: SS2D_VertexProperties) -> void:
-	if has_point(key):
-		_points[key].properties = value
+	SS2D_PluginFunctionality.show_deprecation_warning("set_point_properties", "SS2D_Point")
+	var p := get_point(key)
+	if p:
+		p.texture_idx = value.texture_idx
+		p.flip = value.flip
+		p.width = value.width
 		_changed()
 
 
+## Deprecated. Use respective members in SS2D_Point directly.
+## @deprecated
 func get_point_properties(key: int) -> SS2D_VertexProperties:
+	SS2D_PluginFunctionality.show_deprecation_warning("get_point_properties", "SS2D_Point")
 	var p := get_point(key)
-	return p.properties if p else null
+
+	if not p:
+		return null
+
+	var props := SS2D_VertexProperties.new()
+	props.texture_idx = p.texture_idx
+	props.flip = p.flip
+	props.width = p.width
+	return props
 
 
 ## Returns the corresponding key for a given point or -1 if it does not exist.
@@ -510,7 +543,13 @@ func _update_constraints(src: int) -> void:
 			set_point_in(dst, get_point_in(src))
 			set_point_out(dst, get_point_out(src))
 		if constraint & CONSTRAINT.PROPERTIES:
-			set_point_properties(dst, get_point_properties(src))
+			var pdst := get_point(dst)
+			var psrc := get_point(src)
+
+			if pdst and psrc:
+				pdst.texture_idx = psrc.texture_idx
+				pdst.flip = psrc.flip
+				pdst.width = psrc.width
 
 
 ## Will mutate points based on constraints.[br]
