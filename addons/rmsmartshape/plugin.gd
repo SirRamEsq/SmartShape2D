@@ -281,11 +281,11 @@ func _gui_update_vert_info_panel() -> void:
 	# Shrink panel
 	gui_point_info_panel.size = Vector2(1, 1)
 
-	var properties := shape.get_point_array().get_point_properties(key)
+	var point := shape.get_point_array().get_point(key)
 	gui_point_info_panel.set_idx(idx)
-	gui_point_info_panel.set_texture_idx(properties.texture_idx)
-	gui_point_info_panel.set_width(properties.width)
-	gui_point_info_panel.set_flip(properties.flip)
+	gui_point_info_panel.set_texture_idx(point.texture_idx)
+	gui_point_info_panel.set_width(point.width)
+	gui_point_info_panel.set_flip(point.flip)
 
 
 func _load_config() -> void:
@@ -961,6 +961,7 @@ func deselect_verts() -> void:
 
 
 func select_verticies(keys: PackedInt32Array, action: ACTION_VERT) -> ActionDataVert:
+	# FIXME: This is likely buggy, not all point properties are stored
 	var pa := shape.get_point_array()
 	var from_positions := PackedVector2Array()
 	var from_positions_c_in := PackedVector2Array()
@@ -970,7 +971,7 @@ func select_verticies(keys: PackedInt32Array, action: ACTION_VERT) -> ActionData
 		from_positions.push_back(pa.get_point_position(key))
 		from_positions_c_in.push_back(pa.get_point_in(key))
 		from_positions_c_out.push_back(pa.get_point_out(key))
-		from_widths.push_back(pa.get_point_properties(key).width)
+		from_widths.push_back(pa.get_point(key).width)
 	return ActionDataVert.new(
 		keys, from_positions, from_positions_c_in, from_positions_c_out, from_widths, action
 	)
@@ -1163,18 +1164,18 @@ func _input_handle_mouse_wheel(btn: int) -> bool:
 		if not shape.can_edit:
 			return false
 		var key: int = current_action.current_point_key()
-		var props := shape.get_point_array().get_point_properties(key)
+		var point := shape.get_point_array().get_point(key)
 		if Input.is_key_pressed(KEY_SHIFT):
 			var width_step := 0.1
 			if btn == MOUSE_BUTTON_WHEEL_DOWN:
 				width_step *= -1
-			props.width = props.width + width_step
+			point.width = point.width + width_step
 
 		else:
 			var texture_idx_step := 1
 			if btn == MOUSE_BUTTON_WHEEL_DOWN:
 				texture_idx_step *= -1
-			props.texture_idx = props.texture_idx + texture_idx_step
+			point.texture_idx = point.texture_idx + texture_idx_step
 
 		update_overlays()
 		_gui_update_info_panels()
@@ -1191,8 +1192,8 @@ func _input_handle_keyboard_event(event: InputEventKey) -> bool:
 		if current_action.is_single_vert_selected():
 			if kb.pressed and kb.keycode == KEY_SPACE:
 				var key: int = current_action.current_point_key()
-				var props := shape.get_point_array().get_point_properties(key)
-				props.flip = not props.flip
+				var point := shape.get_point_array().get_point(key)
+				point.flip = not point.flip
 				_gui_update_info_panels()
 
 		if kb.pressed and kb.keycode == KEY_ESCAPE:
@@ -1478,7 +1479,7 @@ func _input_motion_move_width_handle(mouse_position: Vector2, scale: Vector2) ->
 		var from_width: float = current_action.starting_width[i]
 		var from_position: Vector2 = current_action.starting_positions[i]
 		width_scaling = from_position.distance_to(mouse_position) / WIDTH_HANDLE_OFFSET * scale.x
-		shape.get_point_array().get_point_properties(key).width = roundf(from_width * width_scaling * 10.0) / 10.0
+		shape.get_point_array().get_point(key).width = roundf(from_width * width_scaling * 10.0) / 10.0
 		update_overlays()
 	return true
 

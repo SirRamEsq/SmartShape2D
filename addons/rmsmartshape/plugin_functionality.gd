@@ -131,11 +131,11 @@ static func snap_position(
 	return pos_global_snapped
 
 
-static func show_deprecation_warning(what: String, new_location: String) -> void:
+static func show_deprecation_warning(what: String, new_location: String, hint: String = "") -> void:
 	if new_location:
-		push_warning(what, " is deprecated. Use ", new_location, " instead.")
+		push_warning(what, " is deprecated. Use ", new_location, " instead. ", hint)
 	else:
-		push_warning(what, " is deprecated and will be removed in a future version.")
+		push_warning(what, " is deprecated and will be removed in a future version. ", hint)
 
 
 static func show_point_array_deprecation_warning(what: String) -> void:

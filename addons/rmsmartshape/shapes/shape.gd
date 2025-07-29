@@ -651,46 +651,46 @@ func set_point(key: int, value: SS2D_Point) -> void:
 	_points.set_point(key, value)
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_width(key: int, w: float) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_width()")
-	_points.get_point_properties(key).width = w
+	_points.get_point(key).width = w
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_width(key: int) -> float:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_width()")
-	return _points.get_point_properties(key).width
+	return _points.get_point(key).width
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_texture_index(key: int, tex_idx: int) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_index()")
-	_points.get_point_properties(key).texture_idx = tex_idx
+	_points.get_point(key).texture_idx = tex_idx
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_texture_index(key: int) -> int:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_index()")
-	return _points.get_point_properties(key).texture_idx
+	return _points.get_point(key).texture_idx
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_texture_flip(key: int, flip: bool) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_flip()")
-	_points.get_point_properties(key).flip = flip
+	_points.get_point(key).flip = flip
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_texture_flip(key: int) -> bool:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_flip()")
-	return _points.get_point_properties(key).flip
+	return _points.get_point(key).flip
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
@@ -1081,8 +1081,8 @@ func _get_width_for_tessellated_point(
 ) -> float:
 	var v_idx := _points.get_tesselation_vertex_mapping().tess_to_vertex_index(t_idx)
 	var v_idx_next := SS2D_PluginFunctionality.get_next_point_index(v_idx, points)
-	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
-	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
+	var w1: float = _points.get_point(_points.get_point_key_at_index(v_idx)).width
+	var w2: float = _points.get_point(_points.get_point_key_at_index(v_idx_next)).width
 	var ratio: float = get_ratio_from_tessellated_point_to_vertex(t_idx)
 	return lerp(w1, w2, ratio)
 
@@ -1528,7 +1528,7 @@ func _build_edge_with_material(
 
 		var vert_idx: int = _points.get_tesselation_vertex_mapping().tess_to_vertex_index(tess_idx)
 		var vert_key: int = _points.get_point_key_at_index(vert_idx)
-		var vert_props := _points.get_point_properties(vert_key)
+		var vert_props := _points.get_point(vert_key)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
 		var pt_prev: Vector2 = verts_t[tess_idx_prev]

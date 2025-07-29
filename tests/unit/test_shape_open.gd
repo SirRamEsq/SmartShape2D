@@ -63,17 +63,17 @@ func test_invert_point_order() -> void:
 	var size := points.size()
 	var last_idx := size - 1
 	var keys := pa.add_points(points)
-	pa.get_point_properties(keys[0]).width = 5.0
+	pa.get_point(keys[0]).width = 5.0
 	assert_eq(points[0], pa.get_point_at_index(0).position)
 	assert_eq(points[last_idx], pa.get_point_at_index(last_idx).position)
 
-	assert_eq(1.0, pa.get_point_at_index(last_idx).properties.width)
-	assert_eq(5.0, pa.get_point_at_index(0).properties.width)
+	assert_eq(1.0, pa.get_point_at_index(last_idx).width)
+	assert_eq(5.0, pa.get_point_at_index(0).width)
 
 	pa.invert_point_order()
 
-	assert_eq(5.0, pa.get_point_at_index(last_idx).properties.width)
-	assert_eq(1.0, pa.get_point_at_index(0).properties.width)
+	assert_eq(5.0, pa.get_point_at_index(last_idx).width)
+	assert_eq(1.0, pa.get_point_at_index(0).width)
 
 	assert_eq(points[0], pa.get_point_at_index(last_idx).position)
 	assert_eq(points[last_idx], pa.get_point_at_index(0).position)
@@ -266,8 +266,8 @@ func test_get_width_for_tessellated_point() -> void:
 	var w1 := 5.3
 	var w2 := 3.15
 	var w_average := (w1 + w2) / 2.0
-	pa.get_point_properties(k1).width = w1
-	pa.get_point_properties(k2).width = w2
+	pa.get_point(k1).width = w1
+	pa.get_point(k2).width = w2
 	var point_in := Vector2(-16, 0)
 	var point_out := point_in * -1
 	pa.set_point_in(k1, point_in)
