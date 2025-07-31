@@ -34,13 +34,16 @@ signal on_dirty_update
 signal make_unique_pressed(shape: SS2D_Shape)
 
 enum CollisionGenerationMethod {
-	## Uses the shape curve to generate a collision polygon. Usually this method is accurate enough.
-	## For open shapes, a precise method will be used instead, as the fast method is not suitable.
-	Fast,
-	## Uses the edge generation algorithm to create an accurate collision representation that
-	## exactly matches the shape's visuals.
-	## Depending on the shape's complexity, this method is very expensive.
-	Precise,
+	## Uses the shape curve to generate a collision polygon.
+	Default,
+	## Uses the edge generation algorithm to create a collision representation that sometimes
+	## matches the shape's visuals more accurately.
+	## This method is much slower and less consistent than [enum Default]. It should not be used
+	## unless absolutely needed.
+	Legacy,
+	## Same as [enum Default] but only generates edge collisions and keeps the inside open.
+	## Only relevant for closed shapes. Behaves the same as [enum Default] for open shapes.
+	Hollow,
 }
 
 enum CollisionUpdateMode {
@@ -143,18 +146,16 @@ var tessellation_tolerence: float = 6.0 :
 @export_group("Collision")
 
 ## Controls which method should be used to generate the collision shape.
-@export var collision_generation_method := CollisionGenerationMethod.Fast : set = set_collision_generation_method
+@export var collision_generation_method := CollisionGenerationMethod.Default : set = set_collision_generation_method
 
 ## Controls when to update collisions.
 @export var collision_update_mode := CollisionUpdateMode.Editor : set = set_collision_update_mode
 
 ## Controls size of generated polygon for CollisionPolygon2D.
-@export_range(0.0, 64.0, 1.0, "or_greater")
-var collision_size: float = 32 : set = set_collision_size
+@export var collision_size: float = 32 : set = set_collision_size
 
 ## Controls offset of generated polygon for CollisionPolygon2D.
-@export_range(-64.0, 64.0, 1.0, "or_greater", "or_lesser")
-var collision_offset: float = 0.0 : set = set_collision_offset
+@export var collision_offset: float = 0.0 : set = set_collision_offset
 
 ## NodePath to CollisionPolygon2D node for which polygon data will be generated.
 @export_node_path("CollisionPolygon2D") var collision_polygon_node_path: NodePath : set = set_collision_polygon_node_path
@@ -238,13 +239,11 @@ func set_collision_update_mode(value: CollisionUpdateMode) -> void:
 func set_collision_size(s: float) -> void:
 	collision_size = s
 	set_as_dirty()
-	notify_property_list_changed()
 
 
 func set_collision_offset(s: float) -> void:
 	collision_offset = s
 	set_as_dirty()
-	notify_property_list_changed()
 
 
 ## Deprecated. Use get_point_array().set_from_curve() instead.
@@ -652,46 +651,46 @@ func set_point(key: int, value: SS2D_Point) -> void:
 	_points.set_point(key, value)
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_width(key: int, w: float) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_width()")
-	_points.get_point_properties(key).width = w
+	_points.get_point(key).width = w
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_width(key: int) -> float:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_width()")
-	return _points.get_point_properties(key).width
+	return _points.get_point(key).width
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_texture_index(key: int, tex_idx: int) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_index()")
-	_points.get_point_properties(key).texture_idx = tex_idx
+	_points.get_point(key).texture_idx = tex_idx
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_texture_index(key: int) -> int:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_index()")
-	return _points.get_point_properties(key).texture_idx
+	return _points.get_point(key).texture_idx
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_texture_flip(key: int, flip: bool) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_flip()")
-	_points.get_point_properties(key).flip = flip
+	_points.get_point(key).flip = flip
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_texture_flip(key: int) -> bool:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_flip()")
-	return _points.get_point_properties(key).flip
+	return _points.get_point(key).flip
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
@@ -782,57 +781,6 @@ func should_flip_edges() -> bool:
 		return flip_edges
 
 
-func _generate_collision_points_precise() -> PackedVector2Array:
-	var points := PackedVector2Array()
-	var num_points: int = _points.get_point_count()
-	if num_points < 2:
-		return points
-
-	var is_closed := _points.is_shape_closed()
-	var csize: float = 1.0 if is_closed else collision_size
-	var indices := PackedInt32Array(range(num_points))
-	var edge_data := SS2D_IndexMap.new(indices, null)
-	var edge: SS2D_Edge = _build_edge_with_material(edge_data, collision_offset - 1.0, csize)
-	_weld_quad_array(edge.quads, false)
-
-	if is_closed:
-		var first_quad: SS2D_Quad = edge.quads[0]
-		var last_quad: SS2D_Quad = edge.quads.back()
-		SS2D_Shape.weld_quads(last_quad, first_quad)
-
-	if not edge.quads.is_empty():
-		# Top edge (typically point A unless corner quad)
-		for quad in edge.quads:
-			if quad.corner == SS2D_Quad.CORNER.NONE:
-				points.push_back(quad.pt_a)
-			elif quad.corner == SS2D_Quad.CORNER.OUTER:
-				points.push_back(quad.pt_d)
-			elif quad.corner == SS2D_Quad.CORNER.INNER:
-				pass
-
-		if not is_closed:
-			# Right Edge (point d, the first or final quad will never be a corner)
-			points.push_back(edge.quads[edge.quads.size() - 1].pt_d)
-
-			# Bottom Edge (typically point c)
-			for quad_index in edge.quads.size():
-				var quad: SS2D_Quad = edge.quads[edge.quads.size() - 1 - quad_index]
-				if quad.corner == SS2D_Quad.CORNER.NONE:
-					points.push_back(quad.pt_c)
-				elif quad.corner == SS2D_Quad.CORNER.OUTER:
-					pass
-				elif quad.corner == SS2D_Quad.CORNER.INNER:
-					points.push_back(quad.pt_b)
-
-			# Left Edge (point b)
-			points.push_back(edge.quads[0].pt_b)
-	return points
-
-
-func _generate_collision_points_fast() -> PackedVector2Array:
-	return _points.get_tessellated_points()
-
-
 func bake_collision() -> void:
 	if not _collision_polygon_node:
 		return
@@ -841,56 +789,80 @@ func bake_collision() -> void:
 			or collision_update_mode == CollisionUpdateMode.Runtime and Engine.is_editor_hint():
 		return
 
+	if _points.get_point_count() < 2:
+		_collision_polygon_node.polygon = PackedVector2Array()
+		return
+
 	var generated_points: PackedVector2Array
+	var input_points := _points.get_tessellated_points()
+	var gen := SS2D_CollisionGen.new()
+	gen.collision_size = collision_size
+	gen.collision_offset = collision_offset
 
-	if collision_generation_method == CollisionGenerationMethod.Fast and _points.is_shape_closed():
-		generated_points = _generate_collision_points_fast()
-	else:
-		generated_points = _generate_collision_points_precise()
+	match collision_generation_method:
+		CollisionGenerationMethod.Legacy:
+			generated_points = gen.generate_legacy(self)
 
+		CollisionGenerationMethod.Hollow:
+			if _points.is_shape_closed():
+				generated_points = gen.generate_hollow(input_points)
+			else:
+				generated_points = gen.generate_open(input_points)
+
+		CollisionGenerationMethod.Default:
+			if _points.is_shape_closed():
+				generated_points = gen.generate_filled(input_points)
+			else:
+				generated_points = gen.generate_open(input_points)
+
+	# Always apply xform afterwards so node scaling also affects collision offset and size
 	var xform := _collision_polygon_node.get_global_transform().affine_inverse() * get_global_transform()
-	var local_collision_points: PackedVector2Array = xform * generated_points
+	generated_points = xform * generated_points
 
-	if local_collision_points.size() > 1 and local_collision_points[0] == local_collision_points[-1]:
-		local_collision_points.resize(local_collision_points.size() - 1)
+	if generated_points.size() > 1 and generated_points[0] == generated_points[-1]:
+		generated_points.resize(generated_points.size() - 1)
 
-	_collision_polygon_node.polygon = local_collision_points
+	_collision_polygon_node.polygon = generated_points
 
 
 func _build_meshes() -> void:
-	_edges.clear()
-	_meshes.clear()
-
 	if _points == null or shape_material == null or _points.get_point_count() < 2:
+		_edges.clear()
+		_meshes.clear()
 		return
 
-	# TODO: Do not create individual meshes for each edge, corner, taper, etc. Merge meshes with same properties.
+	# Reuse SS2D_Mesh objects to reduce VCS noise due to ever-changing IDs even if there was no change.
+	var mesh_idx: int = 0
 
-	# Fill Mesh
-	var fill_mesh := _build_fill_mesh(_points.get_tessellated_points(), shape_material)
-	if fill_mesh:
-		_meshes.append(fill_mesh)
+	mesh_idx = _build_fill_mesh(_points.get_tessellated_points(), shape_material, _meshes, mesh_idx)
 
-	# Edges
 	if render_edges:
+		# TODO: Do not create individual meshes for each edge, corner, taper, etc. Merge meshes with same properties.
 		_edges = _build_edges(shape_material, _points.get_vertices())
 
 		for e in _edges:
-			_meshes.append_array(e.get_meshes(color_encoding))
+			mesh_idx = e.get_meshes(color_encoding, _meshes, mesh_idx)
+	else:
+		_edges.clear()
+
+	_meshes.resize(mesh_idx)  # Trim if larger
 
 
-func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) -> SS2D_Mesh:
+## Generates a fill mesh if applicable and stores it in the given mesh buffer.
+## Only visible meshes are generated, meshes without a texture are skipped.
+## Returns the resulting buffer index, i.e. the next index after the last added mesh.
+func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape, mesh_buffer: Array[SS2D_Mesh], buffer_idx: int) -> int:
 	if not _points.is_shape_closed() or \
 			s_mat == null or \
 			s_mat.fill_textures.is_empty() or \
 			points.size() < 3:
-		return null
+		return buffer_idx
 
 	# TODO: Support all fill textures not just the first
 	var tex: Texture2D = s_mat.fill_textures[0]
 
 	if tex == null:
-		return null
+		return buffer_idx
 
 	var tex_size: Vector2 = tex.get_size()
 	points = Geometry2D.offset_polygon(points, tex_size.x * s_mat.fill_mesh_offset).front()
@@ -898,7 +870,7 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 
 	if indices.is_empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
-		return null
+		return buffer_idx
 
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -919,13 +891,15 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	st.generate_normals()
 	st.generate_tangents()
 
-	var mesh := SS2D_Mesh.new()
+	var mesh := SS2D_Common_Functions.mesh_buffer_get_or_create(mesh_buffer, buffer_idx)
+	st.commit(mesh.mesh)
 	mesh.texture = tex
-	mesh.mesh = st.commit()
 	mesh.material = s_mat.fill_mesh_material
 	mesh.z_index = s_mat.fill_texture_z_index
 	mesh.show_behind_parent = s_mat.fill_texture_show_behind_parent
-	return mesh
+	buffer_idx += 1
+
+	return buffer_idx
 
 
 func _get_uv_points(
@@ -1107,8 +1081,8 @@ func _get_width_for_tessellated_point(
 ) -> float:
 	var v_idx := _points.get_tesselation_vertex_mapping().tess_to_vertex_index(t_idx)
 	var v_idx_next := SS2D_PluginFunctionality.get_next_point_index(v_idx, points)
-	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
-	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
+	var w1: float = _points.get_point(_points.get_point_key_at_index(v_idx)).width
+	var w2: float = _points.get_point(_points.get_point_key_at_index(v_idx_next)).width
 	var ratio: float = get_ratio_from_tessellated_point_to_vertex(t_idx)
 	return lerp(w1, w2, ratio)
 
@@ -1554,7 +1528,7 @@ func _build_edge_with_material(
 
 		var vert_idx: int = _points.get_tesselation_vertex_mapping().tess_to_vertex_index(tess_idx)
 		var vert_key: int = _points.get_point_key_at_index(vert_idx)
-		var vert_props := _points.get_point_properties(vert_key)
+		var vert_props := _points.get_point(vert_key)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
 		var pt_prev: Vector2 = verts_t[tess_idx_prev]

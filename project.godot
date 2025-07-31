@@ -10,7 +10,7 @@ config_version=5
 
 [addons]
 
-ss2d/version="3.2.0"
+ss2d/version="3.3.0"
 
 [application]
 
