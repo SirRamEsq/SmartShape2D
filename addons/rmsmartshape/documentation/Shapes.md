@@ -9,7 +9,8 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 
 ## Properties
 
-> 🛈 Most properties now have documentation comments.
+> [!NOTE]
+> Most properties now have documentation comments.
 
 <!-- TODO: this is incomplete - not all properties are here -->
 
@@ -20,21 +21,22 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 
 ### Flip Edges
 
-- Will flip the edges of the shape (invert y).
+Will flip the edges of the shape (invert y).
 
 ### Render Edges
 
-- Whether or not the edges of the shape should be rendered.
+Whether the edges of the shape should be rendered.
 
 ### Collision Size
 
-- Size of the collision shape.
+Width of the collision polygon.
+Only relevant for open shapes or `Hollow` collisions.
 
 ### Collision Offset
 
-- Offset of where the collision shape starts and ends.
-- A **positive** value offsets the collision shape **outwards**.
-- A **negative** value offsets the collision shape **inwards**.
+- Offset where the collision polygon begins
+- A **positive** value offsets the collision polygon **outwards**.
+- A **negative** value offsets the collision polygon **inwards**.
 
 ### Tessellation Stages
 
@@ -42,9 +44,9 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 - First Param in Curve2D.tessellate.
 - See [Curve2D Documentation](https://docs.godotengine.org/en/3.2/classes/class_curve2d.html#class-curve2d-method-tessellate).
 
-### Tessellation Tolerence
+### Tessellation Tolerance
 
-- Tolerence Degrees in the curve tessellation process (Uses Curve2D Internally).
+- Tolerance Degrees in the curve tessellation process (Uses Curve2D Internally).
 - Second Param in Curve2D.tessellate.
 - See [Curve2D Documentation](https://docs.godotengine.org/en/3.2/classes/class_curve2d.html#class-curve2d-method-tessellate).
 
@@ -65,8 +67,8 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 
 ### Collision Polygon Node Path
 
-- The path to the CollisionShape that the SmartShape will use for collision.
-- Is Autoset when pressing the generate collision button.
+- The path to the `CollisionPolygon2D` that the SmartShape will use for collision.
+- Is auto-assigned when pressing the generate collision button.
 
 ### Shape Material
 
@@ -76,7 +78,7 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 ### Points
 
 - **There is no need to edit this property by hand, but you can if you'd like.**
-- Contains all of the points and meta-data for the points contained in this shape.
+- Contains points and meta-data for the points contained in this shape.
 - This data structure is updated as you manipulate the shape.
 
 ### Material Overrides
@@ -84,5 +86,5 @@ A shape can be open or closed. Each new shape starts open. To close a shape, sim
 - **There is no need to edit this property by hand, but you can if you'd like.**
 - When an edge is given a "Material Override" the data for that edge is stored here.
 - This data structure is updated as you manipulate the shape.
-![EdgeData Popup](./imgs/EdgeEdit-MaterialOverride.png)
+![Edge Data Popup](./imgs/EdgeEdit-MaterialOverride.png)
 
