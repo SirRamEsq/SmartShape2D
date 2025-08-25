@@ -651,46 +651,46 @@ func set_point(key: int, value: SS2D_Point) -> void:
 	_points.set_point(key, value)
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_width(key: int, w: float) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_width()")
-	_points.get_point_properties(key).width = w
+	_points.get_point(key).width = w
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_width(key: int) -> float:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_width()")
-	return _points.get_point_properties(key).width
+	return _points.get_point(key).width
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_texture_index(key: int, tex_idx: int) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_index()")
-	_points.get_point_properties(key).texture_idx = tex_idx
+	_points.get_point(key).texture_idx = tex_idx
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_texture_index(key: int) -> int:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_index()")
-	return _points.get_point_properties(key).texture_idx
+	return _points.get_point(key).texture_idx
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func set_point_texture_flip(key: int, flip: bool) -> void:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("set_point_texture_flip()")
-	_points.get_point_properties(key).flip = flip
+	_points.get_point(key).flip = flip
 
 
-## Deprecated. Use respective property in get_point_array().get_point_properties() instead.
+## Deprecated. Use respective property in get_point_array().get_point() instead.
 ## @deprecated
 func get_point_texture_flip(key: int) -> bool:
 	SS2D_PluginFunctionality.show_point_array_deprecation_warning("get_point_texture_flip()")
-	return _points.get_point_properties(key).flip
+	return _points.get_point(key).flip
 
 
 ## Deprecated. Use respective function in get_point_array() instead.
@@ -826,39 +826,43 @@ func bake_collision() -> void:
 
 
 func _build_meshes() -> void:
-	_edges.clear()
-	_meshes.clear()
-
 	if _points == null or shape_material == null or _points.get_point_count() < 2:
+		_edges.clear()
+		_meshes.clear()
 		return
 
-	# TODO: Do not create individual meshes for each edge, corner, taper, etc. Merge meshes with same properties.
+	# Reuse SS2D_Mesh objects to reduce VCS noise due to ever-changing IDs even if there was no change.
+	var mesh_idx: int = 0
 
-	# Fill Mesh
-	var fill_mesh := _build_fill_mesh(_points.get_tessellated_points(), shape_material)
-	if fill_mesh:
-		_meshes.append(fill_mesh)
+	mesh_idx = _build_fill_mesh(_points.get_tessellated_points(), shape_material, _meshes, mesh_idx)
 
-	# Edges
 	if render_edges:
+		# TODO: Do not create individual meshes for each edge, corner, taper, etc. Merge meshes with same properties.
 		_edges = _build_edges(shape_material, _points.get_vertices())
 
 		for e in _edges:
-			_meshes.append_array(e.get_meshes(color_encoding))
+			mesh_idx = e.get_meshes(color_encoding, _meshes, mesh_idx)
+	else:
+		_edges.clear()
+
+	_meshes.resize(mesh_idx)  # Trim if larger
 
 
-func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) -> SS2D_Mesh:
+## Generates a fill mesh if applicable and stores it in the given mesh buffer.
+## Only visible meshes are generated, meshes without a texture are skipped.
+## Returns the resulting buffer index, i.e. the next index after the last added mesh.
+func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape, mesh_buffer: Array[SS2D_Mesh], buffer_idx: int) -> int:
 	if not _points.is_shape_closed() or \
 			s_mat == null or \
 			s_mat.fill_textures.is_empty() or \
 			points.size() < 3:
-		return null
+		return buffer_idx
 
 	# TODO: Support all fill textures not just the first
 	var tex: Texture2D = s_mat.fill_textures[0]
 
 	if tex == null:
-		return null
+		return buffer_idx
 
 	var tex_size: Vector2 = tex.get_size()
 	points = Geometry2D.offset_polygon(points, tex_size.x * s_mat.fill_mesh_offset).front()
@@ -866,7 +870,7 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 
 	if indices.is_empty():
 		push_error("'%s': Couldn't Triangulate shape" % name)
-		return null
+		return buffer_idx
 
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -887,13 +891,15 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape) ->
 	st.generate_normals()
 	st.generate_tangents()
 
-	var mesh := SS2D_Mesh.new()
+	var mesh := SS2D_Common_Functions.mesh_buffer_get_or_create(mesh_buffer, buffer_idx)
+	st.commit(mesh.mesh)
 	mesh.texture = tex
-	mesh.mesh = st.commit()
 	mesh.material = s_mat.fill_mesh_material
 	mesh.z_index = s_mat.fill_texture_z_index
 	mesh.show_behind_parent = s_mat.fill_texture_show_behind_parent
-	return mesh
+	buffer_idx += 1
+
+	return buffer_idx
 
 
 func _get_uv_points(
@@ -1075,8 +1081,8 @@ func _get_width_for_tessellated_point(
 ) -> float:
 	var v_idx := _points.get_tesselation_vertex_mapping().tess_to_vertex_index(t_idx)
 	var v_idx_next := SS2D_PluginFunctionality.get_next_point_index(v_idx, points)
-	var w1: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx)).width
-	var w2: float = _points.get_point_properties(_points.get_point_key_at_index(v_idx_next)).width
+	var w1: float = _points.get_point(_points.get_point_key_at_index(v_idx)).width
+	var w2: float = _points.get_point(_points.get_point_key_at_index(v_idx_next)).width
 	var ratio: float = get_ratio_from_tessellated_point_to_vertex(t_idx)
 	return lerp(w1, w2, ratio)
 
@@ -1522,7 +1528,7 @@ func _build_edge_with_material(
 
 		var vert_idx: int = _points.get_tesselation_vertex_mapping().tess_to_vertex_index(tess_idx)
 		var vert_key: int = _points.get_point_key_at_index(vert_idx)
-		var vert_props := _points.get_point_properties(vert_key)
+		var vert_props := _points.get_point(vert_key)
 		var pt: Vector2 = verts_t[tess_idx]
 		var pt_next: Vector2 = verts_t[tess_idx_next]
 		var pt_prev: Vector2 = verts_t[tess_idx_prev]

@@ -2,6 +2,9 @@
 extends Resource
 class_name SS2D_VertexProperties
 
+## Deprecated. These properties are now included in SS2D_Point
+## @deprecated
+
 @export var texture_idx: int : set = set_texture_idx
 @export var flip: bool : set = set_flip
 @export var width: float : set = set_width

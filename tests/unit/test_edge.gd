@@ -30,7 +30,8 @@ func test_generate_mesh_from_quad_sequence() -> void:
 	var quad_arrays := SS2D_Edge.get_consecutive_quads_for_mesh(quads)
 
 	for quad_array: Array[SS2D_Quad] in quad_arrays:
-		var am := SS2D_Edge.generate_array_mesh_from_quad_sequence(quad_array, false, 0)
+		var st := SS2D_Edge.generate_array_mesh_from_quad_sequence(quad_array, false, 0)
+		var am := st.commit()
 		assert_eq(am.get_surface_count(), 1)
 		var arrays := am.surface_get_arrays(0)
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
