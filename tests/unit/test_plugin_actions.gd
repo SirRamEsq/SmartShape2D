@@ -2,20 +2,36 @@ extends "res://addons/gut/test.gd"
 
 
 func test_action_add_collision_nodes() -> void:
-	var s := SS2D_Shape_Closed.new()
-	add_child_autofree(s)
-	s.position = Vector2(777, 777)
+	var container: StaticBody2D = StaticBody2D.new()
+	container.name = "StaticBody2D"
+	container.unique_name_in_owner = true
+	add_child_autofree(container)
 
-	var action := SS2D_ActionAddCollisionNodes.new(s)
+	var s := SS2D_Shape_Closed.new()
+	s.collision_polygon_node_path = ^"asdf"
+	add_child_autofree(s)
+
+	# Add as sibling
+	var action := SS2D_ActionAddCollisionNodes.new(s, null)
 	action.do()
-	assert_true(s.get_parent() is StaticBody2D)
-	@warning_ignore("unsafe_property_access")
-	assert_eq(s.get_parent().position, Vector2(777, 777))
-	assert_true(s.get_parent().has_node("CollisionPolygon2D"))
+	assert_true(s.get_parent().get_child(s.get_index() + 1) is CollisionPolygon2D)
 	assert_eq(s.collision_polygon_node_path, NodePath("../CollisionPolygon2D"))
+
 	action.undo()
-	assert_false(s.get_parent() is StaticBody2D)
-	assert_eq(s.position, Vector2(777, 777))
+	await wait_frames(1)  # wait for queue_free() to take place
+	assert_null(s.get_parent().get_child(s.get_index() + 1))
+	assert_eq(s.collision_polygon_node_path, ^"asdf")
+
+	# Add in container
+	action = SS2D_ActionAddCollisionNodes.new(s, container)
+	action.do()
+	assert_true(container.get_child(0) is CollisionPolygon2D)
+	assert_eq(s.collision_polygon_node_path, NodePath("../StaticBody2D/CollisionPolygon2D"))
+
+	action.undo()
+	await wait_frames(1)  # wait for queue_free() to take place
+	assert_eq(container.get_child_count(), 0)
+	assert_eq(s.collision_polygon_node_path, ^"asdf")
 
 
 func test_action_add_point() -> void:
@@ -320,4 +336,3 @@ func validate_positions(s: SS2D_Shape, positions: PackedVector2Array) -> void:
 		return
 	for i in pa.get_point_count():
 		assert_eq(pa.get_point_position(pa.get_point_key_at_index(i)), positions[i])
-
