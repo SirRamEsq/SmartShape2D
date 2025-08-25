@@ -4,34 +4,23 @@
 
 ## Why aren't my textures repeating?
 
+> [!NOTE]
+> Starting with SS2D v3.3, edge textures will always be tiled regardless of the `repeat` setting.
+
 If your textures aren't repeating and look something like this:
 
 ![Non-Repeating-Texture-IMG](./imgs/faq-texture-repeat.png)
 
-The issue is most likely that you need to set the texture's import options in Godot:
+The issue is most likely that you forgot to enable texture `repeat`.
 
-![Import-Texture-Settings](./imgs/faq-texture-repeat-import.png)
+![Creating CanvasTexture](imgs/canvas-item-repeat.png)
 
 ## Why isn't my shape updating when I change the Light Mask?
 
-Each shape is currently rendered by multiple-subnodes (Children Node2Ds).
-Their owner isn't set, making them invisible in the editor (unless you have debug mode on).
+There is no accessible signal when changing the Light Mask setting in editor, hence no update is triggered.
+The light mask will be correctly set on the next shape update.
 
-Unfortunately, there is no accessible signal when changing the Light Mask setting in editor.
-That means changing the Light Mask setting in editor won't trigger the children nodes to change THIER Light Mask
-
-The Shape nodes CAN update their children's light mask, they just need to be triggered to do it manually.
-If you update the shape in any way, the shape will update its children's light mask.
-
-When playing the game, the render Node children are regenerated, ensuring that the light mask will be set
-correctly.
-
-The actual shape has set\_light\_mask overloaded, so changing the light\_mask in code should work without issue
-
-If you need to manually tell the shape to update its rendering, call the set\_as\_dirty() method
-
-If anyone has any insights on this issue, please feel free to open an issue on this subject
-and let us know how we might be able to fix it
+If you need to tell the shape to update its rendering by code, call the `set_as_dirty()` or `force_update` method.
 
 ## Why does changing the width look so ugly?
 

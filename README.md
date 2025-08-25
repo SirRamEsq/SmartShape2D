@@ -30,10 +30,18 @@ Read the section below on Contributing and post an issue if one doesn't already 
 ## Support
 
 - Newest version is developed and supported for Godot 4.x
-- For Godot 3.x version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest)
+- For Godot 3.x version, please go [here](https://github.com/SirRamEsq/SmartShape2D/tree/Godot3-latest). This version is no longer maintained.
 
 ## Documentation
-> 🛈 Some documentation is outdated.
+
+> [!WARNING]
+> **Some documentation is largely outdated.**
+>
+> Refer to the in-engine documentation as far as possible.
+>
+> If you can't see SS2D nodes in the F1 help search or documentation does not appear when hovering over properties, re-save the respective script.
+> See [#72406](https://github.com/godotengine/godot/issues/72406) and [#86577](https://github.com/godotengine/godot/issues/86577).
+> This should be fixed in Godot 4.5.
 
 - [How To Install](./addons/rmsmartshape/documentation/Install.md)
 - [Quick Start](./addons/rmsmartshape/documentation/Quickstart.md)
@@ -48,7 +56,8 @@ Read the section below on Contributing and post an issue if one doesn't already 
 
 ## Video Tutorials
 
-> 🛈 These tutorials are for Godot 3, and some things are different now.
+> [!WARNING]
+> These tutorials are for Godot 3, and some things are different now.
 > Please, check [using SmartShape2D with Godot 4](./addons/rmsmartshape/documentation/Godot4.md).
 
 SmartShape2D + Aseprite tutorial can be found here (Thanks Picster!):
@@ -59,7 +68,7 @@ SmartShape2D tutorial can be found here (Thanks LucyLavend!):
 
 [![VideoTutorial](https://img.youtube.com/vi/45PldDNCQhw/0.jpg)](https://www.youtube.com/watch?v=45PldDNCQhw)
 
-## Contibuting
+## Contributing
 
 ### Issues
 
@@ -85,7 +94,7 @@ If making a merge request, please ensure that the tests pass. If the tests have 
 
 ### Discord
 
-We have a Discord server for the plugin. https://discord.gg/mHWDPBD3vu
+We have a Discord server for the plugin. <https://discord.gg/mHWDPBD3vu>
 
 Here, you can:
 - Ask for help
