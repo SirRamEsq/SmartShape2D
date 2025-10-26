@@ -12,75 +12,37 @@
 
 [sub_resource type="Resource" id="Resource_iqabp"]
 script = ExtResource("3_isrss")
-position = Vector2(0, 0)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_xv4bw"]
 script = ExtResource("3_isrss")
 position = Vector2(100, 0)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_r1arj"]
 script = ExtResource("3_isrss")
 position = Vector2(100, 100)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_x17xs"]
 script = ExtResource("3_isrss")
 position = Vector2(0, 100)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_ycluc"]
 script = ExtResource("3_isrss")
 position = Vector2(210, 50)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
 texture_idx = 6
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_v5b6r"]
 script = ExtResource("3_isrss")
 position = Vector2(50, 130)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
 texture_idx = 1
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_itfev"]
 script = ExtResource("3_isrss")
 position = Vector2(80, 50)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_ms6jj"]
 script = ExtResource("3_isrss")
 position = Vector2(50, 130)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
 texture_idx = 1
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_isa7x"]
 script = ExtResource("4_j8hj2")
@@ -99,10 +61,6 @@ _constraints = {
 Vector2i(7, 9): 15
 }
 _next_key = 10
-_material_overrides = {}
-tessellation_stages = 3
-tessellation_tolerance = 6.0
-curve_bake_interval = 20.0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_isrss"]
 _surfaces = [{
@@ -122,23 +80,10 @@ script = ExtResource("5_b3my5")
 texture = ExtResource("6_yj1kx")
 mesh = SubResource("ArrayMesh_isrss")
 z_index = -10
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="Resource" id="Resource_ym61l"]
 script = ExtResource("8_q32v1")
-_edge_meta_materials = Array[ExtResource("7_f6ybp")]([])
 fill_textures = Array[Texture2D]([ExtResource("6_yj1kx")])
-fill_texture_z_index = -10
-fill_texture_show_behind_parent = false
-fill_texture_scale = 1.0
-fill_texture_absolute_position = false
-fill_texture_absolute_rotation = false
-fill_texture_offset = Vector2(0, 0)
-fill_texture_angle_offset = 0.0
-fill_mesh_offset = 0.0
-render_offset = 0.0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_rilut"]
 _surfaces = [{
@@ -158,9 +103,6 @@ script = ExtResource("5_b3my5")
 texture = ExtResource("6_yj1kx")
 mesh = SubResource("ArrayMesh_rilut")
 z_index = -10
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_28aev"]
 _surfaces = [{
@@ -180,81 +122,38 @@ script = ExtResource("5_b3my5")
 texture = ExtResource("6_yj1kx")
 mesh = SubResource("ArrayMesh_28aev")
 z_index = -10
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="Resource" id="Resource_w4570"]
 script = ExtResource("3_isrss")
-position = Vector2(0, 0)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_3bnhh"]
 script = ExtResource("3_isrss")
 position = Vector2(100, 0)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_lawjw"]
 script = ExtResource("3_isrss")
 position = Vector2(140, 90)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_vpdol"]
 script = ExtResource("3_isrss")
 position = Vector2(0, 100)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_bw34n"]
 script = ExtResource("3_isrss")
 position = Vector2(210, 50)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
 texture_idx = 6
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_yhdfm"]
 script = ExtResource("3_isrss")
 position = Vector2(100, 100)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_bkhmw"]
 script = ExtResource("3_isrss")
 position = Vector2(80, 50)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_cbecy"]
 script = ExtResource("3_isrss")
 position = Vector2(50, 130)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_hff64"]
 script = ExtResource("4_j8hj2")
@@ -269,12 +168,7 @@ _points = {
 10: SubResource("Resource_cbecy")
 }
 _point_order = PackedInt32Array(7, 10, 3, 8, 0, 1, 6, 2)
-_constraints = {}
 _next_key = 11
-_material_overrides = {}
-tessellation_stages = 3
-tessellation_tolerance = 6.0
-curve_bake_interval = 20.0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_j8hj2"]
 _surfaces = [{
@@ -302,57 +196,28 @@ height = 8
 script = ExtResource("5_b3my5")
 texture = SubResource("GradientTexture2D_yj1kx")
 mesh = SubResource("ArrayMesh_j8hj2")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="Resource" id="Resource_rxnt7"]
 script = ExtResource("9_isrss")
 textures = Array[Texture2D]([SubResource("GradientTexture2D_yj1kx")])
-textures_corner_outer = Array[Texture2D]([])
-textures_corner_inner = Array[Texture2D]([])
-textures_taper_left = Array[Texture2D]([])
-textures_taper_right = Array[Texture2D]([])
-textures_taper_corner_left = Array[Texture2D]([])
-textures_taper_corner_right = Array[Texture2D]([])
-randomize_texture = false
 use_corner_texture = false
 use_taper_texture = false
-fit_mode = 0
 metadata/_custom_type_script = "uid://d0xjijisx1woh"
 
 [sub_resource type="Resource" id="Resource_c6umj"]
 script = ExtResource("10_j8hj2")
-begin = 0.0
 distance = 360.0
-edgeRendering = Vector2(0, 0)
 
 [sub_resource type="Resource" id="Resource_w40a3"]
 script = ExtResource("7_f6ybp")
 edge_material = SubResource("Resource_rxnt7")
 normal_range = SubResource("Resource_c6umj")
-weld = true
 taper_sharp_corners = true
-render = true
-z_index = 0
-z_as_relative = true
-offset = 0.0
 metadata/_custom_type_script = "uid://0lhxan4cqrc1"
 
 [sub_resource type="Resource" id="Resource_6qbm5"]
 script = ExtResource("8_q32v1")
 _edge_meta_materials = Array[ExtResource("7_f6ybp")]([SubResource("Resource_w40a3")])
-fill_textures = Array[Texture2D]([])
-fill_texture_z_index = -10
-fill_texture_show_behind_parent = false
-fill_texture_scale = 1.0
-fill_texture_absolute_position = false
-fill_texture_absolute_rotation = false
-fill_texture_offset = Vector2(0, 0)
-fill_texture_angle_offset = 0.0
-fill_mesh_offset = 0.0
-render_offset = 0.0
 metadata/_custom_type_script = "uid://nc5bfedvnpgm"
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_ym61l"]
@@ -372,10 +237,6 @@ _surfaces = [{
 script = ExtResource("5_b3my5")
 texture = SubResource("GradientTexture2D_yj1kx")
 mesh = SubResource("ArrayMesh_ym61l")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_rpin6"]
 _surfaces = [{
@@ -394,10 +255,6 @@ _surfaces = [{
 script = ExtResource("5_b3my5")
 texture = SubResource("GradientTexture2D_yj1kx")
 mesh = SubResource("ArrayMesh_rpin6")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [node name="test_collisions" type="Node2D"]
 position = Vector2(230, 190)
@@ -475,7 +332,7 @@ metadata/_custom_type_script = "uid://dhdc4b8yddyej"
 metadata/_edit_group_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="closed/closed_default"]
-polygon = PackedVector2Array(230, 37.1217, 230, 62.8783, 109.313, 117.736, 50, 153.324, -38.2929, 100.348, 42.2641, 50, -23.3796, 8.9727, -15.0703, -20, 104.332, -20)
+polygon = PackedVector2Array(230, 37.12173, 230, 62.87827, 109.31312, 117.73593, 50, 153.3238, -38.29287, 100.34809, 42.26406, 50, -23.37961, 8.9727, -15.07034, -20, 104.33218, -20)
 
 [node name="closed_hollow" type="Node2D" parent="closed"]
 position = Vector2(300, 20)
@@ -491,7 +348,7 @@ metadata/_custom_type_script = "uid://dhdc4b8yddyej"
 metadata/_edit_group_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="closed/closed_hollow"]
-polygon = PackedVector2Array(105.415, -25, -18.8379, -25, -29.2245, 11.2159, 32.8301, 50, -47.8661, 100.435, 50, 159.155, 111.641, 122.17, 235, 66.0978, 235, 33.9022, 105.415, -25, 103.249, -15, 225, 40.3413, 225, 59.6587, 106.985, 113.302, 50, 147.493, -28.7197, 100.261, 51.6981, 50, -17.5347, 6.72952, -11.3028, -15, 103.249, -15)
+polygon = PackedVector2Array(105.41523, -25, -18.83793, -25, -29.22451, 11.21587, 32.83009, 49.99999, -47.86608, 100.43511, 50, 159.15475, 111.64136, 122.16993, 235, 66.09783, 235, 33.90217, 105.41523, -25, 103.24914, -15, 225, 40.3413, 225, 59.6587, 106.9848, 113.30196, 50, 147.49286, -28.71965, 100.26107, 51.69806, 49.99999, -17.5347, 6.72952, -11.30276, -15, 103.24914, -15)
 
 [node name="closed_legacy" type="Node2D" parent="closed"]
 position = Vector2(620, 20)
@@ -507,7 +364,7 @@ metadata/_custom_type_script = "uid://dhdc4b8yddyej"
 metadata/_edit_group_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="closed/closed_legacy"]
-polygon = PackedVector2Array(50, 138.646, -5.46133, 100.05, 74.465, 50, -2.99812, -0.85985, 102.071, -9.56291, 214.431, 50, 104.642, 108.84)
+polygon = PackedVector2Array(50, 138.64618, -5.461328, 100.04966, 74.46501, 50, -2.9981194, -0.85984975, 102.0714, -9.562908, 214.43112, 50, 104.64188, 108.84002)
 
 [node name="open" type="Node2D" parent="."]
 position = Vector2(0, -30)
@@ -525,7 +382,7 @@ metadata/_custom_type_script = "uid://dhdc4b8yddyej"
 metadata/_edit_group_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="open/open_default"]
-polygon = PackedVector2Array(229.413, 36.8549, 230.544, 61.2954, 149.923, 107.365, 144.961, 98.6824, 220.272, 55.6477, 219.706, 43.4274, 102.166, -10, -7.53518, -10, -11.6898, 4.48634, 61.132, 50, -19.1464, 100.174, 50, 141.662, 105.145, 108.575, 110.29, 117.15, 50, 153.324, -38.2929, 100.348, 42.2641, 50, -23.3796, 8.9727, -15.0703, -20, 104.332, -20)
+polygon = PackedVector2Array(229.41289, 36.85487, 230.54431, 61.29542, 149.92278, 107.36487, 144.9614, 98.68243, 220.27216, 55.64771, 219.70644, 43.42742, 102.1661, -10, -7.53518, -10, -11.6898, 4.48634, 61.13204, 50, -19.14644, 100.17404, 50, 141.66191, 105.14496, 108.57494, 110.28992, 117.14986, 50, 153.3238, -38.29287, 100.34809, 42.26408, 49.99999, -23.3796, 8.9727, -15.07035, -20, 104.33219, -20)
 
 [node name="open_hollow" type="Node2D" parent="open"]
 position = Vector2(310, 260)
@@ -541,7 +398,7 @@ metadata/_custom_type_script = "uid://dhdc4b8yddyej"
 metadata/_edit_group_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="open/open_hollow"]
-polygon = PackedVector2Array(229.413, 36.8549, 230.544, 61.2954, 149.923, 107.365, 144.961, 98.6824, 220.272, 55.6477, 219.706, 43.4274, 102.166, -10, -7.53518, -10, -11.6898, 4.48634, 61.132, 50, -19.1464, 100.174, 50, 141.662, 105.145, 108.575, 110.29, 117.15, 50, 153.324, -38.2929, 100.348, 42.2641, 50, -23.3796, 8.9727, -15.0703, -20, 104.332, -20)
+polygon = PackedVector2Array(229.41289, 36.85487, 230.54431, 61.29542, 149.92278, 107.36487, 144.9614, 98.68243, 220.27216, 55.64771, 219.70644, 43.42742, 102.1661, -10, -7.53518, -10, -11.6898, 4.48634, 61.13204, 50, -19.14644, 100.17404, 50, 141.66191, 105.14496, 108.57494, 110.28992, 117.14986, 50, 153.3238, -38.29287, 100.34809, 42.26408, 49.99999, -23.3796, 8.9727, -15.07035, -20, 104.33219, -20)
 
 [node name="open_legacy" type="Node2D" parent="open"]
 position = Vector2(640, 260)
@@ -557,4 +414,4 @@ metadata/_custom_type_script = "uid://dhdc4b8yddyej"
 metadata/_edit_group_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="open/open_legacy"]
-polygon = PackedVector2Array(151.45, 185.749, 50, 216.462, -54.6133, 100.496, 24.6501, 50, -29.9812, -8.5985, 120.714, -95.6291, 258.217, 47.7679, 189.614, 176.824, 184.652, 168.142, 248.228, 48.2304, 118.597, -85.8557, -20.3687, -5.84167, 34.6501, 50, -44.6137, 100.406, 50, 206.462, 146.305, 177.174)
+polygon = PackedVector2Array(151.44958, 185.7493, 50, 216.46182, -54.613297, 100.49647, 24.650097, 50, -29.981194, -8.5985, 120.71414, -95.62908, 258.2169, 47.76793, 189.61389, 176.82431, 184.6525, 168.14188, 248.22758, 48.230354, 118.59714, -85.855736, -20.36871, -5.84167, 34.650097, 50, -44.61371, 100.40554, 50, 206.46182, 146.30463, 177.17436)
