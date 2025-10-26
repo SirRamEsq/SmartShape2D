@@ -364,6 +364,24 @@ func test_weld_quads() -> void:
 	assert_quad_point_eq(gut,left, left.pt_a, left.pt_b, pt_bottom, pt_top)
 	assert_quad_point_eq(gut,right, pt_top, pt_bottom, right.pt_c, right.pt_d)
 
+
+func test_no_update_before_ready() -> void:
+	# Related to #197. Ensures we can safely modify a shape before `_ready()`.
+	var s: SS2D_Shape = autoqfree(SS2D_Shape.new())
+	watch_signals(s)
+	s.get_point_array().add_points([ Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT ])
+
+	# Wait until a refresh would trigger. This would cause a crash if not handled correctly.
+	wait_physics_frames(1)
+	assert_signal_not_emitted(s, "on_dirty_update")
+
+	# Add to tree, which makes it _ready
+	add_child(s)
+	wait_physics_frames(1)
+
+	assert_signal_emit_count(s, "on_dirty_update", 1)
+
+
 func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, tex:Texture2D=TEST_TEXTURE)->SS2D_Material_Shape:
 	var edge_materials: Array[SS2D_Material_Edge] = []
 	var edge_materials_meta: Array[SS2D_Material_Edge_Metadata] = []
