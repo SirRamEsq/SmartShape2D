@@ -732,6 +732,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		_setup_click_rect()
 
+	_on_dirty_update()
 
 func _draw() -> void:
 	if editor_debug and Engine.is_editor_hint():
@@ -1303,7 +1304,7 @@ func _handle_material_override_change(_tuple: Vector2i) -> void:
 
 
 func set_as_dirty() -> void:
-	if not _dirty:
+	if not _dirty and is_node_ready():
 		call_deferred("_on_dirty_update")
 	_dirty = true
 
@@ -1325,6 +1326,9 @@ func _on_dirty_update() -> void:
 
 
 func force_update() -> void:
+	if not is_node_ready():
+		return
+
 	bake_collision()  # TODO: Get rid of CollisionUpdateMode and use _first_update as well.
 
 	if not _first_update or not _meshes:
