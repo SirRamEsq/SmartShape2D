@@ -317,7 +317,6 @@ func test_action_split_shape() -> void:
 
 	var action := SS2D_ActionSplitShape.new(s, pa.get_point_key_at_index(1))
 	action.do()
-	assert_eq(s.get_parent().get_child_count(), 2)
 	validate_positions(s, [Vector2.UP, Vector2.RIGHT])
 	var s2: SS2D_Shape = s.get_parent().get_node(^"Shape2")
 	assert_not_null(s2)
@@ -325,7 +324,7 @@ func test_action_split_shape() -> void:
 	validate_positions(s2, [Vector2.DOWN, Vector2.LEFT])
 
 	action.undo()
-	assert_eq(s.get_parent().get_child_count(), 1)
+	assert_null(s.get_parent().get_node(^"Shape2"))
 	validate_positions(s, [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT])
 
 

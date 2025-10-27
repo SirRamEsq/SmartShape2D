@@ -14,41 +14,25 @@ func _init(gut=null):
 # ---------------------
 func _log_end_run_header(gut):
 	var lgr = gut.get_logger()
-	lgr.log("\n\n\n")
 	lgr.log('==============================================', lgr.fmts.yellow)
 	lgr.log("= Run Summary", lgr.fmts.yellow)
 	lgr.log('==============================================', lgr.fmts.yellow)
 
 
 func _log_what_was_run(gut):
-	if(!gut._utils.is_null_or_empty(gut._select_script)):
+	if(!GutUtils.is_null_or_empty(gut._select_script)):
 		gut.p('Ran Scripts matching "' + gut._select_script + '"')
-	if(!gut._utils.is_null_or_empty(gut._unit_test_name)):
+	if(!GutUtils.is_null_or_empty(gut._unit_test_name)):
 		gut.p('Ran Tests matching "' + gut._unit_test_name + '"')
-	if(!gut._utils.is_null_or_empty(gut._inner_class_name)):
+	if(!GutUtils.is_null_or_empty(gut._inner_class_name)):
 		gut.p('Ran Inner Classes matching "' + gut._inner_class_name + '"')
-
-
-func _log_orphans_and_disclaimer(gut):
-	var orphan_count = gut.get_orphan_counter()
-	var lgr = gut.get_logger()
-	# Do not count any of the _test_script_objects since these will be released
-	# when GUT is released.
-	orphan_count._counters.total += gut._test_script_objects.size()
-	if(orphan_count.get_counter('total') > 0 and lgr.is_type_enabled('orphan')):
-		orphan_count.print_orphans('total', lgr)
-		gut.p("Note:  This count does not include GUT objects that will be freed upon exit.")
-		gut.p("       It also does not include any orphans created by global scripts")
-		gut.p("       loaded before tests were ran.")
-		gut.p(str("Total orphans = ", orphan_count.orphan_count()))
-		gut.p('')
 
 
 func _total_fmt(text, value):
 	var space = 18
 	if(str(value) == '0'):
 		value = 'none'
-	return str(text.rpad(space), value)
+	return str(text.rpad(space), str(value).lpad(5))
 
 
 func _log_non_zero_total(text, value, lgr):
@@ -58,12 +42,14 @@ func _log_non_zero_total(text, value, lgr):
 	else:
 		return 0
 
+
 func _log_totals(gut, totals):
 	var lgr = gut.get_logger()
 	lgr.log()
 
-	lgr.log("---- Totals ----")
-	var col1 = 18
+	# lgr.log("---- Totals ----")
+	lgr.log("Totals")
+	lgr.log("------")
 	var issue_count = 0
 	issue_count += _log_non_zero_total('Errors', totals.errors, lgr)
 	issue_count += _log_non_zero_total('Warnings', totals.warnings, lgr)
@@ -73,13 +59,24 @@ func _log_totals(gut, totals):
 
 	lgr.log(_total_fmt( 'Scripts', totals.scripts))
 	lgr.log(_total_fmt( 'Tests', gut.get_test_collector().get_ran_test_count()))
-	lgr.log(_total_fmt( '  Passing', totals.passing_tests))
-	_log_non_zero_total('  Failing', totals.failing_tests, lgr)
-	_log_non_zero_total('  Risky/Pending', totals.risky + totals.pending, lgr)
-	lgr.log(_total_fmt( 'Asserts', totals.passing + totals.failing))
+	lgr.log(_total_fmt( 'Passing Tests', totals.passing_tests))
+	_log_non_zero_total('Failing Tests', totals.failing_tests, lgr)
+	_log_non_zero_total('Risky/Pending', totals.risky + totals.pending, lgr)
+	if(totals.failing == 0):
+		lgr.log(_total_fmt( 'Asserts', totals.passing + totals.failing))
+	else:
+		lgr.log(_total_fmt( 'Asserts', str(totals.passing, '/', totals.passing + totals.failing)))
+	_log_non_zero_total( 'Orphans', totals.orphans, lgr)
 	lgr.log(_total_fmt( 'Time', str(gut.get_elapsed_time(), 's')))
 
 	return totals
+
+
+func _log_nothing_run(gut):
+	var lgr = gut.get_logger()
+	lgr.error("Nothing was run.")
+	lgr.log('On the one hand nothing failed, on the other hand nothing did anything.')
+	_log_what_was_run(gut)
 
 
 # ---------------------
@@ -106,6 +103,7 @@ func log_all_non_passing_tests(gut=_gut):
 			lgr.log(skip_msg, lgr.fmts.yellow)
 			lgr.dec_indent()
 
+		var test_fail_count = 0
 		for test in test_script.tests:
 			if(test.was_run):
 				if(test.is_passing()):
@@ -117,11 +115,15 @@ func log_all_non_passing_tests(gut=_gut):
 
 					for i in range(test.fail_texts.size()):
 						lgr.failed(test.fail_texts[i])
+						test_fail_count += 1
 					for i in range(test.pending_texts.size()):
 						lgr.pending(test.pending_texts[i])
 					if(test.is_risky()):
 						lgr.risky('Did not assert')
 					lgr.dec_indent()
+
+		if(test_script.get_fail_count() > test_fail_count):
+			lgr.failed("before_all/after_all assert failed")
 
 	return to_return
 
@@ -132,6 +134,9 @@ func log_the_final_line(totals, gut):
 	var grand_total_fmt = lgr.fmts.none
 	if(totals.failing_tests > 0):
 		grand_total_text = str(totals.failing_tests, " failing tests")
+		grand_total_fmt = lgr.fmts.red
+	elif(totals.failing > 0): # no failing tests, but some failing asserts
+		grand_total_text = str(totals.failing, " assert(s) in before_all/after_all methods failed")
 		grand_total_fmt = lgr.fmts.red
 	elif(totals.risky > 0 or totals.pending > 0):
 		grand_total_text = str(totals.risky + totals.pending, " pending/risky tests.")
@@ -182,21 +187,24 @@ func get_totals(gut=_gut):
 		totals.failing_tests += s.get_failing_test_count()
 		totals.risky += s.get_risky_count()
 
+	totals.orphans = gut.get_orphan_counter().orphan_count()
+
 	return totals
 
 
 func log_end_run(gut=_gut):
-	_log_end_run_header(gut)
-
 	var totals = get_totals(gut)
-	var tc = gut.get_test_collector()
+	if(totals.tests == 0):
+		_log_nothing_run(gut)
+		return
+
+	_log_end_run_header(gut)
 	var lgr = gut.get_logger()
 
 	log_all_non_passing_tests(gut)
 	log_totals(gut, totals)
 	lgr.log("\n")
 
-	_log_orphans_and_disclaimer(gut)
 	_log_what_was_run(gut)
 	log_the_final_line(totals, gut)
 	lgr.log("")

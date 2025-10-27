@@ -15,7 +15,7 @@ ss2d/version="3.3.0"
 [application]
 
 config/name="SmartShape2D"
-config/features=PackedStringArray("4.4")
+config/features=PackedStringArray("4.5")
 config/icon="res://icon.png"
 
 [debug]

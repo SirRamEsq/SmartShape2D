@@ -22,4 +22,3 @@ func do() -> void:
 
 func undo() -> void:
 	_shape.set_point_array(_old_array)
-

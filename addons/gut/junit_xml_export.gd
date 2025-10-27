@@ -1,18 +1,24 @@
-# ------------------------------------------------------------------------------
-# Creates an export of a test run in the JUnit XML format.
-# ------------------------------------------------------------------------------
-var _utils = load('res://addons/gut/utils.gd').get_instance()
+## Creates an export of a test run in the JUnit XML format.
+##
+## More words needed?
 
-var _exporter = _utils.ResultExporter.new()
+var _exporter = GutUtils.ResultExporter.new()
 
+## @ignore should be private I think
 func indent(s, ind):
 	var to_return = ind + s
 	to_return = to_return.replace("\n", "\n" + ind)
 	return to_return
 
+# Wraps content in CDATA section because it may contain special characters
+# e.g. str(null) becomes <null> and can break XML parsing.
+func wrap_cdata(content):
+	return "<![CDATA[" + str(content) + "]]>"
 
+## @ignore should be private I think
 func add_attr(name, value):
 	return str(name, '="', value, '" ')
+
 
 func _export_test_result(test):
 	var to_return = ''
@@ -20,10 +26,10 @@ func _export_test_result(test):
 	# Right now the pending and failure messages won't fit in the message
 	# attribute because they can span multiple lines and need to be escaped.
 	if(test.status == 'pending'):
-		var skip_tag = str("<skipped message=\"pending\">", test.pending[0], "</skipped>")
+		var skip_tag = str("<skipped message=\"pending\">", wrap_cdata(test.pending[0]), "</skipped>")
 		to_return += skip_tag
 	elif(test.status == 'fail'):
-		var fail_tag = str("<failure message=\"failed\">", test.failing[0], "</failure>")
+		var fail_tag = str("<failure message=\"failed\">", wrap_cdata(test.failing[0]), "</failure>")
 		to_return += fail_tag
 
 	return to_return
@@ -49,6 +55,7 @@ func _export_tests(script_result, classname):
 
 	return to_return
 
+
 func _sum_test_time(script_result, classname)->float:
 	var to_return := 0.0
 
@@ -57,6 +64,7 @@ func _sum_test_time(script_result, classname)->float:
 		to_return += test.time_taken
 
 	return to_return
+
 
 func _export_scripts(exp_results):
 	var to_return = ""
@@ -77,6 +85,8 @@ func _export_scripts(exp_results):
 	return to_return
 
 
+## Takes in an instance of GutMain and returns a string of XML representing the
+## results of the run.
 func get_results_xml(gut):
 	var exp_results = _exporter.get_results_dictionary(gut)
 	var to_return = '<?xml version="1.0" encoding="UTF-8"?>' + "\n"
@@ -92,13 +102,15 @@ func get_results_xml(gut):
 	return to_return
 
 
+## Takes in an instance of GutMain and writes the XML file to the specified
+## path
 func write_file(gut, path):
 	var xml = get_results_xml(gut)
 
-	var f_result = _utils.write_file(path, xml)
+	var f_result = GutUtils.write_file(path, xml)
 	if(f_result != OK):
 		var msg = str("Error:  ", f_result, ".  Could not create export file ", path)
-		_utils.get_logger().error(msg)
+		GutUtils.get_logger().error(msg)
 
 	return f_result
 

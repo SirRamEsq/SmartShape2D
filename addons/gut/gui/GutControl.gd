@@ -9,8 +9,7 @@ var GutConfigGui = load('res://addons/gut/gui/gut_config_gui.gd')
 
 var _config = GutConfig.new()
 var _config_gui = null
-var _gut_runner = GutRunnerScene.instantiate()
-var _has_connected = false
+var _gut_runner = null
 var _tree_root : TreeItem = null
 
 var _script_icon = load('res://addons/gut/images/Script.svg')
@@ -43,6 +42,7 @@ func _ready():
 	if Engine.is_editor_hint():
 		return
 
+	_gut_runner = GutRunnerScene.instantiate()
 	$Bg.color = bg_color
 	_ctrls.tabs.set_tab_title(0, 'Tests')
 	_ctrls.tabs.set_tab_title(1, 'Settings')
@@ -50,14 +50,10 @@ func _ready():
 	_config_gui = GutConfigGui.new(_ctrls.settings_vbox)
 
 	_ctrls.test_tree.hide_root = true
-	# Stop tests from kicking off when the runner is "ready" and prevents it
-	# from writing results file that is used by the panel.
-	_gut_runner.ran_from_editor = false
 	add_child(_gut_runner)
 
-	# Becuase of the janky _utils psuedo-global script, we cannot do all this
-	# in _ready.  If we do this in _ready, it generates a bunch of errors.
-	# The errors don't matter, but it looks bad.
+	# TODO This might not need to be called deferred after changing GutUtils to
+	# an all static class.
 	call_deferred('_post_ready')
 
 
@@ -264,6 +260,10 @@ func run_tests(options = null):
 		_config.options = _config_gui.get_options(_config.options)
 	else:
 		_config.options = options
+		
+	# We ar running from within the game, so we should not exit, ever.
+	_config.options.should_exit_on_success = false
+	_config.options.should_exit = false
 
 	_gut_runner.get_gut().get_test_collector().clear()
 	_gut_runner.set_gut_config(_config)
@@ -303,7 +303,7 @@ func load_config_file(path):
 # The MIT License (MIT)
 # =====================
 #
-# Copyright (c) 2023 Tom "Butch" Wesley
+# Copyright (c) 2025 Tom "Butch" Wesley
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
