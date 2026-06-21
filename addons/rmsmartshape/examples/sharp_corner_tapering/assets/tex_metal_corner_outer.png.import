@@ -3,21 +3,23 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bc34cuc50as8f"
-path="res://.godot/imported/tex_metal_corner_outer.png-6ea6aecab21ef2cdfa9c20ae8389ee06.ctex"
+path="res://.godot/imported/tex_metal_corner_outer.png-875b77a2b4c70883ce130c2c0edf2bc3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://examples/sharp_corner_tapering/assets/tex_metal_corner_outer.png"
-dest_files=["res://.godot/imported/tex_metal_corner_outer.png-6ea6aecab21ef2cdfa9c20ae8389ee06.ctex"]
+source_file="res://addons/rmsmartshape/examples/sharp_corner_tapering/assets/tex_metal_corner_outer.png"
+dest_files=["res://.godot/imported/tex_metal_corner_outer.png-875b77a2b4c70883ce130c2c0edf2bc3.ctex"]
 
 [params]
 
 compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
@@ -25,6 +27,10 @@ mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
 process/fix_alpha_border=true
 process/premult_alpha=false
 process/normal_map_invert_y=false
