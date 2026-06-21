@@ -2,10 +2,10 @@ extends GutTest
 
 
 func test_find_scene_files() -> void:
-	var files := SS2D_VersionTransition.find_files("res://examples/sharp_corner_tapering", [ "*.tscn" ])
+	var files := SS2D_VersionTransition.find_files("res://addons/rmsmartshape/examples/sharp_corner_tapering", [ "*.tscn" ])
 
 	assert_eq(files.size(), 1)
-	assert_eq(files[0], "res://examples/sharp_corner_tapering/sharp_corner_tapering.tscn")
+	assert_eq(files[0], "res://addons/rmsmartshape/examples/sharp_corner_tapering/sharp_corner_tapering.tscn")
 
 
 func test_find_scene_files_no_scenes() -> void:
