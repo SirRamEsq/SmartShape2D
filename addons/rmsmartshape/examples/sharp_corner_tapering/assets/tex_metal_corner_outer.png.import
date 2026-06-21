@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bobwi3r6aiiqg"
-path="res://.godot/imported/tex_metal_corner_inner.png-cdfd7b81c523bc5bb5c7863d7307007e.ctex"
+uid="uid://bc34cuc50as8f"
+path="res://.godot/imported/tex_metal_corner_outer.png-875b77a2b4c70883ce130c2c0edf2bc3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://examples/sharp_corner_tapering/assets/tex_metal_corner_inner.png"
-dest_files=["res://.godot/imported/tex_metal_corner_inner.png-cdfd7b81c523bc5bb5c7863d7307007e.ctex"]
+source_file="res://addons/rmsmartshape/examples/sharp_corner_tapering/assets/tex_metal_corner_outer.png"
+dest_files=["res://.godot/imported/tex_metal_corner_outer.png-875b77a2b4c70883ce130c2c0edf2bc3.ctex"]
 
 [params]
 
