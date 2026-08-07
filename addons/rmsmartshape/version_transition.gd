@@ -2,13 +2,13 @@ extends RefCounted
 class_name SS2D_VersionTransition
 
 
+## Interface for version converters.
+## Converters should not build any internal cache because other converters could potentially make
+## changes that would silently invalidate the cache.
 class IVersionConverter:
 	extends RefCounted
 
-	# Initialize internal state. Must be called before using any other functionality.
-	func init() -> void:
-		pass
-
+	# Returns whether conversion is needed.
 	func needs_conversion() -> bool:
 		return false
 
@@ -17,40 +17,75 @@ class IVersionConverter:
 		return true
 
 
-class ShapeNodeTypeConverter:
+class BaseSceneConverter:
 	extends IVersionConverter
 
-	var _files: PackedStringArray
-	var _from_type: String
-	var _to_type: String
+	## Returns true when changes were made / would have been made if check_only is true.
+	## Override this in sub-classes.
+	@warning_ignore("unused_parameter")
+	func convert_scene(analyzer: TscnAnalyzer, check_only: bool) -> bool:
+		return false
 
-	func _init(from: String, to: String) -> void:
-		_from_type = from
-		_to_type = to
-
-	func init() -> void:
+	## Runs conversion and returns true on success, including when no changes were made.
+	## If check_only is true, returns true if conversion is needed.
+	func _convert(check_only: bool) -> bool:
 		var analyzer := TscnAnalyzer.new()
+
 		for path in SS2D_VersionTransition.find_files("res://", [ "*.tscn" ]):
-			if analyzer.load(path):
-				if analyzer.change_shape_node_type(_from_type, _to_type, true):
-					_files.append(path)
+			if not analyzer.load(path):
+				continue
 
-	func needs_conversion() -> bool:
-		return _files.size() > 0
+			if convert_scene(analyzer, check_only):
+				if check_only:
+					return true
 
-	func convert() -> bool:
-		var analyzer := TscnAnalyzer.new()
+				if not analyzer.write():
+					return false
 
-		for path in _files:
-			analyzer.load(path)
-			analyzer.change_shape_node_type(_from_type, _to_type)
-
-			if not analyzer.write():
-				return false
-
-			print("SS2D: Converted scene ", path)
+		# Return false because no conversion was needed, otherwise report success
+		if check_only:
+			return false
 
 		return true
+
+	func needs_conversion() -> bool:
+		return _convert(true)
+
+	func convert() -> bool:
+		return _convert(false)
+
+
+## Changes the node type of shape nodes from one given type to another given type.
+class ShapeNodeTypeConverter:
+	extends BaseSceneConverter
+
+	var _re_match_node_type: RegEx
+	var _replace_string: String
+
+	func _init(from: String, to: String) -> void:
+		_re_match_node_type = RegEx.create_from_string("type=\"%s\"" % from)
+		_replace_string = "type=\"%s\"" % to
+
+	## Returns true when changes were made / would have been made if check_only is true.
+	func convert_scene(analyzer: TscnAnalyzer, check_only: bool) -> bool:
+		if not analyzer.contains_shapes():
+			return false
+
+		var lines := analyzer.get_lines()
+		var dirty := false
+
+		for node_line in analyzer.find_shape_node_lines():
+			var original_line := lines[node_line]
+			var new_line := _re_match_node_type.sub(original_line, _replace_string)
+
+			if new_line != original_line:
+				if check_only:
+					return true
+
+				lines[node_line] = new_line
+				dirty = true
+
+		return dirty
 
 
 class TscnAnalyzer:
@@ -75,8 +110,14 @@ class TscnAnalyzer:
 		_content_start_line = _extract_shape_script_ids(_shape_script_ids)
 		return true
 
+	func get_path() -> String:
+		return _path
+
 	func contains_shapes() -> bool:
 		return _shape_script_ids.size() > 0
+
+	func get_lines() -> PackedStringArray:
+		return _lines
 
 	## Writes the internal buffer to the given file. If no file is specified, writes to the loaded file.
 	## Returns true on success.
@@ -93,39 +134,60 @@ class TscnAnalyzer:
 		f.close()
 		return true
 
-	## Changes the node type of shape nodes from the given type to the given type.
-	## Returns true if changes were made.
-	## If check_only is true, it returns true when conversion is needed, but no modifications are made.
-	func change_shape_node_type(from: String, to: String, check_only: bool = false) -> bool:
+	## Returns a list of line numbers for each shape node definition found in the scene file.
+	## The line number corresponds to the line with the [node ...] tag
+	func find_shape_node_lines() -> PackedInt32Array:
+		var lines: PackedInt32Array
+
 		if not _shape_script_ids or _content_start_line == -1:
-			return false
+			return lines
 
 		var next_line := _content_start_line
 		var re_match_script := RegEx.create_from_string("^script\\s*=\\s*ExtResource\\(\"(%s)\"\\)" % "|".join(_shape_script_ids))
-		var re_match_node_type := RegEx.create_from_string("type=\"%s\"" % from)
-		var replace_string := "type=\"%s\"" % to
-		var dirty := false
 
 		while true:
-			var node_line := _find_node_with_property_re(next_line, re_match_script)
-			next_line = node_line + 1
+			var node_line := find_node(next_line)
 
-			if node_line == -1:
+			if node_line < 0:
 				break
 
-			var replaced := re_match_node_type.sub(_lines[node_line], replace_string)
+			var script_line := find_property_in_node(node_line, re_match_script)
 
-			# No change -> nothing to do here
-			if replaced == _lines[node_line]:
+			if script_line < 0:
+				next_line = absi(script_line)
 				continue
 
-			if check_only:
-				return true
+			lines.push_back(node_line)
+			next_line = script_line + 1
 
-			_lines[node_line] = replaced
-			dirty = true
+		return lines
 
-		return dirty
+	## Searches for a line matching the given regex under a [node] tag starting at the given line.
+	## Returns a positive integer indicating the line where a match was found or a negative integer
+	## indicating the line where the search stopped because EOF or a new tag was started.
+	func find_property_in_node(node_line: int, re: RegEx) -> int:
+		for i in range(node_line + 1, _lines.size()):
+			var line := _lines[i]
+
+			if line.begins_with("["):
+				return -i
+
+			if re.search(line):
+				return i
+
+		return -_lines.size()
+
+
+	## Searches for the next [node] tag starting at the given line.
+	## Returns -1 when EOF was reached without finding a tag.
+	func find_node(start_line: int) -> int:
+		for i in range(start_line, _lines.size()):
+			var line := _lines[i]
+
+			if line.begins_with("[node"):
+				return i
+
+		return -1
 
 	## Examines [ext_resource] entries and updates the given list to include all resource IDs referring
 	## to shapes (shape/shape_open/shape_closed.gd).
@@ -147,24 +209,6 @@ class TscnAnalyzer:
 			# Any other tag like [sub_resource] or [node]. Usually there shouldn't be any intermixed ext_resource tags
 			if found_something and line.begins_with("["):
 				return i
-
-		return -1
-
-	## Searches for property definitions under [node] tags matching the given regex.
-	## Returns the line of the [node] tag if a match was found, otherwise -1.
-	func _find_node_with_property_re(start_line: int, re: RegEx) -> int:
-		var node_line: int = -1
-
-		for i in range(start_line, _lines.size()):
-			var line := _lines[i]
-
-			if line.begins_with("[node"):
-				node_line = i
-			elif line.begins_with("["):  # There are likely no other tags intermixed but just to be sure
-				node_line = -1
-			elif node_line != -1:
-				if re.search(line):
-					return node_line
 
 		return -1
 

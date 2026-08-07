@@ -197,7 +197,7 @@ func _options_item_selected(id: int) -> void:
 		tb_options_popup.set_item_checked(id, not tb_options_popup.is_item_checked(id))
 		_defer_mesh_updates = tb_options_popup.is_item_checked(id)
 	elif id == OPTIONS_MENU.ID_CHECK_VERSION:
-		perform_version_check_and_conversion(true, true)
+		perform_version_check_and_conversion(true)
 
 
 func _gui_build_toolbar() -> void:
@@ -426,7 +426,7 @@ func _ready() -> void:
 
 	connect("main_screen_changed", self._on_main_screen_changed)
 
-	perform_version_check_and_conversion()
+	perform_version_check_and_conversion(false)
 
 
 func _enter_tree() -> void:
@@ -1656,9 +1656,10 @@ func _debug_mouse_positions(mm: InputEventMouseMotion, t: Transform2D) -> void:
 ####################
 # Version Checking #
 ####################
-func perform_version_check_and_conversion(force: bool = false, show_dialog_when_no_conversion_needed: bool = false) -> void:
-	# Only perform check if version changed or after initial install to reduce project startup time.
-	if not force:
+func perform_version_check_and_conversion(is_manual_check: bool) -> void:
+    # If not manually triggered, only perform check if version changed or after initial install to
+    # reduce project startup time.
+	if not is_manual_check:
 		var last_version: String = ProjectSettings.get_setting(PROJECT_SETTING_INTERNAL_VERSION, "")
 
 		# This should suffice for most cases.
@@ -1670,13 +1671,12 @@ func perform_version_check_and_conversion(force: bool = false, show_dialog_when_
 
 	print("SS2D: Performing version check...")
 
-	var converters: Array[SS2D_VersionTransition.IVersionConverter] = [
-		# SS2D_VersionTransition.ShapeNodeTypeConverter.new("Node2D", "MeshInstance2D"),
-		# Insert more converters for future changes here
-	]
+	# NOTE: Since any converter could theoretically make changes that trigger another converter, it
+	# is best to clean-run each converter on its own
 
-	for i in converters:
-		i.init()
+	var converters: Array[SS2D_VersionTransition.IVersionConverter] = [
+		# Insert converters for future changes here
+	]
 
 	for i in converters:
 		if not i.needs_conversion():
@@ -1698,8 +1698,8 @@ func perform_version_check_and_conversion(force: bool = false, show_dialog_when_
 		Do you want to proceed?""".dedent().strip_edges()
 		dialog.get_ok_button().disabled = true
 		dialog.confirmed.connect(_on_dialog_confirm_conversion.bind(converters))
-		dialog.confirmed.connect(_free_dialog.bind(dialog))
-		dialog.get_cancel_button().pressed.connect(_free_dialog.bind(dialog))
+		dialog.confirmed.connect(dialog.queue_free)
+		dialog.get_cancel_button().pressed.connect(dialog.queue_free)
 		dialog.popup_centered()
 
 		await get_tree().create_timer(3).timeout
@@ -1712,25 +1712,23 @@ func perform_version_check_and_conversion(force: bool = false, show_dialog_when_
 		return
 
 	# No conversion needed
-	print("SS2D: No conversion needed")
+	print("SS2D: No special conversion needed")
 	_write_version_info_to_project()
 
-	if show_dialog_when_no_conversion_needed:
-		var dialog := AcceptDialog.new()
-		add_child(dialog)
-		dialog.title = "Info"
-		dialog.dialog_text = "No conversion needed."
-		dialog.confirmed.connect(_free_dialog.bind(dialog))
-		dialog.popup_centered()
+	if is_manual_check:
+		SS2D_Common_Functions.show_dialog(
+            "Info",
+            'No conversion needed.\nRun "Project -> Tools -> Upgrade Project Files"  after upgrading SmartShape2D to ensure all scenes with SmartShapes are being upgraded properly.',
+            self
+        )
+	else:
+		_show_project_upgrade_prompt()
 
 
 func _on_dialog_confirm_conversion(converters: Array[SS2D_VersionTransition.IVersionConverter]) -> void:
 	var success := true
 
 	for i in converters.size():
-		if not converters[i].needs_conversion():
-			continue
-
 		if converters[i].convert():
 			print("SS2D: Conversion step ", i + 1, " successful")
 		else:
@@ -1738,26 +1736,29 @@ func _on_dialog_confirm_conversion(converters: Array[SS2D_VersionTransition.IVer
 			success = false
 			break
 
-	var summary := AcceptDialog.new()
-	add_child(summary)
-
 	if success:
-		summary.title = "Conversion Successful"
-		summary.dialog_text = "Conversion successful!"
 		_write_version_info_to_project()
+		_show_project_upgrade_prompt()
 	else:
-		summary.title = "Conversion Failed"
-		summary.dialog_text = "An unexpected error occurred.\nSee log output for further information."
-
-	summary.confirmed.connect(_free_dialog.bind(summary))
-	summary.popup_centered()
-
-
-func _free_dialog(dialog: Node) -> void:
-	dialog.queue_free()
+		SS2D_Common_Functions.show_dialog(
+			"Conversion Failed",
+			"An unexpected error occurred.\nSee log output for further information.",
+			self
+		)
 
 
 func _write_version_info_to_project() -> void:
 	ProjectSettings.set_setting(PROJECT_SETTING_INTERNAL_VERSION, get_plugin_version())
 	ProjectSettings.set_as_internal(PROJECT_SETTING_INTERNAL_VERSION, true)
 	ProjectSettings.save()
+
+
+func _show_project_upgrade_prompt() -> void:
+	var dialog := SS2D_Common_Functions.show_dialog(
+		"Project Conversion",
+		'Please run "Project -> Tools -> Upgrade Project Files" to ensure all scenes with SmartShapes are being upgraded properly.',
+		self
+	)
+	dialog.dialog_close_on_escape = false
+	dialog.ok_button_text = "Yes, I will run the upgrade tool or things might break"
+	print(dialog.dialog_text)

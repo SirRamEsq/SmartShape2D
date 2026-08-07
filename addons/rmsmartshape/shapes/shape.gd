@@ -98,7 +98,7 @@ enum CollisionUpdateMode {
 @export var _points: SS2D_Point_Array : set = set_point_array
 
 ## Caches generated meshes for faster loading times.
-@export_storage var _meshes: Array[SS2D_Mesh] = []
+@export_storage var _mesh_cache := SS2D_MeshCache.new(self)
 
 @export_group("Edges")
 
@@ -716,6 +716,8 @@ func _init() -> void:
 
 
 func _enter_tree() -> void:
+	_mesh_cache = _mesh_cache.claim_ownership_or_copy(self)
+
 	# Call this again because get_node() only works when the node is inside the tree
 	set_collision_polygon_node_path(collision_polygon_node_path)
 
@@ -829,30 +831,30 @@ func bake_collision() -> void:
 func _build_meshes() -> void:
 	if _points == null or shape_material == null or _points.get_point_count() < 2:
 		_edges.clear()
-		_meshes.clear()
+		_mesh_cache.meshes.clear()
 		return
 
 	# Reuse SS2D_Mesh objects to reduce VCS noise due to ever-changing IDs even if there was no change.
 	var mesh_idx: int = 0
 
-	mesh_idx = _build_fill_mesh(_points.get_tessellated_points(), shape_material, _meshes, mesh_idx)
+	mesh_idx = _build_fill_mesh(_points.get_tessellated_points(), shape_material, _mesh_cache, mesh_idx)
 
 	if render_edges:
 		# TODO: Do not create individual meshes for each edge, corner, taper, etc. Merge meshes with same properties.
 		_edges = _build_edges(shape_material, _points.get_vertices())
 
 		for e in _edges:
-			mesh_idx = e.get_meshes(color_encoding, _meshes, mesh_idx)
+			mesh_idx = e.get_meshes(color_encoding, _mesh_cache, mesh_idx)
 	else:
 		_edges.clear()
 
-	_meshes.resize(mesh_idx)  # Trim if larger
+	_mesh_cache.meshes.resize(mesh_idx)  # Trim if larger
 
 
 ## Generates a fill mesh if applicable and stores it in the given mesh buffer.
 ## Only visible meshes are generated, meshes without a texture are skipped.
 ## Returns the resulting buffer index, i.e. the next index after the last added mesh.
-func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape, mesh_buffer: Array[SS2D_Mesh], buffer_idx: int) -> int:
+func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape, mesh_cache: SS2D_MeshCache, buffer_idx: int) -> int:
 	if not _points.is_shape_closed() or \
 			s_mat == null or \
 			s_mat.fill_textures.is_empty() or \
@@ -892,7 +894,7 @@ func _build_fill_mesh(points: PackedVector2Array, s_mat: SS2D_Material_Shape, me
 	st.generate_normals()
 	st.generate_tangents()
 
-	var mesh := SS2D_Common_Functions.mesh_buffer_get_or_create(mesh_buffer, buffer_idx)
+	var mesh := mesh_cache.mesh_buffer_get_or_create(buffer_idx)
 	st.commit(mesh.mesh)
 	mesh.texture = tex
 	mesh.material = s_mat.fill_mesh_material
@@ -1329,12 +1331,14 @@ func force_update() -> void:
 	if not is_node_ready():
 		return
 
+	_mesh_cache = _mesh_cache.claim_ownership_or_copy(self)
+
 	bake_collision()  # TODO: Get rid of CollisionUpdateMode and use _first_update as well.
 
-	if not _first_update or not _meshes:
+	if not _first_update or _mesh_cache.meshes.is_empty():
 		_build_meshes()
 
-	_renderer.render(_meshes)
+	_renderer.render(_mesh_cache.meshes)
 	queue_redraw()  # Debug drawing
 	_update_click_rect()
 

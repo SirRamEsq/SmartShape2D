@@ -30,5 +30,3 @@ func get_filename() -> StringName:
     if _filename.is_empty():
         _filename = StringName(res_uri.get_file())
     return _filename
-
-

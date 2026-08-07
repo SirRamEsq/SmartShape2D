@@ -25,32 +25,36 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="LblNoneSelected" type="Label" parent="HBox"]
-visible = false
 layout_mode = 2
 text = "<None>"
 
 [node name="BtnRunScript" type="Button" parent="HBox"]
+visible = false
 layout_mode = 2
 text = "test_test.gd"
 
 [node name="Arrow1" type="TextureButton" parent="HBox"]
+visible = false
 custom_minimum_size = Vector2(24, 0)
 layout_mode = 2
 texture_normal = ExtResource("3")
 stretch_mode = 3
 
 [node name="BtnRunInnerClass" type="Button" parent="HBox"]
+visible = false
 layout_mode = 2
 tooltip_text = "Run all tests in Inner-Test-Class TestAssertNe"
 text = "TestAssertNe"
 
 [node name="Arrow2" type="TextureButton" parent="HBox"]
+visible = false
 custom_minimum_size = Vector2(24, 0)
 layout_mode = 2
 texture_normal = ExtResource("3")
 stretch_mode = 3
 
 [node name="BtnRunMethod" type="Button" parent="HBox"]
+visible = false
 layout_mode = 2
 tooltip_text = "Run test test_fails_with_integers_equal"
 text = "test_fails_with_integers_equal"

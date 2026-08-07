@@ -312,7 +312,7 @@ static func generate_array_mesh_from_quad_sequence(_quads: Array[SS2D_Quad], _wr
 ## If the index is out of range, new elements will be added.
 ## Only visible meshes are generated, quads without a texture are skipped.
 ## Returns the resulting buffer index, i.e. the next index after the last added mesh.
-func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING, mesh_buffer: Array[SS2D_Mesh], buffer_idx: int) -> int:
+func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING, mesh_cache: SS2D_MeshCache, buffer_idx: int) -> int:
 	# Get Arrays of consecutive quads with the same mesh data.
 	# For each array, generate Mesh Data from the quad.
 
@@ -332,7 +332,7 @@ func get_meshes(color_encoding: SS2D_Edge.COLOR_ENCODING, mesh_buffer: Array[SS2
 		if not st:
 			continue
 
-		var mesh := SS2D_Common_Functions.mesh_buffer_get_or_create(mesh_buffer, buffer_idx)
+		var mesh := mesh_cache.mesh_buffer_get_or_create(buffer_idx)
 		st.commit(mesh.mesh)
 		mesh.texture = quad.texture
 		mesh.material = material

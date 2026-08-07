@@ -69,6 +69,6 @@ func show_oneshot_dialog(dialog: AcceptDialog) -> void:
 
 
 func _on_options_index_pressed_dispatch(idx: int) -> void:
-	var callback: Callable = _options_entries.get(idx)
+	var callback: Variant = _options_entries.get(idx)
 	if callback:
-		callback.call()
+		(callback as Callable).call()

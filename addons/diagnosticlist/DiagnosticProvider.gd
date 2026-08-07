@@ -66,6 +66,8 @@ func refresh_diagnostics(force: bool = false) -> bool:
     # NOTE: We always have to do a full update, because a change in one file can cause errors in
     # other files, e.g. renaming an identifier.
 
+    DiagnosticList_Utils.log_debug("Provider: refresh_diagnostics()")
+
     # Still waiting for results from the last call
     if _num_outstanding > 0:
         _dirty = false  # Dirty will be reset anyway after update has been finished
@@ -125,6 +127,7 @@ func refresh_file_list() -> bool:
             cache.last_modified = last_modified
             cache.content = FileAccess.get_file_as_string(path)
             modified = true
+            DiagnosticList_Utils.log_debug("Provider: file modification detected: %s" % path)
 
     # One or more files were deleted
     if _file_cache.size() > _script_paths.size():
@@ -134,6 +137,7 @@ func refresh_file_list() -> bool:
         for path: String in _file_cache.keys():
             if not _script_paths.has(path):
                 _file_cache.erase(path)
+                DiagnosticList_Utils.log_debug("Provider: file deleted: %s" % path)
 
     return modified
 
@@ -143,8 +147,12 @@ func get_diagnostic_count(severity: DiagnosticList_Diagnostic.Severity) -> int:
     return _counts[severity]
 
 
-## Returns all diagnostics of the project
+## Returns all diagnostics of the project.
+## The list of diagnostics is grouped by file, i.e. all diagnostics belonging to the same file are
+## consecutive elements.
 func get_diagnostics() -> Array[DiagnosticList_Diagnostic]:
+    # NOTE: The LSP server usually publishes diagnostics consecutively per file and not in random
+    # order. Hence we do not need additional sorting to fulfill the contract of this method.
     return _diagnostics.duplicate()
 
 
@@ -191,6 +199,7 @@ func _mark_dirty() -> void:
 
 func _on_sources_changed(_exist: bool) -> void:
     _mark_dirty()
+    DiagnosticList_Utils.log_debug("Provider: on_sources_changed")
 
 
 func _on_script_classes_updated() -> void:
@@ -209,12 +218,13 @@ func _on_script_classes_updated() -> void:
     # Hence, when the signal arrives and the Godot window has focus, an update should be performed.
     if EditorInterface.get_base_control().get_window().has_focus():
         _mark_dirty()
+        DiagnosticList_Utils.log_debug("Provider: on_script_classes_updated")
 
 
 func _on_publish_diagnostics(diagnostics: DiagnosticList_Diagnostic.Pack) -> void:
     # Ignore unexpected diagnostic updates
     if _num_outstanding == 0:
-        _client.log_error("Received diagnostics without having them requested before")
+        DiagnosticList_Utils.log_error("Received diagnostics without having them requested before")
         return
 
     _diagnostics.append_array(diagnostics.diagnostics)

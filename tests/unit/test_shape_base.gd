@@ -382,6 +382,28 @@ func test_no_update_before_ready() -> void:
 	assert_signal_emit_count(s, "on_dirty_update", 1)
 
 
+func test_cache_ownership() -> void:
+	var s := SS2D_Shape.new()
+	add_child_autoqfree(s)
+	s.get_point_array().add_points([ Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT ])
+	s.shape_material = create_shape_material_with_equal_normal_ranges(4)
+	s.force_update()
+
+	assert_gt(s._mesh_cache.meshes.size(), 0)
+
+	var dup: SS2D_Shape = s.duplicate()
+	add_child_autoqfree(dup)
+
+	assert_ne(s._mesh_cache._owner, dup._mesh_cache._owner)
+	assert_eq(s._mesh_cache.meshes.size(), dup._mesh_cache.meshes.size())
+
+	for i in range(s._mesh_cache.meshes.size()):
+		var a := s._mesh_cache.meshes[i]
+		var b := dup._mesh_cache.meshes[i]
+		assert_ne(a, b)
+		assert_ne(a.mesh, b.mesh)
+
+
 func create_shape_material_with_equal_normal_ranges(edge_materials_count:int=4, tex:Texture2D=TEST_TEXTURE)->SS2D_Material_Shape:
 	var edge_materials: Array[SS2D_Material_Edge] = []
 	var edge_materials_meta: Array[SS2D_Material_Edge_Metadata] = []

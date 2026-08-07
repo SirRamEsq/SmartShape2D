@@ -33,18 +33,13 @@ static func merge_arrays(arrays: Array) -> Array:
 	return new_array
 
 
-## Returns a cleared mesh object in the given buffer at the given index.
-## If the index is out of bounds, creates and appends a new object.
-## Used for caching and reusing SS2D_Mesh objects to prevent changing resource IDs even if there was
-## no change which in turn causes VCS noise.
-static func mesh_buffer_get_or_create(mesh_buffer: Array[SS2D_Mesh], idx: int) -> SS2D_Mesh:
-	var mesh: SS2D_Mesh
-
-	if idx < mesh_buffer.size():
-		mesh = mesh_buffer[idx]
-		mesh.clear()  # Absolutely ensure working on a clean object
-	else:
-		mesh = SS2D_Mesh.new()
-		mesh_buffer.push_back(mesh)
-
-	return mesh
+## Helper for displaying a one-shot AcceptDialog
+static func show_dialog(title: String, text: String, tree: Node) -> AcceptDialog:
+	var dialog := AcceptDialog.new()
+	tree.add_child(dialog)
+	dialog.title = "SmartShape2D - %s" % title
+	dialog.dialog_text = text
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered()
+	return dialog

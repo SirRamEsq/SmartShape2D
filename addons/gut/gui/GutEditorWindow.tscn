@@ -67,7 +67,7 @@ Panel/styles/panel = SubResource("StyleBoxFlat_fqfwy")
 oversampling_override = 1.0
 title = "GUT"
 position = Vector2i(0, 36)
-size = Vector2i(1408, 1728)
+size = Vector2i(800, 800)
 min_size = Vector2i(800, 600)
 script = ExtResource("1_qevl3")
 

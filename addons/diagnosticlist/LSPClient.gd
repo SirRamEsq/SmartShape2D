@@ -14,7 +14,6 @@ signal on_publish_diagnostics(diagnostics: DiagnosticList_Diagnostic.Pack)
 signal on_jsonrpc_error(error: Dictionary)
 
 
-const ENABLE_DEBUG_LOG: bool = false
 const TICK_INTERVAL_SECONDS_MIN: float = 0.05
 const TICK_INTERVAL_SECONDS_MAX: float = 30.0
 
@@ -26,7 +25,14 @@ var _jsonrpc := JSONRPC.new()
 var _client := StreamPeerTCP.new()
 var _id: int = 0
 var _timer: Timer
-var _lsp_project_path: String = ""  # Absolute project path reported by LS
+
+## Absolute project path reported by LS.
+## Will be initialized when the LSP connection is initialized ( _initialize()) and changed by
+## changeWorkspace events.
+var _ls_project_path: String = ""
+
+## Absolute path of the loaded project.
+var _project_path: String = ProjectSettings.globalize_path("res://").simplify_path()
 
 
 func _init(root: Node) -> void:
@@ -41,7 +47,7 @@ func _init(root: Node) -> void:
 
 
 func disconnect_lsp() -> void:
-    log_debug("Disconnecting from LSP")
+    DiagnosticList_Utils.log_debug("Disconnecting from LSP")
     _timer.stop()
     _client.disconnect_from_host()
 
@@ -56,10 +62,11 @@ func connect_lsp() -> bool:
 
 ## Connect to the LSP server at the given host and port.
 func connect_lsp_at(host: String, port: int) -> bool:
+    DiagnosticList_Utils.log_debug("Connecting to LSP at %s:%d" % [ host, port ])
     var err := _client.connect_to_host(host, port)
 
     if err != OK:
-        log_error("Failed to connect to LSP server: %s" % err)
+        DiagnosticList_Utils.log_error("Failed to connect to LSP server: %s" % err)
         return false
 
     # Enable processing
@@ -96,9 +103,11 @@ func update_diagnostics(res_path: String, content: String) -> void:
     })
 
 
-## Returns the absolute project path as reported by the LS.
-func get_project_path() -> String:
-    return _lsp_project_path
+## Returns whether the root directory reported by the LS is the same as the project root.
+## If there is a mismatch, the LSP client is very likely connected to a different Godot instance
+## with a different project opened.
+func lsp_root_matches_project_root() -> bool:
+    return _ls_project_path == _project_path
 
 
 func _reset_tick_interval() -> void:
@@ -118,10 +127,11 @@ func _on_tick() -> void:
     _update_tick_interval()
 
     while _client.get_available_bytes():
+        DiagnosticList_Utils.log_debug("Bytes available: %d" % _client.get_available_bytes())
         var json := _read_data()
 
         if json:
-            log_debug("Received message:\n%s" % json)
+            DiagnosticList_Utils.log_debug("Received message:\n%s" % json)
 
         _handle_response(json)
         _reset_tick_interval()  # Reset timer interval whenever data arrived as there will likely be more data coming
@@ -139,14 +149,14 @@ func _update_status() -> bool:
         StreamPeerTCP.STATUS_NONE:
             return false
         StreamPeerTCP.STATUS_ERROR:
-            log_error("StreamPeerTCP error")
+            DiagnosticList_Utils.log_error("StreamPeerTCP error")
             return false
         StreamPeerTCP.STATUS_CONNECTING:
             pass
         StreamPeerTCP.STATUS_CONNECTED:
             # First time connected -> run initialization
             if last_status != status:
-                log_debug("Connected to LSP")
+                DiagnosticList_Utils.log_debug("Connected to LSP")
                 on_connected.emit()
                 _initialize()
 
@@ -166,7 +176,7 @@ func _read_data() -> Dictionary:
     var json: Dictionary = JSON.parse_string(content)
 
     if not json:
-        log_error("Failed to parse JSON: %s" % content)
+        DiagnosticList_Utils.log_error("Failed to parse JSON: %s" % content)
         return {}
 
     return json
@@ -176,7 +186,7 @@ func _read_content(length: int) -> String:
     var data := _client.get_data(length)
 
     if data[0] != OK:
-        log_error("Failed to read content: %s" % error_string(data[0]))
+        DiagnosticList_Utils.log_error("Failed to read content: %s" % error_string(data[0]))
         return ""
     else:
         var buf: PackedByteArray = data[1]
@@ -184,6 +194,8 @@ func _read_content(length: int) -> String:
 
 
 func _read_header() -> String:
+    DiagnosticList_Utils.log_debug("reading header")
+
     var buf := PackedByteArray()
     var char_r := "\r".unicode_at(0)
     var char_n := "\n".unicode_at(0)
@@ -192,7 +204,7 @@ func _read_header() -> String:
         var data := _client.get_data(1)
 
         if data[0] != OK:
-            log_error("Failed to read header: %s" % error_string(data[0]))
+            DiagnosticList_Utils.log_error("Failed to read header: %s" % error_string(data[0]))
             return ""
         else:
             buf.push_back(data[1][0])
@@ -221,11 +233,13 @@ func _handle_response(json: Dictionary) -> void:
 
         # Project path
         "gdscript_client/changeWorkspace":
-            _lsp_project_path = str(json["params"]["path"]).simplify_path()
+            _ls_project_path = str(json["params"]["path"]).simplify_path()
+            DiagnosticList_Utils.log_debug("Change Workspace: %s" % _ls_project_path)
             return
 
     # Initialization response
     if json.get("id") == 0:
+        DiagnosticList_Utils.log_debug("LSP initialized")
         _send_notification("initialized", {})
         on_initialized.emit()
         return
@@ -233,8 +247,8 @@ func _handle_response(json: Dictionary) -> void:
     # JSON-RPC error
     if json.has("error"):
         var error: Dictionary = json["error"]
-        log_error("JSON-RPC Error: %s" % error)
-        log_error("This is likely a bug in the plugin. Consider submitting a bug report on GitHub.")
+        DiagnosticList_Utils.log_error("JSON-RPC Error: %s" % error)
+        DiagnosticList_Utils.log_error("This is likely a bug in the plugin. Consider submitting a bug report on GitHub.")
         on_jsonrpc_error.emit(error)
 
 
@@ -275,14 +289,24 @@ func _send(json: Dictionary) -> void:
     var content_bytes := content.to_utf8_buffer()
     var header := "Content-Length: %s\r\n\r\n" % len(content_bytes)
     var header_bytes := header.to_ascii_buffer()
-    log_debug("Sending message (length: %s): %s" % [ len(content_bytes), content ])
-    _client.put_data(header_bytes + content_bytes)
+    DiagnosticList_Utils.log_debug("Sending message (length: %s): %s" % [ len(content_bytes), content ])
+    var err := _client.put_data(header_bytes + content_bytes)
+
+    if err != OK:
+        DiagnosticList_Utils.log_error("Failed to send: %s" % error_string(err))
+
     _reset_tick_interval()  # Reset the timer interval because we are expecting a response
 
 
 func _initialize() -> void:
+    # Comply with LSP, try to initialize root directory to the current project root.
+    # Godot will likely ignore it and send a changeWorkspace event anyway.
+    _ls_project_path = _project_path
+
     _send_request("initialize", {
         "processId": null,
+        "rootPath": _ls_project_path,
+        "rootUri": _res_path_to_lsp_uri("res://"),
         "capabilities": {
             "textDocument": {
                 "publishDiagnostics": {},
@@ -292,16 +316,10 @@ func _initialize() -> void:
 
 
 func _res_path_to_lsp_uri(res_path: String) -> String:
+    # NOTE: No need to manually call uri_encode() as JSONRPC seems to do that automatically
+    # TODO: Consider using the builtin parsing functionality of JSONRPC instead of doing it manually
     return URI_PREFIX + ProjectSettings.globalize_path(res_path).simplify_path()
 
 
 func _lsp_uri_to_res_path(lsp_uri: String) -> String:
-    return ProjectSettings.localize_path(lsp_uri.replace(URI_PREFIX, ""))
-
-
-func log_debug(text: String) -> void:
-    if ENABLE_DEBUG_LOG:
-        print("[DiagnosticList] ", text)
-
-func log_error(text: String) -> void:
-    push_error("[DiagnosticList] ", text)
+    return ProjectSettings.localize_path(lsp_uri.trim_prefix(URI_PREFIX).uri_decode())

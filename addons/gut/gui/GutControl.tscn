@@ -29,16 +29,19 @@ grow_vertical = 2
 [node name="Tabs" type="TabContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+current_tab = 0
 
 [node name="Tests" type="Tree" parent="VBox/Tabs"]
 layout_mode = 2
 size_flags_vertical = 3
 hide_root = true
+metadata/_tab_index = 0
 
 [node name="SettingsScroll" type="ScrollContainer" parent="VBox/Tabs"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
+metadata/_tab_index = 1
 
 [node name="Settings" type="VBoxContainer" parent="VBox/Tabs/SettingsScroll"]
 layout_mode = 2

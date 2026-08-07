@@ -11,6 +11,7 @@ static func set_auto_refresh(on: bool) -> void:
 
 
 static func get_auto_refresh() -> bool:
+    @warning_ignore("unsafe_cast")
     return ProjectSettings.get_setting(SETTING_AUTO_REFRESH, true) as bool
 
 

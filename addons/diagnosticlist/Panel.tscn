@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://tsfsnxbfcax6"]
 
-[ext_resource type="Script" uid="uid://btyk17v3aai46" path="res://addons/diagnosticlist/Panel.gd" id="1_fewy8"]
+[ext_resource type="Script" uid="uid://b3dpnradvv4q5" path="res://addons/diagnosticlist/Panel.gd" id="1_fewy8"]
 
 [node name="DiagnosticsPanel" type="Control"]
 custom_minimum_size = Vector2(250, 225)
@@ -42,8 +42,8 @@ text = "Auto-Refresh"
 
 [node name="btn_refresh_errors" type="Button" parent="HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
+auto_translate_mode = 2
 layout_mode = 2
-auto_translate = false
 text = "Refresh"
 
 [node name="HSeparator" type="HSeparator" parent="HBoxContainer/VBoxContainer"]

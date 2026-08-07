@@ -22,3 +22,15 @@ func clear() -> void:
 	z_as_relative = true
 	show_behind_parent = false
 	force_no_tiling = false
+
+
+func clone() -> SS2D_Mesh:
+	var new_mesh := SS2D_Mesh.new()
+	new_mesh.texture = texture
+	new_mesh.mesh = mesh.duplicate()
+	new_mesh.material = material
+	new_mesh.z_index = z_index
+	new_mesh.z_as_relative = z_as_relative
+	new_mesh.show_behind_parent = show_behind_parent
+	new_mesh.force_no_tiling = force_no_tiling
+	return new_mesh

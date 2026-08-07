@@ -1,9 +1,10 @@
-[gd_scene load_steps=47 format=4 uid="uid://b1ay13k7r3jtg"]
+[gd_scene load_steps=54 format=4 uid="uid://b1ay13k7r3jtg"]
 
 [ext_resource type="Script" uid="uid://dhdc4b8yddyej" path="res://addons/rmsmartshape/shapes/shape.gd" id="1_bgypd"]
 [ext_resource type="Script" uid="uid://bwcf4pjgprn0k" path="res://addons/rmsmartshape/shapes/point.gd" id="3_isrss"]
 [ext_resource type="Script" uid="uid://bo5f7qe27jfje" path="res://addons/rmsmartshape/shapes/point_array.gd" id="4_j8hj2"]
 [ext_resource type="Script" uid="uid://llobjh5hvry" path="res://addons/rmsmartshape/shapes/mesh.gd" id="5_b3my5"]
+[ext_resource type="Script" uid="uid://mc8hrt0xxmjg" path="res://addons/rmsmartshape/shapes/mesh_cache.gd" id="6_t60xk"]
 [ext_resource type="Texture2D" uid="uid://8l501jrnaqt8" path="res://icon.png" id="6_yj1kx"]
 [ext_resource type="Script" uid="uid://0lhxan4cqrc1" path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" id="7_f6ybp"]
 [ext_resource type="Script" uid="uid://nc5bfedvnpgm" path="res://addons/rmsmartshape/materials/shape_material.gd" id="8_q32v1"]
@@ -81,6 +82,10 @@ texture = ExtResource("6_yj1kx")
 mesh = SubResource("ArrayMesh_isrss")
 z_index = -10
 
+[sub_resource type="Resource" id="Resource_udfvr"]
+script = ExtResource("6_t60xk")
+meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_q32v1")])
+
 [sub_resource type="Resource" id="Resource_ym61l"]
 script = ExtResource("8_q32v1")
 fill_textures = Array[Texture2D]([ExtResource("6_yj1kx")])
@@ -104,6 +109,10 @@ texture = ExtResource("6_yj1kx")
 mesh = SubResource("ArrayMesh_rilut")
 z_index = -10
 
+[sub_resource type="Resource" id="Resource_cqi0k"]
+script = ExtResource("6_t60xk")
+meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_ouyma")])
+
 [sub_resource type="ArrayMesh" id="ArrayMesh_28aev"]
 _surfaces = [{
 "aabb": AABB(0, 0, 0, 210, 130, 1e-05),
@@ -122,6 +131,10 @@ script = ExtResource("5_b3my5")
 texture = ExtResource("6_yj1kx")
 mesh = SubResource("ArrayMesh_28aev")
 z_index = -10
+
+[sub_resource type="Resource" id="Resource_12n4a"]
+script = ExtResource("6_t60xk")
+meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_gmc7f")])
 
 [sub_resource type="Resource" id="Resource_w4570"]
 script = ExtResource("3_isrss")
@@ -197,6 +210,10 @@ script = ExtResource("5_b3my5")
 texture = SubResource("GradientTexture2D_yj1kx")
 mesh = SubResource("ArrayMesh_j8hj2")
 
+[sub_resource type="Resource" id="Resource_dflxr"]
+script = ExtResource("6_t60xk")
+meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_rilut")])
+
 [sub_resource type="Resource" id="Resource_rxnt7"]
 script = ExtResource("9_isrss")
 textures = Array[Texture2D]([SubResource("GradientTexture2D_yj1kx")])
@@ -238,6 +255,10 @@ script = ExtResource("5_b3my5")
 texture = SubResource("GradientTexture2D_yj1kx")
 mesh = SubResource("ArrayMesh_ym61l")
 
+[sub_resource type="Resource" id="Resource_5meis"]
+script = ExtResource("6_t60xk")
+meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_fy8q1")])
+
 [sub_resource type="ArrayMesh" id="ArrayMesh_rpin6"]
 _surfaces = [{
 "aabb": AABB(-2.12, -4, 0, 214.105, 138, 1e-05),
@@ -255,6 +276,10 @@ _surfaces = [{
 script = ExtResource("5_b3my5")
 texture = SubResource("GradientTexture2D_yj1kx")
 mesh = SubResource("ArrayMesh_rpin6")
+
+[sub_resource type="Resource" id="Resource_pdcsh"]
+script = ExtResource("6_t60xk")
+meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_tax1t")])
 
 [node name="test_collisions" type="Node2D"]
 position = Vector2(230, 190)
@@ -323,7 +348,7 @@ position = Vector2(0, -30)
 position = Vector2(-10, 10)
 script = ExtResource("1_bgypd")
 _points = SubResource("Resource_isa7x")
-_meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_q32v1")])
+_mesh_cache = SubResource("Resource_udfvr")
 shape_material = SubResource("Resource_ym61l")
 collision_size = 10.0
 collision_offset = 20.0
@@ -338,7 +363,7 @@ polygon = PackedVector2Array(230, 37.12173, 230, 62.87827, 109.31312, 117.73593,
 position = Vector2(300, 20)
 script = ExtResource("1_bgypd")
 _points = SubResource("Resource_isa7x")
-_meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_ouyma")])
+_mesh_cache = SubResource("Resource_cqi0k")
 shape_material = SubResource("Resource_ym61l")
 collision_generation_method = 2
 collision_size = 10.0
@@ -354,7 +379,7 @@ polygon = PackedVector2Array(105.41523, -25, -18.83793, -25, -29.22451, 11.21587
 position = Vector2(620, 20)
 script = ExtResource("1_bgypd")
 _points = SubResource("Resource_isa7x")
-_meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_gmc7f")])
+_mesh_cache = SubResource("Resource_12n4a")
 shape_material = SubResource("Resource_ym61l")
 collision_generation_method = 1
 collision_size = 10.0
@@ -373,7 +398,7 @@ position = Vector2(0, -30)
 position = Vector2(-10, 260)
 script = ExtResource("1_bgypd")
 _points = SubResource("Resource_hff64")
-_meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_rilut")])
+_mesh_cache = SubResource("Resource_dflxr")
 shape_material = SubResource("Resource_6qbm5")
 collision_size = 10.0
 collision_offset = 20.0
@@ -388,7 +413,7 @@ polygon = PackedVector2Array(229.41289, 36.85487, 230.54431, 61.29542, 149.92278
 position = Vector2(310, 260)
 script = ExtResource("1_bgypd")
 _points = SubResource("Resource_hff64")
-_meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_fy8q1")])
+_mesh_cache = SubResource("Resource_5meis")
 shape_material = SubResource("Resource_6qbm5")
 collision_generation_method = 2
 collision_size = 10.0
@@ -404,7 +429,7 @@ polygon = PackedVector2Array(229.41289, 36.85487, 230.54431, 61.29542, 149.92278
 position = Vector2(640, 260)
 script = ExtResource("1_bgypd")
 _points = SubResource("Resource_hff64")
-_meshes = Array[ExtResource("5_b3my5")]([SubResource("Resource_tax1t")])
+_mesh_cache = SubResource("Resource_pdcsh")
 shape_material = SubResource("Resource_6qbm5")
 collision_generation_method = 1
 collision_size = 10.0

@@ -44,6 +44,8 @@ var _provider: DiagnosticList_DiagnosticProvider
 ## Alternative to _ready(). This will be called by plugin.gd to ensure the code in here only runs
 ## when this script is loaded as part of the plugin and not while editing the scene.
 func _plugin_ready() -> void:
+    DiagnosticList_Utils.log_debug("Panel _plugin_ready()")
+
     for i in len(_filter_buttons):
         var btn: Button = _filter_buttons[i]
         var severity := _severity_settings[i]
@@ -85,6 +87,8 @@ func _plugin_ready() -> void:
 
 ## Called by plugin.gd when the LSPClient is ready
 func start(provider: DiagnosticList_DiagnosticProvider) -> void:
+    DiagnosticList_Utils.log_debug("Panel start()")
+
     _provider = provider
 
     # Now that it is safe to do stuff, connect all the signals
@@ -104,18 +108,19 @@ func start(provider: DiagnosticList_DiagnosticProvider) -> void:
     _start_stop_auto_refresh()
 
     # If connected to a LS of a different Godot instance, show a warning
-    if provider.get_lsp_client().get_project_path() != ProjectSettings.globalize_path("res://").simplify_path():
+    if not provider.get_lsp_client().lsp_root_matches_project_root():
         _multiple_instances_alert.popup_centered()
 
 
 func refresh() -> void:
-    # NOTE: This list is sorted by file name as LSP publishes diagnostics per file
-    # This is important as the group-by-file implementation relies on it.
+    DiagnosticList_Utils.log_debug("Panel refresh()")
+
+    # NOTE: This list is grouped by file name. This is important as the group-by-file implementation relies on it.
     var diagnostics := _provider.get_diagnostics()
     var group_by_file := _cb_group_by_file.button_pressed
 
     if not group_by_file:
-        diagnostics.sort_custom(_sort_by_severity)
+        diagnostics.sort_custom(DiagnosticList_Utils.sort_by_severity)
 
     # Show refresh time
     _set_status_string("Up-to-date", true)
@@ -154,12 +159,6 @@ func _set_status_string(text: String, with_last_time: bool) -> void:
         _label_refresh_time.text = text
 
 
-func _sort_by_severity(a: DiagnosticList_Diagnostic, b: DiagnosticList_Diagnostic) -> bool:
-    if a.severity == b.severity:
-        return a.res_uri < b.res_uri
-    return a.severity < b.severity
-
-
 func _create_entry(diag: DiagnosticList_Diagnostic, parent: TreeItem) -> void:
     var entry: TreeItem = _error_list_tree.create_item(parent)
     var severity_setting := _severity_settings[diag.severity]
@@ -174,6 +173,8 @@ func _create_entry(diag: DiagnosticList_Diagnostic, parent: TreeItem) -> void:
 
 
 func _update_diagnostics(force: bool) -> void:
+    DiagnosticList_Utils.log_debug("Panel _update_diagnostics()")
+
     if _provider.is_updating() or _provider.refresh_diagnostics(force):
         _set_status_string("Updating...", false)
     else:

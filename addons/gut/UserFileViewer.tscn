@@ -1,19 +1,18 @@
 [gd_scene load_steps=2 format=3 uid="uid://bsm7wtt1gie4v"]
 
-[ext_resource type="Script" uid="uid://x51wilphva3d" path="res://addons/gut/UserFileViewer.gd" id="1"]
+[ext_resource type="Script" uid="uid://cd22dvrmdvbrm" path="res://addons/gut/UserFileViewer.gd" id="1"]
 
 [node name="UserFileViewer" type="Window"]
+oversampling_override = 1.0
 exclusive = true
 script = ExtResource("1")
 
 [node name="FileDialog" type="FileDialog" parent="."]
 access = 1
 show_hidden_files = true
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="TextDisplay" type="ColorRect" parent="."]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
@@ -22,6 +21,7 @@ offset_bottom = -65.0
 color = Color(0.2, 0.188235, 0.188235, 1)
 
 [node name="RichTextLabel" type="RichTextLabel" parent="TextDisplay"]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 focus_mode = 2
@@ -33,6 +33,7 @@ Versions of the Lorem ipsum text have been used in typesetting at least since th
 selection_enabled = true
 
 [node name="OpenFile" type="Button" parent="."]
+anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -44,6 +45,7 @@ offset_bottom = -30.0
 text = "Open File"
 
 [node name="Home" type="Button" parent="."]
+anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -55,6 +57,7 @@ offset_bottom = -30.0
 text = "Home"
 
 [node name="Copy" type="Button" parent="."]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 160.0
@@ -64,6 +67,7 @@ offset_bottom = -30.0
 text = "Copy"
 
 [node name="End" type="Button" parent="."]
+anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -75,6 +79,7 @@ offset_bottom = -30.0
 text = "End"
 
 [node name="Close" type="Button" parent="."]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 10.0

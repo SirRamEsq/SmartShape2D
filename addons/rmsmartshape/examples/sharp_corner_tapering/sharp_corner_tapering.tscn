@@ -1,4 +1,4 @@
-[gd_scene load_steps=98 format=4 uid="uid://cl71flny1scun"]
+[gd_scene load_steps=101 format=4 uid="uid://cl71flny1scun"]
 
 [ext_resource type="Script" uid="uid://dhdc4b8yddyej" path="res://addons/rmsmartshape/shapes/shape.gd" id="1_5hlge"]
 [ext_resource type="Script" uid="uid://bwcf4pjgprn0k" path="res://addons/rmsmartshape/shapes/point.gd" id="3_edpr6"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://d218yx0d1ilsn" path="res://addons/rmsmartshape/normal_range.gd" id="9_tqu3h"]
 [ext_resource type="Script" uid="uid://d0xjijisx1woh" path="res://addons/rmsmartshape/materials/edge_material.gd" id="10_55l7o"]
 [ext_resource type="Script" uid="uid://0lhxan4cqrc1" path="res://addons/rmsmartshape/materials/edge_material_metadata.gd" id="10_umoay"]
+[ext_resource type="Script" uid="uid://mc8hrt0xxmjg" path="res://addons/rmsmartshape/shapes/mesh_cache.gd" id="11_jajtp"]
 [ext_resource type="Texture2D" uid="uid://b3aqa3bj1osvp" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/assets/tex_metal_edge.png" id="11_jc4po"]
 [ext_resource type="Texture2D" uid="uid://bobwi3r6aiiqg" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/assets/tex_metal_corner_inner.png" id="12_va43u"]
 [ext_resource type="Texture2D" uid="uid://bc34cuc50as8f" path="res://addons/rmsmartshape/examples/sharp_corner_tapering/assets/tex_metal_corner_outer.png" id="13_f7yxr"]
@@ -19,110 +20,51 @@
 [sub_resource type="Resource" id="Resource_vpbfx"]
 script = ExtResource("3_edpr6")
 position = Vector2(83.365, 45.3257)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_w5cbt"]
 script = ExtResource("3_edpr6")
 position = Vector2(263.601, 615.758)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_j5l1j"]
 script = ExtResource("3_edpr6")
 position = Vector2(1026.77, 577.75)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
 texture_idx = -4
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_324cb"]
 script = ExtResource("3_edpr6")
 position = Vector2(731.167, 13.1754)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_p3ja8"]
 script = ExtResource("3_edpr6")
 position = Vector2(83.365, 45.3257)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_qjb65"]
 script = ExtResource("3_edpr6")
 position = Vector2(742.381, 447.381)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_w1ohc"]
 script = ExtResource("3_edpr6")
 position = Vector2(641.411, 322.256)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_tlf23"]
 script = ExtResource("3_edpr6")
 position = Vector2(1133.09, 291.15)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_86kx1"]
 script = ExtResource("3_edpr6")
 position = Vector2(546.956, 94.6283)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_eqyck"]
 script = ExtResource("3_edpr6")
 position = Vector2(293.278, 51.6277)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_1wyqg"]
 script = ExtResource("3_edpr6")
 position = Vector2(871.022, 351.231)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_2owaw"]
 script = ExtResource("3_edpr6")
 position = Vector2(239.115, 334.66)
-point_in = Vector2(0, 0)
-point_out = Vector2(0, 0)
-texture_idx = 0
-flip = false
-width = 1.0
 
 [sub_resource type="Resource" id="Resource_o2w6y"]
 script = ExtResource("4_udfgv")
@@ -145,10 +87,8 @@ _constraints = {
 Vector2i(0, 4): 15
 }
 _next_key = 15
-_material_overrides = {}
 tessellation_stages = 5
 tessellation_tolerance = 4.0
-curve_bake_interval = 20.0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_4fbfb"]
 _surfaces = [{
@@ -168,9 +108,6 @@ script = ExtResource("4_16dh0")
 texture = ExtResource("6_ry0x0")
 mesh = SubResource("ArrayMesh_4fbfb")
 z_index = -10
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_boygq"]
 _surfaces = [{
@@ -189,9 +126,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("6_x85ri")
 mesh = SubResource("ArrayMesh_boygq")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_868su"]
@@ -211,10 +145,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_868su")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_3hymk"]
 _surfaces = [{
@@ -233,9 +163,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("8_8j0ie")
 mesh = SubResource("ArrayMesh_3hymk")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_l8ldv"]
@@ -255,9 +182,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("6_x85ri")
 mesh = SubResource("ArrayMesh_l8ldv")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_gnal5"]
@@ -277,10 +201,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_gnal5")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_w2weh"]
 _surfaces = [{
@@ -299,9 +219,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("13_f7yxr")
 mesh = SubResource("ArrayMesh_w2weh")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_c3p34"]
@@ -321,10 +238,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_c3p34")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_audme"]
 _surfaces = [{
@@ -343,9 +256,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("13_f7yxr")
 mesh = SubResource("ArrayMesh_audme")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_8lhox"]
@@ -365,10 +275,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_8lhox")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_344b0"]
 _surfaces = [{
@@ -387,9 +293,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("12_va43u")
 mesh = SubResource("ArrayMesh_344b0")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_dunmu"]
@@ -409,10 +312,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_dunmu")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_epb57"]
 _surfaces = [{
@@ -431,9 +330,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("8_8j0ie")
 mesh = SubResource("ArrayMesh_epb57")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_al5re"]
@@ -453,9 +349,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("6_x85ri")
 mesh = SubResource("ArrayMesh_al5re")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_4duqu"]
@@ -475,10 +368,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_4duqu")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_o2hm6"]
 _surfaces = [{
@@ -497,9 +386,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("13_f7yxr")
 mesh = SubResource("ArrayMesh_o2hm6")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_tl7tr"]
@@ -519,10 +405,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_tl7tr")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_5gf0o"]
 _surfaces = [{
@@ -541,9 +423,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("8_8j0ie")
 mesh = SubResource("ArrayMesh_5gf0o")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_7uhsi"]
@@ -563,9 +442,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("6_x85ri")
 mesh = SubResource("ArrayMesh_7uhsi")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_sn38o"]
@@ -585,10 +461,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_sn38o")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_16dh0"]
 _surfaces = [{
@@ -607,41 +479,26 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("8_8j0ie")
 mesh = SubResource("ArrayMesh_16dh0")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
+
+[sub_resource type="Resource" id="Resource_apmfv"]
+script = ExtResource("11_jajtp")
+meshes = Array[ExtResource("4_16dh0")]([SubResource("Resource_uwbwq"), SubResource("Resource_4gdy4"), SubResource("Resource_2cis5"), SubResource("Resource_144e3"), SubResource("Resource_gwfvh"), SubResource("Resource_v3imc"), SubResource("Resource_7v07p"), SubResource("Resource_3a0n7"), SubResource("Resource_pbhaj"), SubResource("Resource_nga43"), SubResource("Resource_iyeql"), SubResource("Resource_ramwm"), SubResource("Resource_544ga"), SubResource("Resource_x8gwq"), SubResource("Resource_uf8n0"), SubResource("Resource_xg162"), SubResource("Resource_jiokk"), SubResource("Resource_myb05"), SubResource("Resource_x7356"), SubResource("Resource_pmj4w"), SubResource("Resource_x85ri")])
 
 [sub_resource type="Resource" id="Resource_42qh7"]
 script = ExtResource("9_tqu3h")
-begin = 0.0
 distance = 360.0
-edgeRendering = Vector2(0, 0)
 
 [sub_resource type="Resource" id="Resource_t7ed3"]
 script = ExtResource("10_umoay")
 edge_material = ExtResource("8_uwntg")
 normal_range = SubResource("Resource_42qh7")
-weld = true
 taper_sharp_corners = true
-render = true
-z_index = 0
-z_as_relative = true
-offset = 0.0
 
 [sub_resource type="Resource" id="Resource_07ymf"]
 script = ExtResource("7_ncdby")
 _edge_meta_materials = Array[ExtResource("10_umoay")]([SubResource("Resource_t7ed3")])
 fill_textures = Array[Texture2D]([ExtResource("6_ry0x0")])
-fill_texture_z_index = -10
-fill_texture_show_behind_parent = false
-fill_texture_scale = 1.0
-fill_texture_absolute_position = false
-fill_texture_absolute_rotation = false
-fill_texture_offset = Vector2(0, 0)
-fill_texture_angle_offset = 0.0
-fill_mesh_offset = 0.0
-render_offset = 0.0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_3yv2e"]
 _surfaces = [{
@@ -661,9 +518,6 @@ script = ExtResource("4_16dh0")
 texture = ExtResource("6_ry0x0")
 mesh = SubResource("ArrayMesh_3yv2e")
 z_index = -10
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_0rjua"]
 _surfaces = [{
@@ -682,10 +536,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_0rjua")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_j1qna"]
 _surfaces = [{
@@ -704,9 +554,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("13_f7yxr")
 mesh = SubResource("ArrayMesh_j1qna")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_jybqc"]
@@ -726,10 +573,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_jybqc")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_5ix56"]
 _surfaces = [{
@@ -748,9 +591,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("13_f7yxr")
 mesh = SubResource("ArrayMesh_5ix56")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_i0xij"]
@@ -770,10 +610,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_i0xij")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_7oic5"]
 _surfaces = [{
@@ -792,9 +628,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("12_va43u")
 mesh = SubResource("ArrayMesh_7oic5")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_u4qby"]
@@ -814,10 +647,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_u4qby")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_82nac"]
 _surfaces = [{
@@ -836,9 +665,6 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("13_f7yxr")
 mesh = SubResource("ArrayMesh_82nac")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
 force_no_tiling = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_8j0ie"]
@@ -858,55 +684,30 @@ _surfaces = [{
 script = ExtResource("4_16dh0")
 texture = ExtResource("11_jc4po")
 mesh = SubResource("ArrayMesh_8j0ie")
-z_index = 0
-z_as_relative = true
-show_behind_parent = false
-force_no_tiling = false
+
+[sub_resource type="Resource" id="Resource_xh2g5"]
+script = ExtResource("11_jajtp")
+meshes = Array[ExtResource("4_16dh0")]([SubResource("Resource_1ky4m"), SubResource("Resource_js84d"), SubResource("Resource_8et6a"), SubResource("Resource_p3lcc"), SubResource("Resource_lyckk"), SubResource("Resource_y8xhj"), SubResource("Resource_wsbqp"), SubResource("Resource_efqrv"), SubResource("Resource_d4roe"), SubResource("Resource_4fbfb")])
 
 [sub_resource type="Resource" id="Resource_ma2v2"]
 script = ExtResource("10_55l7o")
 textures = Array[Texture2D]([ExtResource("11_jc4po")])
 textures_corner_outer = Array[Texture2D]([ExtResource("13_f7yxr")])
 textures_corner_inner = Array[Texture2D]([ExtResource("12_va43u")])
-textures_taper_left = Array[Texture2D]([])
-textures_taper_right = Array[Texture2D]([])
-textures_taper_corner_left = Array[Texture2D]([])
-textures_taper_corner_right = Array[Texture2D]([])
-randomize_texture = false
-use_corner_texture = true
-use_taper_texture = true
-fit_mode = 0
 
 [sub_resource type="Resource" id="Resource_atqmo"]
 script = ExtResource("9_tqu3h")
-begin = 0.0
 distance = 360.0
-edgeRendering = Vector2(0, 0)
 
 [sub_resource type="Resource" id="Resource_vboqn"]
 script = ExtResource("10_umoay")
 edge_material = SubResource("Resource_ma2v2")
 normal_range = SubResource("Resource_atqmo")
-weld = true
-taper_sharp_corners = false
-render = true
-z_index = 0
-z_as_relative = true
-offset = 0.0
 
 [sub_resource type="Resource" id="Resource_xsfev"]
 script = ExtResource("7_ncdby")
 _edge_meta_materials = Array[ExtResource("10_umoay")]([SubResource("Resource_vboqn")])
 fill_textures = Array[Texture2D]([ExtResource("6_ry0x0")])
-fill_texture_z_index = -10
-fill_texture_show_behind_parent = false
-fill_texture_scale = 1.0
-fill_texture_absolute_position = false
-fill_texture_absolute_rotation = false
-fill_texture_offset = Vector2(0, 0)
-fill_texture_angle_offset = 0.0
-fill_mesh_offset = 0.0
-render_offset = 0.0
 
 [node name="Node2D" type="Node2D"]
 
@@ -916,7 +717,7 @@ position = Vector2(-30, 228)
 scale = Vector2(0.65, 0.65)
 script = ExtResource("1_5hlge")
 _points = SubResource("Resource_o2w6y")
-_meshes = Array[ExtResource("4_16dh0")]([SubResource("Resource_uwbwq"), SubResource("Resource_4gdy4"), SubResource("Resource_2cis5"), SubResource("Resource_144e3"), SubResource("Resource_gwfvh"), SubResource("Resource_v3imc"), SubResource("Resource_7v07p"), SubResource("Resource_3a0n7"), SubResource("Resource_pbhaj"), SubResource("Resource_nga43"), SubResource("Resource_iyeql"), SubResource("Resource_ramwm"), SubResource("Resource_544ga"), SubResource("Resource_x8gwq"), SubResource("Resource_uf8n0"), SubResource("Resource_xg162"), SubResource("Resource_jiokk"), SubResource("Resource_myb05"), SubResource("Resource_x7356"), SubResource("Resource_pmj4w"), SubResource("Resource_x85ri")])
+_mesh_cache = SubResource("Resource_apmfv")
 shape_material = SubResource("Resource_07ymf")
 tessellation_stages = 5
 tessellation_tolerence = 4.0
@@ -927,7 +728,7 @@ position = Vector2(400, 10)
 scale = Vector2(0.65, 0.65)
 script = ExtResource("1_5hlge")
 _points = SubResource("Resource_o2w6y")
-_meshes = Array[ExtResource("4_16dh0")]([SubResource("Resource_1ky4m"), SubResource("Resource_js84d"), SubResource("Resource_8et6a"), SubResource("Resource_p3lcc"), SubResource("Resource_lyckk"), SubResource("Resource_y8xhj"), SubResource("Resource_wsbqp"), SubResource("Resource_efqrv"), SubResource("Resource_d4roe"), SubResource("Resource_4fbfb")])
+_mesh_cache = SubResource("Resource_xh2g5")
 shape_material = SubResource("Resource_xsfev")
 tessellation_stages = 5
 tessellation_tolerence = 4.0
