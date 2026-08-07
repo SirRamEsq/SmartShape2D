@@ -1,0 +1,27 @@
+name: 📦 Package for Asset Store
+on: [ workflow_dispatch, push ]
+jobs:
+  package:
+    name: "Package"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45
+
+      - name: Create package
+      # Strip all non-plugin files and move readme and license into the plugin dir
+        run: |
+          mkdir -p package/addons
+          mv addons/rmsmartshape package/addons
+          mv README.md LICENSE package/addons/rmsmartshape
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ steps.ghd.outputs.describe }}
+          path: package
+
